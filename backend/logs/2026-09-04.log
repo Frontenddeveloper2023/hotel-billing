@@ -1,0 +1,1378 @@
+[2026-09-04 09:34:28] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 09:34:28] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 09:34:29] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 09:34:29] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 09:34:30] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 09:34:30] [INFO] Admin user already exists
+[2026-09-04 10:07:20] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:07:20] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:07:20] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:07:20] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:07:20] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:07:21] [INFO] Admin user already exists
+[2026-09-04 10:08:02] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:08:02] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:08:02] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:08:02] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:08:02] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:08:03] [INFO] Admin user already exists
+[2026-09-04 10:08:06] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:08:06] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:08:06] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:08:06] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:08:06] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:08:07] [INFO] Admin user already exists
+[2026-09-04 10:08:20] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:08:20] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:08:20] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:08:20] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:08:20] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:08:20] [INFO] Admin user already exists
+[2026-09-04 10:10:41] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:10:41] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:10:41] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:10:41] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:10:41] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:10:41] [INFO] Admin user already exists
+[2026-09-04 10:12:56] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:12:56] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:12:56] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:12:56] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:12:56] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:12:56] [INFO] Admin user already exists
+[2026-09-04 10:13:02] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:13:02] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:13:02] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:13:02] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:13:02] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:13:02] [INFO] Admin user already exists
+[2026-09-04 10:13:04] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:13:04] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:13:04] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:13:04] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:13:04] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:13:04] [INFO] Admin user already exists
+[2026-09-04 10:13:10] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:13:10] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:13:10] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:13:10] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:13:10] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:13:10] [INFO] Admin user already exists
+[2026-09-04 10:13:18] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:13:18] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:13:18] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:13:18] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:13:19] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:13:19] [INFO] Admin user already exists
+[2026-09-04 10:13:24] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:13:24] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:13:24] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:13:24] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:13:24] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:13:24] [INFO] Admin user already exists
+[2026-09-04 10:13:26] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:13:26] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:13:26] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:13:26] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:13:27] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:13:27] [INFO] Admin user already exists
+[2026-09-04 10:13:32] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:13:32] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:13:32] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:13:32] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:13:32] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:13:32] [INFO] Admin user already exists
+[2026-09-04 10:13:35] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:13:35] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:13:35] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:13:35] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:13:35] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:13:35] [INFO] Admin user already exists
+[2026-09-04 10:14:34] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:14:34] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:14:34] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:14:34] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:14:34] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:14:34] [INFO] Admin user already exists
+[2026-09-04 10:14:58] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:14:58] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:14:58] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:14:58] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:14:58] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:14:58] [INFO] Admin user already exists
+[2026-09-04 10:15:04] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:15:04] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:15:04] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:15:04] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:15:05] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:15:05] [INFO] Admin user already exists
+[2026-09-04 10:15:07] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:15:07] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:15:07] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:15:07] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:15:07] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:15:07] [INFO] Admin user already exists
+[2026-09-04 10:15:12] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:15:12] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:15:12] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:15:12] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:15:13] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:15:13] [INFO] Admin user already exists
+[2026-09-04 10:15:14] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:15:14] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:15:14] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:15:14] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:15:15] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:15:15] [INFO] Admin user already exists
+[2026-09-04 10:15:39] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:15:39] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:15:39] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:15:39] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:15:40] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:15:40] [INFO] Admin user already exists
+[2026-09-04 10:17:27] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:17:27] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:17:27] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:17:27] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:17:27] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:17:27] [INFO] Admin user already exists
+[2026-09-04 10:23:37] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:23:37] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:23:37] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:23:37] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:23:37] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:23:37] [INFO] Admin user already exists
+[2026-09-04 10:23:43] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:23:43] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:23:43] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:23:43] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:23:43] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:23:43] [INFO] Admin user already exists
+[2026-09-04 10:23:49] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:23:49] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:23:49] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:23:49] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:23:49] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:23:49] [INFO] Admin user already exists
+[2026-09-04 10:23:53] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:23:53] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:23:53] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:23:53] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:23:53] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:23:53] [INFO] Admin user already exists
+[2026-09-04 10:23:59] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:23:59] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:23:59] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:23:59] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:24:00] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:24:00] [INFO] Admin user already exists
+[2026-09-04 10:24:03] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:24:03] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:24:03] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:24:03] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:24:03] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:24:03] [INFO] Admin user already exists
+[2026-09-04 10:24:13] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:24:13] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:24:13] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:24:13] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:24:13] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:24:13] [INFO] Admin user already exists
+[2026-09-04 10:24:23] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:24:23] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:24:23] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:24:23] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:24:23] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:24:24] [INFO] Admin user already exists
+[2026-09-04 10:24:34] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:24:34] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:24:34] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:24:34] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:24:34] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:24:34] [INFO] Admin user already exists
+[2026-09-04 10:24:43] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:24:43] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:24:43] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:24:43] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:24:44] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:24:44] [INFO] Admin user already exists
+[2026-09-04 10:25:12] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:25:12] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:25:12] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:25:12] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:25:13] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:25:13] [INFO] Admin user already exists
+[2026-09-04 10:25:18] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:25:19] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:25:19] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:25:19] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:25:19] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:25:19] [INFO] Admin user already exists
+[2026-09-04 10:25:29] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:25:29] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:25:29] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:25:29] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:25:29] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:25:30] [INFO] Admin user already exists
+[2026-09-04 10:25:34] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:25:34] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:25:34] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:25:34] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:25:35] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:25:35] [INFO] Admin user already exists
+[2026-09-04 10:42:45] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:42:45] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:42:45] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:42:45] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:42:45] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:42:46] [INFO] Admin user already exists
+[2026-09-04 10:42:59] [INFO] Fetching services for specific customer ID: 1
+[2026-09-04 10:42:59] [INFO] Error in getServicesByCustomer: Cast to ObjectId failed for value "1" (type string) at path "customerId" for model "Service"
+[2026-09-04 10:42:59] [INFO] Fetching services for specific customer ID: 1
+[2026-09-04 10:42:59] [INFO] Error in getServicesByCustomer: Cast to ObjectId failed for value "1" (type string) at path "customerId" for model "Service"
+[2026-09-04 10:43:29] [INFO] Fetching services for specific customer ID: 1
+[2026-09-04 10:43:29] [INFO] Error in getServicesByCustomer: Cast to ObjectId failed for value "1" (type string) at path "customerId" for model "Service"
+[2026-09-04 10:43:29] [INFO] Fetching services for specific customer ID: 1
+[2026-09-04 10:43:29] [INFO] Error in getServicesByCustomer: Cast to ObjectId failed for value "1" (type string) at path "customerId" for model "Service"
+[2026-09-04 10:58:19] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 10:58:19] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 10:58:19] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 10:58:19] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 10:58:20] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 10:58:20] [INFO] Admin user already exists
+[2026-09-04 11:05:01] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:05:01] [INFO] Successfully retrieved 0 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:05:01] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:05:01] [INFO] Successfully retrieved 0 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:06:19] [INFO] Add extra service request received.
+[2026-09-04 11:06:19] [INFO] Extra service added successfully with ID: 6a9a58d3dd4a33c90cde129b for customer: 6a9a565f148a67d916290d56
+[2026-09-04 11:06:47] [INFO] Add extra service request received.
+[2026-09-04 11:06:47] [INFO] Extra service added successfully with ID: 6a9a58efdd4a33c90cde129c for customer: 6a9a565f148a67d916290d56
+[2026-09-04 11:07:49] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:07:49] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:07:49] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:07:49] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:07:49] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:07:51] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:07:51] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:07:51] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:07:51] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:07:51] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:07:52] [INFO] Admin user already exists
+[2026-09-04 11:11:28] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:11:28] [INFO] Successfully retrieved 0 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:11:44] [INFO] Add extra service request received.
+[2026-09-04 11:11:44] [INFO] Extra service added successfully with ID: 6a9a5a184d01d4530df9ad26 for customer: 6a9a565f148a67d916290d56
+[2026-09-04 11:12:48] [INFO] Add extra service request received.
+[2026-09-04 11:12:48] [INFO] Extra service added successfully with ID: 6a9a5a584d01d4530df9ad27 for customer: 6a9a565f148a67d916290d56
+[2026-09-04 11:13:51] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:13:51] [INFO] Successfully retrieved 2 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:13:51] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:13:51] [INFO] Successfully retrieved 2 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:14:04] [INFO] Add extra service request received.
+[2026-09-04 11:14:05] [INFO] Extra service added successfully with ID: 6a9a5aa44d01d4530df9ad28 for customer: 6a9a565f148a67d916290d56
+[2026-09-04 11:15:26] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:15:26] [INFO] Successfully retrieved 3 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:15:26] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:15:26] [INFO] Successfully retrieved 3 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:16:00] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:16:00] [INFO] Successfully retrieved 3 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:16:00] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:16:00] [INFO] Successfully retrieved 3 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:16:41] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:16:41] [INFO] Successfully retrieved 3 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:16:41] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:16:41] [INFO] Successfully retrieved 3 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:19:33] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:19:33] [INFO] Successfully retrieved 3 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:19:44] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:19:44] [INFO] Successfully retrieved 3 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:19:44] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:19:44] [INFO] Successfully retrieved 3 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:19:53] [INFO] Delete request received for service ID: 6a9a5a184d01d4530df9ad26
+[2026-09-04 11:19:53] [INFO] Service deleted successfully for ID: 6a9a5a184d01d4530df9ad26
+[2026-09-04 11:19:53] [INFO] Delete request received for service ID: 6a9a5a584d01d4530df9ad27
+[2026-09-04 11:19:53] [INFO] Service deleted successfully for ID: 6a9a5a584d01d4530df9ad27
+[2026-09-04 11:19:54] [INFO] Delete request received for service ID: 6a9a5aa44d01d4530df9ad28
+[2026-09-04 11:19:54] [INFO] Service deleted successfully for ID: 6a9a5aa44d01d4530df9ad28
+[2026-09-04 11:20:11] [INFO] Add extra service request received.
+[2026-09-04 11:20:11] [INFO] Extra service added successfully with ID: 6a9a5c134d01d4530df9ad29 for customer: 6a9a565f148a67d916290d56
+[2026-09-04 11:22:25] [INFO] Add extra service request received.
+[2026-09-04 11:22:25] [INFO] Extra service added successfully with ID: 6a9a5c994d01d4530df9ad2a for customer: 6a9a565f148a67d916290d56
+[2026-09-04 11:23:07] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:23:07] [INFO] Successfully retrieved 2 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 11:23:33] [INFO] Add extra service request received.
+[2026-09-04 11:23:33] [INFO] Extra service added successfully with ID: 6a9a5cdd4d01d4530df9ad2b for customer: 6a9a565f148a67d916290d56
+[2026-09-04 11:28:44] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:28:44] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:28:44] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:28:44] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:28:44] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:28:44] [INFO] Admin user already exists
+[2026-09-04 11:28:50] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:28:50] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:28:50] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:28:51] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:28:51] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:28:51] [INFO] Admin user already exists
+[2026-09-04 11:29:15] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:29:15] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:29:15] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:29:15] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:29:15] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:29:15] [INFO] Admin user already exists
+[2026-09-04 11:32:01] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:32:01] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:32:01] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:32:01] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:32:02] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:32:02] [INFO] Admin user already exists
+[2026-09-04 11:32:05] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:32:05] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:32:05] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:32:05] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:32:05] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:32:05] [INFO] Admin user already exists
+[2026-09-04 11:36:58] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:36:58] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:36:58] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:36:58] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:36:58] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:36:58] [INFO] Admin user already exists
+[2026-09-04 11:37:02] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:37:02] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:37:02] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:37:02] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:37:02] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:37:03] [INFO] Admin user already exists
+[2026-09-04 11:37:05] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:37:05] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:37:05] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:37:05] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:37:05] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:37:05] [INFO] Admin user already exists
+[2026-09-04 11:37:10] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:37:10] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:37:10] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:37:10] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:37:10] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:37:11] [INFO] Admin user already exists
+[2026-09-04 11:37:29] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:37:29] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:37:29] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:37:29] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:37:29] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:37:29] [INFO] Admin user already exists
+[2026-09-04 11:37:39] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:37:39] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:37:39] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:37:39] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:37:39] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:37:39] [INFO] Admin user already exists
+[2026-09-04 11:37:50] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:37:50] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:37:50] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:37:50] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:37:50] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:37:51] [INFO] Admin user already exists
+[2026-09-04 11:37:56] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:37:56] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:37:56] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:37:56] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:37:56] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:37:56] [INFO] Admin user already exists
+[2026-09-04 11:38:01] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:38:01] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:38:01] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:38:01] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:38:02] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:38:02] [INFO] Admin user already exists
+[2026-09-04 11:38:07] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:38:07] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:38:07] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:38:07] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:38:10] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:38:10] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:38:10] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:38:10] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:38:11] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:38:11] [INFO] Admin user already exists
+[2026-09-04 11:38:14] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:38:14] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:38:14] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:38:14] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:38:14] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:38:14] [INFO] Admin user already exists
+[2026-09-04 11:38:17] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:38:17] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:38:17] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:38:17] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:38:17] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:38:17] [INFO] Admin user already exists
+[2026-09-04 11:38:27] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:38:27] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:38:27] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:38:27] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:38:27] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:38:27] [INFO] Admin user already exists
+[2026-09-04 11:38:33] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:38:33] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:38:33] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:38:33] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:38:34] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:38:34] [INFO] Admin user already exists
+[2026-09-04 11:38:40] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:38:40] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:38:40] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:38:40] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:38:40] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:38:41] [INFO] Admin user already exists
+[2026-09-04 11:45:53] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:45:53] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:45:53] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:45:53] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:45:54] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:45:54] [INFO] Admin user already exists
+[2026-09-04 11:45:57] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:45:57] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:45:57] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:45:57] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:45:57] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:45:57] [INFO] Admin user already exists
+[2026-09-04 11:46:00] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:46:00] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:46:00] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:46:00] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:46:00] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:46:00] [INFO] Admin user already exists
+[2026-09-04 11:46:03] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:46:03] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:46:03] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:46:03] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:46:03] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:46:03] [INFO] Admin user already exists
+[2026-09-04 11:47:25] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:47:25] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:47:25] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:47:25] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:47:25] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:47:25] [INFO] Admin user already exists
+[2026-09-04 11:51:27] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:51:27] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:51:27] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:51:27] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:51:28] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:51:28] [INFO] Admin user already exists
+[2026-09-04 11:51:31] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:51:31] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:51:31] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:51:31] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:51:31] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:51:31] [INFO] Admin user already exists
+[2026-09-04 11:51:40] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:51:40] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:51:40] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:51:40] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:51:41] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:51:41] [INFO] Admin user already exists
+[2026-09-04 11:53:00] [INFO] INFO
+[2026-09-04 11:53:00] [INFO] INFO
+[2026-09-04 11:54:44] [INFO] INFO
+[2026-09-04 11:54:44] [INFO] INFO
+[2026-09-04 11:54:50] [INFO] ERROR
+[2026-09-04 11:56:09] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 11:56:09] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 11:56:09] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 11:56:09] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 11:56:09] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 11:56:09] [INFO] Admin user already exists
+[2026-09-04 11:56:14] [INFO] INFO
+[2026-09-04 11:56:14] [INFO] INFO
+[2026-09-04 11:56:17] [INFO] INFO
+[2026-09-04 11:56:17] [INFO] INFO
+[2026-09-04 12:02:02] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:02:02] [INFO] INFO
+[2026-09-04 12:02:02] [INFO] INFO
+[2026-09-04 12:02:02] [INFO] Successfully retrieved 3 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:02:02] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:02:02] [INFO] Successfully retrieved 3 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:02:10] [INFO] Add extra service request received.
+[2026-09-04 12:02:10] [INFO] Extra service added successfully with ID: 6a9a65eae2ec15f3aaefac0b for customer: 6a9a565f148a67d916290d56
+[2026-09-04 12:02:26] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:02:26] [INFO] INFO
+[2026-09-04 12:02:26] [INFO] Successfully retrieved 4 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:02:26] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:02:26] [INFO] INFO
+[2026-09-04 12:02:26] [INFO] Successfully retrieved 4 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:02:49] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:02:49] [INFO] INFO
+[2026-09-04 12:02:49] [INFO] INFO
+[2026-09-04 12:02:49] [INFO] Successfully retrieved 1 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:02:49] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:02:49] [INFO] Successfully retrieved 1 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:02:55] [INFO] Delete request received for service ID: 6a9a65eae2ec15f3aaefac0b
+[2026-09-04 12:02:55] [INFO] Service deleted successfully for ID: 6a9a65eae2ec15f3aaefac0b
+[2026-09-04 12:03:01] [INFO] Add extra service request received.
+[2026-09-04 12:03:01] [INFO] Extra service added successfully with ID: 6a9a661de2ec15f3aaefac0c for customer: 6a9a565f148a67d916290d56
+[2026-09-04 12:03:13] [INFO] INFO
+[2026-09-04 12:03:13] [INFO] INFO
+[2026-09-04 12:03:22] [INFO] INFO
+[2026-09-04 12:03:22] [INFO] INFO
+[2026-09-04 12:03:27] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:03:27] [INFO] INFO
+[2026-09-04 12:03:27] [INFO] Successfully retrieved 1 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:03:27] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:03:27] [INFO] INFO
+[2026-09-04 12:03:27] [INFO] Successfully retrieved 1 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:03:35] [INFO] Add extra service request received.
+[2026-09-04 12:03:35] [INFO] Extra service added successfully with ID: 6a9a663fe2ec15f3aaefac0e for customer: 6a9a565f148a67d916290d56
+[2026-09-04 12:07:17] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:07:17] [INFO] INFO
+[2026-09-04 12:07:17] [INFO] INFO
+[2026-09-04 12:07:17] [INFO] Successfully retrieved 2 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:07:17] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:07:17] [INFO] Successfully retrieved 2 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:07:32] [INFO] Delete request received for service ID: 6a9a661de2ec15f3aaefac0c
+[2026-09-04 12:07:32] [INFO] Service deleted successfully for ID: 6a9a661de2ec15f3aaefac0c
+[2026-09-04 12:07:34] [INFO] Delete request received for service ID: 6a9a663fe2ec15f3aaefac0e
+[2026-09-04 12:07:34] [INFO] Service deleted successfully for ID: 6a9a663fe2ec15f3aaefac0e
+[2026-09-04 12:07:40] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:07:40] [INFO] Successfully retrieved 0 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:07:40] [INFO] INFO
+[2026-09-04 12:07:40] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:07:40] [INFO] INFO
+[2026-09-04 12:07:40] [INFO] Successfully retrieved 0 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:07:44] [INFO] Add extra service request received.
+[2026-09-04 12:07:44] [INFO] Extra service added successfully with ID: 6a9a6738e2ec15f3aaefac0f for customer: 6a9a565f148a67d916290d56
+[2026-09-04 12:07:45] [INFO] Update request received for service ID: 6a9a6738e2ec15f3aaefac0f
+[2026-09-04 12:07:46] [INFO] Service updated successfully for ID: 6a9a6738e2ec15f3aaefac0f
+[2026-09-04 12:07:52] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:07:52] [INFO] INFO
+[2026-09-04 12:07:52] [INFO] Successfully retrieved 1 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:07:52] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:07:52] [INFO] INFO
+[2026-09-04 12:07:52] [INFO] Successfully retrieved 1 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:07:56] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:07:56] [INFO] INFO
+[2026-09-04 12:07:56] [INFO] INFO
+[2026-09-04 12:07:56] [INFO] Successfully retrieved 1 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:07:56] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:07:56] [INFO] Successfully retrieved 1 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:08:04] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:08:04] [INFO] INFO
+[2026-09-04 12:08:04] [INFO] Successfully retrieved 1 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:08:04] [INFO] Fetching services for specific customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:08:04] [INFO] INFO
+[2026-09-04 12:08:04] [INFO] Successfully retrieved 1 services for customer ID: 6a9a565f148a67d916290d56
+[2026-09-04 12:08:10] [INFO] Add extra service request received.
+[2026-09-04 12:08:10] [INFO] Extra service added successfully with ID: 6a9a6752e2ec15f3aaefac10 for customer: 6a9a565f148a67d916290d56
+[2026-09-04 12:08:12] [INFO] Update request received for service ID: 6a9a6752e2ec15f3aaefac10
+[2026-09-04 12:08:12] [INFO] Service updated successfully for ID: 6a9a6752e2ec15f3aaefac10
+[2026-09-04 12:13:30] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:13:30] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:13:30] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:13:30] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:13:30] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:13:30] [INFO] Admin user already exists
+[2026-09-04 12:13:41] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:13:41] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:13:41] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:13:41] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:13:41] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:13:41] [INFO] Admin user already exists
+[2026-09-04 12:13:46] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:13:46] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:13:46] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:13:46] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:13:47] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:13:47] [INFO] Admin user already exists
+[2026-09-04 12:14:00] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:14:00] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:14:00] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:14:00] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:14:00] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:14:01] [INFO] Admin user already exists
+[2026-09-04 12:14:11] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:14:11] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:14:11] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:14:11] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:14:12] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:14:12] [INFO] Admin user already exists
+[2026-09-04 12:14:33] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:14:33] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:14:33] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:14:33] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:14:33] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:14:34] [INFO] Admin user already exists
+[2026-09-04 12:17:53] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:17:53] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:17:53] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:17:53] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:17:53] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:17:54] [INFO] Admin user already exists
+[2026-09-04 12:18:36] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:18:36] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:18:36] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:18:36] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:18:36] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:18:37] [INFO] Admin user already exists
+[2026-09-04 12:18:42] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:18:42] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:18:42] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:18:42] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:18:42] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:18:42] [INFO] Admin user already exists
+[2026-09-04 12:22:41] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:22:41] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:22:41] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:22:41] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:22:41] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:22:41] [INFO] Admin user already exists
+[2026-09-04 12:22:47] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:22:47] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:22:47] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:22:47] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:22:47] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:22:47] [INFO] Admin user already exists
+[2026-09-04 12:22:54] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:22:54] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:22:54] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:22:54] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:22:55] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:22:55] [INFO] Admin user already exists
+[2026-09-04 12:23:22] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:23:22] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:23:22] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:23:22] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:23:22] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:23:23] [INFO] Admin user already exists
+[2026-09-04 12:23:26] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:23:26] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:23:26] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:23:26] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:23:26] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:23:27] [INFO] Admin user already exists
+[2026-09-04 12:25:00] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:25:00] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:25:00] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:25:00] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:25:00] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:25:01] [INFO] Admin user already exists
+[2026-09-04 12:25:11] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:25:11] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:25:11] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:25:11] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:25:11] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:25:12] [INFO] Admin user already exists
+[2026-09-04 12:25:46] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:25:46] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:25:46] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:25:46] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:25:46] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:25:47] [INFO] Admin user already exists
+[2026-09-04 12:25:55] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:25:55] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:25:55] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:25:55] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:25:55] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:25:55] [INFO] Admin user already exists
+[2026-09-04 12:26:03] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:26:03] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:26:03] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:26:03] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:26:03] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:26:03] [INFO] Admin user already exists
+[2026-09-04 12:26:07] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:26:07] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:26:07] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:26:07] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:26:07] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:26:08] [INFO] Admin user already exists
+[2026-09-04 12:26:39] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:26:39] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:26:39] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:26:39] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:26:39] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:26:39] [INFO] Admin user already exists
+[2026-09-04 12:26:45] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:26:45] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:26:45] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:26:45] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:26:45] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:26:45] [INFO] Admin user already exists
+[2026-09-04 12:26:49] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:26:49] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:26:49] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:26:49] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:26:49] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:26:49] [INFO] Admin user already exists
+[2026-09-04 12:26:53] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:26:53] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:26:53] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:26:53] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:26:53] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:26:53] [INFO] Admin user already exists
+[2026-09-04 12:26:55] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:26:55] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:26:55] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:26:55] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:26:55] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:26:56] [INFO] Admin user already exists
+[2026-09-04 12:26:58] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:26:58] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:26:58] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:26:58] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:26:59] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:26:59] [INFO] Admin user already exists
+[2026-09-04 12:27:01] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:27:01] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:27:01] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:27:01] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:27:02] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:27:02] [INFO] Admin user already exists
+[2026-09-04 12:27:04] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:27:04] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:27:04] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:27:04] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:27:04] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:27:04] [INFO] Admin user already exists
+[2026-09-04 12:27:31] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:27:31] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:27:31] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:27:31] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:27:32] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:27:32] [INFO] Admin user already exists
+[2026-09-04 12:27:39] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:27:39] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:27:39] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:27:39] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:27:39] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:27:39] [INFO] Admin user already exists
+[2026-09-04 12:27:41] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:27:41] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:27:41] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:27:41] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:27:41] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:27:41] [INFO] Admin user already exists
+[2026-09-04 12:27:49] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:27:49] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:27:49] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:27:49] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:27:49] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:27:50] [INFO] Admin user already exists
+[2026-09-04 12:28:10] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:28:10] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:28:10] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:28:10] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:28:10] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:28:10] [INFO] Admin user already exists
+[2026-09-04 12:28:16] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:28:16] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:28:16] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:28:16] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:28:16] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:28:16] [INFO] Admin user already exists
+[2026-09-04 12:28:21] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:28:21] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:28:21] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:28:21] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:28:21] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:28:21] [INFO] Admin user already exists
+[2026-09-04 12:28:31] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:28:31] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:28:31] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:28:31] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:28:31] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:28:33] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 12:28:33] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 12:28:33] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 12:28:33] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 12:28:33] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 12:28:33] [INFO] Admin user already exists
+[2026-09-04 12:36:52] [INFO] Food service added successfully for customer 6a9a565f148a67d916290d56: Porotta with Chicken Curry (Qty: 1)
+[2026-09-04 12:36:52] [INFO] Food service added successfully for customer 6a9a565f148a67d916290d56: Clay Pot Chicken Biryani (Qty: 1)
+[2026-09-04 12:37:19] [INFO] Food service record deleted successfully: 6a9a6e0c508810f5c1882f87
+[2026-09-04 12:45:09] [INFO] INFO
+[2026-09-04 12:54:23] [INFO] INFO
+[2026-09-04 12:55:23] [INFO] INFO
+[2026-09-04 12:55:23] [INFO] INFO
+[2026-09-04 12:55:24] [INFO] INFO
+[2026-09-04 12:55:24] [INFO] INFO
+[2026-09-04 12:57:26] [INFO] INFO
+[2026-09-04 12:57:26] [INFO] INFO
+[2026-09-04 12:57:28] [INFO] INFO
+[2026-09-04 12:57:28] [INFO] INFO
+[2026-09-04 12:58:38] [INFO] INFO
+[2026-09-04 12:58:38] [INFO] INFO
+[2026-09-04 13:00:25] [INFO] INFO
+[2026-09-04 13:00:25] [INFO] INFO
+[2026-09-04 13:00:26] [INFO] INFO
+[2026-09-04 13:00:26] [INFO] INFO
+[2026-09-04 13:01:58] [INFO] INFO
+[2026-09-04 13:01:58] [INFO] INFO
+[2026-09-04 13:02:53] [INFO] INFO
+[2026-09-04 13:02:53] [INFO] INFO
+[2026-09-04 13:02:56] [INFO] INFO
+[2026-09-04 13:02:56] [INFO] INFO
+[2026-09-04 13:02:59] [INFO] INFO
+[2026-09-04 13:02:59] [INFO] INFO
+[2026-09-04 13:03:21] [INFO] INFO
+[2026-09-04 13:03:21] [INFO] INFO
+[2026-09-04 13:06:08] [INFO] INFO
+[2026-09-04 13:06:08] [INFO] INFO
+[2026-09-04 13:42:29] [INFO] INFO
+[2026-09-04 13:42:29] [INFO] INFO
+[2026-09-04 14:16:21] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 14:16:21] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 14:16:21] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 14:16:21] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 14:16:21] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 14:16:22] [INFO] Admin user already exists
+[2026-09-04 14:23:00] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 14:23:00] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 14:23:00] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 14:23:00] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 14:23:00] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 14:23:01] [INFO] Admin user already exists
+[2026-09-04 14:23:09] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 14:23:09] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 14:23:09] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 14:23:09] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 14:23:09] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 14:23:09] [INFO] Admin user already exists
+[2026-09-04 14:23:39] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 14:23:39] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 14:23:39] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 14:23:39] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 14:23:39] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 14:23:39] [INFO] Admin user already exists
+[2026-09-04 14:23:47] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 14:23:47] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 14:23:47] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 14:23:47] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 14:23:47] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 14:23:47] [INFO] Admin user already exists
+[2026-09-04 14:24:57] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 14:24:57] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 14:24:57] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 14:24:57] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 14:24:57] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 14:24:57] [INFO] Admin user already exists
+[2026-09-04 14:25:05] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 14:25:05] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 14:25:05] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 14:25:05] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 14:25:05] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 14:25:05] [INFO] Admin user already exists
+[2026-09-04 14:38:04] [INFO] INFO
+[2026-09-04 14:38:04] [INFO] INFO
+[2026-09-04 14:38:05] [INFO] INFO
+[2026-09-04 14:38:05] [INFO] INFO
+[2026-09-04 14:38:06] [INFO] INFO
+[2026-09-04 14:38:06] [INFO] INFO
+[2026-09-04 14:38:07] [INFO] INFO
+[2026-09-04 14:38:07] [INFO] INFO
+[2026-09-04 14:38:10] [INFO] INFO
+[2026-09-04 14:38:10] [INFO] INFO
+[2026-09-04 14:38:11] [INFO] INFO
+[2026-09-04 14:38:11] [INFO] INFO
+[2026-09-04 14:38:14] [INFO] INFO
+[2026-09-04 14:38:14] [INFO] INFO
+[2026-09-04 14:38:22] [INFO] INFO
+[2026-09-04 14:38:22] [INFO] INFO
+[2026-09-04 14:38:24] [INFO] INFO
+[2026-09-04 14:38:24] [INFO] INFO
+[2026-09-04 14:38:30] [INFO] INFO
+[2026-09-04 14:38:30] [INFO] INFO
+[2026-09-04 14:40:21] [INFO] INFO
+[2026-09-04 14:40:21] [INFO] INFO
+[2026-09-04 14:40:21] [INFO] INFO
+[2026-09-04 14:40:22] [INFO] INFO
+[2026-09-04 15:04:02] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 15:04:02] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 15:04:02] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 15:04:02] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 15:04:03] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 15:04:03] [INFO] Admin user already exists
+[2026-09-04 15:25:33] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 15:25:33] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 15:25:33] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 15:25:33] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 15:25:33] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 15:25:34] [INFO] Admin user already exists
+[2026-09-04 15:26:24] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 15:26:24] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 15:26:24] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 15:26:24] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 15:26:24] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 15:26:24] [INFO] Admin user already exists
+[2026-09-04 15:26:43] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 15:26:43] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 15:26:43] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 15:26:43] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 15:26:43] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 15:26:43] [INFO] Admin user already exists
+[2026-09-04 15:29:40] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 15:29:40] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 15:29:40] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 15:29:40] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 15:29:40] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 15:29:41] [INFO] Admin user already exists
+[2026-09-04 15:31:32] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 15:31:32] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 15:31:32] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 15:31:32] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 15:31:32] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 15:31:32] [INFO] Admin user already exists
+[2026-09-04 15:34:49] [INFO] [Auth Verify] Authentication token not found
+[2026-09-04 15:34:49] [INFO] [Auth Verify] Authentication token not found
+[2026-09-04 15:35:41] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 15:35:41] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 15:35:41] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 15:35:41] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 15:35:42] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 15:35:42] [INFO] Admin user already exists
+[2026-09-04 15:35:55] [INFO] [Auth Verify] Authentication token not found
+[2026-09-04 15:35:55] [INFO] [Auth Verify] Authentication token not found
+[2026-09-04 15:36:54] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 15:36:54] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 15:36:54] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 15:36:54] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 15:36:55] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 15:36:55] [INFO] Admin user already exists
+[2026-09-04 15:36:59] [INFO] [Auth Verify] Authentication token not found
+[2026-09-04 15:36:59] [INFO] [Auth Verify] Authentication token not found
+[2026-09-04 15:37:08] [INFO] [Auth Verify] Authentication token not found
+[2026-09-04 15:37:09] [INFO] [Auth Verify] Authentication token not found
+[2026-09-04 15:40:24] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 15:40:24] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 15:40:24] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 15:40:24] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 15:40:24] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 15:40:25] [INFO] Admin user already exists
+[2026-09-04 15:40:32] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 15:40:32] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 15:40:32] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 15:40:32] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 15:40:33] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 15:40:33] [INFO] Admin user already exists
+[2026-09-04 15:40:41] [INFO] [Auth Verify] Authentication token not found
+[2026-09-04 15:40:41] [INFO] [Auth Verify] Authentication token not found
+[2026-09-04 15:40:42] [INFO] OTP sent to jayamweb.designer2@gmail.com
+[2026-09-04 15:40:47] [INFO] OTP sent to jayamweb.designer2@gmail.com
+[2026-09-04 15:41:22] [INFO] INFO
+[2026-09-04 15:41:22] [INFO] INFO
+[2026-09-04 15:41:24] [INFO] INFO
+[2026-09-04 15:41:24] [INFO] INFO
+[2026-09-04 15:41:25] [INFO] INFO
+[2026-09-04 15:41:25] [INFO] INFO
+[2026-09-04 15:41:27] [INFO] INFO
+[2026-09-04 15:41:27] [INFO] INFO
+[2026-09-04 15:45:29] [INFO] INFO
+[2026-09-04 15:45:29] [INFO] INFO
+[2026-09-04 15:45:32] [INFO] INFO
+[2026-09-04 15:45:32] [INFO] INFO
+[2026-09-04 15:45:35] [INFO] INFO
+[2026-09-04 15:45:35] [INFO] INFO
+[2026-09-04 15:46:19] [INFO] INFO
+[2026-09-04 15:46:19] [INFO] INFO
+[2026-09-04 15:47:13] [INFO] INFO
+[2026-09-04 15:47:13] [INFO] INFO
+[2026-09-04 15:48:02] [INFO] INFO
+[2026-09-04 15:48:02] [INFO] INFO
+[2026-09-04 15:57:41] [INFO] INFO
+[2026-09-04 15:57:41] [INFO] INFO
+[2026-09-04 15:59:02] [INFO] INFO
+[2026-09-04 15:59:02] [INFO] INFO
+[2026-09-04 16:02:23] [INFO] INFO
+[2026-09-04 16:02:23] [INFO] INFO
+[2026-09-04 16:02:24] [INFO] INFO
+[2026-09-04 16:02:24] [INFO] INFO
+[2026-09-04 16:03:22] [INFO] INFO
+[2026-09-04 16:03:22] [INFO] INFO
+[2026-09-04 16:03:57] [INFO] INFO
+[2026-09-04 16:03:57] [INFO] INFO
+[2026-09-04 16:04:00] [INFO] INFO
+[2026-09-04 16:04:00] [INFO] INFO
+[2026-09-04 16:04:50] [INFO] INFO
+[2026-09-04 16:04:50] [INFO] INFO
+[2026-09-04 16:04:53] [INFO] INFO
+[2026-09-04 16:04:53] [INFO] INFO
+[2026-09-04 16:05:41] [INFO] INFO
+[2026-09-04 16:05:41] [INFO] INFO
+[2026-09-04 16:09:43] [INFO] INFO
+[2026-09-04 16:09:43] [INFO] INFO
+[2026-09-04 16:09:46] [INFO] INFO
+[2026-09-04 16:09:46] [INFO] INFO
+[2026-09-04 16:09:50] [INFO] INFO
+[2026-09-04 16:09:50] [INFO] INFO
+[2026-09-04 16:09:50] [INFO] INFO
+[2026-09-04 16:09:50] [INFO] INFO
+[2026-09-04 16:09:51] [INFO] INFO
+[2026-09-04 16:09:52] [INFO] INFO
+[2026-09-04 16:09:52] [INFO] INFO
+[2026-09-04 16:09:52] [INFO] INFO
+[2026-09-04 16:09:53] [INFO] INFO
+[2026-09-04 16:09:53] [INFO] INFO
+[2026-09-04 16:09:54] [INFO] INFO
+[2026-09-04 16:09:54] [INFO] INFO
+[2026-09-04 16:10:42] [INFO] INFO
+[2026-09-04 16:10:42] [INFO] INFO
+[2026-09-04 16:10:57] [INFO] INFO
+[2026-09-04 16:10:58] [INFO] INFO
+[2026-09-04 16:16:09] [INFO] Customer booking created successfully for: Manikandan (Room: 102)
+[2026-09-04 16:16:10] [INFO] INFO
+[2026-09-04 16:16:10] [INFO] INFO
+[2026-09-04 16:16:10] [INFO] INFO
+[2026-09-04 16:22:19] [INFO] INFO
+[2026-09-04 16:22:19] [INFO] INFO
+[2026-09-04 16:22:19] [INFO] INFO
+[2026-09-04 16:22:24] [INFO] INFO
+[2026-09-04 16:22:24] [INFO] INFO
+[2026-09-04 16:22:24] [INFO] INFO
+[2026-09-04 16:22:28] [INFO] INFO
+[2026-09-04 16:22:28] [INFO] INFO
+[2026-09-04 16:22:28] [INFO] INFO
+[2026-09-04 16:22:32] [INFO] INFO
+[2026-09-04 16:22:32] [INFO] INFO
+[2026-09-04 16:22:32] [INFO] INFO
+[2026-09-04 16:23:13] [INFO] INFO
+[2026-09-04 16:23:13] [INFO] INFO
+[2026-09-04 16:23:18] [INFO] INFO
+[2026-09-04 16:23:18] [INFO] INFO
+[2026-09-04 16:24:42] [INFO] Customer booking created successfully for: Manikandan (Room: 101)
+[2026-09-04 16:24:42] [INFO] INFO
+[2026-09-04 16:24:42] [INFO] INFO
+[2026-09-04 16:24:42] [INFO] INFO
+[2026-09-04 16:25:22] [INFO] INFO
+[2026-09-04 16:25:22] [INFO] INFO
+[2026-09-04 16:30:28] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 16:30:28] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 16:30:28] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 16:30:28] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 16:30:29] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 16:30:29] [INFO] Admin user already exists
+[2026-09-04 16:30:48] [INFO] INFO
+[2026-09-04 16:30:48] [INFO] INFO
+[2026-09-04 16:30:48] [INFO] INFO
+[2026-09-04 16:30:48] [INFO] INFO
+[2026-09-04 16:31:32] [INFO] Customer booking created successfully for: Manikandan (Room: 103)
+[2026-09-04 16:31:32] [INFO] INFO
+[2026-09-04 16:31:32] [INFO] INFO
+[2026-09-04 16:31:32] [INFO] INFO
+[2026-09-04 16:31:43] [INFO] INFO
+[2026-09-04 16:31:43] [INFO] INFO
+[2026-09-04 16:32:09] [INFO] Food service added successfully for customer 6a9aa50cc287ff3fd340d282: Porotta with Chicken Curry (Qty: 1)
+[2026-09-04 16:32:48] [INFO] Food service record deleted successfully: 6a9aa531c287ff3fd340d283
+[2026-09-04 16:33:16] [INFO] INFO
+[2026-09-04 16:33:16] [INFO] INFO
+[2026-09-04 16:35:41] [INFO] INFO
+[2026-09-04 16:35:41] [INFO] INFO
+[2026-09-04 16:36:29] [INFO] INFO
+[2026-09-04 16:36:29] [INFO] INFO
+[2026-09-04 16:36:42] [INFO] Food service added successfully for customer 6a9aa50cc287ff3fd340d282: Chicken Parotta (Qty: 1)
+[2026-09-04 16:36:56] [INFO] Fetching services for specific customer ID: 6a9aa50cc287ff3fd340d282
+[2026-09-04 16:36:56] [INFO] Successfully retrieved 0 services for customer ID: 6a9aa50cc287ff3fd340d282
+[2026-09-04 16:36:56] [INFO] Fetching services for specific customer ID: 6a9aa50cc287ff3fd340d282
+[2026-09-04 16:36:56] [INFO] INFO
+[2026-09-04 16:36:56] [INFO] Successfully retrieved 0 services for customer ID: 6a9aa50cc287ff3fd340d282
+[2026-09-04 16:36:56] [INFO] INFO
+[2026-09-04 16:37:01] [INFO] Add extra service request received.
+[2026-09-04 16:37:01] [INFO] Extra service added successfully with ID: 6a9aa655c287ff3fd340d285 for customer: 6a9aa50cc287ff3fd340d282
+[2026-09-04 16:37:02] [INFO] Update request received for service ID: 6a9aa655c287ff3fd340d285
+[2026-09-04 16:37:02] [INFO] Service updated successfully for ID: 6a9aa655c287ff3fd340d285
+[2026-09-04 16:56:53] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 16:56:53] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 16:56:53] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 16:56:53] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 16:56:53] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 16:56:53] [INFO] Admin user already exists
+[2026-09-04 16:56:59] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 16:56:59] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 16:56:59] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 16:56:59] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 16:57:00] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 16:57:00] [INFO] Admin user already exists
+[2026-09-04 16:58:01] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 16:58:01] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 16:58:01] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 16:58:01] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 16:58:02] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 16:58:02] [INFO] Admin user already exists
+[2026-09-04 16:58:08] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 16:58:08] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 16:58:08] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 16:58:08] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 16:58:08] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 16:58:09] [INFO] Admin user already exists
+[2026-09-04 16:58:20] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 16:58:20] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 16:58:20] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 16:58:20] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 16:58:21] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 16:58:21] [INFO] Admin user already exists
+[2026-09-04 16:59:23] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 16:59:23] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 16:59:23] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 16:59:23] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 16:59:24] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 16:59:24] [INFO] Admin user already exists
+[2026-09-04 17:01:50] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 17:01:50] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 17:01:50] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 17:01:50] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 17:01:50] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 17:01:50] [INFO] Admin user already exists
+[2026-09-04 17:02:26] [INFO] INFO
+[2026-09-04 17:02:26] [INFO] INFO
+[2026-09-04 17:10:44] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 17:10:44] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 17:10:44] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 17:10:44] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 17:10:44] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 17:10:45] [INFO] Admin user already exists
+[2026-09-04 17:10:50] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 17:10:50] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 17:10:50] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 17:10:50] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 17:10:50] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 17:10:50] [INFO] Admin user already exists
+[2026-09-04 17:10:53] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 17:10:53] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 17:10:53] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 17:10:53] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 17:10:54] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 17:10:54] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 17:10:54] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 17:10:54] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 17:10:55] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 17:10:55] [INFO] Admin user already exists
+[2026-09-04 17:11:00] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 17:11:00] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 17:11:00] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 17:11:00] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 17:11:01] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 17:11:01] [INFO] Admin user already exists
+[2026-09-04 17:11:06] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 17:11:06] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 17:11:06] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 17:11:06] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 17:11:06] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 17:11:07] [INFO] Admin user already exists
+[2026-09-04 17:11:28] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 17:11:28] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 17:11:28] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 17:11:28] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 17:11:28] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 17:11:29] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 17:11:29] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 17:11:29] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 17:11:29] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 17:11:29] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 17:11:30] [INFO] Admin user already exists
+[2026-09-04 17:14:17] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 17:14:17] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 17:14:17] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 17:14:17] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 17:14:17] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 17:14:17] [INFO] Admin user already exists
+[2026-09-04 17:19:36] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 17:19:36] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 17:19:36] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 17:19:36] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 17:19:36] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 17:19:36] [INFO] Admin user already exists
+[2026-09-04 17:19:40] [INFO] INFO
+[2026-09-04 17:19:40] [INFO] INFO
+[2026-09-04 17:29:09] [INFO] INFO
+[2026-09-04 17:29:09] [INFO] INFO
+[2026-09-04 17:29:39] [INFO] INFO
+[2026-09-04 17:29:39] [INFO] INFO
+[2026-09-04 17:31:50] [INFO] INFO
+[2026-09-04 17:31:50] [INFO] INFO
+[2026-09-04 17:32:30] [INFO] INFO
+[2026-09-04 17:32:30] [INFO] INFO
+[2026-09-04 17:32:36] [INFO] INFO
+[2026-09-04 17:32:36] [INFO] INFO
+[2026-09-04 17:33:51] [INFO] INFO
+[2026-09-04 17:33:51] [INFO] INFO
+[2026-09-04 17:56:22] [INFO] INFO
+[2026-09-04 17:56:23] [INFO] INFO
+[2026-09-04 17:59:10] [INFO] INFO
+[2026-09-04 17:59:10] [INFO] INFO
+[2026-09-04 18:02:20] [INFO] INFO
+[2026-09-04 18:02:21] [INFO] INFO
+[2026-09-04 18:03:55] [INFO] INFO
+[2026-09-04 18:03:55] [INFO] INFO
+[2026-09-04 18:09:04] [INFO] INFO
+[2026-09-04 18:09:04] [INFO] INFO
+[2026-09-04 18:12:20] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 18:12:20] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 18:12:20] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 18:12:20] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 18:12:21] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 18:12:21] [INFO] Admin user already exists
+[2026-09-04 18:12:39] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 18:12:39] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 18:12:39] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 18:12:39] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 18:12:39] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 18:12:39] [INFO] Admin user already exists
+[2026-09-04 18:12:44] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 18:12:44] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 18:12:44] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 18:12:44] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 18:12:44] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 18:12:44] [INFO] Admin user already exists
+[2026-09-04 18:12:49] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 18:12:49] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 18:12:49] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 18:12:49] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 18:12:49] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 18:12:49] [INFO] Admin user already exists
+[2026-09-04 18:12:53] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 18:12:53] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 18:12:53] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 18:12:53] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 18:12:53] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 18:12:53] [INFO] Admin user already exists
+[2026-09-04 18:13:20] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 18:13:20] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 18:13:20] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 18:13:20] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 18:13:20] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 18:13:20] [INFO] Admin user already exists
+[2026-09-04 18:14:11] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 18:14:11] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 18:14:11] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 18:14:11] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 18:14:11] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 18:14:11] [INFO] Admin user already exists
+[2026-09-04 18:14:14] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 18:14:14] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 18:14:14] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 18:14:14] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 18:14:14] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 18:14:14] [INFO] Admin user already exists
+[2026-09-04 18:14:22] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 18:14:22] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 18:14:22] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 18:14:22] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 18:14:23] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 18:14:23] [INFO] Admin user already exists
+[2026-09-04 18:20:37] [INFO] Fetching services for specific customer ID: 6a9aa50cc287ff3fd340d282
+[2026-09-04 18:20:37] [INFO] Successfully retrieved 1 services for customer ID: 6a9aa50cc287ff3fd340d282
+[2026-09-04 18:21:04] [INFO] INFO
+[2026-09-04 18:21:04] [INFO] INFO
+[2026-09-04 18:21:08] [INFO] Fetching services for specific customer ID: 6a9aa50cc287ff3fd340d282
+[2026-09-04 18:21:08] [INFO] Successfully retrieved 1 services for customer ID: 6a9aa50cc287ff3fd340d282
+[2026-09-04 18:21:08] [INFO] Fetching services for specific customer ID: 6a9aa50cc287ff3fd340d282
+[2026-09-04 18:21:08] [INFO] Successfully retrieved 1 services for customer ID: 6a9aa50cc287ff3fd340d282
+[2026-09-04 18:24:18] [INFO] INFO
+[2026-09-04 18:24:18] [INFO] INFO
+[2026-09-04 18:25:08] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 18:25:08] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 18:25:08] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 18:25:08] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 18:25:08] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 18:25:08] [INFO] Admin user already exists
+[2026-09-04 18:25:17] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 18:25:17] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 18:25:17] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 18:25:17] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 18:25:17] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 18:25:17] [INFO] Admin user already exists
+[2026-09-04 18:39:04] [INFO] INFO
+[2026-09-04 18:39:04] [INFO] INFO
+[2026-09-04 18:39:07] [INFO] INFO
+[2026-09-04 18:39:07] [INFO] INFO
+[2026-09-04 18:39:07] [INFO] INFO
+[2026-09-04 18:39:11] [INFO] INFO
+[2026-09-04 18:39:11] [INFO] INFO
+[2026-09-04 18:39:11] [INFO] INFO
+[2026-09-04 18:39:16] [INFO] INFO
+[2026-09-04 18:39:16] [INFO] INFO
+[2026-09-04 18:39:57] [ERROR] Error creating customer record: Customer validation failed: perNightRoomPrice: Path `perNightRoomPrice` is required.
+[2026-09-04 18:40:02] [ERROR] Error creating customer record: Customer validation failed: perNightRoomPrice: Path `perNightRoomPrice` is required.
+[2026-09-04 18:40:02] [ERROR] Error creating customer record: Customer validation failed: perNightRoomPrice: Path `perNightRoomPrice` is required.
+[2026-09-04 18:45:18] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 18:45:18] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 18:45:18] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 18:45:18] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 18:45:18] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 18:45:18] [INFO] Admin user already exists
+[2026-09-04 18:46:29] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 18:46:29] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 18:46:29] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 18:46:29] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 18:46:29] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 18:46:29] [INFO] Admin user already exists
+[2026-09-04 18:46:48] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 18:46:48] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 18:46:48] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 18:46:48] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 18:46:48] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 18:46:48] [INFO] Admin user already exists
+[2026-09-04 18:46:57] [INFO] INFO
+[2026-09-04 18:46:57] [INFO] INFO
+[2026-09-04 18:46:57] [INFO] INFO
+[2026-09-04 18:46:57] [INFO] INFO
+[2026-09-04 18:47:30] [INFO] Customer booking created successfully for: Manikandan (Room: 101)
+[2026-09-04 18:47:30] [INFO] INFO
+[2026-09-04 18:47:30] [INFO] INFO
+[2026-09-04 18:47:30] [INFO] INFO
+[2026-09-04 18:47:43] [INFO] Fetching services for specific customer ID: 6a9ac4ea7069443fc6ce4064
+[2026-09-04 18:47:43] [INFO] Successfully retrieved 0 services for customer ID: 6a9ac4ea7069443fc6ce4064
+[2026-09-04 18:47:43] [INFO] Fetching services for specific customer ID: 6a9ac4ea7069443fc6ce4064
+[2026-09-04 18:47:43] [INFO] Successfully retrieved 0 services for customer ID: 6a9ac4ea7069443fc6ce4064
+[2026-09-04 18:51:27] [INFO] Fetching services for specific customer ID: 6a9ac4ea7069443fc6ce4064
+[2026-09-04 18:51:27] [INFO] Successfully retrieved 0 services for customer ID: 6a9ac4ea7069443fc6ce4064
+[2026-09-04 18:51:27] [INFO] Fetching services for specific customer ID: 6a9ac4ea7069443fc6ce4064
+[2026-09-04 18:51:27] [INFO] Successfully retrieved 0 services for customer ID: 6a9ac4ea7069443fc6ce4064
+[2026-09-04 18:53:09] [INFO] INFO
+[2026-09-04 18:53:09] [INFO] INFO
+[2026-09-04 18:53:10] [INFO] INFO
+[2026-09-04 18:53:10] [INFO] INFO
+[2026-09-04 18:53:44] [INFO] Customer booking created successfully for: Manikandan (Room: 102)
+[2026-09-04 18:53:44] [INFO] INFO
+[2026-09-04 18:53:44] [INFO] INFO
+[2026-09-04 18:53:44] [INFO] INFO
+[2026-09-04 18:53:50] [INFO] Fetching services for specific customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 18:53:50] [INFO] Successfully retrieved 0 services for customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 18:53:50] [INFO] Fetching services for specific customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 18:53:50] [INFO] Successfully retrieved 0 services for customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 18:58:14] [INFO] INFO
+[2026-09-04 18:58:14] [INFO] INFO
+[2026-09-04 18:58:30] [INFO] INFO
+[2026-09-04 18:58:30] [INFO] INFO
+[2026-09-04 18:59:00] [INFO] Fetching services for specific customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 18:59:00] [INFO] Successfully retrieved 0 services for customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 18:59:00] [INFO] Fetching services for specific customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 18:59:00] [INFO] Successfully retrieved 0 services for customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 18:59:18] [INFO] Fetching services for specific customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 18:59:18] [INFO] INFO
+[2026-09-04 18:59:18] [INFO] Successfully retrieved 0 services for customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 18:59:18] [INFO] Fetching services for specific customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 18:59:18] [INFO] Successfully retrieved 0 services for customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 18:59:18] [INFO] INFO
+[2026-09-04 18:59:21] [INFO] Add extra service request received.
+[2026-09-04 18:59:21] [INFO] Extra service added successfully with ID: 6a9ac7b17069443fc6ce4066 for customer: 6a9ac6607069443fc6ce4065
+[2026-09-04 18:59:24] [INFO] Food service added successfully for customer 6a9ac6607069443fc6ce4065: Chicken Parotta (Qty: 1)
+[2026-09-04 18:59:26] [INFO] Fetching services for specific customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 18:59:26] [INFO] Successfully retrieved 1 services for customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 18:59:26] [INFO] Fetching services for specific customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 18:59:26] [INFO] Successfully retrieved 1 services for customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 19:06:15] [INFO] Fetching services for specific customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 19:06:15] [INFO] Successfully retrieved 1 services for customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 19:06:15] [INFO] Fetching services for specific customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 19:06:15] [INFO] Successfully retrieved 1 services for customer ID: 6a9ac6607069443fc6ce4065
+[2026-09-04 19:06:50] [INFO] INFO
+[2026-09-04 19:06:50] [INFO] INFO
+[2026-09-04 19:06:56] [INFO] INFO
+[2026-09-04 19:06:56] [INFO] INFO
+[2026-09-04 19:08:46] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-04 19:08:46] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-04 19:08:46] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-04 19:08:46] [INFO] [Server] Server started and listening on port 5000
+[2026-09-04 19:08:46] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-04 19:08:46] [INFO] Admin user already exists

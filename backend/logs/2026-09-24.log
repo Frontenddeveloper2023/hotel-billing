@@ -1,0 +1,1561 @@
+[2026-09-24 10:01:55] [INFO] [OVERSTAY] Overstay cron initialized successfully
+[2026-09-24 10:01:55] [INFO] [OVERSTAY] Cron schedule: Every minute
+[2026-09-24 10:01:55] [INFO] [OVERSTAY] Cron timezone: Asia/Kolkata
+[2026-09-24 10:01:55] [INFO] ==================================================
+[2026-09-24 10:01:55] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:01:55] [INFO] ==================================================
+[2026-09-24 10:01:55] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:01:55
+[2026-09-24 10:01:55] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:01:56] [INFO] [SUBSCRIPTION] Subscription expiry cron initialized successfully
+[2026-09-24 10:01:56] [INFO] [SUBSCRIPTION] Cron schedule: Every minute
+[2026-09-24 10:01:56] [INFO] [SUBSCRIPTION] Cron timezone: Asia/Kolkata
+[2026-09-24 10:01:56] [INFO] ==================================================
+[2026-09-24 10:01:56] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:01:56] [INFO] ==================================================
+[2026-09-24 10:01:56] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:01:59] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-24 10:01:59] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-24 10:01:59] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-24 10:01:59] [INFO] [Server] Server started and listening on port 5000
+[2026-09-24 10:01:59] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-24 10:01:59] [INFO] Admin user already exists
+[2026-09-24 10:01:59] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:01:59] [INFO] ==================================================
+[2026-09-24 10:01:59] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:01:59] [INFO] ==================================================
+[2026-09-24 10:01:59] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:01:59] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:01:59] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:01:59] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:01:59] [INFO] ==================================================
+[2026-09-24 10:01:59] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:01:59] [INFO] ==================================================
+[2026-09-24 10:02:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:02:00] [INFO] ==================================================
+[2026-09-24 10:02:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:02:00] [INFO] ==================================================
+[2026-09-24 10:02:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:02:00
+[2026-09-24 10:02:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:02:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:02:00] [INFO] ==================================================
+[2026-09-24 10:02:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:02:00] [INFO] ==================================================
+[2026-09-24 10:02:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:02:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:02:00] [INFO] ==================================================
+[2026-09-24 10:02:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:02:00] [INFO] ==================================================
+[2026-09-24 10:02:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:02:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:02:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:02:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:02:00] [INFO] ==================================================
+[2026-09-24 10:02:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:02:00] [INFO] ==================================================
+[2026-09-24 10:02:04] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: dashboard
+[2026-09-24 10:02:04] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: dashboard
+[2026-09-24 10:02:07] [INFO] INFO
+[2026-09-24 10:02:08] [INFO] INFO
+[2026-09-24 10:02:09] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: users
+[2026-09-24 10:02:09] [INFO] [getAllUsers] Loaded 1 users | Hotel ID: 6ab25e07e55f936bf5d96c1a | Branch ID: 6ab362ff650ebb542a4e860e | Subscription: 6ab25e07e55f936bf5d96c1b
+[2026-09-24 10:02:09] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: users
+[2026-09-24 10:02:09] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: users
+[2026-09-24 10:02:09] [INFO] [getAllUsers] Loaded 1 users | Hotel ID: 6ab25e07e55f936bf5d96c1a | Branch ID: 6ab362ff650ebb542a4e860e | Subscription: 6ab25e07e55f936bf5d96c1b
+[2026-09-24 10:02:09] [INFO] [getMySubscription] Loaded subscription 6ab25e07e55f936bf5d96c1b | Hotel ID: 6ab25e07e55f936bf5d96c1a
+[2026-09-24 10:02:09] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: users
+[2026-09-24 10:02:09] [INFO] [Permission Verify] Forbidden. User: 6ab362ff650ebb542a4e860f, Role: hotelOwner, Permission: plans
+[2026-09-24 10:02:09] [INFO] [getMySubscription] Loaded subscription 6ab25e07e55f936bf5d96c1b | Hotel ID: 6ab25e07e55f936bf5d96c1a
+[2026-09-24 10:02:09] [INFO] [Permission Verify] Forbidden. User: 6ab362ff650ebb542a4e860f, Role: hotelOwner, Permission: plans
+[2026-09-24 10:02:12] [INFO] INFO
+[2026-09-24 10:02:12] [INFO] INFO
+[2026-09-24 10:02:13] [INFO] INFO
+[2026-09-24 10:02:13] [INFO] INFO
+[2026-09-24 10:02:13] [INFO] [CUSTOMER] Fetched all customers | Hotel: 6ab25e07e55f936bf5d96c1a | Branch: 6ab362ff650ebb542a4e860e | Count: 2
+[2026-09-24 10:02:13] [INFO] [CUSTOMER] Fetched all customers | Hotel: 6ab25e07e55f936bf5d96c1a | Branch: 6ab362ff650ebb542a4e860e | Count: 2
+[2026-09-24 10:02:14] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:02:14] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:02:14] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:02:14] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:02:14] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:02:14] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:02:16] [INFO] INFO
+[2026-09-24 10:02:16] [INFO] INFO
+[2026-09-24 10:02:17] [INFO] INFO
+[2026-09-24 10:02:17] [INFO] INFO
+[2026-09-24 10:02:17] [INFO] [CUSTOMER] Fetched all customers | Hotel: 6ab25e07e55f936bf5d96c1a | Branch: 6ab362ff650ebb542a4e860e | Count: 2
+[2026-09-24 10:02:17] [INFO] [CUSTOMER] Fetched all customers | Hotel: 6ab25e07e55f936bf5d96c1a | Branch: 6ab362ff650ebb542a4e860e | Count: 2
+[2026-09-24 10:03:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:03:00] [INFO] ==================================================
+[2026-09-24 10:03:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:03:00] [INFO] ==================================================
+[2026-09-24 10:03:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:03:00
+[2026-09-24 10:03:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:03:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:03:00] [INFO] ==================================================
+[2026-09-24 10:03:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:03:00] [INFO] ==================================================
+[2026-09-24 10:03:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:03:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:03:00] [INFO] ==================================================
+[2026-09-24 10:03:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:03:00] [INFO] ==================================================
+[2026-09-24 10:03:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:03:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:03:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:03:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:03:00] [INFO] ==================================================
+[2026-09-24 10:03:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:03:00] [INFO] ==================================================
+[2026-09-24 10:04:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:04:00] [INFO] ==================================================
+[2026-09-24 10:04:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:04:00] [INFO] ==================================================
+[2026-09-24 10:04:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:04:00
+[2026-09-24 10:04:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:04:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:04:00] [INFO] ==================================================
+[2026-09-24 10:04:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:04:00] [INFO] ==================================================
+[2026-09-24 10:04:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:04:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:04:00] [INFO] ==================================================
+[2026-09-24 10:04:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:04:00] [INFO] ==================================================
+[2026-09-24 10:04:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:04:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:04:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:04:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:04:00] [INFO] ==================================================
+[2026-09-24 10:04:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:04:00] [INFO] ==================================================
+[2026-09-24 10:05:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:05:00] [INFO] ==================================================
+[2026-09-24 10:05:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:05:00] [INFO] ==================================================
+[2026-09-24 10:05:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:05:00
+[2026-09-24 10:05:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:05:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:05:00] [INFO] ==================================================
+[2026-09-24 10:05:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:05:00] [INFO] ==================================================
+[2026-09-24 10:05:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:05:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:05:00] [INFO] ==================================================
+[2026-09-24 10:05:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:05:00] [INFO] ==================================================
+[2026-09-24 10:05:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:05:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:05:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:05:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:05:00] [INFO] ==================================================
+[2026-09-24 10:05:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:05:00] [INFO] ==================================================
+[2026-09-24 10:06:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:06:00] [INFO] ==================================================
+[2026-09-24 10:06:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:06:00] [INFO] ==================================================
+[2026-09-24 10:06:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:06:00
+[2026-09-24 10:06:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:06:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:06:00] [INFO] ==================================================
+[2026-09-24 10:06:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:06:00] [INFO] ==================================================
+[2026-09-24 10:06:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:06:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:06:00] [INFO] ==================================================
+[2026-09-24 10:06:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:06:00] [INFO] ==================================================
+[2026-09-24 10:06:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:06:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:06:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:06:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:06:00] [INFO] ==================================================
+[2026-09-24 10:06:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:06:00] [INFO] ==================================================
+[2026-09-24 10:07:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:07:00] [INFO] ==================================================
+[2026-09-24 10:07:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:07:00] [INFO] ==================================================
+[2026-09-24 10:07:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:07:00
+[2026-09-24 10:07:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:07:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:07:00] [INFO] ==================================================
+[2026-09-24 10:07:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:07:00] [INFO] ==================================================
+[2026-09-24 10:07:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:07:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:07:00] [INFO] ==================================================
+[2026-09-24 10:07:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:07:00] [INFO] ==================================================
+[2026-09-24 10:07:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:07:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:07:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:07:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:07:00] [INFO] ==================================================
+[2026-09-24 10:07:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:07:00] [INFO] ==================================================
+[2026-09-24 10:07:29] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:07:29] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:07:29] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:07:29] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:07:29] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:07:29] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:07:30] [INFO] INFO
+[2026-09-24 10:07:30] [INFO] INFO
+[2026-09-24 10:07:31] [INFO] [CUSTOMER] Fetched all customers | Hotel: 6ab25e07e55f936bf5d96c1a | Branch: 6ab362ff650ebb542a4e860e | Count: 2
+[2026-09-24 10:07:31] [INFO] [CUSTOMER] Fetched all customers | Hotel: 6ab25e07e55f936bf5d96c1a | Branch: 6ab362ff650ebb542a4e860e | Count: 2
+[2026-09-24 10:07:31] [INFO] INFO
+[2026-09-24 10:07:31] [INFO] INFO
+[2026-09-24 10:07:41] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:07:41] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:07:41] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:07:41] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:07:41] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:07:41] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:07:42] [INFO] INFO
+[2026-09-24 10:07:42] [INFO] INFO
+[2026-09-24 10:07:42] [INFO] [CUSTOMER] Fetched all customers | Hotel: 6ab25e07e55f936bf5d96c1a | Branch: 6ab362ff650ebb542a4e860e | Count: 2
+[2026-09-24 10:07:42] [INFO] [CUSTOMER] Fetched all customers | Hotel: 6ab25e07e55f936bf5d96c1a | Branch: 6ab362ff650ebb542a4e860e | Count: 2
+[2026-09-24 10:07:42] [INFO] INFO
+[2026-09-24 10:07:43] [INFO] INFO
+[2026-09-24 10:07:44] [INFO] INFO
+[2026-09-24 10:07:44] [INFO] [CUSTOMER] Fetched all customers | Hotel: 6ab25e07e55f936bf5d96c1a | Branch: 6ab362ff650ebb542a4e860e | Count: 2
+[2026-09-24 10:07:44] [INFO] INFO
+[2026-09-24 10:07:44] [INFO] [CUSTOMER] Fetched all customers | Hotel: 6ab25e07e55f936bf5d96c1a | Branch: 6ab362ff650ebb542a4e860e | Count: 2
+[2026-09-24 10:08:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:08:00] [INFO] ==================================================
+[2026-09-24 10:08:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:08:00] [INFO] ==================================================
+[2026-09-24 10:08:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:08:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:08:00] [INFO] ==================================================
+[2026-09-24 10:08:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:08:00] [INFO] ==================================================
+[2026-09-24 10:08:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:08:00
+[2026-09-24 10:08:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:08:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:08:00] [INFO] ==================================================
+[2026-09-24 10:08:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:08:00] [INFO] ==================================================
+[2026-09-24 10:08:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:08:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:08:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:08:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:08:00] [INFO] ==================================================
+[2026-09-24 10:08:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:08:00] [INFO] ==================================================
+[2026-09-24 10:09:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:09:00] [INFO] ==================================================
+[2026-09-24 10:09:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:09:00] [INFO] ==================================================
+[2026-09-24 10:09:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:09:00
+[2026-09-24 10:09:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:09:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:09:00] [INFO] ==================================================
+[2026-09-24 10:09:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:09:00] [INFO] ==================================================
+[2026-09-24 10:09:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:09:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:09:00] [INFO] ==================================================
+[2026-09-24 10:09:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:09:00] [INFO] ==================================================
+[2026-09-24 10:09:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:09:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:09:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:09:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:09:00] [INFO] ==================================================
+[2026-09-24 10:09:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:09:00] [INFO] ==================================================
+[2026-09-24 10:09:10] [INFO] INFO
+[2026-09-24 10:09:10] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: customer
+[2026-09-24 10:09:10] [INFO] [CUSTOMER] Updated successfully | Hotel: 6ab25e07e55f936bf5d96c1a | Branch: 6ab362ff650ebb542a4e860e | Customer: 6ab3a448c7216a2f04a93861
+[2026-09-24 10:09:10] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:09:10] [INFO] [Booking] Create booking started. userId=6ab362ff650ebb542a4e860f
+[2026-09-24 10:09:10] [INFO] [Booking] Create booking tenant resolved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:09:10] [INFO] [Booking] Checking customer. customerId=6ab3a448c7216a2f04a93861, hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:09:10] [INFO] [Booking] Customer validated. customerId=6ab3a448c7216a2f04a93861, hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:09:10] [INFO] [Booking] Validating 1 room(s). hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:09:10] [INFO] [Booking] Checking room. roomId=6ab37016c189e90513381420, hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:09:10] [INFO] [Booking] All rooms validated. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, roomCount=1
+[2026-09-24 10:09:10] [INFO] [Booking] Creating booking document. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, customerId=6ab3a448c7216a2f04a93861
+[2026-09-24 10:09:10] [INFO] [Booking] Booking created successfully. bookingId=6ab4a96eb7dfff4386e1f571, hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, customerId=6ab3a448c7216a2f04a93861
+[2026-09-24 10:09:10] [INFO] [Booking] Updating physical rooms to booked. bookingId=6ab4a96eb7dfff4386e1f571, hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:09:10] [INFO] [Booking] Physical rooms marked as booked. bookingId=6ab4a96eb7dfff4386e1f571, hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:09:10] [INFO] [Booking] Create booking completed. bookingId=6ab4a96eb7dfff4386e1f571, hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:09:10] [INFO] INFO
+[2026-09-24 10:09:11] [INFO] INFO
+[2026-09-24 10:09:13] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:09:13] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:09:13] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=1
+[2026-09-24 10:09:13] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:09:13] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:09:13] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=1
+[2026-09-24 10:09:19] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: settings
+[2026-09-24 10:09:19] [INFO] [Settings] GET started. userId=6ab362ff650ebb542a4e860f
+[2026-09-24 10:09:19] [INFO] [Settings] Tenant resolved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:09:19] [INFO] [Settings] Verifying branch ownership. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:09:19] [INFO] [Settings] Searching settings. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:09:19] [INFO] [Settings] GET successful. settingsId=6ab36f8ac189e9051338141f, hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:09:19] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: settings
+[2026-09-24 10:09:19] [INFO] [Settings] GET started. userId=6ab362ff650ebb542a4e860f
+[2026-09-24 10:09:19] [INFO] [Settings] Tenant resolved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:09:19] [INFO] [Settings] Verifying branch ownership. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:09:19] [INFO] [Settings] Searching settings. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:09:19] [INFO] [Settings] GET successful. settingsId=6ab36f8ac189e9051338141f, hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:10:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:10:00] [INFO] ==================================================
+[2026-09-24 10:10:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:10:00] [INFO] ==================================================
+[2026-09-24 10:10:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:10:00
+[2026-09-24 10:10:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:10:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:10:00] [INFO] ==================================================
+[2026-09-24 10:10:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:10:00] [INFO] ==================================================
+[2026-09-24 10:10:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:10:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:10:00] [INFO] ==================================================
+[2026-09-24 10:10:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:10:00] [INFO] ==================================================
+[2026-09-24 10:10:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:10:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:10:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:10:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:10:00] [INFO] ==================================================
+[2026-09-24 10:10:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:10:00] [INFO] ==================================================
+[2026-09-24 10:10:20] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: reports
+[2026-09-24 10:10:20] [INFO] [Checkout Bill][CB-1790224820993-9OK9YM][START] Checkout bill creation started.
+[2026-09-24 10:10:20] [INFO] [Checkout Bill][CB-1790224820993-9OK9YM][TENANT] hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, userId=6ab362ff650ebb542a4e860f
+[2026-09-24 10:10:20] [INFO] [Checkout Bill][CB-1790224820993-9OK9YM][BOOKINGS] Requested bookingIds=6ab4a96eb7dfff4386e1f571
+[2026-09-24 10:10:21] [INFO] [Checkout Bill][CB-1790224820993-9OK9YM][CHECKOUT] actualDate=2026-09-24, actualTime=11:00 AM, minutes=660
+[2026-09-24 10:10:21] [INFO] [Checkout Bill][CB-1790224820993-9OK9YM][DB] Fetching bookings for tenant.
+[2026-09-24 10:10:21] [INFO] [Checkout Bill][CB-1790224820993-9OK9YM][DB] Successfully loaded 1 booking(s).
+[2026-09-24 10:10:21] [INFO] [Checkout Bill][CB-1790224820993-9OK9YM][DB] Fetching billing settings.
+[2026-09-24 10:10:21] [INFO] [Checkout Bill][CB-1790224820993-9OK9YM][SETTINGS] GST=true, gstRate=8, beforePolicy=percentage:50, afterPolicy=full:0
+[2026-09-24 10:10:21] [INFO] [Checkout Bill][CB-1790224820993-9OK9YM][CALC] Processing booking=6ab4a96eb7dfff4386e1f571
+[2026-09-24 10:10:21] [INFO] [Checkout Bill][CB-1790224820993-9OK9YM][ROOM] booking=6ab4a96eb7dfff4386e1f571, room=111, rate=250, bookedNights=3, completedFullDays=4, extraFullDays=1, extraFullDayCharge=250, checkoutPolicy=125, roomTotal=1125
+[2026-09-24 10:10:21] [INFO] [Checkout Bill][CB-1790224820993-9OK9YM][BOOKING TOTAL] booking=6ab4a96eb7dfff4386e1f571, bookedNights=3, extraFullDays=1, extraFullDayCharge=250, checkoutPolicy=125, roomSubtotal=1125, food=0, roomService=0, availableAdvance=250
+[2026-09-24 10:10:21] [INFO] [Checkout Bill][CB-1790224820993-9OK9YM][ADVANCE] booking=6ab4a96eb7dfff4386e1f571, initialPaid=250, used=0, available=250
+[2026-09-24 10:10:21] [INFO] [Checkout Bill][CB-1790224820993-9OK9YM][TOTAL] bookedNights=3, extraFullDays=1, extraFullDayCharge=250, checkoutPolicy=125, roomSubtotal=1125, foodTotal=0, roomServiceTotal=0, subtotal=1125, gst=90, grandTotal=1215, advance=250, balance=965
+[2026-09-24 10:10:21] [INFO] [Checkout Bill][CB-1790224820993-9OK9YM][DB] Creating CheckoutBill document.
+[2026-09-24 10:10:21] [INFO] [Checkout Bill][CB-1790224820993-9OK9YM][DB] CheckoutBill saved successfully. billId=6ab4a9b5b7dfff4386e1f57a
+[2026-09-24 10:10:21] [INFO] [Checkout Bill][CB-1790224820993-9OK9YM][SUCCESS] Checkout bill created successfully. billId=6ab4a9b5b7dfff4386e1f57a, bookingCount=1, bookedNights=3, extraFullDays=1, checkoutPolicy=125, grandTotal=1215
+[2026-09-24 10:10:21] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:10:21] [INFO] [Booking] Finding booking for checkout. bookingId=6ab4a96eb7dfff4386e1f571, hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:10:21] [INFO] [Booking] 1 room(s) selected for checkout. bookingId=6ab4a96eb7dfff4386e1f571, hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:10:21] [INFO] [Booking] Saving checkout. bookingId=6ab4a96eb7dfff4386e1f571, checkedOutRooms=1, initialPaymentUsed=250, checkoutPayment=965, hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:10:21] [INFO] [Booking] Physical rooms released. bookingId=6ab4a96eb7dfff4386e1f571, roomCount=1, hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:10:21] [INFO] [Booking] Checkout completed. bookingId=6ab4a96eb7dfff4386e1f571, hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:10:21] [INFO] [Invoice] Create invoice request received. userId=6ab362ff650ebb542a4e860f
+[2026-09-24 10:10:21] [INFO] [Invoice] Tenant verified for invoice creation. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, userId=6ab362ff650ebb542a4e860f
+[2026-09-24 10:10:21] [INFO] [Invoice] Verifying customer ownership. customerId=6ab3a448c7216a2f04a93861, hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:10:21] [INFO] [Invoice] Customer ownership verified. customerId=6ab3a448c7216a2f04a93861
+[2026-09-24 10:10:21] [INFO] [Invoice] Starting invoice number generation. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, year=2026
+[2026-09-24 10:10:21] [INFO] [Invoice] Branch code resolved. branchId=6ab362ff650ebb542a4e860e, branchCode=MAIN
+[2026-09-24 10:10:21] [INFO] [Invoice] Existing invoice sequence checked. highestExistingSequence=4
+[2026-09-24 10:10:21] [INFO] [Invoice] Invoice number generated successfully. invoiceNo=INV-MAIN-2026-000005, invoiceYear=2026, invoiceSequence=5
+[2026-09-24 10:10:21] [INFO] [Invoice] Room snapshot prepared. invoiceNo=INV-MAIN-2026-000005, roomCount=1
+[2026-09-24 10:10:21] [INFO] [Invoice] Base room rent calculated. roomRent=750, roomCount=1
+[2026-09-24 10:10:21] [INFO] [Invoice] Extra stay charges resolved. extraNightsStayed=1, extraFullDayCharge=250, checkoutPolicyCharge=125
+[2026-09-24 10:10:21] [INFO] [Invoice] Total extra stay charges calculated. extraFullDay=250, checkoutPolicy=125, extraTime=0, damage=0, other=0, total=375
+[2026-09-24 10:10:21] [INFO] [Invoice] Invoice items prepared. roomItems=1, extraFullDay=250, checkoutPolicy=125, itemCount=3
+[2026-09-24 10:10:21] [INFO] [Invoice] Checkout billing normalized. invoiceNo=INV-MAIN-2026-000005, roomRent=750, checkoutPolicyCharge=125, foodTotal=0, roomServiceTotal=0, subtotal=1125, gst=90, grandTotal=1215, advancePaid=250, currentPayment=965, totalPaid=1215, balanceDue=0
+[2026-09-24 10:10:21] [INFO] [Invoice] Creating invoice document. invoiceNo=INV-MAIN-2026-000005, hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, customerId=6ab3a448c7216a2f04a93861
+[2026-09-24 10:10:21] [INFO] [Invoice] Invoice created successfully. invoiceId=6ab4a9b5b7dfff4386e1f583, invoiceNo=INV-MAIN-2026-000005, grandTotal=1215, totalPaid=1215, balanceDue=0
+[2026-09-24 10:10:21] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:10:21] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:10:21] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:10:21] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:10:21] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:10:21] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:11:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:11:00] [INFO] ==================================================
+[2026-09-24 10:11:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:11:00] [INFO] ==================================================
+[2026-09-24 10:11:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:11:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:11:00] [INFO] ==================================================
+[2026-09-24 10:11:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:11:00] [INFO] ==================================================
+[2026-09-24 10:11:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:11:00
+[2026-09-24 10:11:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:11:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:11:00] [INFO] ==================================================
+[2026-09-24 10:11:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:11:00] [INFO] ==================================================
+[2026-09-24 10:11:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:11:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:11:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:11:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:11:00] [INFO] ==================================================
+[2026-09-24 10:11:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:11:00] [INFO] ==================================================
+[2026-09-24 10:11:22] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:11:22] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:11:22] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:12:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:12:00] [INFO] ==================================================
+[2026-09-24 10:12:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:12:00] [INFO] ==================================================
+[2026-09-24 10:12:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:12:00
+[2026-09-24 10:12:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:12:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:12:00] [INFO] ==================================================
+[2026-09-24 10:12:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:12:00] [INFO] ==================================================
+[2026-09-24 10:12:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:12:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:12:00] [INFO] ==================================================
+[2026-09-24 10:12:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:12:00] [INFO] ==================================================
+[2026-09-24 10:12:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:12:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:12:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:12:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:12:00] [INFO] ==================================================
+[2026-09-24 10:12:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:12:00] [INFO] ==================================================
+[2026-09-24 10:12:22] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:12:22] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:12:22] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:13:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:13:00] [INFO] ==================================================
+[2026-09-24 10:13:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:13:00] [INFO] ==================================================
+[2026-09-24 10:13:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:13:00
+[2026-09-24 10:13:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:13:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:13:00] [INFO] ==================================================
+[2026-09-24 10:13:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:13:00] [INFO] ==================================================
+[2026-09-24 10:13:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:13:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:13:00] [INFO] ==================================================
+[2026-09-24 10:13:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:13:00] [INFO] ==================================================
+[2026-09-24 10:13:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:13:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:13:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:13:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:13:00] [INFO] ==================================================
+[2026-09-24 10:13:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:13:00] [INFO] ==================================================
+[2026-09-24 10:13:22] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:13:22] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:13:22] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:14:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:14:00] [INFO] ==================================================
+[2026-09-24 10:14:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:14:00] [INFO] ==================================================
+[2026-09-24 10:14:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:14:00
+[2026-09-24 10:14:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:14:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:14:00] [INFO] ==================================================
+[2026-09-24 10:14:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:14:00] [INFO] ==================================================
+[2026-09-24 10:14:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:14:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:14:00] [INFO] ==================================================
+[2026-09-24 10:14:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:14:00] [INFO] ==================================================
+[2026-09-24 10:14:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:14:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:14:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:14:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:14:00] [INFO] ==================================================
+[2026-09-24 10:14:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:14:00] [INFO] ==================================================
+[2026-09-24 10:14:22] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:14:22] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:14:22] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:15:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:15:00] [INFO] ==================================================
+[2026-09-24 10:15:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:15:00] [INFO] ==================================================
+[2026-09-24 10:15:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:15:00
+[2026-09-24 10:15:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:15:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:15:00] [INFO] ==================================================
+[2026-09-24 10:15:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:15:00] [INFO] ==================================================
+[2026-09-24 10:15:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:15:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:15:00] [INFO] ==================================================
+[2026-09-24 10:15:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:15:00] [INFO] ==================================================
+[2026-09-24 10:15:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:15:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:15:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:15:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:15:00] [INFO] ==================================================
+[2026-09-24 10:15:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:15:00] [INFO] ==================================================
+[2026-09-24 10:15:22] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:15:22] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:15:22] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:16:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:16:00] [INFO] ==================================================
+[2026-09-24 10:16:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:16:00] [INFO] ==================================================
+[2026-09-24 10:16:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:16:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:16:00] [INFO] ==================================================
+[2026-09-24 10:16:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:16:00] [INFO] ==================================================
+[2026-09-24 10:16:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:16:00
+[2026-09-24 10:16:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:16:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:16:00] [INFO] ==================================================
+[2026-09-24 10:16:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:16:00] [INFO] ==================================================
+[2026-09-24 10:16:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:16:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:16:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:16:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:16:00] [INFO] ==================================================
+[2026-09-24 10:16:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:16:00] [INFO] ==================================================
+[2026-09-24 10:16:22] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:16:22] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:16:22] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:17:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:17:00] [INFO] ==================================================
+[2026-09-24 10:17:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:17:00] [INFO] ==================================================
+[2026-09-24 10:17:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:17:00
+[2026-09-24 10:17:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:17:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:17:00] [INFO] ==================================================
+[2026-09-24 10:17:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:17:00] [INFO] ==================================================
+[2026-09-24 10:17:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:17:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:17:00] [INFO] ==================================================
+[2026-09-24 10:17:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:17:00] [INFO] ==================================================
+[2026-09-24 10:17:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:17:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:17:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:17:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:17:00] [INFO] ==================================================
+[2026-09-24 10:17:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:17:00] [INFO] ==================================================
+[2026-09-24 10:17:33] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:17:33] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:17:33] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:18:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:18:00] [INFO] ==================================================
+[2026-09-24 10:18:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:18:00] [INFO] ==================================================
+[2026-09-24 10:18:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:18:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:18:00] [INFO] ==================================================
+[2026-09-24 10:18:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:18:00] [INFO] ==================================================
+[2026-09-24 10:18:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:18:00
+[2026-09-24 10:18:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:18:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:18:00] [INFO] ==================================================
+[2026-09-24 10:18:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:18:00] [INFO] ==================================================
+[2026-09-24 10:18:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:18:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:18:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:18:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:18:00] [INFO] ==================================================
+[2026-09-24 10:18:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:18:00] [INFO] ==================================================
+[2026-09-24 10:18:33] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:18:33] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:18:33] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:19:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:19:00] [INFO] ==================================================
+[2026-09-24 10:19:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:19:00] [INFO] ==================================================
+[2026-09-24 10:19:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:19:00
+[2026-09-24 10:19:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:19:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:19:00] [INFO] ==================================================
+[2026-09-24 10:19:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:19:00] [INFO] ==================================================
+[2026-09-24 10:19:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:19:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:19:00] [INFO] ==================================================
+[2026-09-24 10:19:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:19:00] [INFO] ==================================================
+[2026-09-24 10:19:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:19:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:19:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:19:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:19:00] [INFO] ==================================================
+[2026-09-24 10:19:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:19:00] [INFO] ==================================================
+[2026-09-24 10:19:22] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:19:22] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:19:22] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:20:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:20:00] [INFO] ==================================================
+[2026-09-24 10:20:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:20:00] [INFO] ==================================================
+[2026-09-24 10:20:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:20:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:20:00] [INFO] ==================================================
+[2026-09-24 10:20:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:20:00] [INFO] ==================================================
+[2026-09-24 10:20:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:20:00
+[2026-09-24 10:20:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:20:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:20:00] [INFO] ==================================================
+[2026-09-24 10:20:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:20:00] [INFO] ==================================================
+[2026-09-24 10:20:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:20:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:20:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:20:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:20:00] [INFO] ==================================================
+[2026-09-24 10:20:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:20:00] [INFO] ==================================================
+[2026-09-24 10:20:22] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:20:22] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:20:22] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:21:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:21:00] [INFO] ==================================================
+[2026-09-24 10:21:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:21:00] [INFO] ==================================================
+[2026-09-24 10:21:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:21:00
+[2026-09-24 10:21:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:21:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:21:00] [INFO] ==================================================
+[2026-09-24 10:21:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:21:00] [INFO] ==================================================
+[2026-09-24 10:21:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:21:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:21:00] [INFO] ==================================================
+[2026-09-24 10:21:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:21:00] [INFO] ==================================================
+[2026-09-24 10:21:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:21:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:21:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:21:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:21:00] [INFO] ==================================================
+[2026-09-24 10:21:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:21:00] [INFO] ==================================================
+[2026-09-24 10:21:23] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:21:23] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:21:23] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:22:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:22:00] [INFO] ==================================================
+[2026-09-24 10:22:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:22:00] [INFO] ==================================================
+[2026-09-24 10:22:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:22:00
+[2026-09-24 10:22:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:22:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:22:00] [INFO] ==================================================
+[2026-09-24 10:22:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:22:00] [INFO] ==================================================
+[2026-09-24 10:22:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:22:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:22:00] [INFO] ==================================================
+[2026-09-24 10:22:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:22:00] [INFO] ==================================================
+[2026-09-24 10:22:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:22:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:22:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:22:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:22:00] [INFO] ==================================================
+[2026-09-24 10:22:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:22:00] [INFO] ==================================================
+[2026-09-24 10:22:24] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:22:24] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:22:24] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:23:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:23:00] [INFO] ==================================================
+[2026-09-24 10:23:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:23:00] [INFO] ==================================================
+[2026-09-24 10:23:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:23:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:23:00] [INFO] ==================================================
+[2026-09-24 10:23:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:23:00] [INFO] ==================================================
+[2026-09-24 10:23:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:23:00
+[2026-09-24 10:23:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:23:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:23:00] [INFO] ==================================================
+[2026-09-24 10:23:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:23:00] [INFO] ==================================================
+[2026-09-24 10:23:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:23:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:23:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:23:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:23:00] [INFO] ==================================================
+[2026-09-24 10:23:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:23:00] [INFO] ==================================================
+[2026-09-24 10:23:25] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:23:25] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:23:25] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:24:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:24:00] [INFO] ==================================================
+[2026-09-24 10:24:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:24:00] [INFO] ==================================================
+[2026-09-24 10:24:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:24:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:24:00] [INFO] ==================================================
+[2026-09-24 10:24:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:24:00] [INFO] ==================================================
+[2026-09-24 10:24:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:24:00
+[2026-09-24 10:24:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:24:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:24:00] [INFO] ==================================================
+[2026-09-24 10:24:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:24:00] [INFO] ==================================================
+[2026-09-24 10:24:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:24:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:24:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:24:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:24:00] [INFO] ==================================================
+[2026-09-24 10:24:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:24:00] [INFO] ==================================================
+[2026-09-24 10:24:26] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:24:26] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:24:26] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:25:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:25:00] [INFO] ==================================================
+[2026-09-24 10:25:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:25:00] [INFO] ==================================================
+[2026-09-24 10:25:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:25:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:25:00] [INFO] ==================================================
+[2026-09-24 10:25:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:25:00] [INFO] ==================================================
+[2026-09-24 10:25:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:25:00
+[2026-09-24 10:25:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:25:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:25:00] [INFO] ==================================================
+[2026-09-24 10:25:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:25:00] [INFO] ==================================================
+[2026-09-24 10:25:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:25:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:25:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:25:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:25:00] [INFO] ==================================================
+[2026-09-24 10:25:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:25:00] [INFO] ==================================================
+[2026-09-24 10:25:27] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:25:27] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:25:27] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:26:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:26:00] [INFO] ==================================================
+[2026-09-24 10:26:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:26:00] [INFO] ==================================================
+[2026-09-24 10:26:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:26:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:26:00] [INFO] ==================================================
+[2026-09-24 10:26:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:26:00] [INFO] ==================================================
+[2026-09-24 10:26:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:26:00
+[2026-09-24 10:26:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:26:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:26:00] [INFO] ==================================================
+[2026-09-24 10:26:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:26:00] [INFO] ==================================================
+[2026-09-24 10:26:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:26:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:26:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:26:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:26:00] [INFO] ==================================================
+[2026-09-24 10:26:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:26:00] [INFO] ==================================================
+[2026-09-24 10:26:28] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:26:28] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:26:28] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:27:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:27:00] [INFO] ==================================================
+[2026-09-24 10:27:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:27:00] [INFO] ==================================================
+[2026-09-24 10:27:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:27:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:27:00] [INFO] ==================================================
+[2026-09-24 10:27:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:27:00] [INFO] ==================================================
+[2026-09-24 10:27:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:27:00
+[2026-09-24 10:27:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:27:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:27:00] [INFO] ==================================================
+[2026-09-24 10:27:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:27:00] [INFO] ==================================================
+[2026-09-24 10:27:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:27:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:27:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:27:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:27:00] [INFO] ==================================================
+[2026-09-24 10:27:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:27:00] [INFO] ==================================================
+[2026-09-24 10:27:29] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:27:29] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:27:29] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:28:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:28:00] [INFO] ==================================================
+[2026-09-24 10:28:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:28:00] [INFO] ==================================================
+[2026-09-24 10:28:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:28:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:28:00] [INFO] ==================================================
+[2026-09-24 10:28:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:28:00] [INFO] ==================================================
+[2026-09-24 10:28:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:28:00
+[2026-09-24 10:28:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:28:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:28:00] [INFO] ==================================================
+[2026-09-24 10:28:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:28:00] [INFO] ==================================================
+[2026-09-24 10:28:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:28:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:28:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:28:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:28:00] [INFO] ==================================================
+[2026-09-24 10:28:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:28:00] [INFO] ==================================================
+[2026-09-24 10:28:30] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:28:30] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:28:30] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:29:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:29:00] [INFO] ==================================================
+[2026-09-24 10:29:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:29:00] [INFO] ==================================================
+[2026-09-24 10:29:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:29:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:29:00] [INFO] ==================================================
+[2026-09-24 10:29:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:29:00] [INFO] ==================================================
+[2026-09-24 10:29:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:29:00
+[2026-09-24 10:29:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:29:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:29:00] [INFO] ==================================================
+[2026-09-24 10:29:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:29:00] [INFO] ==================================================
+[2026-09-24 10:29:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:29:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:29:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:29:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:29:00] [INFO] ==================================================
+[2026-09-24 10:29:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:29:00] [INFO] ==================================================
+[2026-09-24 10:29:31] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:29:31] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:29:31] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:30:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:30:00] [INFO] ==================================================
+[2026-09-24 10:30:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:30:00] [INFO] ==================================================
+[2026-09-24 10:30:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:30:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:30:00] [INFO] ==================================================
+[2026-09-24 10:30:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:30:00] [INFO] ==================================================
+[2026-09-24 10:30:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:30:00
+[2026-09-24 10:30:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:30:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:30:00] [INFO] ==================================================
+[2026-09-24 10:30:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:30:00] [INFO] ==================================================
+[2026-09-24 10:30:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:30:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:30:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:30:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:30:00] [INFO] ==================================================
+[2026-09-24 10:30:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:30:00] [INFO] ==================================================
+[2026-09-24 10:30:32] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:30:32] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:30:32] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:31:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:31:00] [INFO] ==================================================
+[2026-09-24 10:31:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:31:00] [INFO] ==================================================
+[2026-09-24 10:31:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:31:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:31:00] [INFO] ==================================================
+[2026-09-24 10:31:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:31:00] [INFO] ==================================================
+[2026-09-24 10:31:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:31:00
+[2026-09-24 10:31:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:31:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:31:00] [INFO] ==================================================
+[2026-09-24 10:31:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:31:00] [INFO] ==================================================
+[2026-09-24 10:31:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:31:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:31:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:31:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:31:00] [INFO] ==================================================
+[2026-09-24 10:31:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:31:00] [INFO] ==================================================
+[2026-09-24 10:31:33] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:31:33] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:31:33] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:32:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:32:00] [INFO] ==================================================
+[2026-09-24 10:32:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:32:00] [INFO] ==================================================
+[2026-09-24 10:32:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:32:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:32:00] [INFO] ==================================================
+[2026-09-24 10:32:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:32:00] [INFO] ==================================================
+[2026-09-24 10:32:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:32:00
+[2026-09-24 10:32:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:32:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:32:00] [INFO] ==================================================
+[2026-09-24 10:32:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:32:00] [INFO] ==================================================
+[2026-09-24 10:32:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:32:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:32:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:32:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:32:00] [INFO] ==================================================
+[2026-09-24 10:32:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:32:00] [INFO] ==================================================
+[2026-09-24 10:32:33] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:32:33] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:32:33] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:33:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:33:00] [INFO] ==================================================
+[2026-09-24 10:33:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:33:00] [INFO] ==================================================
+[2026-09-24 10:33:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:33:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:33:00] [INFO] ==================================================
+[2026-09-24 10:33:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:33:00] [INFO] ==================================================
+[2026-09-24 10:33:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:33:00
+[2026-09-24 10:33:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:33:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:33:00] [INFO] ==================================================
+[2026-09-24 10:33:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:33:00] [INFO] ==================================================
+[2026-09-24 10:33:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:33:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:33:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:33:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:33:00] [INFO] ==================================================
+[2026-09-24 10:33:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:33:00] [INFO] ==================================================
+[2026-09-24 10:33:33] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:33:33] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:33:33] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:34:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:34:00] [INFO] ==================================================
+[2026-09-24 10:34:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:34:00] [INFO] ==================================================
+[2026-09-24 10:34:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:34:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:34:00] [INFO] ==================================================
+[2026-09-24 10:34:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:34:00] [INFO] ==================================================
+[2026-09-24 10:34:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:34:00
+[2026-09-24 10:34:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:34:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:34:00] [INFO] ==================================================
+[2026-09-24 10:34:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:34:00] [INFO] ==================================================
+[2026-09-24 10:34:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:34:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:34:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:34:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:34:00] [INFO] ==================================================
+[2026-09-24 10:34:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:34:00] [INFO] ==================================================
+[2026-09-24 10:34:33] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:34:33] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:34:33] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:35:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:35:00] [INFO] ==================================================
+[2026-09-24 10:35:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:35:00] [INFO] ==================================================
+[2026-09-24 10:35:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:35:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:35:00] [INFO] ==================================================
+[2026-09-24 10:35:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:35:00] [INFO] ==================================================
+[2026-09-24 10:35:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:35:00
+[2026-09-24 10:35:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:35:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:35:00] [INFO] ==================================================
+[2026-09-24 10:35:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:35:00] [INFO] ==================================================
+[2026-09-24 10:35:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:35:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:35:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:35:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:35:00] [INFO] ==================================================
+[2026-09-24 10:35:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:35:00] [INFO] ==================================================
+[2026-09-24 10:35:33] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:35:33] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:35:33] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:36:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:36:00] [INFO] ==================================================
+[2026-09-24 10:36:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:36:00] [INFO] ==================================================
+[2026-09-24 10:36:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:36:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:36:00] [INFO] ==================================================
+[2026-09-24 10:36:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:36:00] [INFO] ==================================================
+[2026-09-24 10:36:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:36:00
+[2026-09-24 10:36:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:36:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:36:00] [INFO] ==================================================
+[2026-09-24 10:36:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:36:00] [INFO] ==================================================
+[2026-09-24 10:36:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:36:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:36:01] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:36:01] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:36:01] [INFO] ==================================================
+[2026-09-24 10:36:01] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:36:01] [INFO] ==================================================
+[2026-09-24 10:36:33] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:36:33] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:36:33] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:37:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:37:00] [INFO] ==================================================
+[2026-09-24 10:37:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:37:00] [INFO] ==================================================
+[2026-09-24 10:37:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:37:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:37:00] [INFO] ==================================================
+[2026-09-24 10:37:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:37:00] [INFO] ==================================================
+[2026-09-24 10:37:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:37:00
+[2026-09-24 10:37:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:37:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:37:00] [INFO] ==================================================
+[2026-09-24 10:37:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:37:00] [INFO] ==================================================
+[2026-09-24 10:37:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:37:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:37:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:37:01] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:37:01] [INFO] ==================================================
+[2026-09-24 10:37:01] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:37:01] [INFO] ==================================================
+[2026-09-24 10:37:33] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:37:33] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:37:33] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:38:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:38:00] [INFO] ==================================================
+[2026-09-24 10:38:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:38:00] [INFO] ==================================================
+[2026-09-24 10:38:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:38:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:38:00] [INFO] ==================================================
+[2026-09-24 10:38:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:38:00] [INFO] ==================================================
+[2026-09-24 10:38:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:38:00
+[2026-09-24 10:38:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:38:01] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:38:01] [INFO] ==================================================
+[2026-09-24 10:38:01] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:38:01] [INFO] ==================================================
+[2026-09-24 10:38:01] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:38:01] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:38:01] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:38:01] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:38:01] [INFO] ==================================================
+[2026-09-24 10:38:01] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:38:01] [INFO] ==================================================
+[2026-09-24 10:38:33] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:38:33] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:38:33] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:39:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:39:00] [INFO] ==================================================
+[2026-09-24 10:39:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:39:00] [INFO] ==================================================
+[2026-09-24 10:39:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:39:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:39:00] [INFO] ==================================================
+[2026-09-24 10:39:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:39:00] [INFO] ==================================================
+[2026-09-24 10:39:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:39:00
+[2026-09-24 10:39:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:39:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:39:00] [INFO] ==================================================
+[2026-09-24 10:39:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:39:00] [INFO] ==================================================
+[2026-09-24 10:39:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:39:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:39:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:39:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:39:00] [INFO] ==================================================
+[2026-09-24 10:39:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:39:00] [INFO] ==================================================
+[2026-09-24 10:39:33] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:39:33] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:39:33] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:40:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:40:00] [INFO] ==================================================
+[2026-09-24 10:40:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:40:00] [INFO] ==================================================
+[2026-09-24 10:40:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:40:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:40:00] [INFO] ==================================================
+[2026-09-24 10:40:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:40:00] [INFO] ==================================================
+[2026-09-24 10:40:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:40:00
+[2026-09-24 10:40:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:40:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:40:00] [INFO] ==================================================
+[2026-09-24 10:40:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:40:00] [INFO] ==================================================
+[2026-09-24 10:40:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:40:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:40:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:40:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:40:00] [INFO] ==================================================
+[2026-09-24 10:40:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:40:00] [INFO] ==================================================
+[2026-09-24 10:40:33] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:40:33] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:40:33] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:41:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:41:00] [INFO] ==================================================
+[2026-09-24 10:41:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:41:00] [INFO] ==================================================
+[2026-09-24 10:41:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:41:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:41:00] [INFO] ==================================================
+[2026-09-24 10:41:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:41:00] [INFO] ==================================================
+[2026-09-24 10:41:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:41:00
+[2026-09-24 10:41:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:41:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:41:00] [INFO] ==================================================
+[2026-09-24 10:41:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:41:00] [INFO] ==================================================
+[2026-09-24 10:41:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:41:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:41:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:41:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:41:00] [INFO] ==================================================
+[2026-09-24 10:41:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:41:00] [INFO] ==================================================
+[2026-09-24 10:41:33] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:41:33] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:41:33] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:42:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:42:00] [INFO] ==================================================
+[2026-09-24 10:42:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:42:00] [INFO] ==================================================
+[2026-09-24 10:42:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:42:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:42:00] [INFO] ==================================================
+[2026-09-24 10:42:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:42:00] [INFO] ==================================================
+[2026-09-24 10:42:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:42:00
+[2026-09-24 10:42:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:42:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:42:00] [INFO] ==================================================
+[2026-09-24 10:42:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:42:00] [INFO] ==================================================
+[2026-09-24 10:42:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:42:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:42:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:42:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:42:00] [INFO] ==================================================
+[2026-09-24 10:42:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:42:00] [INFO] ==================================================
+[2026-09-24 10:42:33] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 10:42:33] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 10:42:33] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 10:43:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 10:43:00] [INFO] ==================================================
+[2026-09-24 10:43:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 10:43:00] [INFO] ==================================================
+[2026-09-24 10:43:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 10:43:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 10:43:00] [INFO] ==================================================
+[2026-09-24 10:43:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 10:43:00] [INFO] ==================================================
+[2026-09-24 10:43:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 10:43:00
+[2026-09-24 10:43:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 10:43:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 10:43:00] [INFO] ==================================================
+[2026-09-24 10:43:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 10:43:00] [INFO] ==================================================
+[2026-09-24 10:43:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 10:43:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 10:43:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 10:43:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 10:43:00] [INFO] ==================================================
+[2026-09-24 10:43:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 10:43:00] [INFO] ==================================================
+[2026-09-24 11:09:17] [INFO] [OVERSTAY] Overstay cron initialized successfully
+[2026-09-24 11:09:17] [INFO] [OVERSTAY] Cron schedule: Every minute
+[2026-09-24 11:09:17] [INFO] [OVERSTAY] Cron timezone: Asia/Kolkata
+[2026-09-24 11:09:17] [INFO] ==================================================
+[2026-09-24 11:09:17] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 11:09:17] [INFO] ==================================================
+[2026-09-24 11:09:17] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 11:09:17
+[2026-09-24 11:09:17] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 11:09:17] [INFO] [SUBSCRIPTION] Subscription expiry cron initialized successfully
+[2026-09-24 11:09:17] [INFO] [SUBSCRIPTION] Cron schedule: Every minute
+[2026-09-24 11:09:17] [INFO] [SUBSCRIPTION] Cron timezone: Asia/Kolkata
+[2026-09-24 11:09:17] [INFO] ==================================================
+[2026-09-24 11:09:17] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 11:09:18] [INFO] ==================================================
+[2026-09-24 11:09:18] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 11:09:18] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-24 11:09:18] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-24 11:09:18] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-24 11:09:18] [INFO] [Server] Server started and listening on port 5000
+[2026-09-24 11:09:18] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-24 11:09:18] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 11:09:18] [INFO] ==================================================
+[2026-09-24 11:09:18] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 11:09:18] [INFO] ==================================================
+[2026-09-24 11:09:18] [INFO] Admin user already exists
+[2026-09-24 11:09:18] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 11:09:18] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 11:09:18] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 11:09:18] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 11:09:18] [INFO] ==================================================
+[2026-09-24 11:09:18] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 11:09:18] [INFO] ==================================================
+[2026-09-24 11:09:49] [INFO] [Auth Verify] Authentication token not found
+[2026-09-24 11:09:49] [INFO] [Auth Verify] Authentication token not found
+[2026-09-24 11:09:59] [INFO] [Auth Verify] Authentication token not found
+[2026-09-24 11:09:59] [INFO] [Auth Verify] Authentication token not found
+[2026-09-24 11:10:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 11:10:00] [INFO] ==================================================
+[2026-09-24 11:10:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 11:10:00] [INFO] ==================================================
+[2026-09-24 11:10:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 11:10:00
+[2026-09-24 11:10:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 11:10:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 11:10:00] [INFO] ==================================================
+[2026-09-24 11:10:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 11:10:00] [INFO] ==================================================
+[2026-09-24 11:10:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 11:10:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 11:10:00] [INFO] ==================================================
+[2026-09-24 11:10:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 11:10:00] [INFO] ==================================================
+[2026-09-24 11:10:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 11:10:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 11:10:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 11:10:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 11:10:00] [INFO] ==================================================
+[2026-09-24 11:10:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 11:10:00] [INFO] ==================================================
+[2026-09-24 11:10:26] [INFO] [LOGIN] Login request received for email: ganeshsubbranch@gmail.com
+[2026-09-24 11:10:29] [INFO] OTP sent to ganeshsubbranch@gmail.com
+[2026-09-24 11:10:29] [INFO] [LOGIN] OTP sent successfully to ganeshsubbranch@gmail.com
+[2026-09-24 11:10:37] [INFO] [LOGIN] OTP verified successfully. User: ganeshsubbranch@gmail.com, Role: hotelOwner, Hotel: 6ab25e07e55f936bf5d96c1a, Branch: 6ab362ff650ebb542a4e860e
+[2026-09-24 11:10:38] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: dashboard
+[2026-09-24 11:10:38] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: dashboard
+[2026-09-24 11:10:40] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: reports
+[2026-09-24 11:10:40] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: reports
+[2026-09-24 11:10:41] [INFO] INFO
+[2026-09-24 11:10:41] [INFO] INFO
+[2026-09-24 11:10:43] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: dashboard
+[2026-09-24 11:10:43] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: dashboard
+[2026-09-24 11:10:46] [INFO] INFO
+[2026-09-24 11:10:46] [INFO] INFO
+[2026-09-24 11:10:48] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 11:10:48] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 11:10:48] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 11:10:48] [INFO] [Permission Verify] Allowed. User: 6ab362ff650ebb542a4e860f, Permission: roomsBooking
+[2026-09-24 11:10:48] [INFO] [Booking] Get active bookings started. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e
+[2026-09-24 11:10:48] [INFO] [Booking] Active bookings retrieved. hotelId=6ab25e07e55f936bf5d96c1a, branchId=6ab362ff650ebb542a4e860e, count=0
+[2026-09-24 11:10:49] [INFO] INFO
+[2026-09-24 11:10:49] [INFO] INFO
+[2026-09-24 11:10:49] [INFO] [CUSTOMER] Fetched all customers | Hotel: 6ab25e07e55f936bf5d96c1a | Branch: 6ab362ff650ebb542a4e860e | Count: 2
+[2026-09-24 11:10:49] [INFO] [CUSTOMER] Fetched all customers | Hotel: 6ab25e07e55f936bf5d96c1a | Branch: 6ab362ff650ebb542a4e860e | Count: 2
+[2026-09-24 11:11:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 11:11:00] [INFO] ==================================================
+[2026-09-24 11:11:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 11:11:00] [INFO] ==================================================
+[2026-09-24 11:11:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 11:11:00
+[2026-09-24 11:11:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 11:11:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 11:11:00] [INFO] ==================================================
+[2026-09-24 11:11:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 11:11:00] [INFO] ==================================================
+[2026-09-24 11:11:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 11:11:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 11:11:00] [INFO] ==================================================
+[2026-09-24 11:11:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 11:11:00] [INFO] ==================================================
+[2026-09-24 11:11:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 11:11:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 11:11:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 11:11:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 11:11:00] [INFO] ==================================================
+[2026-09-24 11:11:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 11:11:00] [INFO] ==================================================
+[2026-09-24 11:12:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 11:12:00] [INFO] ==================================================
+[2026-09-24 11:12:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 11:12:00] [INFO] ==================================================
+[2026-09-24 11:12:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 11:12:00
+[2026-09-24 11:12:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 11:12:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 11:12:00] [INFO] ==================================================
+[2026-09-24 11:12:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 11:12:00] [INFO] ==================================================
+[2026-09-24 11:12:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 11:12:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 11:12:00] [INFO] ==================================================
+[2026-09-24 11:12:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 11:12:00] [INFO] ==================================================
+[2026-09-24 11:12:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 11:12:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 11:12:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 11:12:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 11:12:00] [INFO] ==================================================
+[2026-09-24 11:12:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 11:12:00] [INFO] ==================================================
+[2026-09-24 11:13:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 11:13:00] [INFO] ==================================================
+[2026-09-24 11:13:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 11:13:00] [INFO] ==================================================
+[2026-09-24 11:13:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 11:13:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 11:13:00] [INFO] ==================================================
+[2026-09-24 11:13:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 11:13:00] [INFO] ==================================================
+[2026-09-24 11:13:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 11:13:00
+[2026-09-24 11:13:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 11:13:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 11:13:00] [INFO] ==================================================
+[2026-09-24 11:13:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 11:13:00] [INFO] ==================================================
+[2026-09-24 11:13:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 11:13:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 11:13:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 11:13:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 11:13:00] [INFO] ==================================================
+[2026-09-24 11:13:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 11:13:00] [INFO] ==================================================
+[2026-09-24 11:14:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 11:14:00] [INFO] ==================================================
+[2026-09-24 11:14:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 11:14:00] [INFO] ==================================================
+[2026-09-24 11:14:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 11:14:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 11:14:00] [INFO] ==================================================
+[2026-09-24 11:14:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 11:14:00] [INFO] ==================================================
+[2026-09-24 11:14:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 11:14:00
+[2026-09-24 11:14:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 11:14:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 11:14:00] [INFO] ==================================================
+[2026-09-24 11:14:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 11:14:00] [INFO] ==================================================
+[2026-09-24 11:14:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 11:14:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 11:14:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 11:14:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 11:14:00] [INFO] ==================================================
+[2026-09-24 11:14:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 11:14:00] [INFO] ==================================================
+[2026-09-24 11:15:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 11:15:00] [INFO] ==================================================
+[2026-09-24 11:15:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 11:15:00] [INFO] ==================================================
+[2026-09-24 11:15:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 11:15:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 11:15:00] [INFO] ==================================================
+[2026-09-24 11:15:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 11:15:00] [INFO] ==================================================
+[2026-09-24 11:15:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 11:15:00
+[2026-09-24 11:15:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 11:15:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 11:15:00] [INFO] ==================================================
+[2026-09-24 11:15:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 11:15:00] [INFO] ==================================================
+[2026-09-24 11:15:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 11:15:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 11:15:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 11:15:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 11:15:00] [INFO] ==================================================
+[2026-09-24 11:15:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 11:15:00] [INFO] ==================================================
+[2026-09-24 11:16:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 11:16:00] [INFO] ==================================================
+[2026-09-24 11:16:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 11:16:00] [INFO] ==================================================
+[2026-09-24 11:16:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 11:16:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 11:16:00] [INFO] ==================================================
+[2026-09-24 11:16:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 11:16:00] [INFO] ==================================================
+[2026-09-24 11:16:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 11:16:00
+[2026-09-24 11:16:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 11:16:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 11:16:00] [INFO] ==================================================
+[2026-09-24 11:16:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 11:16:00] [INFO] ==================================================
+[2026-09-24 11:16:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 11:16:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 11:16:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 11:16:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 11:16:00] [INFO] ==================================================
+[2026-09-24 11:16:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 11:16:00] [INFO] ==================================================
+[2026-09-24 11:17:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 11:17:00] [INFO] ==================================================
+[2026-09-24 11:17:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 11:17:00] [INFO] ==================================================
+[2026-09-24 11:17:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 11:17:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 11:17:00] [INFO] ==================================================
+[2026-09-24 11:17:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 11:17:00] [INFO] ==================================================
+[2026-09-24 11:17:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 11:17:00
+[2026-09-24 11:17:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 11:17:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 11:17:00] [INFO] ==================================================
+[2026-09-24 11:17:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 11:17:00] [INFO] ==================================================
+[2026-09-24 11:17:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 11:17:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 11:17:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 11:17:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 11:17:00] [INFO] ==================================================
+[2026-09-24 11:17:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 11:17:00] [INFO] ==================================================
+[2026-09-24 11:18:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 11:18:00] [INFO] ==================================================
+[2026-09-24 11:18:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 11:18:00] [INFO] ==================================================
+[2026-09-24 11:18:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 11:18:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 11:18:00] [INFO] ==================================================
+[2026-09-24 11:18:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 11:18:00] [INFO] ==================================================
+[2026-09-24 11:18:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 11:18:00
+[2026-09-24 11:18:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 11:18:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 11:18:00] [INFO] ==================================================
+[2026-09-24 11:18:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 11:18:00] [INFO] ==================================================
+[2026-09-24 11:18:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 11:18:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 11:18:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 11:18:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 11:18:00] [INFO] ==================================================
+[2026-09-24 11:18:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 11:18:00] [INFO] ==================================================
+[2026-09-24 11:19:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 11:19:00] [INFO] ==================================================
+[2026-09-24 11:19:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 11:19:00] [INFO] ==================================================
+[2026-09-24 11:19:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 11:19:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 11:19:00] [INFO] ==================================================
+[2026-09-24 11:19:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 11:19:00] [INFO] ==================================================
+[2026-09-24 11:19:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 11:19:00
+[2026-09-24 11:19:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 11:19:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 11:19:00] [INFO] ==================================================
+[2026-09-24 11:19:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 11:19:00] [INFO] ==================================================
+[2026-09-24 11:19:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 11:19:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 11:19:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 11:19:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 11:19:00] [INFO] ==================================================
+[2026-09-24 11:19:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 11:19:00] [INFO] ==================================================
+[2026-09-24 11:20:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 11:20:00] [INFO] ==================================================
+[2026-09-24 11:20:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 11:20:00] [INFO] ==================================================
+[2026-09-24 11:20:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 11:20:00
+[2026-09-24 11:20:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 11:20:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 11:20:00] [INFO] ==================================================
+[2026-09-24 11:20:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 11:20:00] [INFO] ==================================================
+[2026-09-24 11:20:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 11:20:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 11:20:00] [INFO] ==================================================
+[2026-09-24 11:20:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 11:20:00] [INFO] ==================================================
+[2026-09-24 11:20:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 11:20:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 11:20:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 11:20:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 11:20:00] [INFO] ==================================================
+[2026-09-24 11:20:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 11:20:00] [INFO] ==================================================
+[2026-09-24 11:21:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 11:21:00] [INFO] ==================================================
+[2026-09-24 11:21:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 11:21:00] [INFO] ==================================================
+[2026-09-24 11:21:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 11:21:00
+[2026-09-24 11:21:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 11:21:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 11:21:00] [INFO] ==================================================
+[2026-09-24 11:21:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 11:21:00] [INFO] ==================================================
+[2026-09-24 11:21:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 11:21:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 11:21:00] [INFO] ==================================================
+[2026-09-24 11:21:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 11:21:00] [INFO] ==================================================
+[2026-09-24 11:21:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 11:21:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 11:21:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 11:21:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 11:21:00] [INFO] ==================================================
+[2026-09-24 11:21:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 11:21:00] [INFO] ==================================================
+[2026-09-24 11:22:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 11:22:00] [INFO] ==================================================
+[2026-09-24 11:22:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 11:22:00] [INFO] ==================================================
+[2026-09-24 11:22:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 11:22:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 11:22:00] [INFO] ==================================================
+[2026-09-24 11:22:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 11:22:00] [INFO] ==================================================
+[2026-09-24 11:22:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 11:22:00
+[2026-09-24 11:22:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 11:22:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 11:22:00] [INFO] ==================================================
+[2026-09-24 11:22:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 11:22:00] [INFO] ==================================================
+[2026-09-24 11:22:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 11:22:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 11:22:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 11:22:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 11:22:00] [INFO] ==================================================
+[2026-09-24 11:22:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 11:22:00] [INFO] ==================================================
+[2026-09-24 11:23:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-24 11:23:00] [INFO] ==================================================
+[2026-09-24 11:23:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-24 11:23:00] [INFO] ==================================================
+[2026-09-24 11:23:00] [INFO] [OVERSTAY] Current India Date/Time: 24/09/2026 11:23:00
+[2026-09-24 11:23:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-24 11:23:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-24 11:23:00] [INFO] ==================================================
+[2026-09-24 11:23:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-24 11:23:00] [INFO] ==================================================
+[2026-09-24 11:23:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-24
+[2026-09-24 11:23:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-24 11:23:00] [INFO] ==================================================
+[2026-09-24 11:23:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-24 11:23:00] [INFO] ==================================================
+[2026-09-24 11:23:00] [INFO] [SUBSCRIPTION] Subscriptions found: 3
+[2026-09-24 11:23:00] [INFO] [SUBSCRIPTION] mani hotel | Expiry: 2026-10-16 | Days Remaining: 22
+[2026-09-24 11:23:00] [INFO] [SUBSCRIPTION] hotel 2 | Expiry: 2026-10-17 | Days Remaining: 23
+[2026-09-24 11:23:00] [INFO] [SUBSCRIPTION] ganesh hotel | Expiry: 2026-10-22 | Days Remaining: 28
+[2026-09-24 11:23:00] [INFO] ==================================================
+[2026-09-24 11:23:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-24 11:23:00] [INFO] ==================================================
