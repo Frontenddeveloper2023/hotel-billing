@@ -1,0 +1,99 @@
+/* reports.css - Professional Styling for PDF Export */
+.pdf-export-container {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #121921;
+  background: #ffffff;
+  padding: 32px;
+  width: 800px;
+}
+
+.pdf-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2px solid #08838d;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+
+.pdf-title h1 {
+  font-size: 22px;
+  font-weight: 800;
+  color: #121921;
+  margin: 0;
+}
+
+.pdf-title p {
+  font-size: 12px;
+  color: #4a5965;
+  margin: 4px 0 0 0;
+}
+
+.pdf-meta {
+  text-align: right;
+  font-size: 11px;
+  color: #4a5965;
+}
+
+.pdf-summary-grid {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.pdf-summary-card {
+  flex: 1;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.pdf-summary-card span {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.pdf-summary-card h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #121921;
+  margin: 4px 0 0 0;
+}
+
+.pdf-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.pdf-table th {
+  background: #f1f5f9;
+  color: #0f172a;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.pdf-table td {
+  padding: 10px 12px;
+  font-size: 11px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+.pdf-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 9px;
+  font-weight: 600;
+  border-radius: 4px;
+}
+.pdf-badge.paid { background: #dcfce7; color: #166534; }
+.pdf-badge.pending { background: #fef9c3; color: #854d0e; }
+.pdf-badge.refunded { background: #fee2e2; color: #991b1b; }

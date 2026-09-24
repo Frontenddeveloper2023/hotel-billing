@@ -1,0 +1,81 @@
+[2026-08-28 11:28:50] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-08-28 11:28:50] [Logger] Cleanup completed. No expired log files found.
+[2026-08-28 11:28:50] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-08-28 11:28:50] [Server] Server started and listening on port 5000
+[2026-08-28 11:28:50] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-08-28 11:28:50] Admin user already exists
+[2026-08-28 11:31:21] OTP sent to jayamproj@gmail.com
+[2026-08-28 11:34:39] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-08-28 11:34:39] [Logger] Cleanup completed. No expired log files found.
+[2026-08-28 11:34:39] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-08-28 11:34:39] [Server] Server started and listening on port 5000
+[2026-08-28 11:34:40] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-08-28 11:34:40] Admin user already exists
+[2026-08-28 11:38:04] User logged out: Sridhar
+[2026-08-28 11:38:23] OTP sent to jayamproj@gmail.com
+[2026-08-28 11:38:41] OTP sent to jayamproj@gmail.com
+[2026-08-28 11:39:56] OTP sent to jayamproj@gmail.com
+[2026-08-28 11:40:58] OTP sent to jayamproj@gmail.com
+[2026-08-28 11:42:05] OTP sent to jayamproj@gmail.com
+[2026-08-28 11:43:20] User logged out: Sridhar
+[2026-08-28 11:43:28] OTP sent to jayamproj@gmail.com
+[2026-08-28 11:43:52] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-08-28 11:43:52] [Logger] Cleanup completed. No expired log files found.
+[2026-08-28 11:43:52] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-08-28 11:43:52] [Server] Server started and listening on port 5000
+[2026-08-28 11:43:52] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-08-28 11:43:52] Admin user already exists
+[2026-08-28 15:36:55] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-08-28 15:36:55] [Logger] Cleanup completed. No expired log files found.
+[2026-08-28 15:36:55] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-08-28 15:36:55] [Server] Server started and listening on port 5000
+[2026-08-28 15:36:56] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-08-28 15:36:56] Admin user already exists
+[2026-08-28 15:37:17] OTP sent to jayamproj@gmail.com
+[2026-08-28 15:37:59] User logged out: Sridhar
+[2026-08-28 15:39:10] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-08-28 15:39:10] [Logger] Cleanup completed. No expired log files found.
+[2026-08-28 15:39:10] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-08-28 15:39:10] [Server] Server started and listening on port 5000
+[2026-08-28 15:39:11] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-08-28 15:39:11] Admin user already exists
+[2026-08-28 15:39:18] OTP sent to jayamproj@gmail.com
+[2026-08-28 15:42:42] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-08-28 15:42:42] [Logger] Cleanup completed. No expired log files found.
+[2026-08-28 15:42:42] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-08-28 15:42:42] [Server] Server started and listening on port 5000
+[2026-08-28 15:42:43] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-08-28 15:42:43] Admin user already exists
+[2026-08-28 15:45:36] OTP sent to jayamproj@gmail.com
+[2026-08-28 15:55:54] User logged out: Sridhar
+[2026-08-28 15:56:04] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-08-28 15:56:04] [Logger] Cleanup completed. No expired log files found.
+[2026-08-28 15:56:04] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-08-28 15:56:04] [Server] Server started and listening on port 5000
+[2026-08-28 15:56:04] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-08-28 15:56:05] Admin user already exists
+[2026-08-28 15:56:15] OTP sent to jayamproj@gmail.com
+[2026-08-28 16:09:48] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-08-28 16:09:48] [Logger] Cleanup completed. No expired log files found.
+[2026-08-28 16:09:48] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-08-28 16:09:48] [Server] Server started and listening on port 5000
+[2026-08-28 16:09:48] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-08-28 16:09:48] Admin user already exists
+[2026-08-28 16:10:55] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-08-28 16:10:55] [Logger] Cleanup completed. No expired log files found.
+[2026-08-28 16:10:55] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-08-28 16:10:55] [Server] Server started and listening on port 5000
+[2026-08-28 16:10:55] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-08-28 16:10:55] Admin user already exists
+[2026-08-28 16:11:28] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-08-28 16:11:28] [Logger] Cleanup completed. No expired log files found.
+[2026-08-28 16:11:28] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-08-28 16:11:28] [Server] Server started and listening on port 5000
+[2026-08-28 16:11:28] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-08-28 16:11:29] Admin user already exists
+[2026-08-28 16:13:04] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-08-28 16:13:04] [Logger] Cleanup completed. No expired log files found.
+[2026-08-28 16:13:04] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-08-28 16:13:04] [Server] Server started and listening on port 5000
+[2026-08-28 16:13:04] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-08-28 16:13:05] Admin user already exists

@@ -1,0 +1,854 @@
+[2026-09-15 09:59:11] [INFO] [OVERSTAY] Overstay cron initialized successfully
+[2026-09-15 09:59:11] [INFO] [OVERSTAY] Cron schedule: Every minute
+[2026-09-15 09:59:11] [INFO] [OVERSTAY] Cron timezone: Asia/Kolkata
+[2026-09-15 09:59:11] [INFO] ==================================================
+[2026-09-15 09:59:11] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 09:59:11] [INFO] ==================================================
+[2026-09-15 09:59:11] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 09:59:11
+[2026-09-15 09:59:11] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 09:59:13] [INFO] [SUBSCRIPTION] Subscription expiry cron initialized successfully
+[2026-09-15 09:59:13] [INFO] [SUBSCRIPTION] Cron schedule: Every minute
+[2026-09-15 09:59:13] [INFO] [SUBSCRIPTION] Cron timezone: Asia/Kolkata
+[2026-09-15 09:59:13] [INFO] ==================================================
+[2026-09-15 09:59:13] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 09:59:13] [INFO] ==================================================
+[2026-09-15 09:59:13] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 09:59:16] [INFO] [Logger] Running log cleanup check. Retention limit: 30 days.
+[2026-09-15 09:59:16] [INFO] [Logger] Cleanup completed. No expired log files found.
+[2026-09-15 09:59:16] [INFO] [Logger] Automated log cleanup scheduler started (runs every 24 hours).
+[2026-09-15 09:59:16] [INFO] [Server] Server started and listening on port 5000
+[2026-09-15 09:59:17] [INFO] [Database] MongoDB Connected successfully: 76.13.244.61
+[2026-09-15 09:59:17] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 09:59:17] [INFO] ==================================================
+[2026-09-15 09:59:17] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 09:59:17] [INFO] ==================================================
+[2026-09-15 09:59:17] [INFO] Admin user already exists
+[2026-09-15 09:59:17] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 09:59:17] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 09:59:17] [INFO] ==================================================
+[2026-09-15 09:59:17] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 09:59:17] [INFO] ==================================================
+[2026-09-15 09:59:52] [INFO] [Auth Verify] Authentication token not found
+[2026-09-15 09:59:52] [INFO] [Auth Verify] Authentication token not found
+[2026-09-15 10:00:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:00:00] [INFO] ==================================================
+[2026-09-15 10:00:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:00:00] [INFO] ==================================================
+[2026-09-15 10:00:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:00:00
+[2026-09-15 10:00:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:00:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:00:00] [INFO] ==================================================
+[2026-09-15 10:00:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:00:00] [INFO] ==================================================
+[2026-09-15 10:00:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:00:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:00:00] [INFO] ==================================================
+[2026-09-15 10:00:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:00:00] [INFO] ==================================================
+[2026-09-15 10:00:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:00:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:00:00] [INFO] ==================================================
+[2026-09-15 10:00:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:00:00] [INFO] ==================================================
+[2026-09-15 10:01:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:01:00] [INFO] ==================================================
+[2026-09-15 10:01:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:01:00] [INFO] ==================================================
+[2026-09-15 10:01:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:01:00
+[2026-09-15 10:01:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:01:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:01:00] [INFO] ==================================================
+[2026-09-15 10:01:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:01:00] [INFO] ==================================================
+[2026-09-15 10:01:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:01:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:01:00] [INFO] ==================================================
+[2026-09-15 10:01:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:01:00] [INFO] ==================================================
+[2026-09-15 10:01:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:01:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:01:00] [INFO] ==================================================
+[2026-09-15 10:01:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:01:00] [INFO] ==================================================
+[2026-09-15 10:02:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:02:00] [INFO] ==================================================
+[2026-09-15 10:02:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:02:00] [INFO] ==================================================
+[2026-09-15 10:02:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:02:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:02:00] [INFO] ==================================================
+[2026-09-15 10:02:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:02:00] [INFO] ==================================================
+[2026-09-15 10:02:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:02:00
+[2026-09-15 10:02:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:02:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:02:00] [INFO] ==================================================
+[2026-09-15 10:02:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:02:00] [INFO] ==================================================
+[2026-09-15 10:02:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:02:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:02:00] [INFO] ==================================================
+[2026-09-15 10:02:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:02:00] [INFO] ==================================================
+[2026-09-15 10:03:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:03:00] [INFO] ==================================================
+[2026-09-15 10:03:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:03:00] [INFO] ==================================================
+[2026-09-15 10:03:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:03:00
+[2026-09-15 10:03:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:03:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:03:00] [INFO] ==================================================
+[2026-09-15 10:03:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:03:00] [INFO] ==================================================
+[2026-09-15 10:03:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:03:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:03:00] [INFO] ==================================================
+[2026-09-15 10:03:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:03:00] [INFO] ==================================================
+[2026-09-15 10:03:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:03:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:03:00] [INFO] ==================================================
+[2026-09-15 10:03:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:03:00] [INFO] ==================================================
+[2026-09-15 10:04:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:04:00] [INFO] ==================================================
+[2026-09-15 10:04:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:04:00] [INFO] ==================================================
+[2026-09-15 10:04:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:04:00
+[2026-09-15 10:04:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:04:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:04:00] [INFO] ==================================================
+[2026-09-15 10:04:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:04:00] [INFO] ==================================================
+[2026-09-15 10:04:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:04:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:04:00] [INFO] ==================================================
+[2026-09-15 10:04:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:04:00] [INFO] ==================================================
+[2026-09-15 10:04:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:04:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:04:00] [INFO] ==================================================
+[2026-09-15 10:04:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:04:00] [INFO] ==================================================
+[2026-09-15 10:05:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:05:00] [INFO] ==================================================
+[2026-09-15 10:05:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:05:00] [INFO] ==================================================
+[2026-09-15 10:05:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:05:00
+[2026-09-15 10:05:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:05:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:05:00] [INFO] ==================================================
+[2026-09-15 10:05:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:05:00] [INFO] ==================================================
+[2026-09-15 10:05:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:05:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:05:00] [INFO] ==================================================
+[2026-09-15 10:05:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:05:00] [INFO] ==================================================
+[2026-09-15 10:05:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:05:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:05:00] [INFO] ==================================================
+[2026-09-15 10:05:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:05:00] [INFO] ==================================================
+[2026-09-15 10:06:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:06:00] [INFO] ==================================================
+[2026-09-15 10:06:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:06:00] [INFO] ==================================================
+[2026-09-15 10:06:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:06:00
+[2026-09-15 10:06:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:06:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:06:00] [INFO] ==================================================
+[2026-09-15 10:06:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:06:00] [INFO] ==================================================
+[2026-09-15 10:06:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:06:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:06:00] [INFO] ==================================================
+[2026-09-15 10:06:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:06:00] [INFO] ==================================================
+[2026-09-15 10:06:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:06:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:06:00] [INFO] ==================================================
+[2026-09-15 10:06:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:06:00] [INFO] ==================================================
+[2026-09-15 10:07:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:07:00] [INFO] ==================================================
+[2026-09-15 10:07:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:07:00] [INFO] ==================================================
+[2026-09-15 10:07:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:07:00
+[2026-09-15 10:07:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:07:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:07:00] [INFO] ==================================================
+[2026-09-15 10:07:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:07:00] [INFO] ==================================================
+[2026-09-15 10:07:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:07:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:07:00] [INFO] ==================================================
+[2026-09-15 10:07:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:07:00] [INFO] ==================================================
+[2026-09-15 10:07:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:07:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:07:00] [INFO] ==================================================
+[2026-09-15 10:07:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:07:00] [INFO] ==================================================
+[2026-09-15 10:08:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:08:00] [INFO] ==================================================
+[2026-09-15 10:08:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:08:00] [INFO] ==================================================
+[2026-09-15 10:08:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:08:00
+[2026-09-15 10:08:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:08:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:08:00] [INFO] ==================================================
+[2026-09-15 10:08:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:08:00] [INFO] ==================================================
+[2026-09-15 10:08:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:08:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:08:00] [INFO] ==================================================
+[2026-09-15 10:08:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:08:00] [INFO] ==================================================
+[2026-09-15 10:08:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:08:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:08:00] [INFO] ==================================================
+[2026-09-15 10:08:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:08:00] [INFO] ==================================================
+[2026-09-15 10:09:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:09:00] [INFO] ==================================================
+[2026-09-15 10:09:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:09:00] [INFO] ==================================================
+[2026-09-15 10:09:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:09:00
+[2026-09-15 10:09:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:09:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:09:00] [INFO] ==================================================
+[2026-09-15 10:09:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:09:00] [INFO] ==================================================
+[2026-09-15 10:09:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:09:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:09:00] [INFO] ==================================================
+[2026-09-15 10:09:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:09:00] [INFO] ==================================================
+[2026-09-15 10:09:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:09:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:09:00] [INFO] ==================================================
+[2026-09-15 10:09:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:09:00] [INFO] ==================================================
+[2026-09-15 10:10:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:10:00] [INFO] ==================================================
+[2026-09-15 10:10:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:10:00] [INFO] ==================================================
+[2026-09-15 10:10:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:10:00
+[2026-09-15 10:10:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:10:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:10:00] [INFO] ==================================================
+[2026-09-15 10:10:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:10:00] [INFO] ==================================================
+[2026-09-15 10:10:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:10:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:10:00] [INFO] ==================================================
+[2026-09-15 10:10:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:10:00] [INFO] ==================================================
+[2026-09-15 10:10:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:10:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:10:00] [INFO] ==================================================
+[2026-09-15 10:10:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:10:00] [INFO] ==================================================
+[2026-09-15 10:11:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:11:00] [INFO] ==================================================
+[2026-09-15 10:11:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:11:00] [INFO] ==================================================
+[2026-09-15 10:11:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:11:00
+[2026-09-15 10:11:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:11:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:11:00] [INFO] ==================================================
+[2026-09-15 10:11:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:11:00] [INFO] ==================================================
+[2026-09-15 10:11:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:11:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:11:00] [INFO] ==================================================
+[2026-09-15 10:11:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:11:00] [INFO] ==================================================
+[2026-09-15 10:11:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:11:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:11:00] [INFO] ==================================================
+[2026-09-15 10:11:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:11:00] [INFO] ==================================================
+[2026-09-15 10:12:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:12:00] [INFO] ==================================================
+[2026-09-15 10:12:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:12:00] [INFO] ==================================================
+[2026-09-15 10:12:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:12:00
+[2026-09-15 10:12:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:12:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:12:00] [INFO] ==================================================
+[2026-09-15 10:12:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:12:00] [INFO] ==================================================
+[2026-09-15 10:12:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:12:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:12:00] [INFO] ==================================================
+[2026-09-15 10:12:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:12:00] [INFO] ==================================================
+[2026-09-15 10:12:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:12:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:12:00] [INFO] ==================================================
+[2026-09-15 10:12:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:12:00] [INFO] ==================================================
+[2026-09-15 10:13:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:13:00] [INFO] ==================================================
+[2026-09-15 10:13:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:13:00] [INFO] ==================================================
+[2026-09-15 10:13:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:13:00
+[2026-09-15 10:13:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:13:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:13:00] [INFO] ==================================================
+[2026-09-15 10:13:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:13:00] [INFO] ==================================================
+[2026-09-15 10:13:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:13:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:13:00] [INFO] ==================================================
+[2026-09-15 10:13:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:13:00] [INFO] ==================================================
+[2026-09-15 10:13:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:13:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:13:00] [INFO] ==================================================
+[2026-09-15 10:13:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:13:00] [INFO] ==================================================
+[2026-09-15 10:14:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:14:00] [INFO] ==================================================
+[2026-09-15 10:14:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:14:00] [INFO] ==================================================
+[2026-09-15 10:14:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:14:00
+[2026-09-15 10:14:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:14:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:14:00] [INFO] ==================================================
+[2026-09-15 10:14:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:14:00] [INFO] ==================================================
+[2026-09-15 10:14:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:14:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:14:00] [INFO] ==================================================
+[2026-09-15 10:14:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:14:00] [INFO] ==================================================
+[2026-09-15 10:14:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:14:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:14:00] [INFO] ==================================================
+[2026-09-15 10:14:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:14:00] [INFO] ==================================================
+[2026-09-15 10:15:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:15:00] [INFO] ==================================================
+[2026-09-15 10:15:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:15:00] [INFO] ==================================================
+[2026-09-15 10:15:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:15:00
+[2026-09-15 10:15:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:15:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:15:00] [INFO] ==================================================
+[2026-09-15 10:15:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:15:00] [INFO] ==================================================
+[2026-09-15 10:15:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:15:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:15:00] [INFO] ==================================================
+[2026-09-15 10:15:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:15:00] [INFO] ==================================================
+[2026-09-15 10:15:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:15:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:15:00] [INFO] ==================================================
+[2026-09-15 10:15:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:15:00] [INFO] ==================================================
+[2026-09-15 10:16:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:16:00] [INFO] ==================================================
+[2026-09-15 10:16:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:16:00] [INFO] ==================================================
+[2026-09-15 10:16:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:16:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:16:00] [INFO] ==================================================
+[2026-09-15 10:16:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:16:00] [INFO] ==================================================
+[2026-09-15 10:16:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:16:00
+[2026-09-15 10:16:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:16:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:16:00] [INFO] ==================================================
+[2026-09-15 10:16:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:16:00] [INFO] ==================================================
+[2026-09-15 10:16:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:16:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:16:00] [INFO] ==================================================
+[2026-09-15 10:16:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:16:00] [INFO] ==================================================
+[2026-09-15 10:17:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:17:00] [INFO] ==================================================
+[2026-09-15 10:17:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:17:00] [INFO] ==================================================
+[2026-09-15 10:17:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:17:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:17:00] [INFO] ==================================================
+[2026-09-15 10:17:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:17:00] [INFO] ==================================================
+[2026-09-15 10:17:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:17:00
+[2026-09-15 10:17:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:17:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:17:00] [INFO] ==================================================
+[2026-09-15 10:17:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:17:00] [INFO] ==================================================
+[2026-09-15 10:17:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:17:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:17:00] [INFO] ==================================================
+[2026-09-15 10:17:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:17:00] [INFO] ==================================================
+[2026-09-15 10:18:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:18:00] [INFO] ==================================================
+[2026-09-15 10:18:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:18:00] [INFO] ==================================================
+[2026-09-15 10:18:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:18:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:18:00] [INFO] ==================================================
+[2026-09-15 10:18:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:18:00] [INFO] ==================================================
+[2026-09-15 10:18:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:18:00
+[2026-09-15 10:18:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:18:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:18:00] [INFO] ==================================================
+[2026-09-15 10:18:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:18:00] [INFO] ==================================================
+[2026-09-15 10:18:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:18:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:18:00] [INFO] ==================================================
+[2026-09-15 10:18:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:18:00] [INFO] ==================================================
+[2026-09-15 10:19:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:19:00] [INFO] ==================================================
+[2026-09-15 10:19:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:19:00] [INFO] ==================================================
+[2026-09-15 10:19:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:19:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:19:00] [INFO] ==================================================
+[2026-09-15 10:19:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:19:00] [INFO] ==================================================
+[2026-09-15 10:19:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:19:00
+[2026-09-15 10:19:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:19:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:19:00] [INFO] ==================================================
+[2026-09-15 10:19:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:19:00] [INFO] ==================================================
+[2026-09-15 10:19:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:19:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:19:00] [INFO] ==================================================
+[2026-09-15 10:19:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:19:00] [INFO] ==================================================
+[2026-09-15 10:20:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:20:00] [INFO] ==================================================
+[2026-09-15 10:20:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:20:00] [INFO] ==================================================
+[2026-09-15 10:20:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:20:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:20:00] [INFO] ==================================================
+[2026-09-15 10:20:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:20:00] [INFO] ==================================================
+[2026-09-15 10:20:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:20:00
+[2026-09-15 10:20:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:20:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:20:00] [INFO] ==================================================
+[2026-09-15 10:20:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:20:00] [INFO] ==================================================
+[2026-09-15 10:20:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:20:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:20:00] [INFO] ==================================================
+[2026-09-15 10:20:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:20:00] [INFO] ==================================================
+[2026-09-15 10:21:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:21:00] [INFO] ==================================================
+[2026-09-15 10:21:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:21:00] [INFO] ==================================================
+[2026-09-15 10:21:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:21:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:21:00] [INFO] ==================================================
+[2026-09-15 10:21:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:21:00] [INFO] ==================================================
+[2026-09-15 10:21:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:21:00
+[2026-09-15 10:21:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:21:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:21:00] [INFO] ==================================================
+[2026-09-15 10:21:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:21:00] [INFO] ==================================================
+[2026-09-15 10:21:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:21:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:21:00] [INFO] ==================================================
+[2026-09-15 10:21:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:21:00] [INFO] ==================================================
+[2026-09-15 10:22:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:22:00] [INFO] ==================================================
+[2026-09-15 10:22:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:22:00] [INFO] ==================================================
+[2026-09-15 10:22:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:22:00
+[2026-09-15 10:22:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:22:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:22:00] [INFO] ==================================================
+[2026-09-15 10:22:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:22:00] [INFO] ==================================================
+[2026-09-15 10:22:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:22:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:22:00] [INFO] ==================================================
+[2026-09-15 10:22:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:22:00] [INFO] ==================================================
+[2026-09-15 10:22:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:22:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:22:00] [INFO] ==================================================
+[2026-09-15 10:22:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:22:00] [INFO] ==================================================
+[2026-09-15 10:23:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:23:00] [INFO] ==================================================
+[2026-09-15 10:23:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:23:00] [INFO] ==================================================
+[2026-09-15 10:23:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:23:00
+[2026-09-15 10:23:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:23:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:23:00] [INFO] ==================================================
+[2026-09-15 10:23:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:23:00] [INFO] ==================================================
+[2026-09-15 10:23:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:23:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:23:00] [INFO] ==================================================
+[2026-09-15 10:23:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:23:00] [INFO] ==================================================
+[2026-09-15 10:23:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:23:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:23:00] [INFO] ==================================================
+[2026-09-15 10:23:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:23:00] [INFO] ==================================================
+[2026-09-15 10:24:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:24:00] [INFO] ==================================================
+[2026-09-15 10:24:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:24:00] [INFO] ==================================================
+[2026-09-15 10:24:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:24:00
+[2026-09-15 10:24:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:24:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:24:00] [INFO] ==================================================
+[2026-09-15 10:24:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:24:00] [INFO] ==================================================
+[2026-09-15 10:24:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:24:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:24:00] [INFO] ==================================================
+[2026-09-15 10:24:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:24:00] [INFO] ==================================================
+[2026-09-15 10:24:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:24:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:24:00] [INFO] ==================================================
+[2026-09-15 10:24:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:24:00] [INFO] ==================================================
+[2026-09-15 10:25:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:25:00] [INFO] ==================================================
+[2026-09-15 10:25:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:25:00] [INFO] ==================================================
+[2026-09-15 10:25:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:25:00
+[2026-09-15 10:25:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:25:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:25:00] [INFO] ==================================================
+[2026-09-15 10:25:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:25:00] [INFO] ==================================================
+[2026-09-15 10:25:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:25:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:25:00] [INFO] ==================================================
+[2026-09-15 10:25:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:25:00] [INFO] ==================================================
+[2026-09-15 10:25:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:25:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:25:00] [INFO] ==================================================
+[2026-09-15 10:25:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:25:00] [INFO] ==================================================
+[2026-09-15 10:26:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:26:00] [INFO] ==================================================
+[2026-09-15 10:26:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:26:00] [INFO] ==================================================
+[2026-09-15 10:26:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:26:00
+[2026-09-15 10:26:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:26:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:26:00] [INFO] ==================================================
+[2026-09-15 10:26:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:26:00] [INFO] ==================================================
+[2026-09-15 10:26:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:26:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:26:00] [INFO] ==================================================
+[2026-09-15 10:26:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:26:00] [INFO] ==================================================
+[2026-09-15 10:26:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:26:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:26:00] [INFO] ==================================================
+[2026-09-15 10:26:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:26:00] [INFO] ==================================================
+[2026-09-15 10:27:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:27:00] [INFO] ==================================================
+[2026-09-15 10:27:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:27:00] [INFO] ==================================================
+[2026-09-15 10:27:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:27:00
+[2026-09-15 10:27:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:27:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:27:00] [INFO] ==================================================
+[2026-09-15 10:27:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:27:00] [INFO] ==================================================
+[2026-09-15 10:27:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:27:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:27:00] [INFO] ==================================================
+[2026-09-15 10:27:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:27:00] [INFO] ==================================================
+[2026-09-15 10:27:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:27:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:27:00] [INFO] ==================================================
+[2026-09-15 10:27:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:27:00] [INFO] ==================================================
+[2026-09-15 10:28:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:28:00] [INFO] ==================================================
+[2026-09-15 10:28:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:28:00] [INFO] ==================================================
+[2026-09-15 10:28:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:28:00
+[2026-09-15 10:28:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:28:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:28:00] [INFO] ==================================================
+[2026-09-15 10:28:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:28:00] [INFO] ==================================================
+[2026-09-15 10:28:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:28:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:28:00] [INFO] ==================================================
+[2026-09-15 10:28:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:28:00] [INFO] ==================================================
+[2026-09-15 10:28:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:28:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:28:00] [INFO] ==================================================
+[2026-09-15 10:28:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:28:00] [INFO] ==================================================
+[2026-09-15 10:29:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:29:00] [INFO] ==================================================
+[2026-09-15 10:29:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:29:00] [INFO] ==================================================
+[2026-09-15 10:29:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:29:00
+[2026-09-15 10:29:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:29:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:29:00] [INFO] ==================================================
+[2026-09-15 10:29:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:29:00] [INFO] ==================================================
+[2026-09-15 10:29:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:29:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:29:00] [INFO] ==================================================
+[2026-09-15 10:29:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:29:00] [INFO] ==================================================
+[2026-09-15 10:29:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:29:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:29:00] [INFO] ==================================================
+[2026-09-15 10:29:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:29:00] [INFO] ==================================================
+[2026-09-15 10:30:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:30:00] [INFO] ==================================================
+[2026-09-15 10:30:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:30:00] [INFO] ==================================================
+[2026-09-15 10:30:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:30:00
+[2026-09-15 10:30:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:30:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:30:00] [INFO] ==================================================
+[2026-09-15 10:30:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:30:00] [INFO] ==================================================
+[2026-09-15 10:30:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:30:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:30:00] [INFO] ==================================================
+[2026-09-15 10:30:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:30:00] [INFO] ==================================================
+[2026-09-15 10:30:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:30:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:30:00] [INFO] ==================================================
+[2026-09-15 10:30:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:30:00] [INFO] ==================================================
+[2026-09-15 10:31:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:31:00] [INFO] ==================================================
+[2026-09-15 10:31:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:31:00] [INFO] ==================================================
+[2026-09-15 10:31:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:31:00
+[2026-09-15 10:31:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:31:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:31:00] [INFO] ==================================================
+[2026-09-15 10:31:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:31:00] [INFO] ==================================================
+[2026-09-15 10:31:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:31:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:31:00] [INFO] ==================================================
+[2026-09-15 10:31:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:31:00] [INFO] ==================================================
+[2026-09-15 10:31:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:31:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:31:00] [INFO] ==================================================
+[2026-09-15 10:31:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:31:00] [INFO] ==================================================
+[2026-09-15 10:32:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 10:32:00] [INFO] ==================================================
+[2026-09-15 10:32:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 10:32:00] [INFO] ==================================================
+[2026-09-15 10:32:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 10:32:00
+[2026-09-15 10:32:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 10:32:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 10:32:00] [INFO] ==================================================
+[2026-09-15 10:32:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 10:32:00] [INFO] ==================================================
+[2026-09-15 10:32:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 10:32:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 10:32:00] [INFO] ==================================================
+[2026-09-15 10:32:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 10:32:00] [INFO] ==================================================
+[2026-09-15 10:32:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 10:32:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 10:32:00] [INFO] ==================================================
+[2026-09-15 10:32:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 10:32:00] [INFO] ==================================================
+[2026-09-15 12:42:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 12:42:00] [INFO] ==================================================
+[2026-09-15 12:42:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 12:42:00] [INFO] ==================================================
+[2026-09-15 12:42:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 12:42:00
+[2026-09-15 12:42:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 12:42:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 12:42:00] [INFO] ==================================================
+[2026-09-15 12:42:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 12:42:00] [INFO] ==================================================
+[2026-09-15 12:42:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 12:42:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 12:42:00] [INFO] ==================================================
+[2026-09-15 12:42:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 12:42:00] [INFO] ==================================================
+[2026-09-15 12:42:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 12:42:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 12:42:00] [INFO] ==================================================
+[2026-09-15 12:42:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 12:42:00] [INFO] ==================================================
+[2026-09-15 12:43:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 12:43:00] [INFO] ==================================================
+[2026-09-15 12:43:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 12:43:00] [INFO] ==================================================
+[2026-09-15 12:43:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 12:43:00
+[2026-09-15 12:43:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 12:43:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 12:43:00] [INFO] ==================================================
+[2026-09-15 12:43:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 12:43:00] [INFO] ==================================================
+[2026-09-15 12:43:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 12:43:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 12:43:00] [INFO] ==================================================
+[2026-09-15 12:43:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 12:43:00] [INFO] ==================================================
+[2026-09-15 12:43:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 12:43:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 12:43:00] [INFO] ==================================================
+[2026-09-15 12:43:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 12:43:00] [INFO] ==================================================
+[2026-09-15 12:44:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 12:44:00] [INFO] ==================================================
+[2026-09-15 12:44:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 12:44:00] [INFO] ==================================================
+[2026-09-15 12:44:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 12:44:00
+[2026-09-15 12:44:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 12:44:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 12:44:00] [INFO] ==================================================
+[2026-09-15 12:44:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 12:44:00] [INFO] ==================================================
+[2026-09-15 12:44:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 12:44:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 12:44:00] [INFO] ==================================================
+[2026-09-15 12:44:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 12:44:00] [INFO] ==================================================
+[2026-09-15 12:44:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 12:44:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 12:44:00] [INFO] ==================================================
+[2026-09-15 12:44:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 12:44:00] [INFO] ==================================================
+[2026-09-15 12:45:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 12:45:00] [INFO] ==================================================
+[2026-09-15 12:45:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 12:45:00] [INFO] ==================================================
+[2026-09-15 12:45:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 12:45:00
+[2026-09-15 12:45:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 12:45:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 12:45:00] [INFO] ==================================================
+[2026-09-15 12:45:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 12:45:00] [INFO] ==================================================
+[2026-09-15 12:45:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 12:45:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 12:45:00] [INFO] ==================================================
+[2026-09-15 12:45:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 12:45:00] [INFO] ==================================================
+[2026-09-15 12:45:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 12:45:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 12:45:00] [INFO] ==================================================
+[2026-09-15 12:45:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 12:45:00] [INFO] ==================================================
+[2026-09-15 12:46:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 12:46:00] [INFO] ==================================================
+[2026-09-15 12:46:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 12:46:00] [INFO] ==================================================
+[2026-09-15 12:46:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 12:46:00
+[2026-09-15 12:46:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 12:46:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 12:46:00] [INFO] ==================================================
+[2026-09-15 12:46:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 12:46:00] [INFO] ==================================================
+[2026-09-15 12:46:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 12:46:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 12:46:00] [INFO] ==================================================
+[2026-09-15 12:46:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 12:46:00] [INFO] ==================================================
+[2026-09-15 12:46:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 12:46:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 12:46:00] [INFO] ==================================================
+[2026-09-15 12:46:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 12:46:00] [INFO] ==================================================
+[2026-09-15 12:46:39] [INFO] [Auth Verify] Authentication token not found
+[2026-09-15 12:46:39] [INFO] [Auth Verify] Authentication token not found
+[2026-09-15 12:47:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 12:47:00] [INFO] ==================================================
+[2026-09-15 12:47:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 12:47:00] [INFO] ==================================================
+[2026-09-15 12:47:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 12:47:00
+[2026-09-15 12:47:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 12:47:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 12:47:00] [INFO] ==================================================
+[2026-09-15 12:47:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 12:47:00] [INFO] ==================================================
+[2026-09-15 12:47:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 12:47:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 12:47:00] [INFO] ==================================================
+[2026-09-15 12:47:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 12:47:00] [INFO] ==================================================
+[2026-09-15 12:47:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 12:47:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 12:47:00] [INFO] ==================================================
+[2026-09-15 12:47:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 12:47:00] [INFO] ==================================================
+[2026-09-15 12:48:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 12:48:00] [INFO] ==================================================
+[2026-09-15 12:48:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 12:48:00] [INFO] ==================================================
+[2026-09-15 12:48:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 12:48:00
+[2026-09-15 12:48:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 12:48:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 12:48:00] [INFO] ==================================================
+[2026-09-15 12:48:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 12:48:00] [INFO] ==================================================
+[2026-09-15 12:48:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 12:48:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 12:48:00] [INFO] ==================================================
+[2026-09-15 12:48:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 12:48:00] [INFO] ==================================================
+[2026-09-15 12:48:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 12:48:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 12:48:00] [INFO] ==================================================
+[2026-09-15 12:48:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 12:48:00] [INFO] ==================================================
+[2026-09-15 12:49:00] [INFO] [OVERSTAY] Cron triggered
+[2026-09-15 12:49:00] [INFO] ==================================================
+[2026-09-15 12:49:00] [INFO] OVERSTAY CRON STARTED
+[2026-09-15 12:49:00] [INFO] ==================================================
+[2026-09-15 12:49:00] [INFO] [OVERSTAY] Current India Date/Time: 15/09/2026 12:49:00
+[2026-09-15 12:49:00] [INFO] [OVERSTAY] Timezone: Asia/Kolkata
+[2026-09-15 12:49:00] [INFO] [SUBSCRIPTION] Expiry cron triggered
+[2026-09-15 12:49:00] [INFO] ==================================================
+[2026-09-15 12:49:00] [INFO] SUBSCRIPTION EXPIRY CRON STARTED
+[2026-09-15 12:49:00] [INFO] ==================================================
+[2026-09-15 12:49:00] [INFO] [SUBSCRIPTION] Current India Date: 2026-09-15
+[2026-09-15 12:49:00] [INFO] [OVERSTAY] Staying customers found: 0
+[2026-09-15 12:49:00] [INFO] ==================================================
+[2026-09-15 12:49:00] [INFO] OVERSTAY CRON COMPLETED
+[2026-09-15 12:49:00] [INFO] ==================================================
+[2026-09-15 12:49:00] [INFO] [SUBSCRIPTION] Subscriptions found: 1
+[2026-09-15 12:49:00] [INFO] [SUBSCRIPTION] murugan hotel | Expiry: 2026-10-13 | Days Remaining: 28
+[2026-09-15 12:49:00] [INFO] ==================================================
+[2026-09-15 12:49:00] [INFO] SUBSCRIPTION EXPIRY CRON COMPLETED
+[2026-09-15 12:49:00] [INFO] ==================================================
