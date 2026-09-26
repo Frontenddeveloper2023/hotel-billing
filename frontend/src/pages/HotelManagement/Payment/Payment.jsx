@@ -941,15 +941,13 @@ export default function Payment({
         extraNights:
           extraFullDaysTotal,
 
-        extraHours: 0,
+        extraHours: paymentDetails?.staySummary?.extraHoursStayed || 0,
 
-        extraMinutes: 0,
+        extraMinutes: paymentDetails?.staySummary?.extraMinutesStayed || 0,
 
-        extraTime:
-          "0h 0m",
+        extraTime: `${paymentDetails?.staySummary?.extraHoursStayed || 0}h ${paymentDetails?.staySummary?.extraMinutesStayed || 0}m`,
 
-        totalExtraStayMinutes:
-          0,
+        totalExtraStayMinutes: paymentDetails?.staySummary?.totalExtraStayMinutes || 0,
 
         totalNightsStayed:
           bookedNights +
@@ -1163,14 +1161,14 @@ export default function Payment({
               extraFullDaysTotal
           ),
 
-        extraHoursStayed: 0,
+        extraHoursStayed: paymentDetails?.billing?.extraHoursStayed || 0,
 
-        extraMinutesStayed: 0,
+        extraMinutesStayed: paymentDetails?.billing?.extraMinutesStayed || 0,
 
         extraNightCharge:
           finalExtraFullDayCharge,
 
-        extraTimeCharge: 0,
+        extraTimeCharge: paymentDetails?.billing?.extraTimeCharge || 0,
 
         extraNightUnits:
           Number(
@@ -1179,10 +1177,10 @@ export default function Payment({
               extraFullDaysTotal
           ),
 
-        extraTimeUnits: 0,
+        extraTimeUnits: paymentDetails?.billing?.extraTimeUnits || 0,
 
         extraTime:
-          "0h 0m",
+          `${paymentDetails?.billing?.extraHoursStayed || 0}h ${paymentDetails?.billing?.extraMinutesStayed || 0}m`,
 
         extraNightPolicyType:
           calculation?.checkoutPolicy
@@ -1254,8 +1252,7 @@ export default function Payment({
         extraNightCharge:
           finalExtraFullDayCharge,
 
-        extraTimeCharge:
-          0,
+        extraTimeCharge: paymentDetails?.billing?.extraTimeCharge || 0,
 
         totalExtraStayCharges:
           finalExtraCharge,
@@ -1985,235 +1982,78 @@ export default function Payment({
         }
       }
 
-      // =====================================================
-      // STEP 6
-      // CREATE INVOICE USING BACKEND VALUES
-      // =====================================================
+// =====================================================
+// STEP 6
+// CREATE INVOICE FROM BACKEND DATABASE DATA
+// =====================================================
 
-      const invoicePayload =
-        buildInvoicePayload(
-          calculation
-        );
+const checkoutBillId =
+  billResponse?.data?._id ||
+  billResponse?.data?.id ||
+  "";
 
-      /*
-       * Force final financial values
-       * from backend.
-       *
-       * This prevents Checkout.jsx /
-       * Payment.jsx preview calculations
-       * from changing invoice amounts.
-       */
+if (!checkoutBillId) {
+  throw new Error(
+    "Checkout bill was created, but checkout bill ID was not returned."
+  );
+}
 
-      const finalExtraFullDayCharge =
-        money(
-          calculation.extraFullDayChargeTotal ??
-            calculation.extraFullDayCharge
-        );
+console.info(
+  "[Payment] Creating invoice from CheckoutBill and Booking data.",
+  {
+    checkoutBillId,
+    bookingIds: uniqueBookingIds,
+    paymentMode,
+  }
+);
 
-      const finalCheckoutPolicyCharge =
-        money(
-          calculation
-            .checkoutPolicy
-            ?.amount ??
-            calculation.checkoutPolicyAmount ??
-            calculation.checkoutPolicyCharge
-        );
+const invoiceResponse =
+  await createInvoice({
+    checkoutBillId,
+    bookingIds: uniqueBookingIds,
+    paymentMode,
+    uiExtraDetails: {
+      extraHours: paymentDetails?.staySummary?.extraHoursStayed || 0,
+      extraMinutes: paymentDetails?.staySummary?.extraMinutesStayed || 0,
+      totalExtraStayMinutes: paymentDetails?.staySummary?.totalExtraStayMinutes || 0,
+      extraTimeCharge: paymentDetails?.staySummary?.extraTimeCharge || 0,
+      extraTimeUnits: paymentDetails?.staySummary?.extraTimeUnits || 0,
+    }
+  });
 
-      const finalExtraCharge =
-        finalExtraFullDayCharge +
-        finalCheckoutPolicyCharge;
+if (!invoiceResponse?.success) {
+  throw new Error(
+    invoiceResponse?.message ||
+      "Checkout completed, but invoice creation failed."
+  );
+}
 
-      // -----------------------------------------------------
-      // BASE ROOM RENT
-      // -----------------------------------------------------
+const savedInvoiceData =
+  invoiceResponse?.data ||
+  invoiceResponse?.invoice ||
+  null;
 
-      const finalBaseRoomRent =
-        Array.isArray(
-          calculation.rooms
-        )
-          ? calculation.rooms.reduce(
-              (sum, room) =>
-                sum +
-                Number(
-                  room.bookedNights ??
-                    room.nights ??
-                    0
-                ) *
-                  money(
-                    room.pricePerNight
-                  ),
-              0
-            )
-          : money(
-              calculation.roomRent
-            );
+if (!savedInvoiceData) {
+  throw new Error(
+    "Invoice was created, but invoice data was not returned."
+  );
+}
 
-      invoicePayload.financials = {
-        ...invoicePayload.financials,
+console.info(
+  "[Payment] Invoice created successfully.",
+  {
+    checkoutBillId,
+    bookingIds: uniqueBookingIds,
+    invoiceId:
+      savedInvoiceData?._id ||
+      savedInvoiceData?.invoiceNo ||
+      null,
+  }
+);
 
-        roomRent:
-          money(
-            finalBaseRoomRent
-          ),
+setSavedInvoice(savedInvoiceData);
 
-        roomSubtotal:
-          money(
-            calculation.roomSubtotal
-          ),
-
-        foodServices:
-          money(
-            calculation.foodTotal
-          ),
-
-        roomServices:
-          money(
-            calculation.roomServiceTotal
-          ),
-
-        extraNightCharge:
-          finalExtraFullDayCharge,
-
-        extraTimeCharge:
-          0,
-
-        totalExtraStayCharges:
-          finalExtraCharge,
-
-        subTotal:
-          money(
-            calculation.subtotal
-          ),
-
-        gstPercentage:
-          money(
-            calculation.gst?.rate ??
-              calculation.gstPercentage
-          ),
-
-        gstAmount:
-          money(
-            calculation.gst?.amount ??
-              calculation.gstAmount
-          ),
-
-        grandTotal:
-          serverGrandTotal,
-
-        advancePaid:
-          serverAdvancePaid,
-
-        currentPayment:
-          serverBalanceDue,
-
-        totalPaid:
-          serverAdvancePaid +
-          serverBalanceDue,
-
-        balanceDue:
-          serverBalanceDue,
-      };
-
-      // Keep extraCharges synchronized
-      // with final backend values.
-
-      invoicePayload.extraCharges = {
-        ...(invoicePayload.extraCharges ||
-          {}),
-
-        total:
-          finalExtraCharge,
-
-        extraNightCharge:
-          finalExtraFullDayCharge,
-
-        checkoutPolicyCharge:
-          finalCheckoutPolicyCharge,
-
-        extraNightsStayed:
-          Number(
-            calculation.extraFullDaysTotal ??
-              calculation.extraFullDays ??
-              invoicePayload
-                ?.extraCharges
-                ?.extraNightsStayed ??
-              0
-          ),
-
-        extraNightUnits:
-          Number(
-            calculation.extraFullDaysTotal ??
-              calculation.extraFullDays ??
-              invoicePayload
-                ?.extraCharges
-                ?.extraNightUnits ??
-              0
-          ),
-      };
-
-      console.info(
-        "[Payment] Creating invoice from backend billing.",
-        {
-          roomRent:
-            finalBaseRoomRent,
-
-          roomSubtotal:
-            money(
-              calculation.roomSubtotal
-            ),
-
-          extraFullDayCharge:
-            finalExtraFullDayCharge,
-
-          checkoutPolicyCharge:
-            finalCheckoutPolicyCharge,
-
-          totalExtraStayCharges:
-            finalExtraCharge,
-
-          grandTotal:
-            serverGrandTotal,
-
-          advancePaid:
-            serverAdvancePaid,
-
-          balanceDue:
-            serverBalanceDue,
-        }
-      );
-
-      // =====================================================
-      // CREATE INVOICE
-      // =====================================================
-
-      const invoiceResponse =
-        await createInvoice(
-          invoicePayload
-        );
-
-      if (
-        !invoiceResponse?.success
-      ) {
-        throw new Error(
-          invoiceResponse?.message ||
-            "Checkout completed, but invoice creation failed."
-        );
-      }
-
-      const savedInvoiceData =
-        invoiceResponse?.data ||
-        invoiceResponse?.invoice ||
-        null;
-
-      if (!savedInvoiceData) {
-        throw new Error(
-          "Invoice was created, but invoice data was not returned."
-        );
-      }
-
-      setSavedInvoice(
-        savedInvoiceData
-      );
+     
 
       // =====================================================
       // SUCCESS

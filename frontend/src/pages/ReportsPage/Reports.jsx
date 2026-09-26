@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useToast } from "../../Context/ToastContext";
 import { getReportsSummary } from "../../service/reportsApi";
+import { formatHumanDate } from "../InvoiceTemplate/stayDurationHelper.js";
 import "./reports.css";
 
 export default function Reports() {
@@ -223,7 +224,7 @@ export default function Reports() {
         `"${item.id || ""}"`,
         `"${item.customer || ""}"`,
         `"${roomServiceText.replace(/"/g, '""')}"`,
-        `"${item.date || ""}"`,
+        `"${formatHumanDate(item.date) || item.date || ""}"`,
         item.amount ?? 0,
         `"${item.status || ""}"`,
       ];
@@ -231,8 +232,9 @@ export default function Reports() {
       csvRows.push(row.join(","));
     });
 
+    const BOM = "\uFEFF";
     const blob = new Blob(
-      [csvRows.join("\n")],
+      [BOM + csvRows.join("\r\n")],
       { type: "text/csv;charset=utf-8;" }
     );
 

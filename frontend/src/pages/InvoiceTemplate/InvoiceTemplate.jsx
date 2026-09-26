@@ -1,4 +1,12 @@
 import React from "react";
+import {
+  computeExtraStayDetails,
+  formatActualCheckOutDisplay,
+  formatHumanDate,
+  formatHumanTime,
+  formatHumanDateTime,
+  exportInvoicesToExcel,
+} from "./stayDurationHelper.js";
 
 const InvoiceTemplate = ({
   activeInvoice,
@@ -6,8 +14,8 @@ const InvoiceTemplate = ({
   receiptRef,
   handleDownloadPDF,
   setActiveInvoice,
-  formatDate,
-  formatTime,
+  formatDate = formatHumanDate,
+  formatTime = formatHumanTime,
 }) => {
   return (
     <>
@@ -67,28 +75,11 @@ const InvoiceTemplate = ({
             ec.extraTimeCharge ?? 0
           );
 
-          const extraNightsStayed = Number(
-            s.extraNights ??
-              ec.extraNightsStayed ??
-              0
-          );
-
-          const extraHoursStayed = Number(
-            ec.extraHoursStayed ??
-              s.extraHours ??
-              0
-          );
-
-          const extraMinutesStayed = Number(
-            ec.extraMinutesStayed ??
-              s.extraMinutes ??
-              0
-          );
-
-          const extraTimeText =
-            ec.extraTime ||
-            s.extraTime ||
-            `${extraHoursStayed}h ${extraMinutesStayed}m`;
+          const extraStay = computeExtraStayDetails(s, ec);
+          const extraNightsStayed = extraStay.extraFullDays;
+          const extraHoursStayed = extraStay.extraHours;
+          const extraMinutesStayed = extraStay.extraMinutes;
+          const extraTimeText = extraStay.extraTimeFormatted;
 
           // ========================================================
           // CHECKOUT POLICY LABEL
@@ -215,52 +206,7 @@ const InvoiceTemplate = ({
           // OVERSTAY INFORMATION
           // ========================================================
 
-          const overstayLabel = (() => {
-            const extraNights = Number(
-              s.extraNights || 0
-            );
-
-            const extraHours = Number(
-              s.extraHours || 0
-            );
-
-            const extraMinutes = Number(
-              s.extraMinutes || 0
-            );
-
-            if (extraNights > 0) {
-              return `${extraNights} extra full day${
-                extraNights > 1
-                  ? "s"
-                  : ""
-              }`;
-            }
-
-            if (extraHours > 0) {
-              return `${extraHours} hour${
-                extraHours > 1
-                  ? "s"
-                  : ""
-              }`;
-            }
-
-            if (extraMinutes > 0) {
-              return `${extraMinutes} minute${
-                extraMinutes > 1
-                  ? "s"
-                  : ""
-              }`;
-            }
-
-            if (
-              checkoutPolicyCharge >
-              0
-            ) {
-              return "Checkout time policy charge";
-            }
-
-            return "No extra stay";
-          })();
+          const overstayLabel = extraStay.overstayLabel;
 
           return (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
@@ -480,7 +426,7 @@ const InvoiceTemplate = ({
                       </span>
 
                       <span>
-                        {inv.invoiceDate}
+                        {formatDate(inv.invoiceDate || inv.createdAt)}
                       </span>
                     </p>
                   </div>
@@ -501,15 +447,11 @@ const InvoiceTemplate = ({
                       </span>
 
                       <span>
-                        {formatDate(
-                          s.bookedCheckIn
+                        {formatHumanDateTime(
+                          s.bookedCheckIn,
+                          s.bookedCheckInTime,
+                          " • "
                         )}
-
-                        {s.bookedCheckInTime
-                          ? ` • ${formatTime(
-                              s.bookedCheckInTime
-                            )}`
-                          : ""}
                       </span>
                     </p>
 
@@ -519,15 +461,11 @@ const InvoiceTemplate = ({
                       </span>
 
                       <span>
-                        {formatDate(
-                          s.bookedCheckOut
+                        {formatHumanDateTime(
+                          s.bookedCheckOut,
+                          s.bookedCheckOutTime,
+                          " • "
                         )}
-
-                        {s.bookedCheckOutTime
-                          ? ` • ${formatTime(
-                              s.bookedCheckOutTime
-                            )}`
-                          : ""}
                       </span>
                     </p>
 
@@ -537,8 +475,13 @@ const InvoiceTemplate = ({
                       </span>
 
                       <span className="font-bold text-emerald-700">
-                        {s.actualCheckOut ||
-                          "-"}
+                        {formatActualCheckOutDisplay(
+                          s.actualCheckOut,
+                          s.actualCheckOutDate,
+                          s.actualCheckOutTime,
+                          formatDate,
+                          formatTime
+                        )}
                       </span>
                     </p>
 
@@ -559,7 +502,7 @@ const InvoiceTemplate = ({
                       </span>
 
                       <span>
-                        {extraNightsStayed}
+                        {extraStay.extraFullDays}
                       </span>
                     </p>
 
@@ -569,8 +512,7 @@ const InvoiceTemplate = ({
                       </span>
 
                       <span>
-                        {s.extraTime ||
-                          "0h 0m"}
+                        {extraStay.extraTimeFormatted}
                       </span>
                     </p>
 
@@ -581,18 +523,12 @@ const InvoiceTemplate = ({
                       </span>
 
                       <span>
-                        {s.totalNightsStayed ??
-                          0}
+                        {Number(s.bookedNights || 0) + extraStay.extraFullDays}
                       </span>
                     </p>
 
                     {(
-                      extraNightsStayed >
-                        0 ||
-                      extraHoursStayed >
-                        0 ||
-                      extraMinutesStayed >
-                        0 ||
+                      extraStay.hasExtraStay ||
                       checkoutPolicyCharge >
                         0
                     ) && (
@@ -600,7 +536,9 @@ const InvoiceTemplate = ({
                         <strong>
                           Checkout:
                         </strong>{" "}
-                        {overstayLabel}
+                        {extraStay.hasExtraStay
+                          ? extraStay.overstayLabel
+                          : "Checkout time policy charge applied"}
                       </div>
                     )}
                   </div>
@@ -694,117 +632,46 @@ const InvoiceTemplate = ({
 
                   <div className="bg-gray-50 p-4 rounded-lg border space-y-1 text-xs">
 
-                    {Number(
-                      f.roomRent || 0
-                    ) > 0 && (
-                      <p className="flex justify-between">
-                        <span className="text-gray-500">
-                          Room Rent:
-                        </span>
-
-                        <span>
-                          ₹
-                          {Number(
-                            f.roomRent ||
-                              0
-                          ).toFixed(
-                            2
-                          )}
-                        </span>
-                      </p>
-                    )}
-
-                    {Number(
-                      f.foodServices || 0
-                    ) > 0 && (
-                      <p className="flex justify-between">
-                        <span className="text-gray-500">
-                          Food Services:
-                        </span>
-
-                        <span>
-                          ₹
-                          {Number(
-                            f.foodServices ||
-                              0
-                          ).toFixed(
-                            2
-                          )}
-                        </span>
-                      </p>
-                    )}
-
-                    {Number(
-                      f.roomServices || 0
-                    ) > 0 && (
-                      <p className="flex justify-between">
-                        <span className="text-gray-500">
-                          Room Services:
-                        </span>
-
-                        <span>
-                          ₹
-                          {Number(
-                            f.roomServices ||
-                              0
-                          ).toFixed(
-                            2
-                          )}
-                        </span>
-                      </p>
-                    )}
-
-                    {/* CHECKOUT POLICY */}
-
-                    {checkoutPolicyCharge >
-                      0 && (
-                      <p className="flex justify-between text-orange-700">
-                        <span>
-                          Checkout Time
-                          Policy:
-                        </span>
-
-                        <span>
-                          ₹
-                          {checkoutPolicyCharge.toFixed(
-                            2
-                          )}
-                        </span>
-                      </p>
-                    )}
-
-                    {/* REAL EXTRA NIGHT */}
-
-                    {extraNightCharge >
-                      0 && (
-                      <p className="flex justify-between text-orange-700">
-                        <span>
-                          Extra Full Day Stay:
-                        </span>
-
-                        <span>
-                          ₹
-                          {extraNightCharge.toFixed(
-                            2
-                          )}
-                        </span>
-                      </p>
-                    )}
-
-                    {extraTimeCharge >
-                      0 && (
-                      <p className="flex justify-between text-orange-700">
-                        <span>
-                          Extra Time Stay:
-                        </span>
-
-                        <span>
-                          ₹
-                          {extraTimeCharge.toFixed(
-                            2
-                          )}
-                        </span>
-                      </p>
+                    {/* When itemized items are not present, fallback to summary rows */}
+                    {(!inv.items || inv.items.length === 0) && (
+                      <>
+                        {Number(f.roomRent || 0) > 0 && (
+                          <p className="flex justify-between">
+                            <span className="text-gray-500">Room Rent:</span>
+                            <span>₹{Number(f.roomRent || 0).toFixed(2)}</span>
+                          </p>
+                        )}
+                        {Number(f.foodServices || 0) > 0 && (
+                          <p className="flex justify-between">
+                            <span className="text-gray-500">Food Services:</span>
+                            <span>₹{Number(f.foodServices || 0).toFixed(2)}</span>
+                          </p>
+                        )}
+                        {Number(f.roomServices || 0) > 0 && (
+                          <p className="flex justify-between">
+                            <span className="text-gray-500">Room Services:</span>
+                            <span>₹{Number(f.roomServices || 0).toFixed(2)}</span>
+                          </p>
+                        )}
+                        {checkoutPolicyCharge > 0 && (
+                          <p className="flex justify-between text-orange-700">
+                            <span>Checkout Time Policy:</span>
+                            <span>₹{checkoutPolicyCharge.toFixed(2)}</span>
+                          </p>
+                        )}
+                        {extraNightCharge > 0 && (
+                          <p className="flex justify-between text-orange-700">
+                            <span>Extra Full Day Stay:</span>
+                            <span>₹{extraNightCharge.toFixed(2)}</span>
+                          </p>
+                        )}
+                        {extraTimeCharge > 0 && checkoutPolicyCharge === 0 && (
+                          <p className="flex justify-between text-orange-700">
+                            <span>Extra Time Stay:</span>
+                            <span>₹{extraTimeCharge.toFixed(2)}</span>
+                          </p>
+                        )}
+                      </>
                     )}
 
                     <p className="flex justify-between font-semibold border-t border-gray-200 pt-1">
@@ -930,8 +797,13 @@ const InvoiceTemplate = ({
 
                       <p className="text-xs text-teal-600">
                         Paid At:{" "}
-                        {p.paidAt ||
-                          "-"}
+                        {formatActualCheckOutDisplay(
+                          p.paidAt,
+                          null,
+                          null,
+                          formatDate,
+                          formatTime
+                        )}
                       </p>
                     </div>
 
@@ -964,9 +836,22 @@ const InvoiceTemplate = ({
                         inv
                       )
                     }
-                    className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-700 transition"
+                    className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-700 transition cursor-pointer"
                   >
                     Download PDF
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      exportInvoicesToExcel(
+                        [inv],
+                        `Invoice_${inv.invoiceNo || "Receipt"}.csv`
+                      )
+                    }
+                    className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 transition cursor-pointer"
+                  >
+                    Export Excel / CSV
                   </button>
 
                   <button
@@ -976,7 +861,7 @@ const InvoiceTemplate = ({
                         null
                       )
                     }
-                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-400 transition"
+                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-400 transition cursor-pointer"
                   >
                     Close
                   </button>
@@ -1036,31 +921,11 @@ const InvoiceTemplate = ({
               ec.extraTimeCharge || 0
             );
 
-          const extraNightsStayed =
-            Number(
-              s.extraNights ??
-                ec.extraNightsStayed ??
-                0
-            );
-
-          const extraHoursStayed =
-            Number(
-              ec.extraHoursStayed ??
-                s.extraHours ??
-                0
-            );
-
-          const extraMinutesStayed =
-            Number(
-              ec.extraMinutesStayed ??
-                s.extraMinutes ??
-                0
-            );
-
-          const extraTimeText =
-            ec.extraTime ||
-            s.extraTime ||
-            `${extraHoursStayed}h ${extraMinutesStayed}m`;
+          const extraStay = computeExtraStayDetails(s, ec);
+          const extraNightsStayed = extraStay.extraFullDays;
+          const extraHoursStayed = extraStay.extraHours;
+          const extraMinutesStayed = extraStay.extraMinutes;
+          const extraTimeText = extraStay.extraTimeFormatted;
 
           // ========================================================
           // CHECKOUT POLICY LABEL
@@ -1172,52 +1037,7 @@ const InvoiceTemplate = ({
           // OVERSTAY LABEL
           // ========================================================
 
-          const overstayLabel = (() => {
-            if (
-              extraNightsStayed >
-              0
-            ) {
-              return `${extraNightsStayed} night${
-                extraNightsStayed >
-                1
-                  ? "s"
-                  : ""
-              }`;
-            }
-
-            if (
-              extraHoursStayed >
-              0
-            ) {
-              return `${extraHoursStayed} hour${
-                extraHoursStayed >
-                1
-                  ? "s"
-                  : ""
-              }`;
-            }
-
-            if (
-              extraMinutesStayed >
-              0
-            ) {
-              return `${extraMinutesStayed} minute${
-                extraMinutesStayed >
-                1
-                  ? "s"
-                  : ""
-              }`;
-            }
-
-            if (
-              checkoutPolicyCharge >
-              0
-            ) {
-              return "Checkout time policy charge";
-            }
-
-            return "No extra stay";
-          })();
+          const overstayLabel = extraStay.overstayLabel;
 
           const row = {
             display: "flex",
@@ -1545,84 +1365,7 @@ const InvoiceTemplate = ({
                     </span>
                   </div>
 
-                  <div style={row}>
-                    <span>
-                      Check-In:
-                    </span>
 
-                    <span>
-                      {formatDate(
-                        s.bookedCheckIn
-                      )}
-
-                      {s.bookedCheckInTime
-                        ? ` • ${formatTime(
-                            s.bookedCheckInTime
-                          )}`
-                        : ""}
-                    </span>
-                  </div>
-
-                  <div style={row}>
-                    <span>
-                      Check-Out:
-                    </span>
-
-                    <span>
-                      {formatDate(
-                        s.bookedCheckOut
-                      )}
-
-                      {s.bookedCheckOutTime
-                        ? ` • ${formatTime(
-                            s.bookedCheckOutTime
-                          )}`
-                        : ""}
-                    </span>
-                  </div>
-
-                  <div style={row}>
-                    <span>
-                      Actual
-                      Check-Out:
-                    </span>
-
-                    <span
-                      style={{
-                        fontWeight: 700,
-                      }}
-                    >
-                      {s.actualCheckOut ||
-                        "-"}
-                    </span>
-                  </div>
-
-                  <div style={row}>
-                    <span>
-                      Booked Nights:
-                    </span>
-
-                    <span>
-                      {s.bookedNights ??
-                        0}
-                    </span>
-                  </div>
-
-                  <div style={row}>
-                    <span>
-                      Total Stay:
-                    </span>
-
-                    <span>
-                      {s.totalNightsStayed ??
-                        0}{" "}
-                      Night
-                      {(s.totalNightsStayed ??
-                        0) !== 1
-                        ? "s"
-                        : ""}
-                    </span>
-                  </div>
 
                   <div style={row}>
                     <span>
@@ -1640,7 +1383,7 @@ const InvoiceTemplate = ({
                     </span>
 
                     <span>
-                      {inv.invoiceDate}
+                      {formatDate(inv.invoiceDate || inv.createdAt)}
                     </span>
                   </div>
 
@@ -1687,15 +1430,11 @@ const InvoiceTemplate = ({
                     </span>
 
                     <span>
-                      {formatDate(
-                        s.bookedCheckIn
+                      {formatHumanDateTime(
+                        s.bookedCheckIn,
+                        s.bookedCheckInTime,
+                        " • "
                       )}
-
-                      {s.bookedCheckInTime
-                        ? ` • ${formatTime(
-                            s.bookedCheckInTime
-                          )}`
-                        : ""}
                     </span>
                   </div>
 
@@ -1705,15 +1444,11 @@ const InvoiceTemplate = ({
                     </span>
 
                     <span>
-                      {formatDate(
-                        s.bookedCheckOut
+                      {formatHumanDateTime(
+                        s.bookedCheckOut,
+                        s.bookedCheckOutTime,
+                        " • "
                       )}
-
-                      {s.bookedCheckOutTime
-                        ? ` • ${formatTime(
-                            s.bookedCheckOutTime
-                          )}`
-                        : ""}
                     </span>
                   </div>
 
@@ -1729,8 +1464,13 @@ const InvoiceTemplate = ({
                           "#047857",
                       }}
                     >
-                      {s.actualCheckOut ||
-                        "-"}
+                      {formatActualCheckOutDisplay(
+                        s.actualCheckOut,
+                        s.actualCheckOutDate,
+                        s.actualCheckOutTime,
+                        formatDate,
+                        formatTime
+                      )}
                     </span>
                   </div>
 
@@ -1751,7 +1491,7 @@ const InvoiceTemplate = ({
                     </span>
 
                     <span>
-                      {extraNightsStayed}
+                      {extraStay.extraFullDays}
                     </span>
                   </div>
 
@@ -1761,8 +1501,7 @@ const InvoiceTemplate = ({
                     </span>
 
                     <span>
-                      {s.extraTime ||
-                        "0h 0m"}
+                      {extraStay.extraTimeFormatted}
                     </span>
                   </div>
 
@@ -1784,18 +1523,12 @@ const InvoiceTemplate = ({
                     </span>
 
                     <span>
-                      {s.totalNightsStayed ??
-                        0}
+                      {Number(s.bookedNights || 0) + extraStay.extraFullDays}
                     </span>
                   </div>
 
                   {(
-                    extraNightsStayed >
-                      0 ||
-                    extraHoursStayed >
-                      0 ||
-                    extraMinutesStayed >
-                      0 ||
+                    extraStay.hasExtraStay ||
                     checkoutPolicyCharge >
                       0
                   ) && (
@@ -1820,7 +1553,9 @@ const InvoiceTemplate = ({
                       <strong>
                         Checkout:
                       </strong>{" "}
-                      {overstayLabel}
+                      {extraStay.hasExtraStay
+                        ? extraStay.overstayLabel
+                        : "Checkout time policy charge applied"}
                     </div>
                   )}
 
@@ -1987,119 +1722,46 @@ const InvoiceTemplate = ({
                   }}
                 >
 
-                  {Number(
-                    f.roomRent || 0
-                  ) > 0 && (
-                    <div style={row}>
-                      <span>
-                        Room Rent:
-                      </span>
-
-                      <span>
-                        ₹
-                        {Number(
-                          f.roomRent ||
-                            0
-                        ).toFixed(
-                          2
-                        )}
-                      </span>
-                    </div>
-                  )}
-
-                  {Number(
-                    f.foodServices || 0
-                  ) > 0 && (
-                    <div style={row}>
-                      <span>
-                        Food Services:
-                      </span>
-
-                      <span>
-                        ₹
-                        {Number(
-                          f.foodServices ||
-                            0
-                        ).toFixed(
-                          2
-                        )}
-                      </span>
-                    </div>
-                  )}
-
-                  {Number(
-                    f.roomServices || 0
-                  ) > 0 && (
-                    <div style={row}>
-                      <span>
-                        Room Services:
-                      </span>
-
-                      <span>
-                        ₹
-                        {Number(
-                          f.roomServices ||
-                            0
-                        ).toFixed(
-                          2
-                        )}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* CHECKOUT TIME POLICY */}
-
-                  {checkoutPolicyCharge >
-                    0 && (
-                    <div style={row}>
-                      <span>
-                        Checkout Time
-                        Policy:
-                      </span>
-
-                      <span>
-                        ₹
-                        {checkoutPolicyCharge.toFixed(
-                          2
-                        )}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* REAL EXTRA NIGHT */}
-
-                  {extraNightCharge >
-                    0 && (
-                    <div style={row}>
-                      <span>
-                        Extra Full Day Stay:
-                      </span>
-
-                      <span>
-                        ₹
-                        {extraNightCharge.toFixed(
-                          2
-                        )}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* EXTRA TIME */}
-
-                  {extraTimeCharge >
-                    0 && (
-                    <div style={row}>
-                      <span>
-                        Extra Time Stay:
-                      </span>
-
-                      <span>
-                        ₹
-                        {extraTimeCharge.toFixed(
-                          2
-                        )}
-                      </span>
-                    </div>
+                  {/* When itemized items are not present, fallback to summary rows */}
+                  {(!inv.items || inv.items.length === 0) && (
+                    <>
+                      {Number(f.roomRent || 0) > 0 && (
+                        <div style={row}>
+                          <span>Room Rent:</span>
+                          <span>₹{Number(f.roomRent || 0).toFixed(2)}</span>
+                        </div>
+                      )}
+                      {Number(f.foodServices || 0) > 0 && (
+                        <div style={row}>
+                          <span>Food Services:</span>
+                          <span>₹{Number(f.foodServices || 0).toFixed(2)}</span>
+                        </div>
+                      )}
+                      {Number(f.roomServices || 0) > 0 && (
+                        <div style={row}>
+                          <span>Room Services:</span>
+                          <span>₹{Number(f.roomServices || 0).toFixed(2)}</span>
+                        </div>
+                      )}
+                      {checkoutPolicyCharge > 0 && (
+                        <div style={row}>
+                          <span>Checkout Time Policy:</span>
+                          <span>₹{checkoutPolicyCharge.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {extraNightCharge > 0 && (
+                        <div style={row}>
+                          <span>Extra Full Day Stay:</span>
+                          <span>₹{extraNightCharge.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {extraTimeCharge > 0 && checkoutPolicyCharge === 0 && (
+                        <div style={row}>
+                          <span>Extra Time Stay:</span>
+                          <span>₹{extraTimeCharge.toFixed(2)}</span>
+                        </div>
+                      )}
+                    </>
                   )}
 
                   <div
@@ -2323,8 +1985,13 @@ const InvoiceTemplate = ({
                     </span>
 
                     <span>
-                      {p.paidAt ||
-                        "-"}
+                      {formatActualCheckOutDisplay(
+                        p.paidAt,
+                        null,
+                        null,
+                        formatDate,
+                        formatTime
+                      )}
                     </span>
                   </div>
 
