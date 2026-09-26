@@ -396,36 +396,40 @@ export default function Checkout({ stay, onClose }) {
     };
   }
 
-  // Difference between expected checkout date
-  // and actual checkout date.
-  const dateDifference = dateDifferenceInDays(
+  // Calculate exact time difference
+  const expectedParts = getDateTimeParts(
     expectedCheckoutDateKey,
-    actualParts.dateKey
+    room?.checkOutTime || "12:00 PM"
   );
+  let exactExtraMinutes = 0;
 
-  const extraDays = Math.max(
-    0,
-    Number(dateDifference || 0)
-  );
+  if (expectedParts && actualParts) {
+    const [ey, em, ed] = expectedParts.dateKey.split("-").map(Number);
+    const [ay, am, ad] = actualParts.dateKey.split("-").map(Number);
 
-  const extraMinutesTotal =
-    extraDays * 24 * 60;
+    const expMs = Date.UTC(ey, em - 1, ed) + expectedParts.minutes * 60000;
+    const actMs = Date.UTC(ay, am - 1, ad) + actualParts.minutes * 60000;
 
-  const extraHours = Math.floor(
-    extraMinutesTotal / 60
-  );
+    if (actMs > expMs) {
+      exactExtraMinutes = Math.floor((actMs - expMs) / 60000);
+    }
+  }
 
-  const extraMinutes =
-    extraMinutesTotal % 60;
+  const actualIsBeforeNoon = actualParts.minutes < CHECKOUT_CUTOFF_MINUTES;
+  const actualIsAfterNoon = actualParts.minutes > CHECKOUT_CUTOFF_MINUTES;
+  const actualIsExactlyNoon = actualParts.minutes === CHECKOUT_CUTOFF_MINUTES;
 
-  const actualIsBeforeNoon =
-    actualParts.minutes < CHECKOUT_CUTOFF_MINUTES;
+  // 24hr threshold rule:
+  // If stay is below 24hr: extraDays = 0, extraHours and minutes = elapsed time
+  // If stay is 24hr and above: extraDays = floor(minutes / 1440), extraHours = remainder
+  const extraDays = Math.floor(exactExtraMinutes / 1440);
+  const remainingExtraMinutes = exactExtraMinutes % 1440;
+  const displayExtraHours = Math.floor(remainingExtraMinutes / 60);
+  const displayExtraMinutes = remainingExtraMinutes % 60;
 
-  const actualIsAfterNoon =
-    actualParts.minutes > CHECKOUT_CUTOFF_MINUTES;
-
-  const actualIsExactlyNoon =
-    actualParts.minutes === CHECKOUT_CUTOFF_MINUTES;
+  const extraMinutesTotal = exactExtraMinutes;
+  const extraHours = displayExtraHours;
+  const extraMinutes = displayExtraMinutes;
 
   let timePolicyType = "";
   let timePolicyValue = 0;
@@ -624,10 +628,6 @@ const grandTotal =
     "";
 
   const totalBookedNights = roomBreakdown.reduce((sum, room) => sum + Number(room.nights || 0), 0);
-  const totalExtraNights = roomBreakdown.reduce(
-    (sum, room) => sum + Number(room.extraStay?.extraDays || 0),
-    0
-  );
   const totalExtraStayMinutes = roomBreakdown.reduce(
     (sum, room) => sum + Number(room.extraStay?.extraMinutesTotal || 0),
     0
@@ -636,6 +636,7 @@ const grandTotal =
   const totalExtraRemainderMinutes = totalExtraStayMinutes % 1440;
   const totalExtraHours = Math.floor(totalExtraRemainderMinutes / 60);
   const totalExtraMinutes = totalExtraRemainderMinutes % 60;
+  const totalExtraNights = totalExtraDaysFromTime;
   const totalExtraDayUnits = roomBreakdown.reduce(
     (sum, room) => sum + Number(room.extraStay?.fullDayUnits || 0),
     0

@@ -4,6 +4,10 @@ import Invoice from "../models/invoice.js";
 import InvoiceCounter from "../models/InvoiceCounter.js";
 import Customer from "../models/customers.js";
 import BranchHotels from "../models/BranchHotels.js";
+import CheckoutBill from "../models/checkoutBill.js";
+import Booking from "../models/booking.js";
+
+
 
 import { log } from "../util/logger.js";
 
@@ -594,10 +598,7 @@ const normalizeRoomServices = (
 // 1. CREATE INVOICE
 // ============================================================
 
-export const createInvoice = async (
-    req,
-    res
-) => {
+export const createInvoice = async (req, res) => {
     let tenant = null;
 
     try {
@@ -605,6 +606,10 @@ export const createInvoice = async (
             `[Invoice] Create invoice request received. ` +
             `userId=${req.user?._id || "unknown"}`
         );
+
+        // ========================================================
+        // TENANT
+        // ========================================================
 
         tenant = getTenantIds(
             req,
@@ -622,38 +627,30 @@ export const createInvoice = async (
         } = tenant;
 
         log.info(
-            `[Invoice] Tenant verified for invoice creation. ` +
+            `[Invoice] Tenant verified. ` +
             `hotelId=${hotelId}, ` +
             `branchId=${branchId}, ` +
             `userId=${req.user?._id || "unknown"}`
         );
 
+        // ========================================================
+        // REQUEST DATA
+        // ========================================================
+
         const {
-            customer,
-            room,
-            rooms,
-            staySummary,
-            foodServicesDetails,
-            roomServicesDetails,
-            extraCharges,
-            financials,
-            billingDetails,
-            paymentInfo,
+            checkoutBillId,
+            bookingIds,
+            paymentMode,
         } = req.body;
 
         // ========================================================
-        // CUSTOMER VALIDATION
+        // CHECKOUT BILL ID VALIDATION
         // ========================================================
 
-        if (
-            !customer ||
-            !normalizeString(
-                customer.customerName
-            )
-        ) {
+        if (!checkoutBillId) {
             log.warn(
-                `[Invoice] Invoice creation rejected. ` +
-                `Customer name is missing. ` +
+                `[Invoice] Create rejected. ` +
+                `checkoutBillId is missing. ` +
                 `hotelId=${hotelId}, ` +
                 `branchId=${branchId}`
             );
@@ -661,22 +658,218 @@ export const createInvoice = async (
             return res.status(400).json({
                 success: false,
                 message:
-                    "Customer name is required.",
+                    "Checkout bill ID is required.",
             });
         }
 
-        if (
-            !normalizeString(
-                customer.phoneNumber
-            )
-        ) {
+        if (!isValidObjectId(checkoutBillId)) {
             log.warn(
-                `[Invoice] Invoice creation rejected. ` +
-                `Customer phone number is missing. ` +
+                `[Invoice] Create rejected. ` +
+                `Invalid checkoutBillId=${checkoutBillId}`
+            );
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "The checkout bill ID is invalid.",
+            });
+        }
+
+        // ========================================================
+        // FETCH CHECKOUT BILL
+        // ========================================================
+
+        log.info(
+            `[Invoice] Fetching CheckoutBill. ` +
+            `checkoutBillId=${checkoutBillId}, ` +
+            `hotelId=${hotelId}, ` +
+            `branchId=${branchId}`
+        );
+
+        const checkoutBill =
+            await CheckoutBill.findOne({
+                _id: checkoutBillId,
+                hotelId,
+                branchId,
+            }).lean();
+
+        if (!checkoutBill) {
+            log.warn(
+                `[Invoice] CheckoutBill not found. ` +
+                `checkoutBillId=${checkoutBillId}, ` +
                 `hotelId=${hotelId}, ` +
                 `branchId=${branchId}`
             );
 
+            return res.status(404).json({
+                success: false,
+                message:
+                    "Checkout bill not found in your branch.",
+            });
+        }
+
+        // ========================================================
+        // BOOKING IDS VALIDATION
+        // ========================================================
+
+        if (
+            !Array.isArray(bookingIds) ||
+            bookingIds.length === 0
+        ) {
+            log.warn(
+                `[Invoice] Create rejected. ` +
+                `No booking IDs supplied.`
+            );
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "At least one booking ID is required.",
+            });
+        }
+
+        const validBookingIds =
+            bookingIds.filter((id) =>
+                isValidObjectId(id)
+            );
+
+        if (
+            validBookingIds.length !==
+            bookingIds.length
+        ) {
+            log.warn(
+                `[Invoice] Create rejected. ` +
+                `One or more booking IDs are invalid.`
+            );
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "One or more booking IDs are invalid.",
+            });
+        }
+
+        // ========================================================
+        // FETCH BOOKINGS
+        // ========================================================
+
+        log.info(
+            `[Invoice] Fetching bookings. ` +
+            `bookingCount=${validBookingIds.length}, ` +
+            `hotelId=${hotelId}, ` +
+            `branchId=${branchId}`
+        );
+
+        const bookings =
+            await Booking.find({
+                _id: {
+                    $in: validBookingIds,
+                },
+                hotelId,
+                branchId,
+            }).lean();
+
+        if (
+            bookings.length !==
+            validBookingIds.length
+        ) {
+            log.warn(
+                `[Invoice] Booking ownership validation failed. ` +
+                `requested=${validBookingIds.length}, ` +
+                `found=${bookings.length}`
+            );
+
+            return res.status(404).json({
+                success: false,
+                message:
+                    "One or more bookings were not found in your branch.",
+            });
+        }
+
+        log.info(
+            `[Invoice] CheckoutBill and Booking data loaded successfully. ` +
+            `checkoutBillId=${checkoutBillId}, ` +
+            `bookingCount=${bookings.length}`
+        );
+
+        // ========================================================
+        // PRIMARY BOOKING
+        // ========================================================
+
+        const primaryBooking =
+            bookings[0];
+
+        if (!primaryBooking) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    "Booking data is required to create the invoice.",
+            });
+        }
+
+        // ========================================================
+        // CUSTOMER
+        // ========================================================
+
+        const customerId =
+            primaryBooking.customerId ||
+            checkoutBill.customer ||
+            null;
+
+        if (
+            !customerId ||
+            !isValidObjectId(customerId)
+        ) {
+            log.warn(
+                `[Invoice] Invalid customer ID. ` +
+                `customerId=${customerId || "none"}`
+            );
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Customer information is invalid.",
+            });
+        }
+
+        log.info(
+            `[Invoice] Fetching customer. ` +
+            `customerId=${customerId}`
+        );
+
+        const customer =
+            await Customer.findOne({
+                _id: customerId,
+                hotelId,
+                branchId,
+            }).lean();
+
+        if (!customer) {
+            log.warn(
+                `[Invoice] Customer not found. ` +
+                `customerId=${customerId}, ` +
+                `hotelId=${hotelId}, ` +
+                `branchId=${branchId}`
+            );
+
+            return res.status(404).json({
+                success: false,
+                message:
+                    "Customer not found in your branch.",
+            });
+        }
+
+        const customerName =
+            normalizeString(
+                customer.customerName
+            ) || "Guest";
+
+        const phoneNumber =
+            normalizeString(
+                customer.phoneNumber
+            );
+
+        if (!phoneNumber) {
             return res.status(400).json({
                 success: false,
                 message:
@@ -684,143 +877,107 @@ export const createInvoice = async (
             });
         }
 
-        const customerId =
-            customer.customerId || null;
-
         // ========================================================
-        // CUSTOMER TENANT VALIDATION
+        // ROOMS FROM BOOKING DB
         // ========================================================
 
-        if (customerId) {
-            if (
-                !isValidObjectId(
-                    customerId
-                )
-            ) {
-                log.warn(
-                    `[Invoice] Invalid customer ID received. ` +
-                    `customerId=${customerId}, ` +
-                    `hotelId=${hotelId}, ` +
-                    `branchId=${branchId}`
-                );
+        const bookingRooms =
+            bookings.flatMap(
+                (booking) =>
+                    Array.isArray(
+                        booking.rooms
+                    )
+                        ? booking.rooms.map(
+                              (room) => ({
+                                  bookingId:
+                                      booking._id,
 
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        "The customer ID is invalid. Please select the customer again.",
-                });
-            }
+                                  roomId:
+                                      room.roomId ||
+                                      null,
 
-            log.info(
-                `[Invoice] Verifying customer ownership. ` +
-                `customerId=${customerId}, ` +
-                `hotelId=${hotelId}, ` +
-                `branchId=${branchId}`
+                                  roomNumber:
+                                      normalizeString(
+                                          room.roomNumber
+                                      ),
+
+                                  roomType:
+                                      normalizeString(
+                                          room.roomType
+                                      ),
+
+                                  bedType:
+                                      normalizeString(
+                                          room.bedType
+                                      ),
+
+                                  perNightRoomPrice:
+                                      roundMoney(
+                                          room.pricePerNight
+                                      ),
+
+                                  adults:
+                                      Math.max(
+                                          0,
+                                          Math.floor(
+                                              normalizeNumber(
+                                                  room.adults
+                                              )
+                                          )
+                                      ),
+
+                                  children:
+                                      Math.max(
+                                          0,
+                                          Math.floor(
+                                              normalizeNumber(
+                                                  room.children
+                                              )
+                                          )
+                                      ),
+
+                                  checkIn:
+                                      room.checkIn ||
+                                      null,
+
+                                  checkInTime:
+                                      normalizeString(
+                                          room.checkInTime
+                                      ),
+
+                                  checkOut:
+                                      room.checkOut ||
+                                      null,
+
+                                  checkOutTime:
+                                      normalizeString(
+                                          room.checkOutTime
+                                      ),
+
+                                  actualCheckoutDate:
+                                      normalizeString(
+                                          room.actualCheckoutDate
+                                      ),
+
+                                  actualCheckoutTime:
+                                      normalizeString(
+                                          room.actualCheckoutTime
+                                      ),
+
+                                  foodServicesDetails: normalizeFoodServices(room.foodServices),
+
+                                 roomServicesDetails: normalizeRoomServices(room.roomServices),
+                              })
+                          )
+                        : []
             );
 
-            const existingCustomer =
-                await Customer.findOne({
-                    _id: customerId,
-                    hotelId,
-                    branchId,
-                })
-                    .select("_id")
-                    .lean();
-
-            if (!existingCustomer) {
-                log.warn(
-                    `[Invoice] Customer ownership verification failed. ` +
-                    `customerId=${customerId}, ` +
-                    `hotelId=${hotelId}, ` +
-                    `branchId=${branchId}`
-                );
-
-                return res.status(404).json({
-                    success: false,
-                    message:
-                        "The selected customer was not found in your branch.",
-                });
-            }
-
-            log.info(
-                `[Invoice] Customer ownership verified. ` +
-                `customerId=${customerId}`
-            );
-        }
-
-        // ========================================================
-        // ROOM VALIDATION
-        // ========================================================
-
-        let processedRooms =
-            Array.isArray(rooms)
-                ? rooms
-                : [];
-
-        // Backward compatibility for old single-room payload.
         if (
-            processedRooms.length === 0 &&
-            room &&
-            (
-                room.roomNumber ||
-                customer.roomNumber
-            )
-        ) {
-            processedRooms = [
-                {
-                    roomNumber:
-                        room.roomNumber ||
-                        customer.roomNumber,
-
-                    roomType:
-                        room.roomType ||
-                        customer.roomType,
-
-                    bedType:
-                        room.bedType ||
-                        customer.bedType,
-
-                    perNightRoomPrice:
-                        room.perNightRoomPrice ??
-                        customer.perNightRoomPrice ??
-                        0,
-
-                    adults:
-                        room.adults ??
-                        customer.adults ??
-                        0,
-
-                    children:
-                        room.children ??
-                        customer.children ??
-                        0,
-
-                    bookedNights:
-                        room.bookedNights ??
-                        room.nights ??
-                        0,
-
-                    roomRent:
-                        room.roomRent ??
-                        0,
-
-                    checkoutPolicyCharge:
-                        room.checkoutPolicyCharge ??
-                        room.checkoutPolicyAmount ??
-                        0,
-                },
-            ];
-        }
-
-        if (
-            processedRooms.length === 0
+            bookingRooms.length === 0
         ) {
             log.warn(
-                `[Invoice] Invoice creation rejected. ` +
-                `No room information was provided. ` +
-                `hotelId=${hotelId}, ` +
-                `branchId=${branchId}, ` +
-                `customerId=${customerId || "unknown"}`
+                `[Invoice] No rooms found in booking. ` +
+                `bookingId=${primaryBooking._id}`
             );
 
             return res.status(400).json({
@@ -831,62 +988,844 @@ export const createInvoice = async (
         }
 
         // ========================================================
-        // FINANCIAL VALIDATION
+        // CHECKOUT BILL - ROOM BILLING
         // ========================================================
 
-        if (!financials) {
-            log.warn(
-                `[Invoice] Invoice creation rejected. ` +
-                `Financial information is missing. ` +
-                `hotelId=${hotelId}, ` +
-                `branchId=${branchId}`
+        const bookedNights =
+            Math.max(
+                0,
+                Math.floor(
+                    normalizeNumber(
+                        checkoutBill
+                            ?.roomBilling
+                            ?.nights
+                    )
+                )
             );
 
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Financial details are required.",
-            });
-        }
+        const roomSubtotal =
+            roundMoney(
+                checkoutBill
+                    ?.roomBilling
+                    ?.roomSubtotal
+            );
+
+        const checkoutPolicy =
+            checkoutBill
+                ?.roomBilling
+                ?.checkoutPolicy || {};
+
+        const checkoutPolicyCharge =
+            roundMoney(
+                checkoutPolicy.amount
+            );
+
+        const checkoutPolicyType =
+            normalizeString(
+                checkoutPolicy.type
+            );
+
+        const checkoutPolicyValue =
+            normalizeNumber(
+                checkoutPolicy.policyValue
+            );
+
+        // ========================================================
+        // EXTRA FULL DAY
+        // ========================================================
+
+        const extraFullDays =
+            Math.max(
+                0,
+                Math.floor(
+                    normalizeNumber(
+                        checkoutBill
+                            ?.roomExtraStay
+                            ?.extraDayStay
+                            ?.numberOfDays
+                    )
+                )
+            );
+
+        const extraFullDayCharge =
+            roundMoney(
+                checkoutBill
+                    ?.roomExtraStay
+                    ?.extraDayStay
+                    ?.amount
+            );
+
+        // ========================================================
+        // FOOD / ROOM SERVICE
+        // ========================================================
+
+        const foodTotal =
+            roundMoney(
+                checkoutBill?.foodTotal
+            );
+
+        const roomServiceTotal =
+            roundMoney(
+                checkoutBill
+                    ?.roomServiceTotal
+            );
+
+        // ========================================================
+        // GST
+        // ========================================================
+
+        const gstAmount =
+            roundMoney(
+                checkoutBill?.gst
+            );
+
+        const taxableSubtotal =
+            roundMoney(
+                roomSubtotal +
+                    foodTotal +
+                    roomServiceTotal
+            );
+
+        const gstPercentage =
+            taxableSubtotal > 0
+                ? roundMoney(
+                      (
+                          gstAmount /
+                          taxableSubtotal
+                      ) * 100
+                  )
+                : 0;
+
+        // ========================================================
+        // GRAND TOTAL
+        // ========================================================
+
+        const grandTotal =
+            roundMoney(
+                checkoutBill?.grandTotal
+            );
+
+        // ========================================================
+        // BASE ROOM RENT
+        // ========================================================
+        //
+        // roomSubtotal already includes:
+        //
+        // Base room rent
+        // + extra full day
+        // + checkout policy
+        //
+        // Therefore remove those extra charges here.
+        //
+        // ========================================================
+
+        const baseRoomRent =
+            Math.max(
+                0,
+                roundMoney(
+                    roomSubtotal -
+                        extraFullDayCharge -
+                        checkoutPolicyCharge
+                )
+            );
+
+        // ========================================================
+        // FINAL PAYMENTS FROM BOOKING DB
+        // ========================================================
+
+        const allPayments =
+            bookings.flatMap(
+                (booking) =>
+                    Array.isArray(
+                        booking.payments
+                    )
+                        ? booking.payments
+                        : []
+            );
+
+        const initialPaid =
+            roundMoney(
+                bookings.reduce(
+                    (
+                        total,
+                        booking
+                    ) =>
+                        total +
+                        normalizeNumber(
+                            booking.initialPaidAmount
+                        ),
+                    0
+                )
+            );
+
+        const checkoutPayment =
+            roundMoney(
+                allPayments
+                    .filter(
+                        (payment) =>
+                            payment?.paymentType ===
+                            "Checkout"
+                    )
+                    .reduce(
+                        (
+                            total,
+                            payment
+                        ) =>
+                            total +
+                            normalizeNumber(
+                                payment.amount
+                            ),
+                        0
+                    )
+            );
+
+        const servicePayment =
+            roundMoney(
+                allPayments
+                    .filter(
+                        (payment) =>
+                            payment?.paymentType ===
+                            "Service"
+                    )
+                    .reduce(
+                        (
+                            total,
+                            payment
+                        ) =>
+                            total +
+                            normalizeNumber(
+                                payment.amount
+                            ),
+                        0
+                    )
+            );
+
+        const otherPayment =
+            roundMoney(
+                allPayments
+                    .filter(
+                        (payment) =>
+                            payment?.paymentType ===
+                            "Other"
+                    )
+                    .reduce(
+                        (
+                            total,
+                            payment
+                        ) =>
+                            total +
+                            normalizeNumber(
+                                payment.amount
+                            ),
+                        0
+                    )
+            );
+
+        const paymentsTotal =
+            roundMoney(
+                allPayments.reduce(
+                    (
+                        total,
+                        payment
+                    ) =>
+                        total +
+                        normalizeNumber(
+                            payment.amount
+                        ),
+                    0
+                )
+            );
+
+        const bookingFinancialTotal =
+            roundMoney(
+                bookings.reduce(
+                    (
+                        total,
+                        booking
+                    ) =>
+                        total +
+                        normalizeNumber(
+                            booking
+                                ?.financials
+                                ?.totalPaid
+                        ),
+                    0
+                )
+            );
+
+        const totalPaid =
+            paymentsTotal > 0
+                ? paymentsTotal
+                : bookingFinancialTotal;
+
+        // ========================================================
+        // CURRENT PAYMENT
+        // ========================================================
+
+        const currentPayment =
+            roundMoney(
+                checkoutPayment +
+                    servicePayment +
+                    otherPayment
+            );
+
+        // ========================================================
+        // BALANCE
+        // ========================================================
+
+        const balanceDue =
+            Math.max(
+                0,
+                roundMoney(
+                    grandTotal -
+                        totalPaid
+                )
+            );
+
+        // ========================================================
+        // ROOM SNAPSHOT
+        // ========================================================
+
+        const roomCount =
+            bookingRooms.length;
+
+        const roomNightsPerRoom =
+            roomCount > 0
+                ? Math.floor(
+                      bookedNights /
+                          roomCount
+                  )
+                : 0;
+
+        let remainingNights =
+            bookedNights;
+
+        let remainingRoomRent =
+            baseRoomRent;
+
+        const formattedRooms =
+            bookingRooms.map(
+                (room, index) => {
+                    let nights;
+
+                    if (
+                        index ===
+                        roomCount - 1
+                    ) {
+                        nights =
+                            remainingNights;
+                    } else {
+                        nights =
+                            roomNightsPerRoom;
+                    }
+
+                    nights =
+                        Math.max(
+                            0,
+                            nights
+                        );
+
+                    let roomRent;
+
+                    if (
+                        index ===
+                        roomCount - 1
+                    ) {
+                        roomRent =
+                            roundMoney(
+                                remainingRoomRent
+                            );
+                    } else {
+                        roomRent =
+                            roundMoney(
+                                room.perNightRoomPrice *
+                                    nights
+                            );
+                    }
+
+                    remainingNights =
+                        Math.max(
+                            0,
+                            remainingNights -
+                                nights
+                        );
+
+                    remainingRoomRent =
+                        Math.max(
+                            0,
+                            roundMoney(
+                                remainingRoomRent -
+                                    roomRent
+                            )
+                        );
+
+                    return {
+                        ...room,
+
+                        bookedNights:
+                            nights,
+
+                        roomRent,
+
+                        checkoutPolicyCharge:
+                            index ===
+                            roomCount - 1
+                                ? checkoutPolicyCharge
+                                : 0,
+
+                        checkoutPolicyType:
+                            index ===
+                            roomCount - 1
+                                ? checkoutPolicyType
+                                : "",
+
+                        checkoutPolicyValue:
+                            index ===
+                            roomCount - 1
+                                ? checkoutPolicyValue
+                                : 0,
+                    };
+                }
+            );
+
+        // ========================================================
+        // INVOICE ITEMS
+        // ========================================================
+
+        const invoiceItems = [];
+
+        formattedRooms.forEach(
+            (room, index) => {
+                const nights =
+                    Math.max(
+                        0,
+                        Math.floor(
+                            normalizeNumber(
+                                room.bookedNights
+                            )
+                        )
+                    );
+
+                const unitPrice =
+                    roundMoney(
+                        room.perNightRoomPrice
+                    );
+
+                const total =
+                    roundMoney(
+                        unitPrice *
+                            nights
+                    );
+
+                invoiceItems.push({
+                    description:
+                        `Room Rent - ${
+                            room.roomNumber ||
+                            index + 1
+                        } (${
+                            room.roomType ||
+                            "Room"
+                        } - ${nights} ${
+                            nights === 1
+                                ? "Night"
+                                : "Nights"
+                        })`,
+
+                    unitPrice,
+
+                    quantity:
+                        nights,
+
+                    total,
+                });
+            }
+        );
+
+        // ========================================================
+        // EXTRA FULL DAY ITEM
+        // ========================================================
 
         if (
-            financials.grandTotal ===
-                undefined ||
-            financials.grandTotal ===
-                null
+            extraFullDays > 0 &&
+            extraFullDayCharge > 0
         ) {
-            log.warn(
-                `[Invoice] Invoice creation rejected. ` +
-                `Grand total is missing. ` +
-                `hotelId=${hotelId}, ` +
-                `branchId=${branchId}`
-            );
+            invoiceItems.push({
+                description:
+                    "Extra Full Day Stay",
 
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Financial grand total is required.",
+                unitPrice:
+                    roundMoney(
+                        extraFullDayCharge /
+                            extraFullDays
+                    ),
+
+                quantity:
+                    extraFullDays,
+
+                total:
+                    extraFullDayCharge,
             });
         }
 
         // ========================================================
-        // PAYMENT VALIDATION
+        // CHECKOUT POLICY ITEM
         // ========================================================
 
-        if (!paymentInfo) {
-            log.warn(
-                `[Invoice] Invoice creation rejected. ` +
-                `Payment information is missing. ` +
-                `hotelId=${hotelId}, ` +
-                `branchId=${branchId}`
-            );
+        if (
+            checkoutPolicyCharge > 0
+        ) {
+            let policyLabel =
+                "Checkout Time Policy";
 
-            return res.status(400).json({
-                success: false,
-                message:
-                    "Payment information is required.",
+            if (
+                checkoutPolicyType ===
+                "before12PM"
+            ) {
+                policyLabel =
+                    "Checkout Time Policy - Before 12 PM";
+            }
+
+            if (
+                checkoutPolicyType ===
+                "after12PM"
+            ) {
+                policyLabel =
+                    "Checkout Time Policy - After 12 PM";
+            }
+
+            invoiceItems.push({
+                description:
+                    policyLabel,
+
+                unitPrice:
+                    checkoutPolicyCharge,
+
+                quantity: 1,
+
+                total:
+                    checkoutPolicyCharge,
             });
         }
+
+        // ========================================================
+        // SERVICES
+        // ========================================================
+
+        const foodServicesDetails =
+            formattedRooms.flatMap(
+                (room) =>
+                    Array.isArray(
+                        room.foodServices
+                    )
+                        ? room.foodServices
+                        : []
+            );
+
+        const roomServicesDetails =
+            formattedRooms.flatMap(
+                (room) =>
+                    Array.isArray(
+                        room.roomServices
+                    )
+                        ? room.roomServices
+                        : []
+            );
+
+        // ========================================================
+        // STAY DETAILS
+        // ========================================================
+        //
+        // IMPORTANT:
+        // Booking DB is the source for:
+        //
+        // check-in date
+        // check-in time
+        // expected checkout date
+        // expected checkout time
+        // actual checkout date
+        // actual checkout time
+        //
+        // ========================================================
+
+        const firstRoom =
+            formattedRooms[0];
+
+        const expectedCheckoutDate =
+            checkoutBill
+                ?.roomBilling
+                ?.expectedCheckoutDate ||
+            firstRoom?.checkOut ||
+            null;
+
+        const actualCheckoutDateTime =
+            checkoutBill
+                ?.roomBilling
+                ?.actualCheckoutDateTime ||
+            checkoutBill
+                ?.checkoutDateTime ||
+            null;
+
+        const actualCheckoutDate =
+            firstRoom
+                ?.actualCheckoutDate ||
+            (
+                actualCheckoutDateTime
+                    ? new Date(
+                          actualCheckoutDateTime
+                      )
+                          .toISOString()
+                          .slice(
+                              0,
+                              10
+                          )
+                    : ""
+            );
+
+        const actualCheckoutTime =
+            firstRoom
+                ?.actualCheckoutTime ||
+            "";
+
+        const uiDetails = req.body.uiExtraDetails || {};
+
+        const staySummary = {
+            bookedCheckIn:
+                firstRoom?.checkIn ||
+                null,
+
+            bookedCheckInTime:
+                firstRoom
+                    ?.checkInTime ||
+                "",
+
+            bookedCheckOut:
+                expectedCheckoutDate,
+
+            bookedCheckOutTime:
+                firstRoom
+                    ?.checkOutTime ||
+                "",
+
+            actualCheckOut:
+                actualCheckoutDateTime,
+
+            actualCheckOutDate:
+                actualCheckoutDate,
+
+            actualCheckOutTime:
+                actualCheckoutTime,
+
+            bookedNights,
+
+            extraNights:
+                extraFullDays,
+
+            extraHours: uiDetails.extraHours || 0,
+
+            extraMinutes: uiDetails.extraMinutes || 0,
+
+            extraTime: (uiDetails.extraHours || uiDetails.extraMinutes) ? `${uiDetails.extraHours || 0}h ${uiDetails.extraMinutes || 0}m` : "",
+
+            totalExtraStayMinutes: uiDetails.totalExtraStayMinutes || 0,
+
+            totalNightsStayed:
+                bookedNights +
+                extraFullDays,
+
+            overstayDescription:
+                extraFullDays > 0
+                    ? `${extraFullDays} extra full day${
+                          extraFullDays >
+                          1
+                              ? "s"
+                              : ""
+                      }`
+                    : checkoutPolicyCharge >
+                      0
+                    ? "Checkout time policy charge"
+                    : "",
+        };
+
+        // ========================================================
+        // EXTRA CHARGES
+        // ========================================================
+
+        const totalExtraStayCharges =
+            roundMoney(
+                extraFullDayCharge +
+                    checkoutPolicyCharge
+            );
+
+        const extraCharges = {
+            extraNightsStayed:
+                extraFullDays,
+
+            extraNightRate:
+                extraFullDays > 0
+                    ? roundMoney(
+                          extraFullDayCharge /
+                              extraFullDays
+                      )
+                    : 0,
+
+            extraNightCharge:
+                extraFullDayCharge,
+
+            extraHoursStayed: uiDetails.extraHours || 0,
+
+            extraMinutesStayed: uiDetails.extraMinutes || 0,
+
+            extraHoursCharge: 0,
+
+            extraTimeCharge: uiDetails.extraTimeCharge || 0,
+
+            extraTimeChargeType:
+                "No extra time charge",
+
+            extraTimeRatePercentage:
+                0,
+
+            lateCheckoutCharge:
+                checkoutPolicyCharge,
+
+            checkoutPolicyType:
+                checkoutPolicyType,
+
+            checkoutPolicyValue:
+                checkoutPolicyValue,
+
+            damageCharge: 0,
+
+            otherCharges: 0,
+
+            otherChargesDescription:
+                "",
+
+            total:
+                totalExtraStayCharges,
+        };
+
+        // ========================================================
+        // FINANCIALS
+        // ========================================================
+
+        const subtotal =
+            roundMoney(
+                roomSubtotal +
+                    foodTotal +
+                    roomServiceTotal
+            );
+
+        const financials = {
+            roomRent:
+                baseRoomRent,
+
+            roomRentPerNight:
+                roundMoney(
+                    firstRoom
+                        ?.perNightRoomPrice
+                ),
+
+            foodServices:
+                foodTotal,
+
+            roomServices:
+                roomServiceTotal,
+
+            extraNightCharge:
+                extraFullDayCharge,
+
+            extraTimeCharge:
+                uiDetails.extraTimeCharge || 0,
+
+            totalExtraStayCharges:
+                totalExtraStayCharges,
+
+            subTotal:
+                subtotal,
+
+            gstPercentage:
+                gstPercentage,
+
+            gstAmount:
+                gstAmount,
+
+            grandTotal:
+                grandTotal,
+
+            advancePaid:
+                initialPaid,
+
+            advancePaidVia:
+                normalizeString(
+                    primaryBooking
+                        ?.initialPaidVia,
+                    "Cash"
+                ),
+
+            currentPayment:
+                currentPayment,
+
+            totalPaid:
+                totalPaid,
+
+            balanceDue:
+                balanceDue,
+        };
+
+        // ========================================================
+        // PAYMENT INFO
+        // ========================================================
+
+        const sortedPayments =
+            [...allPayments].sort(
+                (a, b) =>
+                    new Date(
+                        b?.paidAt || 0
+                    ) -
+                    new Date(
+                        a?.paidAt || 0
+                    )
+            );
+
+        const lastPayment =
+            sortedPayments[0];
+
+        const finalPaymentMode =
+            normalizeString(
+                lastPayment
+                    ?.paymentVia
+            ) ||
+            normalizeString(
+                paymentMode
+            ) ||
+            "Cash";
+
+        const paymentStatus =
+            balanceDue <= 0
+                ? "PAID"
+                : totalPaid > 0
+                ? "PARTIAL"
+                : "PENDING";
+
+        const paymentInfo = {
+            paymentMode:
+                finalPaymentMode,
+
+            paymentStatus:
+
+                paymentStatus,
+
+            paidAt:
+                lastPayment
+                    ?.paidAt ||
+                checkoutBill
+                    ?.checkoutDateTime ||
+                new Date(),
+
+            transactionId:
+                "",
+        };
 
         // ========================================================
         // GENERATE INVOICE NUMBER
@@ -902,575 +1841,19 @@ export const createInvoice = async (
                 branchId
             );
 
-        // ========================================================
-        // ROOM SNAPSHOT
-        // ========================================================
-
-        const formattedRooms =
-            processedRooms.map(
-                normalizeRoom
-            );
-
         log.info(
-            `[Invoice] Room snapshot prepared. ` +
+            `[Invoice] Creating invoice document. ` +
             `invoiceNo=${invoiceNo}, ` +
-            `roomCount=${formattedRooms.length}`
-        );
-
-        // ========================================================
-        // SERVICE SNAPSHOTS
-        // ========================================================
-
-        const normalizedFoodServices =
-            normalizeFoodServices(
-                foodServicesDetails
-            );
-
-        const normalizedRoomServices =
-            normalizeRoomServices(
-                roomServicesDetails
-            );
-
-        // ========================================================
-        // CHECKOUT BILLING
-        // ========================================================
-        //
-        // The CheckoutBill backend is the source of truth.
-        //
-        // IMPORTANT:
-        //
-        // If financials.roomRent is ₹875:
-        //
-        //   ₹750 base room rent
-        //   ₹125 checkout policy
-        //
-        // then we must NOT add another ₹125 to subtotal.
-        //
-        // ========================================================
-
-       // ========================================================
-// BASE ROOM RENT
-// ========================================================
-//
-// Do NOT use roomSubtotal here.
-//
-// roomSubtotal already includes extra charges.
-//
-// Base room rent:
-// ₹250 × 2 nights = ₹500
-//
-// ========================================================
-
-const calculatedBaseRoomRent = formattedRooms.reduce(
-    (total, roomData) => {
-        const nights = Math.max(
-            0,
-            Number(roomData.bookedNights || 0)
-        );
-
-        const rate = roundMoney(
-            roomData.perNightRoomPrice || 0
-        );
-
-        return total + rate * nights;
-    },
-    0
-);
-
-const roomRent = roundMoney(
-    calculatedBaseRoomRent
-);
-
-log.info(
-    `[Invoice] Base room rent calculated. ` +
-    `roomRent=${roomRent}, ` +
-    `roomCount=${formattedRooms.length}`
-);
-
-        const foodTotal =
-            roundMoney(
-                financials.foodServices ??
-                    financials.foodTotal ??
-                    0
-            );
-
-        const roomServiceTotal =
-            roundMoney(
-                financials.roomServices ??
-                    financials.roomServiceTotal ??
-                    0
-            );
-
-        // ========================================================
-        // CHECKOUT POLICY CHARGE
-        // ========================================================
-
-        const checkoutPolicyCharge =
-            roundMoney(
-                extraCharges?.checkoutPolicyCharge ??
-                    extraCharges?.checkoutPolicyAmount ??
-                    financials?.checkoutPolicyCharge ??
-                    financials?.checkoutPolicyAmount ??
-                    extraCharges?.lateCheckoutCharge ??
-                    0
-            );
-
-        // ========================================================
-        // EXTRA NIGHT CHARGE
-        // ========================================================
-        //
-        // This is a real additional full-night charge.
-        //
-        // Do not use the legacy extraNightCharge field for the
-        // before/after 12 PM checkout policy.
-        //
-        // ========================================================
-
-       // ========================================================
-// EXTRA FULL DAY CHARGE
-// ========================================================
-//
-// This is a real additional full-day charge.
-//
-// Example:
-// Extra full day = ₹250
-// Checkout policy = ₹125
-//
-// Both charges MUST be kept.
-//
-// ========================================================
-
-const extraNightCharge = roundMoney(
-    extraCharges?.extraNightCharge ??
-        extraCharges?.extraFullDayCharge ??
-        financials?.extraNightCharge ??
-        financials?.extraFullDayCharge ??
-        0
-);
-
-const extraNightsStayed = Math.max(
-    0,
-    Math.floor(
-        normalizeNumber(
-            extraCharges?.extraNightsStayed ??
-                extraCharges?.extraFullDays ??
-                staySummary?.extraNights ??
-                0
-        )
-    )
-);
-
-log.info(
-    `[Invoice] Extra stay charges resolved. ` +
-    `extraNightsStayed=${extraNightsStayed}, ` +
-    `extraFullDayCharge=${extraNightCharge}, ` +
-    `checkoutPolicyCharge=${checkoutPolicyCharge}`
-);
-
-     // ========================================================
-// EXTRA TIME CHARGE
-// ========================================================
-
-const extraTimeCharge = roundMoney(
-    extraCharges?.extraTimeCharge ??
-        extraCharges?.extraHoursCharge ??
-        0
-);
-
-// ========================================================
-// OTHER CHARGES
-// ========================================================
-
-const damageCharge = roundMoney(
-    extraCharges?.damageCharge ?? 0
-);
-
-const otherCharges = roundMoney(
-    extraCharges?.otherCharges ?? 0
-);
-
-// ========================================================
-// TOTAL EXTRA STAY CHARGES
-// ========================================================
-//
-// ₹250 extra full day
-// + ₹125 checkout policy
-// = ₹375
-//
-// ========================================================
-
-const totalExtraStayCharges = roundMoney(
-    extraNightCharge +
-        checkoutPolicyCharge +
-        extraTimeCharge +
-        damageCharge +
-        otherCharges
-);
-
-log.info(
-    `[Invoice] Total extra stay charges calculated. ` +
-    `extraFullDay=${extraNightCharge}, ` +
-    `checkoutPolicy=${checkoutPolicyCharge}, ` +
-    `extraTime=${extraTimeCharge}, ` +
-    `damage=${damageCharge}, ` +
-    `other=${otherCharges}, ` +
-    `total=${totalExtraStayCharges}`
-);
-
-        // ========================================================
-        // SUBTOTAL
-        // ========================================================
-        //
-        // Prefer backend subtotal.
-        //
-        // Fallback:
-        //
-        // roomRent + food + roomService
-        //
-        // Do NOT add checkoutPolicyCharge here because the
-        // backend roomRent already contains it when using the
-        // current CheckoutBill calculation.
-        //
-        // ========================================================
-
-        const subtotal = roundMoney(
-    financials.subTotal ??
-        financials.subtotal ??
-        (
-            roomRent +
-            totalExtraStayCharges +
-            foodTotal +
-            roomServiceTotal
-        )
-);
-
-        // ========================================================
-        // GST
-        // ========================================================
-
-        const gstPercentage =
-            Math.max(
-                0,
-                normalizeNumber(
-                    financials.gstPercentage ??
-                        financials.gst?.rate ??
-                        0
-                )
-            );
-
-        const gstAmount =
-            roundMoney(
-                financials.gstAmount ??
-                    financials.gst?.amount ??
-                    (
-                        subtotal *
-                        gstPercentage /
-                        100
-                    )
-            );
-
-        // ========================================================
-        // GRAND TOTAL
-        // ========================================================
-
-        const grandTotal =
-            roundMoney(
-                financials.grandTotal ??
-                    (
-                        subtotal +
-                        gstAmount
-                    )
-            );
-
-        // ========================================================
-        // ADVANCE PAYMENT
-        // ========================================================
-
-        const advancePaid =
-            Math.max(
-                0,
-                roundMoney(
-                    financials.advancePaid ??
-                        financials.initialPaidAmount ??
-                        0
-                )
-            );
-
-        // ========================================================
-        // CURRENT PAYMENT
-        // ========================================================
-
-        const currentPayment =
-            Math.max(
-                0,
-                roundMoney(
-                    financials.currentPayment ??
-                        financials.balanceDue ??
-                        0
-                )
-            );
-
-        // ========================================================
-        // TOTAL PAID
-        // ========================================================
-
-        const totalPaid =
-            roundMoney(
-                advancePaid +
-                    currentPayment
-            );
-
-        // ========================================================
-        // BALANCE DUE
-        // ========================================================
-        //
-        // NEVER trust an old frontend balance value.
-        //
-        // Always derive:
-        //
-        // grandTotal - totalPaid
-        //
-        // ========================================================
-
-        const balanceDue =
-            Math.max(
-                0,
-                roundMoney(
-                    grandTotal -
-                        totalPaid
-                )
-            );
-
-        // ========================================================
-        // STAY SUMMARY
-        // ========================================================
-
-        const bookedNights =
-            Math.max(
-                0,
-                Math.floor(
-                    normalizeNumber(
-                        staySummary?.bookedNights
-                    )
-                )
-            );
-
-        const actualTotalNights =
-            Math.max(
-                bookedNights,
-                Math.floor(
-                    normalizeNumber(
-                        staySummary?.totalNightsStayed
-                    )
-                )
-            );
-
-        const calculatedExtraNights =
-            Math.max(
-                0,
-                actualTotalNights -
-                    bookedNights
-            );
-
-        const finalExtraNights =
-            Math.max(
-                extraNightsStayed,
-                calculatedExtraNights
-            );
-
-let overstayDescription =
-    normalizeString(
-        staySummary?.overstayDescription
-    );
-
-if (
-    !overstayDescription &&
-    finalExtraNights > 0
-) {
-    overstayDescription =
-        `${finalExtraNights} extra night${
-            finalExtraNights > 1
-                ? "s"
-                : ""
-        }`;
-}
-
-const checkoutPolicyText =
-    "checkout time policy charge";
-
-if (
-    checkoutPolicyCharge > 0 &&
-    !overstayDescription
-        .toLowerCase()
-        .includes(checkoutPolicyText)
-) {
-    overstayDescription =
-        overstayDescription
-            ? `${overstayDescription} + ${checkoutPolicyText}`
-            : "Checkout time policy charge";
-}
-
-        // ========================================================
-        // INVOICE ROOM ITEMS
-        // ========================================================
-        //
-        // The item represents BASE ROOM RENT only.
-        //
-        // Example:
-        //
-        // ₹250 × 3 = ₹750
-        //
-        // Checkout policy ₹125 is stored separately.
-        //
-        // ========================================================
-
-        // ========================================================
-// INVOICE ITEMS
-// ========================================================
-//
-// 1. Normal room rent
-// 2. Extra full day
-// 3. Checkout time policy
-//
-// ========================================================
-
-const invoiceItems = formattedRooms.map(
-    (roomData, index) => {
-        const nights = Math.max(
-            0,
-            Math.floor(
-                Number(
-                    roomData.bookedNights || 0
-                )
-            )
-        );
-
-        const unitPrice = roundMoney(
-            roomData.perNightRoomPrice || 0
-        );
-
-        const total = roundMoney(
-            unitPrice * nights
-        );
-
-        return {
-            description:
-                `Room Rent - ${
-                    roomData.roomNumber ||
-                    index + 1
-                } (${
-                    roomData.roomType ||
-                    "Room"
-                } - ${nights} ${
-                    nights === 1
-                        ? "Night"
-                        : "Nights"
-                })`,
-
-            unitPrice,
-
-            quantity: nights,
-
-            total,
-        };
-    }
-);
-
-// ========================================================
-// EXTRA FULL DAY ITEM
-// ========================================================
-
-if (
-    extraNightsStayed > 0 &&
-    extraNightCharge > 0
-) {
-    invoiceItems.push({
-        description:
-            extraNightsStayed === 1
-                ? "Extra Full Day Stay"
-                : "Extra Full Day Stay",
-
-        unitPrice: roundMoney(
-            extraNightCharge /
-                extraNightsStayed
-        ),
-
-        quantity: extraNightsStayed,
-
-        total: roundMoney(
-            extraNightCharge
-        ),
-    });
-}
-
-// ========================================================
-// CHECKOUT POLICY ITEM
-// ========================================================
-
-if (checkoutPolicyCharge > 0) {
-    const checkoutPolicyType =
-        normalizeString(
-            extraCharges?.checkoutPolicyType
-        );
-
-    const checkoutPolicyLabel =
-        checkoutPolicyType ===
-        "before12PM"
-            ? "Checkout Time Policy - Before 12 PM"
-            : checkoutPolicyType ===
-              "after12PM"
-            ? "Checkout Time Policy - After 12 PM"
-            : "Checkout Time Policy";
-
-    invoiceItems.push({
-        description:
-            checkoutPolicyLabel,
-
-        unitPrice:
-            checkoutPolicyCharge,
-
-        quantity: 1,
-
-        total:
-            checkoutPolicyCharge,
-    });
-}
-
-log.info(
-    `[Invoice] Invoice items prepared. ` +
-    `roomItems=${formattedRooms.length}, ` +
-    `extraFullDay=${extraNightCharge}, ` +
-    `checkoutPolicy=${checkoutPolicyCharge}, ` +
-    `itemCount=${invoiceItems.length}`
-);
-
-        log.info(
-            `[Invoice] Checkout billing normalized. ` +
-            `invoiceNo=${invoiceNo}, ` +
-            `roomRent=${roomRent}, ` +
-            `checkoutPolicyCharge=${checkoutPolicyCharge}, ` +
-            `foodTotal=${foodTotal}, ` +
-            `roomServiceTotal=${roomServiceTotal}, ` +
-            `subtotal=${subtotal}, ` +
-            `gst=${gstAmount}, ` +
+            `checkoutBillId=${checkoutBillId}, ` +
+            `customerId=${customerId}, ` +
             `grandTotal=${grandTotal}, ` +
-            `advancePaid=${advancePaid}, ` +
-            `currentPayment=${currentPayment}, ` +
             `totalPaid=${totalPaid}, ` +
             `balanceDue=${balanceDue}`
         );
 
         // ========================================================
-        // CREATE INVOICE DOCUMENT
+        // CREATE INVOICE
         // ========================================================
-
-        log.info(
-            `[Invoice] Creating invoice document. ` +
-            `invoiceNo=${invoiceNo}, ` +
-            `hotelId=${hotelId}, ` +
-            `branchId=${branchId}, ` +
-            `customerId=${customerId || "none"}`
-        );
 
         const newInvoice =
             await Invoice.create({
@@ -1493,36 +1876,25 @@ log.info(
                 invoiceSequence,
 
                 invoiceDate:
-                    normalizeString(
-                        req.body.invoiceDate
-                    ) ||
                     formatInvoiceDate(),
 
                 // ==================================================
                 // CUSTOMER
                 // ==================================================
 
-                customerId:
-                    customerId || null,
+                customerId,
 
                 customer: {
-                    customerId:
-                        customerId || null,
+                    customerId,
 
-                    customerName:
-                        normalizeString(
-                            customer.customerName
-                        ),
+                    customerName,
 
-                    phoneNumber:
-                        normalizeString(
-                            customer.phoneNumber
-                        ),
+                    phoneNumber,
 
                     alternativePhone:
                         normalizeString(
-                            customer.alternativePhone ??
-                                customer.altPhone
+                            customer
+                                .alternativePhone
                         ),
 
                     email:
@@ -1537,8 +1909,7 @@ log.info(
 
                     idProofType:
                         normalizeString(
-                            customer.idProofType ??
-                                customer.idProof
+                            customer.idProofType
                         ),
 
                     idProofNumber:
@@ -1549,26 +1920,30 @@ log.info(
                     rooms:
                         formattedRooms,
 
-                    // Backward compatibility.
                     roomNumber:
-                        formattedRooms[0]
-                            ?.roomNumber || "",
+                        firstRoom
+                            ?.roomNumber ||
+                        "",
 
                     roomType:
-                        formattedRooms[0]
-                            ?.roomType || "",
+                        firstRoom
+                            ?.roomType ||
+                        "",
 
                     bedType:
-                        formattedRooms[0]
-                            ?.bedType || "",
+                        firstRoom
+                            ?.bedType ||
+                        "",
 
                     adults:
-                        formattedRooms[0]
-                            ?.adults || 0,
+                        firstRoom
+                            ?.adults ||
+                        0,
 
                     children:
-                        formattedRooms[0]
-                            ?.children || 0,
+                        firstRoom
+                            ?.children ||
+                        0,
                 },
 
                 // ==================================================
@@ -1578,87 +1953,12 @@ log.info(
                 rooms:
                     formattedRooms,
 
-                room:
-                    formattedRooms[0] || {},
 
                 // ==================================================
                 // STAY SUMMARY
                 // ==================================================
 
-                staySummary: {
-                    bookedCheckIn:
-                        staySummary?.bookedCheckIn ||
-                        "",
-
-                    bookedCheckInTime:
-                        staySummary?.bookedCheckInTime ||
-                        "",
-
-                    bookedCheckOut:
-                        staySummary?.bookedCheckOut ||
-                        "",
-
-                    bookedCheckOutTime:
-                        staySummary?.bookedCheckOutTime ||
-                        "",
-
-                    actualCheckOut:
-                        staySummary?.actualCheckOut ||
-                        "",
-
-                    actualCheckOutDate:
-                        staySummary?.actualCheckOutDate ||
-                        "",
-
-                    actualCheckOutTime:
-                        staySummary?.actualCheckOutTime ||
-                        "",
-
-                    bookedNights,
-
-                    extraNights:
-                        finalExtraNights,
-
-                    extraHours:
-                        Math.max(
-                            0,
-                            Math.floor(
-                                normalizeNumber(
-                                    staySummary?.extraHours
-                                )
-                            )
-                        ),
-
-                    extraMinutes:
-                        Math.max(
-                            0,
-                            Math.floor(
-                                normalizeNumber(
-                                    staySummary?.extraMinutes
-                                )
-                            )
-                        ),
-
-                    extraTime:
-                        normalizeString(
-                            staySummary?.extraTime
-                        ),
-
-                    totalExtraStayMinutes:
-                        Math.max(
-                            0,
-                            Math.floor(
-                                normalizeNumber(
-                                    staySummary?.totalExtraStayMinutes
-                                )
-                            )
-                        ),
-
-                    totalNightsStayed:
-                        actualTotalNights,
-
-                    overstayDescription,
-                },
+                staySummary,
 
                 // ==================================================
                 // ITEMS
@@ -1671,201 +1971,69 @@ log.info(
                 // FOOD SERVICES
                 // ==================================================
 
-                foodServicesDetails:
-                    normalizedFoodServices,
 
                 // ==================================================
                 // ROOM SERVICES
                 // ==================================================
 
-                roomServicesDetails:
-                    normalizedRoomServices,
+              
 
-               extraCharges: {
-    // Extra full-day stay
-    extraNightsStayed:
-        extraNightsStayed,
+                // ==================================================
+                // EXTRA CHARGES
+                // ==================================================
 
-    extraNightRate:
-        roundMoney(
-            extraCharges?.extraNightRate ??
-                formattedRooms[0]
-                    ?.perNightRoomPrice ??
-                0
-        ),
+                extraCharges,
 
-    // IMPORTANT:
-    // This is the actual extra full-day amount.
-    extraNightCharge:
-        extraNightCharge,
-
-    extraHoursStayed:
-        Math.max(
-            0,
-            Math.floor(
-                normalizeNumber(
-                    extraCharges?.extraHoursStayed ??
-                        staySummary?.extraHours ??
-                        0
-                )
-            )
-        ),
-
-    extraMinutesStayed:
-        Math.max(
-            0,
-            Math.floor(
-                normalizeNumber(
-                    extraCharges?.extraMinutesStayed ??
-                        staySummary?.extraMinutes ??
-                        0
-                )
-            )
-        ),
-
-    extraHoursCharge:
-        extraTimeCharge,
-
-    extraTimeCharge:
-        extraTimeCharge,
-
-    extraTimeChargeType:
-        extraTimeCharge > 0
-            ? normalizeString(
-                  extraCharges?.extraTimeChargeType
-              ) ||
-              "Extra time charge"
-            : "No extra time charge",
-
-    extraTimeRatePercentage:
-        normalizeNumber(
-            extraCharges?.extraTimeRatePercentage
-        ),
-
-    // Checkout time policy.
-    // This is SEPARATE from extraNightCharge.
-    lateCheckoutCharge:
-        checkoutPolicyCharge,
-
-    damageCharge:
-        damageCharge,
-
-    otherCharges:
-        otherCharges,
-
-    otherChargesDescription:
-        normalizeString(
-            extraCharges?.otherChargesDescription
-        ),
-
-    // ₹250 + ₹125 = ₹375
-    total:
-        totalExtraStayCharges,
-},
                 // ==================================================
                 // FINANCIALS
                 // ==================================================
 
-              financials: {
-    // ONLY base room rent
-    roomRent:
-        roomRent,
-
-    roomRentPerNight:
-        roundMoney(
-            financials.roomRentPerNight ??
-                formattedRooms[0]
-                    ?.perNightRoomPrice ??
-                0
-        ),
-
-    foodServices:
-        foodTotal,
-
-    roomServices:
-        roomServiceTotal,
-
-    // Extra full-day charge
-    extraNightCharge:
-        extraNightCharge,
-
-    extraTimeCharge:
-        extraTimeCharge,
-
-    // ₹250 + ₹125
-    totalExtraStayCharges:
-        totalExtraStayCharges,
-
-    // ₹875
-    subTotal:
-        subtotal,
-
-    gstPercentage:
-        gstPercentage,
-
-    gstAmount:
-        gstAmount,
-
-    // ₹945
-    grandTotal:
-        grandTotal,
-
-    advancePaid:
-        advancePaid,
-
-    advancePaidVia:
-        normalizeString(
-            financials.advancePaidVia,
-            "cash"
-        ),
-
-    currentPayment:
-        currentPayment,
-
-    totalPaid:
-        totalPaid,
-
-    balanceDue:
-        balanceDue,
-},
+                financials,
 
                 // ==================================================
                 // BILLING DETAILS
                 // ==================================================
 
-                billingDetails:
-                    billingDetails &&
-                    typeof billingDetails ===
-                        "object"
-                        ? billingDetails
-                        : {},
+                billingDetails: {
+                    checkoutBillId:
+                        checkoutBill._id,
 
-                // ==================================================
-                // PAYMENT INFORMATION
-                // ==================================================
+                    bookedNights:
+                        bookedNights,
 
-                paymentInfo: {
-                    paymentMode:
-                        normalizeString(
-                            paymentInfo.paymentMode,
-                            "Cash"
-                        ),
+                    roomSubtotal:
+                        roomSubtotal,
 
-                    paymentStatus:
-                        normalizeString(
-                            paymentInfo.paymentStatus,
-                            "PAID"
-                        ),
+                    extraFullDays:
+                        extraFullDays,
 
-                    paidAt:
-                        paymentInfo.paidAt ||
-                        "",
+                    extraFullDayCharge:
+                        extraFullDayCharge,
 
-                    transactionId:
-                        normalizeString(
-                            paymentInfo.transactionId
-                        ),
+                    checkoutPolicyType:
+                        checkoutPolicyType,
+
+                    checkoutPolicyValue:
+                        checkoutPolicyValue,
+
+                    checkoutPolicyCharge:
+                        checkoutPolicyCharge,
+
+                    expectedCheckoutDate:
+                        expectedCheckoutDate,
+
+                    actualCheckoutDate:
+                        actualCheckoutDate,
+
+                    actualCheckoutTime:
+                        actualCheckoutTime,
                 },
+
+                // ==================================================
+                // PAYMENT INFO
+                // ==================================================
+
+                paymentInfo,
 
                 // ==================================================
                 // STATUS
@@ -1879,10 +2047,15 @@ log.info(
                         : "ISSUED",
             });
 
+        // ========================================================
+        // SUCCESS LOG
+        // ========================================================
+
         log.info(
             `[Invoice] Invoice created successfully. ` +
             `invoiceId=${newInvoice._id}, ` +
             `invoiceNo=${newInvoice.invoiceNo}, ` +
+            `checkoutBillId=${checkoutBillId}, ` +
             `grandTotal=${grandTotal}, ` +
             `totalPaid=${totalPaid}, ` +
             `balanceDue=${balanceDue}`
@@ -1890,9 +2063,12 @@ log.info(
 
         return res.status(201).json({
             success: true,
+
             message:
                 "Invoice stored successfully.",
-            data: newInvoice,
+
+            data:
+                newInvoice,
         });
     } catch (error) {
         return handleControllerError(
@@ -1910,13 +2086,17 @@ log.info(
                     req.user?.branchId ||
                     "unknown",
 
-                customerId:
-                    req.body?.customer?.customerId ||
+                checkoutBillId:
+                    req.body
+                        ?.checkoutBillId ||
                     "unknown",
             }
         );
     }
 };
+
+
+
 
 // ============================================================
 // 2. GET ALL INVOICES

@@ -3,6 +3,14 @@ import { getAllInvoices, deleteInvoice } from "../../service/invoiceApi.js";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import InvoiceTemplate from "../InvoiceTemplate/InvoiceTemplate.jsx";
+import {
+  computeExtraStayDetails,
+  formatActualCheckOutDisplay,
+  formatHumanDate,
+  formatHumanTime,
+  formatHumanDateTime,
+  exportInvoicesToExcel,
+} from "../InvoiceTemplate/stayDurationHelper.js";
 
 const InvoicesManagement = () => {
   const [invoices, setInvoices] = useState([]);
@@ -149,52 +157,8 @@ const InvoicesManagement = () => {
   // FORMAT HELPERS (same behavior as InvoiceTemplate.jsx)
   // ============================================================
 
-  const formatDate = (value) => {
-    if (!value) return "-";
-    try {
-      const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return String(value);
-      return date.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
-    } catch {
-      return String(value);
-    }
-  };
-
-  const formatTime = (value) => {
-    if (!value) return "-";
-    try {
-      const str = String(value).trim();
-
-      if (str.toLowerCase().includes("am") || str.toLowerCase().includes("pm")) {
-        return str.toUpperCase();
-      }
-
-      if (str.includes("T")) {
-        return new Date(value)
-          .toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })
-          .toUpperCase();
-      }
-
-      const parts = str.split(":");
-      if (parts.length >= 2) {
-        let hours = parseInt(parts[0], 10);
-        const minutes = parts[1].replace(/\D/g, "").padStart(2, "0");
-        if (!Number.isNaN(hours)) {
-          const period = hours >= 12 ? "PM" : "AM";
-          hours = hours % 12 || 12;
-          return `${String(hours).padStart(2, "0")}:${minutes} ${period}`;
-        }
-      }
-
-      return str;
-    } catch {
-      return String(value);
-    }
-  };
+  const formatDate = (value) => formatHumanDate(value);
+  const formatTime = (value) => formatHumanTime(value);
 
   const handleDownloadPDF = async (invoice) => {
     setPdfInvoice(invoice);
@@ -223,32 +187,10 @@ const InvoicesManagement = () => {
       return;
     }
 
-    const headers = [
-      "Invoice No,Date,Customer Name,Phone,Alt Phone,Email,Address,ID Proof Type,ID Proof No,Room No,Room Type,Bed Type,Adults,Children,Booked Check-In,Booked Check-Out,Actual Check-Out,Nights,Sub Total,GST %,GST Amount,Extra Full Day Charge,Checkout Policy Charge,Extra Time Charge,Other Charges,Total Extra Charges,Advance Paid,Advance Paid Via,Grand Total,Payment Mode,Payment Status\n",
-    ];
-    const rows = sortedInvoices.map((inv) => {
-      const c = inv.customer || {};
-      const rooms = Array.isArray(inv.rooms) ? inv.rooms : [];
-      const roomNumbers = rooms.map((room) => room.roomNumber).filter(Boolean).join(" / ");
-      const roomTypes = rooms.map((room) => room.roomType).filter(Boolean).join(" / ");
-      const bedTypes = rooms.map((room) => room.bedType).filter(Boolean).join(" / ");
-      const adults = rooms.map((room) => room.adults ?? "").join(" / ");
-      const children = rooms.map((room) => room.children ?? "").join(" / ");
-      const s = inv.staySummary || {};
-      const f = inv.financials || {};
-      const ec = inv.extraCharges || {};
-      const p = inv.paymentInfo || {};
-      return `"${inv.invoiceNo}","${inv.invoiceDate}","${c.customerName}","${c.phoneNumber}","${c.alternativePhone || ""}","${c.email || ""}","${c.address || ""}","${c.idProofType || ""}","${c.idProofNumber || ""}","${roomNumbers}","${roomTypes}","${bedTypes}","${adults}","${children}","${s.bookedCheckIn || ""}","${s.bookedCheckOut || ""}","${s.actualCheckOut || ""}","${s.bookedNights ?? ""}","${s.extraNights ?? ec.extraNightsStayed ?? 0}","${f.subTotal ?? ""}","${f.gstPercentage ?? ""}","${f.gstAmount ?? ""}","${ec.extraNightCharge ?? 0}","${ec.checkoutPolicyCharge ?? ec.lateCheckoutCharge ?? 0}","${ec.extraTimeCharge ?? 0}","${ec.otherCharges ?? 0}","${ec.total ?? 0}","${f.advancePaid ?? 0}","${f.advancePaidVia || ""}","${f.grandTotal}","${p.paymentMode || ""}","${p.paymentStatus || ""}"`;
-    });
-
-    const csvContent = "data:text/csv;charset=utf-8," + headers.concat(rows).join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Invoices_Report_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    exportInvoicesToExcel(
+      sortedInvoices,
+      `Hotel_Invoices_Report_${new Date().toISOString().slice(0, 10)}.csv`
+    );
   };
 
 
@@ -391,6 +333,7 @@ const handleDownloadClick = async (inv) => {
                 <th className="p-3 sm:p-4 whitespace-nowrap">Customer Name</th>
                 <th className="p-3 sm:p-4 whitespace-nowrap">Phone</th>
                 <th className="p-3 sm:p-4 whitespace-nowrap">Room</th>
+                <th className="p-3 sm:p-4 whitespace-nowrap">Extra Stay</th>
                 <th className="p-3 sm:p-4 whitespace-nowrap">Total (₹)</th>
                 <th className="p-3 sm:p-4 whitespace-nowrap">Status</th>
                 <th className="p-3 sm:p-4 text-center whitespace-nowrap">Actions</th>
@@ -403,7 +346,7 @@ const handleDownloadClick = async (inv) => {
                     <td className="p-3 sm:p-4 font-bold text-indigo-700 whitespace-nowrap">
                       {inv.invoiceNo}
                     </td>
-                    <td className="p-3 sm:p-4 whitespace-nowrap">{inv.invoiceDate}</td>
+                    <td className="p-3 sm:p-4 whitespace-nowrap">{formatDate(inv.invoiceDate || inv.createdAt)}</td>
                     <td className="p-3 sm:p-4 font-medium whitespace-nowrap">
                       {inv.customer?.customerName}
                     </td>
@@ -422,6 +365,28 @@ const handleDownloadClick = async (inv) => {
                         "-"
                       )}
                     </td>
+                    <td className="p-3 sm:p-4 whitespace-nowrap">
+                      {(() => {
+                        const extraStay = computeExtraStayDetails(inv.staySummary, inv.extraCharges);
+                        if (!extraStay.hasExtraStay) {
+                          return <span className="text-gray-400 text-xs">-</span>;
+                        }
+                        return (
+                          <div className="flex flex-col text-xs leading-tight">
+                            {extraStay.extraFullDays > 0 && (
+                              <span className="font-bold text-amber-700">
+                                {extraStay.extraFullDays} {extraStay.extraFullDays === 1 ? "day" : "days"} extra
+                              </span>
+                            )}
+                            {(extraStay.extraHours > 0 || extraStay.extraMinutes > 0) && (
+                              <span className="font-semibold text-teal-700">
+                                {extraStay.extraHours}h {extraStay.extraMinutes}m extra
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </td>
                     <td className="p-3 sm:p-4 font-bold whitespace-nowrap">
                       ₹{inv.financials?.grandTotal?.toLocaleString()}
                     </td>
@@ -438,12 +403,12 @@ const handleDownloadClick = async (inv) => {
                         >
                           View
                         </button>
-                       <button
-  onClick={() => handleDownloadClick(inv)}
-  disabled={downloadingId === inv.id}
-  className="bg-indigo-600 text-white px-2.5 sm:px-3 py-1.5 sm:py-1 rounded text-[11px] sm:text-xs font-semibold hover:bg-indigo-700 active:scale-95 transition-all duration-150 disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
->
-  {downloadingId === inv.id ? (
+                        <button
+                          onClick={() => handleDownloadClick(inv)}
+                          disabled={downloadingId === (inv._id || inv.id)}
+                          className="bg-indigo-600 text-white px-2.5 sm:px-3 py-1.5 sm:py-1 rounded text-[11px] sm:text-xs font-semibold hover:bg-indigo-700 active:scale-95 transition-all duration-150 disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                        >
+                          {downloadingId === (inv._id || inv.id) ? (
     <>
       {/* Loading Spinner */}
       <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -468,7 +433,7 @@ const handleDownloadClick = async (inv) => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="p-6 text-center text-black font-medium">
+                  <td colSpan="9" className="p-6 text-center text-black font-medium">
                     No matching invoices found.
                   </td>
                 </tr>
