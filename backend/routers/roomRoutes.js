@@ -13,18 +13,20 @@ import {
     permissionVerify,
     permissionVerifyAny,
 } from "../middleware/userVerify.js";
+import { roomLimitVerify } from "../middleware/roomLimitVerify.js";
 
 const router = express.Router();
 
 
 // ==========================================
 // ADD ROOM
-// Only roomsBooking permission 
+// Only roomsBooking permission + valid room plan limit
 // ==========================================
 router.post(
     "/add",
     authVerify,
     permissionVerify("roomsBooking"),
+    roomLimitVerify,
     addRoom
 );
 

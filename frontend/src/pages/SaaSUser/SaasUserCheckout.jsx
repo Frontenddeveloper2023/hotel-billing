@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   Clock3,
   CreditCard,
-  FileText,
   Hotel,
   Info,
   Landmark,
@@ -17,6 +16,7 @@ import {
   LockKeyhole,
   Mail,
   MapPin,
+  Phone,
   ReceiptText,
   ShieldCheck,
   Sparkles,
@@ -24,12 +24,20 @@ import {
   Users,
   Utensils,
   X,
+  XCircle
+  
 } from "lucide-react";
 
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { useAuth } from "../../Context/AuthContext";
 import { confirmDummyPayment } from "../../service/hotelRegistrationApi";
+import { upgradeHotelSubscription } from "../../service/subscriptionApi";
 
+// ============================================================
+// DESIGN: dark hotel-inspired hero, blue featured plan, white cards
+// Functional payment, registration and upgrade logic is unchanged.
+// ============================================================
 
 // ============================================================
 // HELPERS
@@ -54,7 +62,6 @@ const getBillingLabel = (cycle) => {
   return labels[cycle] || "Subscription";
 };
 
-
 // ============================================================
 // MAIN COMPONENT
 // ============================================================
@@ -63,37 +70,25 @@ const SaaSUserCheckout = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const { isAuthenticated, userData } = useAuth();
+
   // ==========================================================
   // PAYMENT STATE
   // ==========================================================
 
-  const [isPaymentModalOpen, setIsPaymentModalOpen] =
-    useState(false);
-
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
-
-  const [paymentSuccess, setPaymentSuccess] =
-    useState(false);
-
-  const [transactionId, setTransactionId] =
-    useState("");
-
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [transactionId, setTransactionId] = useState("");
   const [error, setError] = useState("");
-
 
   // ==========================================================
   // ROUTER DATA
   // ==========================================================
 
-  const selectedPlanFromState =
-    location.state?.selectedPlan || null;
-
-  const billingCycleFromState =
-    location.state?.billingCycle || null;
-
-  const registrationFromState =
-    location.state?.registration || null;
-
+  const selectedPlanFromState = location.state?.selectedPlan || null;
+  const billingCycleFromState = location.state?.billingCycle || null;
+  const registrationFromState = location.state?.registration || null;
 
   // ==========================================================
   // SESSION STORAGE FALLBACK
@@ -101,49 +96,57 @@ const SaaSUserCheckout = () => {
 
   const storedPlan = useMemo(() => {
     try {
-      const data =
-        sessionStorage.getItem("saasSelectedPlan");
-
+      const data = sessionStorage.getItem("saasSelectedPlan");
       return data ? JSON.parse(data) : null;
     } catch {
       return null;
     }
   }, []);
 
-
   const storedBillingCycle = useMemo(() => {
-    return (
-      sessionStorage.getItem("saasBillingCycle") ||
-      ""
-    );
+    return sessionStorage.getItem("saasBillingCycle") || "";
   }, []);
-
 
   const storedRegistration = useMemo(() => {
     try {
-      const data =
-        sessionStorage.getItem("saasRegistration");
-
+      const data = sessionStorage.getItem("saasRegistration");
       return data ? JSON.parse(data) : null;
     } catch {
       return null;
     }
   }, []);
 
+  const storedHotelDetails = useMemo(() => {
+    try {
+      const data = sessionStorage.getItem("saasHotelDetails");
+      return data ? JSON.parse(data) : null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  // ==========================================================
+  // IS UPGRADE (EXISTING HOTEL)
+  // ==========================================================
+
+  const isUpgrade = useMemo(() => {
+    return Boolean(
+      location.state?.isUpgrade ||
+      sessionStorage.getItem("saasIsUpgrade") === "true" ||
+      (isAuthenticated && userData?.hotelId)
+    );
+  }, [location.state?.isUpgrade, isAuthenticated, userData]);
 
   // ==========================================================
   // FINAL DATA
   // ==========================================================
 
-  const selectedPlan =
-    selectedPlanFromState || storedPlan;
+  const selectedPlan = selectedPlanFromState || storedPlan;
+  const billingCycle = billingCycleFromState || storedBillingCycle;
+  const registration = registrationFromState || storedRegistration || null;
 
-  const billingCycle =
-    billingCycleFromState || storedBillingCycle;
-
-  const registration =
-    registrationFromState || storedRegistration || null;
-
+  const hotelDetails =
+    location.state?.hotelDetails || storedHotelDetails || registration || null;
 
   // ==========================================================
   // REGISTRATION ID
@@ -155,86 +158,50 @@ const SaaSUserCheckout = () => {
     location.state?.registrationId ||
     sessionStorage.getItem("saasRegistrationId");
 
-
   // ==========================================================
   // PRICE CALCULATION
   // ==========================================================
 
   const price = useMemo(() => {
     if (!selectedPlan) return 0;
-
-    const pricing =
-      selectedPlan.pricing || {};
-
-    return Number(
-      pricing[billingCycle] || 0
-    );
+    const pricing = selectedPlan.pricing || {};
+    return Number(pricing[billingCycle] || 0);
   }, [selectedPlan, billingCycle]);
 
-
-  const setupFee = Number(
-    selectedPlan?.setupFee || 0
-  );
-
-
-  const subtotal =
-    price + setupFee;
-
+  const setupFee = Number(selectedPlan?.setupFee || 0);
+  const subtotal = price + setupFee;
 
   /*
    * Keep the current project behaviour.
    * Your backend currently handles the actual payment state.
    */
   const tax = 0;
-
-
-  const total =
-    subtotal + tax;
-
+  const total = subtotal + tax;
 
   // ==========================================================
   // HOTEL DATA
   // ==========================================================
 
   const hotelName =
-    registration?.hotelName ||
-    "Hotel Registration";
-
+    hotelDetails?.hotelName || userData?.hotelName || registration?.hotelName || "Hotel Account";
 
   const ownerName =
-    registration?.ownerName ||
-    "Hotel Owner";
-
+    hotelDetails?.ownerName || userData?.name || registration?.ownerName || "Hotel Owner";
 
   const ownerEmail =
-    registration?.email ||
-    "";
-
+    hotelDetails?.email || userData?.email || registration?.email || "";
 
   const ownerPhone =
-    registration?.phone ||
-    "";
+    hotelDetails?.phone || userData?.phone || registration?.phone || "";
 
+  const address = hotelDetails?.address || registration?.address || {};
 
-  const address =
-    registration?.address || {};
+  const addressText =
+    [address.street, address.city, address.state, address.country, address.pincode]
+      .filter(Boolean)
+      .join(", ") || (isUpgrade ? "Registered Hotel Branch" : "");
 
-
-  const addressText = [
-    address.street,
-    address.city,
-    address.state,
-    address.country,
-    address.pincode,
-  ]
-    .filter(Boolean)
-    .join(", ");
-
-
-  const gstNumber =
-    registration?.gstNumber ||
-    "";
-
+  const gstNumber = hotelDetails?.gstNumber || registration?.gstNumber || "";
 
   // ==========================================================
   // PAYMENT HANDLERS
@@ -243,108 +210,97 @@ const SaaSUserCheckout = () => {
   const handlePayNow = () => {
     setError("");
 
-    if (!registrationId) {
-      setError(
-        "Registration details are missing. Please go back and complete registration again."
-      );
-
+    if (!isUpgrade && !registrationId) {
+      setError("Registration details are missing. Please go back and complete registration again.");
       return;
     }
 
     if (!selectedPlan) {
-      setError(
-        "Plan details are missing. Please select a plan again."
-      );
-
+      setError("Plan details are missing. Please select a plan again.");
       return;
     }
 
     setIsPaymentModalOpen(true);
   };
 
-
   const handleConfirmPayment = async () => {
     try {
       setIsPaying(true);
       setError("");
 
-      if (!registrationId) {
-        setError(
-          "Registration ID is missing. Please try again."
-        );
+      if (isUpgrade) {
+        // ----------------------------------------------------
+        // EXISTING HOTEL UPGRADE FLOW (IMMEDIATE ACTIVATION)
+        // ----------------------------------------------------
+        const response = await upgradeHotelSubscription({
+          planId: selectedPlan._id,
+          billingCycle: billingCycle || "monthly",
+        });
 
+        if (!response?.success) {
+          throw new Error(response?.message || "Plan upgrade could not be completed.");
+        }
+
+        const paymentTransactionId =
+          response?.data?.paymentTransactionId || `UPG-${Date.now()}`;
+
+        setTransactionId(paymentTransactionId);
+        setPaymentSuccess(true);
+        setIsPaymentModalOpen(false);
+
+        sessionStorage.removeItem("saasIsUpgrade");
+        sessionStorage.removeItem("saasHotelDetails");
+
+        window.dispatchEvent(
+          new CustomEvent("subscriptionUpdated", { detail: response.data })
+        );
         return;
       }
 
-
-      const response =
-        await confirmDummyPayment(
-          registrationId
-        );
-
-
-      if (!response?.success) {
-        throw new Error(
-          response?.message ||
-            "Payment could not be completed."
-        );
+      // ----------------------------------------------------
+      // NEW CUSTOMER REGISTRATION FLOW (REQUIRES ADMIN APPROVAL)
+      // ----------------------------------------------------
+      if (!registrationId) {
+        setError("Registration ID is missing. Please try again.");
+        return;
       }
 
+      const response = await confirmDummyPayment(registrationId);
 
-      const paymentTransactionId =
-        response?.data?.paymentTransactionId ||
-        "";
+      if (!response?.success) {
+        throw new Error(response?.message || "Payment could not be completed.");
+      }
 
+      const paymentTransactionId = response?.data?.paymentTransactionId || "";
 
-      setTransactionId(
-        paymentTransactionId
-      );
-
-
+      setTransactionId(paymentTransactionId);
       setPaymentSuccess(true);
-
       setIsPaymentModalOpen(false);
 
-
-      // Save registration ID
-      sessionStorage.setItem(
-        "saasRegistrationId",
-        registrationId
-      );
-
-
-      // Save payment status for UI
-      sessionStorage.setItem(
-        "saasPaymentStatus",
-        "paid"
-      );
+      sessionStorage.setItem("saasRegistrationId", registrationId);
+      sessionStorage.setItem("saasPaymentStatus", "paid");
     } catch (error) {
-      setError(
-        error?.message ||
-          error?.data?.message ||
-          "Unable to complete demo payment."
-      );
+      setError(error?.message || error?.data?.message || "Unable to complete payment.");
     } finally {
       setIsPaying(false);
     }
   };
 
-
   // ==========================================================
-  // APPLICATION STATUS
+  // NAVIGATION
   // ==========================================================
 
   const handleViewApplicationStatus = () => {
-    navigate(
-      "/saas-user/application-status",
-      {
-        state: {
-          registrationId,
-        },
-      }
-    );
+    navigate("/saas-user/application-status", { state: { registrationId } });
   };
 
+  const handleGoToHotelManagement = () => {
+    navigate("/hotel-management");
+  };
+
+  const handleGoToRoomAvailability = () => {
+    navigate("/hotel-management/room-availability");
+  };
 
   // ==========================================================
   // NO PLAN
@@ -352,1303 +308,1027 @@ const SaaSUserCheckout = () => {
 
   if (!selectedPlan) {
     return (
-      <div className="min-h-screen bg-[#F8F8FC] text-[#111827]">
+        
+        <div className="min-h-screen bg-[linear-gradient(to_right,#FFFFFF_0%,#FFFFFF_50%,#FFF1E3_100%)] pb-28 font-sans text-[#161311] antialiased sm:pb-24">
 
-      
 
 
         <main className="mx-auto flex min-h-[calc(100vh-73px)] max-w-xl items-center px-4 py-10">
-
-          <div className="w-full rounded-2xl border border-[#E1E3EA] bg-white p-7 text-center sm:p-9">
-
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F1F0FF] text-[#4338CA]">
+          <div className="w-full rounded-2xl border border-[#E2EAF5] bg-white p-7 text-center shadow-[0_1px_3px_rgba(16,24,40,0.06)] sm:p-9">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#EAF3FF] text-[#3479E8]">
               <ReceiptText size={26} />
             </div>
 
-
-            <h1 className="mt-5 text-[24px] font-extrabold tracking-[-0.03em] text-[#111827]">
+            <h1 className="mt-5 text-[24px] font-bold tracking-[-0.02em] text-[#17345D]">
               No Plan Selected
             </h1>
 
-
-            <p className="mx-auto mt-2 max-w-sm text-[13px] font-medium leading-6 text-[#64748B]">
-              Please select a subscription plan before
-              continuing to checkout.
+            <p className="mx-auto mt-2 max-w-sm text-[13px] font-medium leading-6 text-[#5B6472]">
+              Please select a subscription plan before continuing to checkout.
             </p>
-
 
             <button
               type="button"
-              onClick={() =>
-                navigate(
-                  "/saas-user/choose-plan"
-                )
-              }
-              className="
-                mt-7
-                inline-flex
-                w-full
-                items-center
-                justify-center
-                gap-2
-                rounded-xl
-                bg-[#4338CA]
-                px-5
-                py-3.5
-                text-[13px]
-                font-bold
-                text-white
-                transition
-                hover:bg-[#3730A3]
-              "
+              onClick={() => navigate("/hotel-billing-system/saas-user/choose-plan")}
+              className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#347BE9] px-5 py-3.5 text-[13px] font-bold text-white transition hover:bg-[#2467D5]"
             >
               Choose Plan
               <ArrowRight size={16} />
             </button>
-
           </div>
-
         </main>
       </div>
     );
   }
-
 
   // ==========================================================
   // SUCCESS SCREEN
   // ==========================================================
+// ==========================================================
+// SUCCESS SCREEN
+// ==========================================================
 
-  if (paymentSuccess) {
-    return (
-      <div className="min-h-screen bg-[#F8F8FC]">
+if (paymentSuccess) {
+  return (
+    <div className="min-h-screen bg-[linear-gradient(180deg,#10233E_0px,#183A60_360px,#F4F7FC_540px,#F4F7FC_100%)]">
 
-        {/* Header */}
+      {/* ====================================================
+          TOP PROGRESS BAR
+          ALWAYS AT THE VERY TOP
+      ==================================================== */}
+      <div className="sticky top-0 z-50 border-b border-[#DDE5F0] bg-white shadow-[0_1px_4px_rgba(16,24,40,0.05)]">
+        <div className="mx-auto w-full max-w-[1180px]">
+          <SaaSSetupProgress
+            activeStep={4}
+            isUpgrade={isUpgrade}
+          />
+        </div>
+      </div>
 
-        <header className="border-b border-[#E5E7EB] bg-white">
 
-          <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      {/* ====================================================
+          SUCCESS HERO
+      ==================================================== */}
+      <header className="relative overflow-hidden">
 
-            <div className="flex items-center gap-3">
+        {/* Background glow */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute left-1/2 top-0 h-[320px] w-[700px] -translate-x-1/2 rounded-full bg-[#347BE9]/20 blur-[100px]" />
+        </div>
 
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#4338CA] text-white">
-                <Hotel size={18} />
-              </div>
 
-             
+        <div className="relative mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
 
+          <div className="flex min-w-0 items-center gap-3">
+
+            <div className="
+              flex
+              h-10
+              w-10
+              shrink-0
+              items-center
+              justify-center
+              rounded-xl
+              bg-white/10
+              text-white
+              ring-1
+              ring-white/20
+            ">
+              <Hotel size={19} />
             </div>
 
+            <div className="min-w-0">
 
-            <div className="flex items-center gap-2 rounded-full border border-[#DDF7EC] bg-[#F0FDF7] px-3 py-1.5">
+              <p className="
+                truncate
+                text-[13px]
+                font-bold
+                text-white
+                sm:text-[14px]
+              ">
+                Hotel Operations Platform
+              </p>
 
-              <CheckCircle2
-                size={14}
-                className="text-[#087A58]"
-              />
-
-              <span className="text-[10px] font-bold text-[#087A58]">
-                Payment Completed
-              </span>
-
-            </div>
-
-          </div>
-
-        </header>
-
-
-        <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
-
-          <SaaSSetupProgress activeStep={4} />
-
-
-          <div className="mt-8 overflow-hidden rounded-2xl border border-[#E0E2EA] bg-white">
-
-            {/* Success Banner */}
-
-            <div className="border-b border-[#E3E5EC] bg-[#F7F7FF] px-6 py-8 text-center sm:px-10">
-
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#DDF7EC] text-[#087A58]">
-                <CheckCircle2 size={34} />
-              </div>
-
-
-              <h1 className="mt-5 text-[26px] font-extrabold tracking-[-0.035em] text-[#111827] sm:text-[30px]">
-                Payment Successful
-              </h1>
-
-
-              <p className="mx-auto mt-2 max-w-md text-[13px] font-medium leading-6 text-[#64748B]">
-                Your payment has been completed successfully.
-                Your hotel application is now waiting for
-                administrative approval.
+              <p className="
+                mt-0.5
+                text-[11px]
+                font-medium
+                text-[#C9D9ED]
+              ">
+                SaaS onboarding
               </p>
 
             </div>
 
-
-            {/* Details */}
-
-            <div className="p-6 sm:p-8">
-
-              <div className="rounded-xl border border-[#E3E5EC] bg-[#FAFAFD] p-5">
-
-                <SummaryRow
-                  label="Hotel"
-                  value={hotelName}
-                  icon={Building2}
-                />
-
-                <SummaryRow
-                  label="Plan"
-                  value={selectedPlan.planName}
-                  icon={Sparkles}
-                />
-
-                <SummaryRow
-                  label="Billing"
-                  value={getBillingLabel(billingCycle)}
-                  icon={ReceiptText}
-                />
-
-                <SummaryRow
-                  label="Amount Paid"
-                  value={formatCurrency(total)}
-                  icon={CreditCard}
-                  strong
-                />
-
-                <div className="mt-3 border-t border-[#E4E6EC] pt-3">
-
-                  <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#64748B]">
-                    Transaction ID
-                  </p>
-
-                  <p className="mt-1 break-all text-[12px] font-bold text-[#087A58]">
-                    {transactionId || "Generated successfully"}
-                  </p>
-
-                </div>
-
-              </div>
-
-
-              {/* Pending Notice */}
-
-              <div className="mt-5 flex items-start gap-3 rounded-xl border border-[#F4D99A] bg-[#FFF9E8] p-4">
-
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FFF0C2] text-[#A16207]">
-                  <Clock3 size={16} />
-                </div>
-
-                <div>
-
-                  <p className="text-[12px] font-extrabold text-[#854D0E]">
-                    Application Pending
-                  </p>
-
-                  <p className="mt-1 text-[11px] font-medium leading-5 text-[#A16207]">
-                    Payment is complete, but your hotel account
-                    will only be activated after SaaS admin approval.
-                  </p>
-
-                </div>
-
-              </div>
-
-
-              <button
-                type="button"
-                onClick={handleViewApplicationStatus}
-                className="
-                  mt-6
-                  flex
-                  w-full
-                  items-center
-                  justify-center
-                  gap-2
-                  rounded-xl
-                  bg-[#4338CA]
-                  px-5
-                  py-3.5
-                  text-[13px]
-                  font-bold
-                  text-white
-                  transition
-                  hover:bg-[#3730A3]
-                "
-              >
-                View Application Status
-                <ArrowRight size={16} />
-              </button>
-
-            </div>
-
-          </div>
-
-        </main>
-
-      </div>
-    );
-  }
-
-
-  // ==========================================================
-  // MAIN CHECKOUT
-  // ==========================================================
-
-  return (
-    <div className="min-h-screen bg-[#FAF9FF] text-[#111827]">
-
-    
-
-      {/* ======================================================
-          PROGRESS
-      ====================================================== */}
-
-      <div className="border-b border-[#E4E5EC] bg-[#F3F2FA]">
-
-        <div className=" max-w-7xl">
-
-          <SaaSSetupProgress activeStep={3} />
-
-        </div>
-
-      </div>
-
-
-      {/* ======================================================
-          MAIN
-      ====================================================== */}
-
-      <main className="mx-auto max-w-7xl px-4 pb-12 pt-7 sm:px-6 lg:px-8">
-
-        {/* PAGE HEADER */}
-
-        <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-
-          <div>
-
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#EAE9FF] px-3 py-1.5">
-
-              <span className="h-1.5 w-1.5 rounded-full bg-[#4338CA]" />
-
-              <span className="text-[10px] font-bold uppercase tracking-[0.09em] text-[#4338CA]">
-                Pre-Activation Checkout
-              </span>
-
-            </div>
-
-
-            <h1 className="mt-3 text-[28px] font-bold tracking-[-0.04em] text-[#111827] sm:text-[34px]">
-              Review Subscription & Checkout
-            </h1>
-
-
-            <p className="mt-2 max-w-2xl text-[13px] font-medium leading-6 text-[#64748B] sm:text-[14px]">
-              Review your selected hotel plan, registration
-              details and payable amount before completing payment.
-            </p>
-
           </div>
 
 
-          <div className="flex items-center gap-2 rounded-xl border border-[#DCE8E3] bg-[#F3FBF7] px-3.5 py-2.5">
+          <div className="
+            flex
+            shrink-0
+            items-center
+            gap-2
+            rounded-full
+            border
+            border-[#BFE4D2]
+            bg-[#E7F6EF]
+            px-3
+            py-1.5
+          ">
 
-            <LockKeyhole
-              size={16}
-              className="text-[#087A58]"
+            <CheckCircle2
+              size={14}
+              className="text-[#0F7A5E]"
             />
 
-            <span className="text-[10px] font-bold text-[#087A58]">
-              Secure SaaS Onboarding
+            <span className="
+              hidden
+              text-[12px]
+              font-semibold
+              text-[#0F7A5E]
+              sm:block
+            ">
+              Payment Completed
             </span>
 
           </div>
 
         </div>
 
+      </header>
 
-        {/* ERROR */}
 
-        {error && (
-          <div className="mb-6 flex items-start gap-3 rounded-xl border border-[#F3C5C5] bg-[#FFF5F5] px-4 py-3.5">
+      {/* ====================================================
+          SUCCESS CONTENT
+      ==================================================== */}
+      <main className="
+        relative
+        mx-auto
+        w-full
+        max-w-3xl
+        px-4
+        pb-12
+        pt-4
+        sm:px-6
+        sm:pb-16
+        sm:pt-6
+      ">
 
-            <Info
-              size={17}
-              className="mt-0.5 shrink-0 text-[#DC2626]"
-            />
+        <div className="
+          overflow-hidden
+          rounded-[22px]
+          border
+          border-[#E2EAF5]
+          bg-white
+          shadow-[0_20px_50px_rgba(14,42,81,0.12)]
+        ">
 
-            <div>
+          {/* ==================================================
+              SUCCESS BANNER
+          ================================================== */}
+          <div className="
+            border-b
+            border-[#E2EAF5]
+            bg-[linear-gradient(145deg,#F8FBFF_0%,#EEF6FF_100%)]
+            px-5
+            py-8
+            text-center
+            sm:px-10
+            sm:py-10
+          ">
 
-              <p className="text-[12px] font-bold text-[#991B1B]">
-                Checkout Error
-              </p>
+            <div className="
+              mx-auto
+              flex
+              h-16
+              w-16
+              items-center
+              justify-center
+              rounded-full
+              bg-[#E7F6EF]
+              text-[#0F7A5E]
+              ring-8
+              ring-[#F1FAF6]
+            ">
+              <CheckCircle2 size={36} />
+            </div>
 
-              <p className="mt-0.5 text-[11px] font-medium leading-5 text-[#B91C1C]">
-                {error}
-              </p>
+
+            <h1 className="
+              mt-5
+              text-[27px]
+              font-extrabold
+              leading-tight
+              tracking-[-0.03em]
+              text-[#17345D]
+              sm:text-[31px]
+            ">
+              {isUpgrade
+                ? "Plan Upgraded Successfully"
+                : "Payment Successful"}
+            </h1>
+
+
+            <p className="
+              mx-auto
+              mt-3
+              max-w-[560px]
+              text-[14px]
+              font-medium
+              leading-6
+              text-[#5B6472]
+            ">
+              {isUpgrade
+                ? `Your hotel subscription is now upgraded to the ${selectedPlan.planName} plan. Upgraded limits and features are active immediately.`
+                : "Your payment has been completed successfully. Your hotel application is now awaiting administrative approval."}
+            </p>
+
+          </div>
+
+
+          {/* ==================================================
+              DETAILS
+          ================================================== */}
+          <div className="p-5 sm:p-8">
+
+            <div className="
+              rounded-xl
+              border
+              border-[#E2EAF5]
+              bg-[#F8FAFF]
+              p-4
+              sm:p-5
+            ">
+
+              <SummaryRow
+                label="Hotel"
+                value={hotelName}
+                icon={Building2}
+              />
+
+              <SummaryRow
+                label={isUpgrade ? "Upgraded Plan" : "Selected Plan"}
+                value={selectedPlan.planName}
+                icon={Sparkles}
+              />
+
+              <SummaryRow
+                label="Billing Cycle"
+                value={getBillingLabel(billingCycle)}
+                icon={ReceiptText}
+              />
+
+              <SummaryRow
+                label="Amount Paid"
+                value={formatCurrency(total)}
+                icon={CreditCard}
+                strong
+              />
+
+
+              <div className="mt-3 border-t border-[#E2EAF5] pt-3">
+
+                <p className="
+                  text-[11px]
+                  font-semibold
+                  uppercase
+                  tracking-[0.06em]
+                  text-[#5B6472]
+                ">
+                  Transaction ID
+                </p>
+
+                <p className="
+                  mt-1
+                  break-all
+                  text-[13px]
+                  font-bold
+                  text-[#3479E8]
+                ">
+                  {transactionId || "Generated successfully"}
+                </p>
+
+              </div>
 
             </div>
 
-          </div>
-        )}
 
+            {/* ==================================================
+                EXISTING SUCCESS ACTIONS
+            ================================================== */}
 
-        {/* ====================================================
-            TWO COLUMN LAYOUT
-        ==================================================== */}
+            {isUpgrade ? (
+              <>
+                <div className="
+                  mt-5
+                  flex
+                  items-start
+                  gap-3
+                  rounded-xl
+                  border
+                  border-[#BFE4D2]
+                  bg-[#E7F6EF]
+                  p-4
+                ">
 
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-
-
-          {/* ==================================================
-              LEFT
-          ================================================== */}
-
-          <div className="space-y-6 lg:col-span-7">
-
-
-            {/* =================================================
-                SELECTED PLAN
-            ================================================= */}
-
-            <section className="rounded-2xl border border-[#E1E3EA] bg-white">
-
-              <div className="border-b border-[#E6E7ED] px-5 py-5 sm:px-6">
-
-                <div className="flex flex-wrap items-start justify-between gap-4">
-
-                  <div>
-
-                    <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#64748B]">
-                      Tier Architecture
-                    </p>
-
-                    <h2 className="mt-1 text-[20px] font-bold tracking-[-0.025em] text-[#111827]">
-                      Selected Plan
-                    </h2>
-
+                  <div className="
+                    flex
+                    h-8
+                    w-8
+                    shrink-0
+                    items-center
+                    justify-center
+                    rounded-full
+                    bg-white
+                    text-[#0F7A5E]
+                  ">
+                    <ShieldCheck size={18} />
                   </div>
 
+                  <div className="min-w-0">
 
-                  <div className="inline-flex items-center gap-2 rounded-full border border-[#DDF7EC] bg-[#F0FDF7] px-3 py-1.5">
-
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#087A58]" />
-
-                    <span className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#087A58]">
-                      Active Tier
-                    </span>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-
-              <div className="p-5 sm:p-6">
-
-                {/* Pricing */}
-
-                <div className="rounded-xl border border-[#E0E0F2] bg-[#F6F5FF] p-4">
-
-                  <div className="flex flex-wrap items-end justify-between gap-4">
-
-                    <div>
-
-                      <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#64748B]">
-                        Subscription Rate
-                      </p>
-
-                      <div className="mt-1 flex items-end gap-1.5">
-
-                        <span className="text-[30px] font-extrabold tracking-[-0.04em] text-[#4338CA]">
-                          {formatCurrency(price)}
-                        </span>
-
-                        <span className="pb-1 text-[12px] font-semibold text-[#64748B]">
-                          / {billingCycle === "yearly"
-                            ? "year"
-                            : billingCycle === "monthly"
-                            ? "month"
-                            : "cycle"}
-                        </span>
-
-                      </div>
-
-                    </div>
-
-
-                    <div className="rounded-lg bg-[#EAE9FF] px-3 py-1.5 text-[10px] font-bold text-[#4338CA]">
-                      {getBillingLabel(billingCycle)} Billing
-                    </div>
-
-                  </div>
-
-                </div>
-
-
-                {/* Plan name */}
-
-                <div className="mt-5">
-
-                  <div className="flex items-center gap-3">
-
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EEEEFF] text-[#4338CA]">
-                      <Sparkles size={19} />
-                    </div>
-
-                    <div>
-
-                      <p className="text-[16px] font-extrabold text-[#111827]">
-                        {selectedPlan.planName}
-                      </p>
-
-                      {selectedPlan.description && (
-                        <p className="mt-0.5 text-[11px] font-medium text-[#64748B]">
-                          {selectedPlan.description}
-                        </p>
-                      )}
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-
-                {/* Limits */}
-
-                <div className="mt-6">
-
-                  <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#64748B]">
-                    Plan Entitlements
-                  </p>
-
-
-                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-
-                    <PlanLimit
-                      icon={Building2}
-                      label="Rooms"
-                      value={selectedPlan?.limits?.rooms}
-                    />
-
-                    <PlanLimit
-                      icon={Landmark}
-                      label="Branches"
-                      value={selectedPlan?.limits?.branches}
-                    />
-
-                    <PlanLimit
-                      icon={Users}
-                      label="Staff Access"
-                      value={selectedPlan?.limits?.receptionists}
-                    />
-
-                  </div>
-
-                </div>
-
-
-                {/* Features */}
-
-                {selectedPlan.features && (
-                  <div className="mt-6">
-
-                    <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#64748B]">
-                      Included Features
-                    </p>
-
-
-                    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-
-                      <FeatureItem
-                        icon={Utensils}
-                        label="Food Service"
-                        enabled={
-                          selectedPlan
-                            ?.features
-                            ?.foodService
-                        }
-                      />
-
-                      <FeatureItem
-                        icon={ReceiptText}
-                        label="Room Service"
-                        enabled={
-                          selectedPlan
-                            ?.features
-                            ?.roomService
-                        }
-                      />
-
-                    </div>
-
-                  </div>
-                )}
-
-              </div>
-
-            </section>
-
-
-            {/* =================================================
-                HOTEL PROFILE
-            ================================================= */}
-
-            <section className="rounded-2xl border border-[#E1E3EA] bg-white">
-
-              <div className="border-b border-[#E6E7ED] px-5 py-5 sm:px-6">
-
-                <div className="flex items-center justify-between gap-4">
-
-                  <div>
-
-                    <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#64748B]">
-                      Entity Verification
-                    </p>
-
-                    <h2 className="mt-1 text-[20px] font-bold tracking-[-0.025em] text-[#111827]">
-                      Registered Hotel Profile
-                    </h2>
-
-                  </div>
-
-
-                  <button
-                    type="button"
-                    onClick={() => navigate(-1)}
-                    className="
-                      inline-flex
-                      items-center
-                      gap-1.5
-                      rounded-lg
-                      px-2.5
-                      py-2
-                      text-[11px]
+                    <p className="
+                      text-[13px]
                       font-bold
-                      text-[#4338CA]
-                      transition
-                      hover:bg-[#F3F2FF]
-                    "
-                  >
-                    <ArrowLeft size={14} />
-                    Edit
-                  </button>
-
-                </div>
-
-              </div>
-
-
-              <div className="p-5 sm:p-6">
-
-                {/* Hotel Identity */}
-
-                <div className="rounded-xl border border-[#E0E2EA] bg-[#FAFAFD] p-5">
-
-                  <div className="flex items-start gap-4">
-
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#4338CA] text-white">
-                      <Hotel size={22} />
-                    </div>
-
-                    <div className="min-w-0">
-
-                      <p className="text-[19px] font-extrabold tracking-[-0.025em] text-[#111827]">
-                        {hotelName}
-                      </p>
-
-                      <p className="mt-1 flex items-start gap-1.5 text-[11px] font-medium leading-5 text-[#64748B]">
-
-                        <MapPin
-                          size={14}
-                          className="mt-0.5 shrink-0 text-[#4338CA]"
-                        />
-
-                        <span>
-                          {addressText ||
-                            "Registered hotel address"}
-                        </span>
-
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-
-                {/* Owner + Tax */}
-
-                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-
-                  <ProfileInfo
-                    icon={User}
-                    label="Authorized Hotel Owner"
-                    value={ownerName}
-                  />
-
-                  <ProfileInfo
-                    icon={ReceiptText}
-                    label="GST / Tax ID"
-                    value={
-                      gstNumber ||
-                      "Not provided"
-                    }
-                  />
-
-                </div>
-
-
-                {/* Contact */}
-
-                <div className="mt-3 rounded-xl border border-[#E1E3EA] bg-white p-4">
-
-                  <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#64748B]">
-                    Contact Information
-                  </p>
-
-
-                  <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-
-                    <ContactValue
-                      icon={Mail}
-                      value={
-                        ownerEmail ||
-                        "Email not available"
-                      }
-                    />
-
-                    <ContactValue
-                      icon={Users}
-                      value={
-                        ownerPhone ||
-                        "Phone not available"
-                      }
-                    />
-
-                  </div>
-
-                </div>
-
-
-                {/* Verification */}
-
-                <div className="mt-4 flex items-start gap-3 rounded-xl border border-[#DCEBE4] bg-[#F3FBF7] p-4">
-
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#DDF7EC] text-[#087A58]">
-                    <Check size={16} />
-                  </div>
-
-                  <div>
-
-                    <p className="text-[12px] font-extrabold text-[#065F46]">
-                      Registration Details Ready
+                      text-[#0F7A5E]
+                    ">
+                      Instant Plan Activation
                     </p>
 
-                    <p className="mt-1 text-[11px] font-medium leading-5 text-[#087A58]">
-                      Your hotel information will be
-                      submitted for admin review after payment.
+                    <p className="
+                      mt-1
+                      text-[12px]
+                      font-medium
+                      leading-5
+                      text-[#136245]
+                    ">
+                      No admin approval is required for plan upgrades.
+                      Your hotel management system and branch room limits
+                      have been upgraded immediately.
                     </p>
 
                   </div>
 
                 </div>
 
-              </div>
 
-            </section>
+                <div className="
+                  mt-4
+                  grid
+                  grid-cols-1
+                  gap-3
+                  sm:grid-cols-3
+                ">
 
+                  <div className="
+                    rounded-xl
+                    border
+                    border-[#E2EAF5]
+                    bg-white
+                    p-4
+                    text-center
+                  ">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#5B6472]">
+                      Rooms / Branch
+                    </p>
 
-            {/* =================================================
-                PAYMENT ENVIRONMENT
-            ================================================= */}
-
-            <section className="rounded-2xl border border-[#E1E3EA] bg-white p-5 sm:p-6">
-
-              <div className="flex items-start gap-3">
-
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EEEEFF] text-[#4338CA]">
-                  <ShieldCheck size={19} />
-                </div>
-
-                <div>
-
-                  <h3 className="text-[14px] font-bold text-[#111827]">
-                    Demo Payment Environment
-                  </h3>
-
-                  <p className="mt-1 text-[11px] font-medium leading-5 text-[#64748B]">
-                    This checkout currently uses your demo payment
-                    flow. No real money will be charged. A transaction
-                    ID will be generated when payment is confirmed.
-                  </p>
-
-                </div>
-
-              </div>
-
-            </section>
-
-          </div>
+                    <p className="mt-1 text-[18px] font-bold text-[#17345D]">
+                      {Number(selectedPlan?.limits?.rooms || 0) === 0
+                        ? "Unlimited"
+                        : selectedPlan?.limits?.rooms}
+                    </p>
+                  </div>
 
 
-          {/* ==================================================
-              RIGHT SUMMARY
-          ================================================== */}
+                  <div className="
+                    rounded-xl
+                    border
+                    border-[#E2EAF5]
+                    bg-white
+                    p-4
+                    text-center
+                  ">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#5B6472]">
+                      Max Branches
+                    </p>
 
-          <aside className="lg:col-span-5">
+                    <p className="mt-1 text-[18px] font-bold text-[#17345D]">
+                      {Number(selectedPlan?.limits?.branches || 0) === 0
+                        ? "Unlimited"
+                        : selectedPlan?.limits?.branches}
+                    </p>
+                  </div>
 
-            <div className="lg:sticky lg:top-5">
 
-              <section className="overflow-hidden rounded-2xl border border-[#DCDDE7] bg-white">
+                  <div className="
+                    rounded-xl
+                    border
+                    border-[#E2EAF5]
+                    bg-white
+                    p-4
+                    text-center
+                  ">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#5B6472]">
+                      Staff / Receptionists
+                    </p>
 
-                {/* Summary Header */}
-
-                <div className="border-b border-[#E4E5EB] px-5 py-5 sm:px-6">
-
-                  <div className="flex items-center justify-between gap-4">
-
-                    <div>
-
-                      <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#64748B]">
-                        Billing Ledger
-                      </p>
-
-                      <h2 className="mt-1 text-[20px] font-bold tracking-[-0.025em] text-[#111827]">
-                        Order Summary
-                      </h2>
-
-                    </div>
-
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#EEEEFF] text-[#4338CA]">
-                      <ReceiptText size={18} />
-                    </div>
-
+                    <p className="mt-1 text-[18px] font-bold text-[#17345D]">
+                      {Number(selectedPlan?.limits?.receptionists || 0) === 0
+                        ? "Unlimited"
+                        : selectedPlan?.limits?.receptionists}
+                    </p>
                   </div>
 
                 </div>
 
 
-                {/* Summary Body */}
-
-                <div className="p-5 sm:p-6">
-
-                  <div className="space-y-4">
-
-                    {/* Plan */}
-
-                    <SummaryPriceRow
-                      label={selectedPlan.planName}
-                      description={`${getBillingLabel(
-                        billingCycle
-                      )} subscription`}
-                      value={price}
-                    />
-
-
-                    {/* Setup */}
-
-                    <div className="flex items-start justify-between gap-4">
-
-                      <div>
-
-                        <p className="text-[12px] font-semibold text-[#334155]">
-                          Platform Setup Fee
-                        </p>
-
-                        <p className="mt-0.5 text-[10px] font-medium text-[#94A3B8]">
-                          Initial platform provisioning
-                        </p>
-
-                      </div>
-
-                      <div className="text-right">
-
-                        {setupFee > 0 ? (
-                          <span className="text-[12px] font-bold text-[#111827]">
-                            {formatCurrency(setupFee)}
-                          </span>
-                        ) : (
-                          <span className="rounded-full bg-[#DDF7EC] px-2 py-1 text-[9px] font-extrabold uppercase tracking-[0.06em] text-[#087A58]">
-                            Free
-                          </span>
-                        )}
-
-                      </div>
-
-                    </div>
-
-
-                    {/* Tax */}
-
-                    <div className="flex items-start justify-between gap-4">
-
-                      <div>
-
-                        <p className="text-[12px] font-semibold text-[#334155]">
-                          Tax
-                        </p>
-
-                        <p className="mt-0.5 text-[10px] font-medium text-[#94A3B8]">
-                          Current checkout calculation
-                        </p>
-
-                      </div>
-
-                      <span className="text-[12px] font-bold text-[#111827]">
-                        {formatCurrency(tax)}
-                      </span>
-
-                    </div>
-
-                  </div>
-
-
-                  {/* Total */}
-
-                  <div className="my-5 rounded-xl border border-[#DAD8F5] bg-[#F4F3FF] p-4">
-
-                    <div className="flex items-center justify-between gap-4">
-
-                      <div>
-
-                        <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#64748B]">
-                          Total Due Today
-                        </p>
-
-                        <p className="mt-1 text-[28px] font-extrabold tracking-[-0.04em] text-[#4338CA]">
-                          {formatCurrency(total)}
-                        </p>
-
-                      </div>
-
-
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E6E4FF] text-[#4338CA]">
-                        <CreditCard size={19} />
-                      </div>
-
-                    </div>
-
-                  </div>
-
-
-                  {/* Payment Notice */}
-
-                  <div className="flex items-start gap-3 rounded-xl border border-[#E0E2EA] bg-[#FAFAFD] p-4">
-
-                    <Info
-                      size={17}
-                      className="mt-0.5 shrink-0 text-[#4338CA]"
-                    />
-
-                    <div>
-
-                      <p className="text-[11px] font-extrabold text-[#334155]">
-                        Before you continue
-                      </p>
-
-                      <p className="mt-1 text-[10px] font-medium leading-5 text-[#64748B]">
-                        Payment marks your registration as paid.
-                        Your hotel is then submitted to the SaaS
-                        admin for review and activation.
-                      </p>
-
-                    </div>
-
-                  </div>
-
-
-                  {/* Pay Button */}
+                <div className="
+                  mt-6
+                  flex
+                  flex-col
+                  gap-3
+                  sm:flex-row
+                ">
 
                   <button
                     type="button"
-                    onClick={handlePayNow}
-                    disabled={isPaying}
+                    onClick={handleGoToHotelManagement}
                     className="
-                      mt-5
                       flex
-                      cursor-pointer
-                      w-full
+                      min-h-[50px]
+                      flex-1
                       items-center
                       justify-center
                       gap-2
                       rounded-xl
-                      bg-[#4338CA]
+                      bg-[#347BE9]
                       px-5
                       py-3.5
-                      text-[13px]
-                      font-extrabold
+                      text-[14px]
+                      font-bold
                       text-white
+                      shadow-[0_4px_12px_rgba(52,123,233,0.22)]
                       transition
-                      hover:bg-[#3730A3]
-                      disabled:cursor-not-allowed
-                      disabled:opacity-60
+                      hover:bg-[#2467D5]
+                      active:scale-[0.99]
                     "
                   >
-
-                    <CreditCard size={17} />
-
-                    Pay Now
-
-                    <span className="ml-1">
-                      {formatCurrency(total)}
-                    </span>
-
-                    <ArrowRight
-                      size={16}
-                      className="ml-auto"
-                    />
-
+                    <Hotel size={17} />
+                    Go to Hotel Management
                   </button>
 
 
-                  {/* Back */}
-
                   <button
                     type="button"
-                    onClick={() => navigate(-1)}
+                    onClick={handleGoToRoomAvailability}
                     className="
-                      mt-3
-                      cursor-pointer
                       flex
-                      w-full
+                      min-h-[50px]
+                      flex-1
                       items-center
                       justify-center
                       gap-2
                       rounded-xl
                       border
-                      border-[#D9DDE7]
+                      border-[#C9D8EB]
                       bg-white
                       px-5
-                      py-3
-                      text-[12px]
-                      font-bold
-                      text-[#475569]
+                      py-3.5
+                      text-[14px]
+                      font-semibold
+                      text-[#344054]
                       transition
-                      hover:border-[#B8B5E8]
-                      hover:bg-[#F8F7FF]
-                      hover:text-[#4338CA]
+                      hover:bg-[#F4F7FC]
+                      active:scale-[0.99]
                     "
                   >
-                    <ArrowLeft size={15} />
-                    Back to Hotel Details
+                    View Rooms & Availability
+                    <ArrowRight size={17} />
                   </button>
 
-
-                  {/* Security */}
-
-                  <div className="mt-5 flex items-center justify-center gap-2 border-t border-[#E6E7ED] pt-4">
-
-                    <LockKeyhole
-                      size={13}
-                      className="text-[#087A58]"
-                    />
-
-                    <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-[#64748B]">
-                      Secure SaaS Registration
-                    </span>
-
-                  </div>
-
                 </div>
 
-              </section>
+              </>
+            ) : (
+              <>
 
+                <div className="
+                  mt-5
+                  flex
+                  items-start
+                  gap-3
+                  rounded-xl
+                  border
+                  border-[#F1D999]
+                  bg-[#FDF3DF]
+                  p-4
+                ">
 
-           
-
-            </div>
-
-          </aside>
-
-        </div>
-
-      </main>
-
-
-      {/* ======================================================
-          PAYMENT MODAL
-      ====================================================== */}
-
-      {isPaymentModalOpen && (
-
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#111827]/55 px-4 py-5">
-
-          <div className="absolute inset-0" />
-
-          <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-2xl border border-[#DCDDE7] bg-white">
-
-            {/* Modal Header */}
-
-            <div className="border-b border-[#E5E6EC] bg-[#F7F6FF] px-5 py-5 sm:px-6">
-
-              <div className="flex items-start justify-between gap-4">
-
-                <div className="flex items-center gap-3">
-
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#4338CA] text-white">
-                    <CreditCard size={19} />
-                  </div>
-
-                  <div>
-
-                    <p className="text-[16px] font-extrabold tracking-[-0.02em] text-[#111827]">
-                      Confirm Payment
-                    </p>
-
-                    <p className="mt-0.5 text-[10px] font-medium text-[#64748B]">
-                      Review your payment before confirmation.
-                    </p>
-
-                  </div>
-
-                </div>
-
-
-                <button
-                  type="button"
-                  disabled={isPaying}
-                  onClick={() =>
-                    setIsPaymentModalOpen(false)
-                  }
-                  className="
+                  <div className="
                     flex
                     h-8
                     w-8
+                    shrink-0
                     items-center
                     justify-center
-                    rounded-lg
+                    rounded-full
                     bg-white
-                    text-[#64748B]
-                    transition
-                    hover:bg-[#ECECF2]
-                    disabled:opacity-50
-                  "
-                >
-                  <X size={16} />
-                </button>
-
-              </div>
-
-            </div>
-
-
-            {/* Modal Body */}
-
-            <div className="p-5 sm:p-6">
-
-              {/* Amount */}
-
-              <div className="rounded-xl border border-[#DCD9F6] bg-[#F5F4FF] p-4">
-
-                <div className="flex items-center justify-between gap-4">
-
-                  <div>
-
-                    <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#64748B]">
-                      Payable Total
-                    </p>
-
-                    <p className="mt-1 text-[27px] font-extrabold tracking-[-0.04em] text-[#4338CA]">
-                      {formatCurrency(total)}
-                    </p>
-
+                    text-[#92620B]
+                  ">
+                    <Clock3 size={17} />
                   </div>
 
-                  <div className="text-right">
+                  <div className="min-w-0">
 
-                    <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[#64748B]">
-                      Billing
+                    <p className="
+                      text-[13px]
+                      font-bold
+                      text-[#7A4E08]
+                    ">
+                      Application Pending
                     </p>
 
-                    <p className="mt-1 text-[12px] font-extrabold text-[#334155]">
-                      {getBillingLabel(billingCycle)}
+                    <p className="
+                      mt-1
+                      text-[12px]
+                      font-medium
+                      leading-5
+                      text-[#92620B]
+                    ">
+                      Payment is complete, but your hotel account will only
+                      be activated after SaaS admin approval.
                     </p>
 
                   </div>
 
                 </div>
 
-              </div>
-
-
-              {/* Details */}
-
-              <div className="mt-4 rounded-xl border border-[#E1E3EA] bg-[#FAFAFD] p-4">
-
-                <ModalRow
-                  label="Hotel"
-                  value={hotelName}
-                />
-
-                <ModalRow
-                  label="Plan"
-                  value={selectedPlan.planName}
-                />
-
-                <ModalRow
-                  label="Billing Cycle"
-                  value={getBillingLabel(billingCycle)}
-                />
-
-                <ModalRow
-                  label="Amount"
-                  value={formatCurrency(total)}
-                  last
-                  strong
-                />
-
-              </div>
-
-
-              {/* Important Notice */}
-
-              <div className="mt-4 flex items-start gap-3 rounded-xl border border-[#D9E1F4] bg-[#F3F6FF] p-4">
-
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E5E9FF] text-[#4338CA]">
-                  <Info size={16} />
-                </div>
-
-                <div>
-
-                  <p className="text-[11px] font-extrabold text-[#1E3A8A]">
-                    Application Approval Notice
-                  </p>
-
-                  <p className="mt-1 text-[10px] font-medium leading-5 text-[#475569]">
-                    After confirmation, your payment will be
-                    marked as paid and your hotel application
-                    will be sent to the SaaS admin for approval.
-                  </p>
-
-                </div>
-
-              </div>
-
-
-              {/* Actions */}
-
-              <div className="mt-5 flex flex-col-reverse gap-2.5 sm:flex-row">
 
                 <button
                   type="button"
-                  disabled={isPaying}
-                  onClick={() =>
-                    setIsPaymentModalOpen(false)
-                  }
+                  onClick={handleViewApplicationStatus}
                   className="
+                    mt-6
                     flex
-                    cursor-pointer
-                    w-full
-                    items-center
-                    justify-center
-                    rounded-xl
-                    border
-                    border-[#D9DDE7]
-                    bg-white
-                    px-4
-                    py-3
-                    text-[12px]
-                    font-bold
-                    text-[#475569]
-                    transition
-                    hover:bg-[#F8F8FA]
-                    disabled:opacity-50
-                    sm:w-1/2
-                  "
-                >
-                  Cancel
-                </button>
-
-
-                <button
-                  type="button"
-                  disabled={isPaying}
-                  onClick={handleConfirmPayment}
-                  className="
-                    flex
-                    cursor-pointer
+                    min-h-[50px]
                     w-full
                     items-center
                     justify-center
                     gap-2
                     rounded-xl
-                    bg-[#4338CA]
-                    px-4
-                    py-3
-                    text-[12px]
-                    font-extrabold
+                    bg-[#347BE9]
+                    px-5
+                    py-3.5
+                    text-[14px]
+                    font-bold
                     text-white
+                    shadow-[0_4px_12px_rgba(52,123,233,0.22)]
                     transition
-                    hover:bg-[#3730A3]
-                    disabled:cursor-not-allowed
-                    disabled:opacity-60
-                    sm:w-1/2
+                    hover:bg-[#2467D5]
+                    active:scale-[0.99]
                   "
                 >
-
-                  {isPaying ? (
-                    <>
-                      <Loader2
-                        size={15}
-                        className="animate-spin"
-                      />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 size={15} />
-                      Confirm Payment
-                    </>
-                  )}
-
+                  View Application Status
+                  <ArrowRight size={17} />
                 </button>
 
-              </div>
-
-            </div>
+              </>
+            )}
 
           </div>
+
+        </div>
+
+      </main>
+
+    </div>
+  );
+}
+
+  // ==========================================================
+  // MAIN CHECKOUT
+  // ==========================================================
+
+  return (
+    <div className="min-h-screen bg-[linear-gradient(180deg,#10233E_0px,#183A60_360px,#F4F7FC_540px,#F4F7FC_100%)] text-[#101828]">
+      {/* ======================================================
+          PROGRESS
+      ====================================================== */}
+      <div className="border-b border-[#E2EAF5] bg-white">
+        <div className="mx-auto w-full max-w-[1180px]">
+          <SaaSSetupProgress activeStep={3} isUpgrade={isUpgrade} />
+        </div>
+      </div>
+
+      {/* ======================================================
+          CENTERED MAIN CONTENT
+      ====================================================== */}
+      <main className="mx-auto w-full max-w-[1160px] px-4 pb-16 pt-5 sm:px-6 sm:pt-8 lg:px-8">
+
+        {/* PAGE HEADER */}
+        <div className="mx-auto mb-7 max-w-[850px] text-center">
+         
+
+          <h1 className="mt-4 text-[24px] font-bold tracking-[-0.035em] text-white sm:text-[28px]">
+            {isUpgrade ? "Upgrade Subscription & Checkout" : "Review Subscription & Checkout"}
+          </h1>
+
+        
+
+         
+        </div>
+
+        {/* ERROR */}
+        {error && (
+          <div className="mx-auto mb-6 flex max-w-[1080px] items-start gap-3 rounded-xl border border-[#F3C6C1] bg-[#FEF0EF] px-4 py-3.5">
+            <Info size={17} className="mt-0.5 shrink-0 text-[#B42318]" />
+            <div>
+              <p className="text-[14px] font-bold text-[#7A1B12]">Checkout Error</p>
+              <p className="mt-0.5 text-[13px] font-medium leading-5 text-[#93261B]">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* ====================================================
+            TOP ROW — PLAN LEFT + HOTEL RIGHT
+        ==================================================== */}
+        <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-2 lg:gap-6">
+
+          {/* ==================================================
+              LEFT — SELECTED SUBSCRIPTION PLAN
+          ================================================== */}
+    <section className="relative w-full overflow-hidden rounded-[22px] border border-[#6AA5FF] bg-[linear-gradient(145deg,#5597F5_0%,#347BE9_58%,#2868DA_100%)] shadow-[0_20px_45px_rgba(22,71,149,0.23)]">
+
+  {/* ============================================================
+      SUBTLE TOP-RIGHT BACKGROUND
+  ============================================================ */}
+  <div className="pointer-events-none absolute right-0 top-0 h-[140px] w-[180px] bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24)_0%,transparent_72%)]" />
+
+
+  {/* ============================================================
+      CONTENT
+  ============================================================ */}
+  <div className="relative w-full p-4 sm:p-6 lg:p-7">
+
+
+    {/* ==========================================================
+        HEADER
+    ========================================================== */}
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+
+      {/* TITLE */}
+      <div className="min-w-0">
+
+        <p className="text-[12px] font-semibold uppercase tracking-[0.07em] text-[#E2EEFF]">
+          Subscription
+        </p>
+
+        <h2 className="mt-1 text-[20px] font-bold leading-6 tracking-[-0.01em] text-white sm:text-[22px]">
+          Selected Plan
+        </h2>
+
+      </div>
+
+
+      {/* PLAN BADGE */}
+      <span className="w-fit shrink-0 rounded-full bg-white/20 px-3.5 py-2 text-[12px] font-bold text-white ring-1 ring-white/30 sm:self-center">
+        {isUpgrade ? "Selected Plan" : "Most Popular"}
+      </span>
+
+    </div>
+
+
+    {/* ==========================================================
+        PLAN INFORMATION
+    ========================================================== */}
+    <div className="mt-6 min-w-0">
+
+      <p className="break-words text-[22px] font-bold leading-7 tracking-[-0.01em] text-white sm:text-[22px]">
+        {selectedPlan.planName}
+      </p>
+
+      {selectedPlan.description && (
+        <p className="mt-2 max-w-[520px] break-words text-[14px] font-medium leading-6 text-[#F0F6FF]">
+          {selectedPlan.description}
+        </p>
+      )}
+
+    </div>
+
+
+    {/* ==========================================================
+        PRICE
+    ========================================================== */}
+    <div className="mt-6 flex flex-wrap items-end gap-x-2 gap-y-1">
+
+      <span className="break-words text-[33px] font-bold leading-none tracking-[-0.04em] text-white sm:text-[36px]">
+        {formatCurrency(price)}
+      </span>
+
+      <span className="pb-0.5 text-[14px] font-medium text-[#F0F6FF]">
+        /
+        {" "}
+        {billingCycle === "yearly"
+          ? "year"
+          : billingCycle === "monthly"
+            ? "month"
+            : "cycle"}
+      </span>
+
+    </div>
+
+
+    {/* DIVIDER */}
+    <div className="my-5 border-t border-white/30" />
+
+
+    {/* ==========================================================
+        INCLUDED TITLE
+    ========================================================== */}
+    <p className="break-words text-[14px] font-medium leading-5 text-[#F0F6FF]">
+      {selectedPlan.planName} package included{" "}
+      <span className="font-bold text-white">
+        +
+      </span>
+    </p>
+
+
+    {/* ==========================================================
+        FEATURES
+    ========================================================== */}
+    <div className="mt-2 w-full">
+
+
+      {/* ========================================================
+          ROOMS
+      ======================================================== */}
+      <div className="flex min-h-[36px] w-full items-center gap-2.5 border-b border-white/20 py-2">
+
+        <CheckCircle2
+          size={16}
+          strokeWidth={1.8}
+          className="shrink-0 text-white"
+        />
+
+        <span className="min-w-0 break-words text-[14px] font-medium leading-5 text-white">
+          {Number(selectedPlan?.limits?.rooms || 0) === 0
+            ? "Unlimited rooms"
+            : `Up to ${selectedPlan?.limits?.rooms} rooms`}
+        </span>
+
+      </div>
+
+
+      {/* ========================================================
+          BRANCHES
+      ======================================================== */}
+      <div className="flex min-h-[36px] w-full items-center gap-2.5 border-b border-white/20 py-2">
+
+        <CheckCircle2
+          size={16}
+          strokeWidth={1.8}
+          className="shrink-0 text-white"
+        />
+
+        <span className="min-w-0 break-words text-[14px] font-medium leading-5 text-white">
+          {Number(selectedPlan?.limits?.branches || 0) === 0
+            ? "Unlimited branches"
+            : `Up to ${selectedPlan?.limits?.branches} branches`}
+        </span>
+
+      </div>
+
+
+      {/* ========================================================
+          RECEPTIONISTS
+      ======================================================== */}
+      <div className="flex min-h-[36px] w-full items-center gap-2.5 border-b border-white/20 py-2">
+
+        <CheckCircle2
+          size={16}
+          strokeWidth={1.8}
+          className="shrink-0 text-white"
+        />
+
+        <span className="min-w-0 break-words text-[14px] font-medium leading-5 text-white">
+          {Number(selectedPlan?.limits?.receptionists || 0) === 0
+            ? "Unlimited receptionists"
+            : `Up to ${selectedPlan?.limits?.receptionists} receptionists`}
+        </span>
+
+      </div>
+
+
+    {/* ========================================================
+    FOOD SERVICE
+======================================================== */}
+<div className="flex min-h-[36px] w-full items-center gap-2.5 border-b border-white/20 py-2">
+
+  {selectedPlan?.features?.foodService ? (
+    <CheckCircle2
+      size={16}
+      strokeWidth={1.8}
+      className="shrink-0 text-white"
+    />
+  ) : (
+    <XCircle
+      size={16}
+      strokeWidth={1.8}
+      className="shrink-0 text-[#B7D4FF]"
+    />
+  )}
+
+  <span
+    className={`min-w-0 break-words text-[14px] font-medium leading-5 ${
+      selectedPlan?.features?.foodService
+        ? "text-white"
+        : "text-[#D5E6FF] line-through decoration-white/60"
+    }`}
+  >
+    Food Service
+  </span>
+
+</div>
+
+
+{/* ========================================================
+    ROOM SERVICE
+======================================================== */}
+<div className="flex min-h-[36px] w-full items-center gap-2.5 border-b border-white/20 py-2">
+
+  {selectedPlan?.features?.roomService ? (
+    <CheckCircle2
+      size={16}
+      strokeWidth={1.8}
+      className="shrink-0 text-white"
+    />
+  ) : (
+    <XCircle
+      size={16}
+      strokeWidth={1.8}
+      className="shrink-0 text-[#B7D4FF]"
+    />
+  )}
+
+  <span
+    className={`min-w-0 break-words text-[14px] font-medium leading-5 ${
+      selectedPlan?.features?.roomService
+        ? "text-white"
+        : "text-[#D5E6FF] line-through decoration-white/60"
+    }`}
+  >
+    Room Service
+  </span>
+
+</div>
+
+
+      {/* ========================================================
+          TRIAL
+      ======================================================== */}
+      {Number(selectedPlan?.trialDays || 0) > 0 && (
+        <div className="flex min-h-[36px] w-full items-center gap-2.5 border-b border-white/20 py-2">
+
+          <CheckCircle2
+            size={16}
+            strokeWidth={1.8}
+            className="shrink-0 text-white"
+          />
+
+          <span className="min-w-0 break-words text-[14px] font-medium leading-5 text-white">
+            {selectedPlan.trialDays} days free trial
+          </span>
 
         </div>
       )}
 
     </div>
-  );
-};
 
 
-// ============================================================
-// PLAN LIMIT
-// ============================================================
+    {/* ==========================================================
+        BILLING
+    ========================================================== */}
+    <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
 
-const PlanLimit = ({
-  icon: Icon,
-  label,
-  value,
-}) => {
-  return (
-    <div className="rounded-xl border border-[#E1E3EA] bg-[#FAFAFD] p-3">
+      <span className="text-[14px] font-semibold text-[#F0F6FF]">
+        Billing
+      </span>
 
-      <div className="flex items-center gap-2">
+      <span className="w-fit shrink-0 rounded-full border border-white/30 bg-white/20 px-3 py-1.5 text-[13px] font-bold text-white">
+        {getBillingLabel(billingCycle)}
+      </span>
 
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EEEEFF] text-[#4338CA]">
-          <Icon size={15} />
-        </div>
+    </div>
 
-        <div className="min-w-0">
+  </div>
 
-          <p className="text-[10px] font-semibold text-[#64748B]">
-            {label}
-          </p>
+</section>
 
-          <p className="mt-0.5 truncate text-[14px] font-extrabold text-[#111827]">
-            {value ?? 0}
+
+          {/* ==================================================
+              RIGHT — HOTEL REGISTRATION
+          ================================================== */}
+          
+          <section className="w-full overflow-hidden rounded-[22px] border border-[#E2EAF5] bg-white shadow-[0_16px_40px_rgba(14,42,81,0.09)]">
+
+  {/* ============================================================
+      HEADER
+  ============================================================ */}
+  <div className="flex flex-col gap-3 border-b border-[#E2EAF5] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 sm:py-5">
+
+    {/* HEADER TITLE */}
+    <div className="flex min-w-0 items-center gap-3">
+
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EAF3FF] text-[#3479E8]">
+        <Hotel size={18} />
+      </div>
+
+      <div className="min-w-0">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.07em] text-[#5B6472]">
+          Registration
+        </p>
+
+        <h2 className="mt-0.5 break-words text-[19px] font-bold leading-6 text-[#17345D]">
+          Hotel Information
+        </h2>
+      </div>
+
+    </div>
+
+
+    {/* EDIT BUTTON */}
+    <button
+      type="button"
+      onClick={() => navigate(-1)}
+      className="
+        inline-flex
+        min-h-[40px]
+        w-full
+        shrink-0
+        cursor-pointer
+        items-center
+        justify-center
+        gap-1.5
+        rounded-lg
+        px-3
+        py-2
+        text-[13px]
+        font-semibold
+        text-[#3479E8]
+        transition
+        hover:bg-[#EAF3FF]
+        active:scale-[0.98]
+        sm:min-h-[38px]
+        sm:w-auto
+        sm:px-3
+      "
+    >
+      <ArrowLeft
+        size={15}
+        className="shrink-0"
+      />
+
+      <span>
+        Edit
+      </span>
+    </button>
+
+  </div>
+
+
+  {/* ============================================================
+      CONTENT
+  ============================================================ */}
+  <div className="w-full p-4 sm:p-6 lg:p-7">
+
+
+    {/* ==========================================================
+        HOTEL IDENTITY
+    ========================================================== */}
+    <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+
+      {/* HOTEL ICON */}
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#17345D] text-white sm:h-12 sm:w-12">
+        <Hotel size={19} />
+      </div>
+
+
+      {/* HOTEL DETAILS */}
+      <div className="min-w-0 flex-1">
+
+        <p className="break-words text-[19px] font-bold leading-6 tracking-[-0.01em] text-[#17345D] sm:text-[19px]">
+          {hotelName}
+        </p>
+
+        <div className="mt-1.5 flex min-w-0 items-start gap-2">
+
+          <MapPin
+            size={15}
+            className="mt-0.5 shrink-0 text-[#3479E8]"
+          />
+
+          <p className="min-w-0 break-words text-[14px] font-medium leading-5 text-[#5B6472]">
+            {addressText || "Registered hotel address"}
           </p>
 
         </div>
@@ -1656,302 +1336,717 @@ const PlanLimit = ({
       </div>
 
     </div>
-  );
-};
 
 
-// ============================================================
-// FEATURE ITEM
-// ============================================================
+    {/* ==========================================================
+        OWNER + TAX
+    ========================================================== */}
+    <div className="mt-5 grid w-full grid-cols-1 overflow-hidden rounded-xl border border-[#E2EAF5] sm:grid-cols-2">
 
-const FeatureItem = ({
-  icon: Icon,
-  label,
-  enabled,
-}) => {
-  return (
-    <div
-      className={`
-        flex
-        items-center
-        gap-2.5
-        rounded-xl
-        border
-        px-3
-        py-3
-        ${
-          enabled
-            ? "border-[#DCEBE4] bg-[#F5FCF8]"
-            : "border-[#E5E7EB] bg-[#FAFAFD]"
-        }
-      `}
-    >
+      {/* AUTHORIZED OWNER */}
+      <div className="min-w-0 p-4 sm:p-4">
 
-      <div
-        className={`
-          flex
-          h-8
-          w-8
-          shrink-0
-          items-center
-          justify-center
-          rounded-lg
-          ${
-            enabled
-              ? "bg-[#DDF7EC] text-[#087A58]"
-              : "bg-[#EEF0F3] text-[#94A3B8]"
-          }
-        `}
-      >
-        <Icon size={15} />
-      </div>
-
-
-      <div className="min-w-0">
-
-        <p
-          className={`
-            text-[11px]
-            font-bold
-            ${
-              enabled
-                ? "text-[#334155]"
-                : "text-[#94A3B8]"
-            }
-          `}
-        >
-          {label}
+        <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#5B6472]">
+          Authorized Owner
         </p>
 
-        <p
-          className={`
-            mt-0.5
-            text-[9px]
-            font-semibold
-            ${
-              enabled
-                ? "text-[#087A58]"
-                : "text-[#94A3B8]"
-            }
-          `}
-        >
-          {enabled ? "Included" : "Not included"}
+        <p className="mt-1.5 break-words text-[14px] font-bold leading-5 text-[#17345D]">
+          {ownerName}
         </p>
 
       </div>
 
 
-      <div className="ml-auto shrink-0">
 
-        {enabled ? (
-          <CheckCircle2
-            size={15}
-            className="text-[#087A58]"
-          />
+    </div>
+
+
+    {/* ==========================================================
+        CONTACT
+    ========================================================== */}
+    <div className="mt-4 grid w-full grid-cols-1 overflow-hidden rounded-xl border border-[#E2EAF5] sm:grid-cols-2">
+
+      {/* EMAIL */}
+      <div className="flex min-w-0 items-start gap-3 p-4">
+
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EAF3FF] text-[#3479E8]">
+          <Mail size={16} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+
+          <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#5B6472]">
+            Email
+          </p>
+
+          <p className="mt-1 break-all text-[13px] font-semibold leading-5 text-[#222222]">
+            {ownerEmail || "Not available"}
+          </p>
+
+        </div>
+
+      </div>
+
+
+      {/* PHONE */}
+      <div className="flex min-w-0 items-start gap-3 border-t border-[#EEF1F5] p-4 sm:border-l sm:border-t-0">
+
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EAF3FF] text-[#3479E8]">
+          <Phone size={16} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+
+          <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#5B6472]">
+            Phone
+          </p>
+
+          <p className="mt-1 break-words text-[13px] font-semibold leading-5 text-[#222222]">
+            {ownerPhone || "Not available"}
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    {/* ==========================================================
+        VERIFICATION
+    ========================================================== */}
+    <div className="mt-4 flex w-full items-start gap-3 rounded-xl border border-[#BFE4D2] bg-[#F1FAF6] p-4 sm:p-4">
+
+      {/* CHECK ICON */}
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E7F6EF] text-[#0F7A5E]">
+        <Check size={15} />
+      </div>
+
+
+      {/* MESSAGE */}
+      <div className="min-w-0 flex-1">
+
+        <p className="break-words text-[13px] font-bold leading-5 text-[#0F7A5E]">
+          Registration details ready
+        </p>
+
+        <p className="mt-1 break-words text-[12px] font-medium leading-5 text-[#136245]">
+          {isUpgrade
+            ? "Your existing hotel details are ready for your plan upgrade."
+            : "Hotel information will be submitted for admin review after payment."}
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+        </div>
+
+
+        {/* ====================================================
+            BOTTOM — PROFESSIONAL CHECKOUT INFORMATION
+        ==================================================== */}
+   <section className="mt-6 overflow-hidden rounded-[22px] border border-[#E2EAF5] bg-white shadow-[0_16px_40px_rgba(14,42,81,0.08)]">
+
+  {/* ============================================================
+      CHECKOUT HEADER
+  ============================================================ */}
+  <div className="flex flex-col gap-3 border-b border-[#E2EAF5] bg-[linear-gradient(105deg,#17345D,#347BE9)] px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
+
+    <div className="min-w-0">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#C4DAFF]">
+        Checkout
+      </p>
+
+      <h2 className="mt-1 text-[20px] font-bold text-white sm:text-[20px]">
+        Order Summary
+      </h2>
+    </div>
+
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white">
+      <ReceiptText size={18} />
+    </div>
+
+  </div>
+
+
+  {/* ============================================================
+      CHECKOUT CONTENT
+  ============================================================ */}
+  <div className="p-4 sm:p-6 lg:p-7">
+
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_330px] lg:gap-6">
+
+
+      {/* ==========================================================
+          BILLING DETAILS
+      ========================================================== */}
+    <div className="min-w-0 w-full">
+
+  {/* ============================================================
+      BILLING DETAILS
+  ============================================================ */}
+  <p className="mb-3 text-[14px] font-bold uppercase tracking-[0.06em] text-[#5B6472] sm:text-[14px]">
+    Billing Details
+  </p>
+
+
+  {/* ============================================================
+      BILLING CARD
+  ============================================================ */}
+  <div className="w-full overflow-hidden rounded-xl border border-[#E2EAF5] bg-white">
+
+
+    {/* ==========================================================
+        PLAN PRICE
+    ========================================================== */}
+    <div className="min-w-0 w-full">
+      <SummaryPriceRow
+        label={selectedPlan.planName}
+        description={`${getBillingLabel(billingCycle)} subscription`}
+        value={price}
+      />
+    </div>
+
+
+    {/* ==========================================================
+        SETUP FEE
+    ========================================================== */}
+    <div className="border-t border-[#EEF1F5] px-4 py-4 sm:px-5 sm:py-5">
+
+      <div className="flex w-full flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+
+        {/* LEFT */}
+        <div className="min-w-0 flex-1">
+
+          <p className="break-words text-[16px] font-semibold leading-5 text-[#101828]">
+            Platform Setup Fee
+          </p>
+
+          <p className="mt-1 text-[14px] font-medium leading-5 text-[#5B6472]">
+            Initial platform provisioning
+          </p>
+
+        </div>
+
+
+        {/* RIGHT */}
+        {setupFee > 0 ? (
+          <span className="shrink-0 self-start text-[16px] font-bold text-[#17345D] sm:self-center">
+            {formatCurrency(setupFee)}
+          </span>
         ) : (
-          <span className="text-[10px] font-bold text-[#94A3B8]">
-            —
+          <span className="w-fit shrink-0 rounded-full bg-[#E7F6EF] px-3 py-1.5 text-[13px] font-bold text-[#0F7A5E]">
+            Free
           </span>
         )}
 
       </div>
 
     </div>
+
+
+    
+
+  </div>
+
+
+  {/* ============================================================
+      PAYMENT NOTICE
+  ============================================================ */}
+  <div className="mt-4 flex w-full items-start gap-3 rounded-xl border border-[#BFD8FF] bg-[#EAF3FF] p-4 sm:mt-5 sm:p-5">
+
+    {/* ICON */}
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#3479E8] sm:h-10 sm:w-10">
+      <Info size={18} />
+    </div>
+
+
+    {/* CONTENT */}
+    <div className="min-w-0 flex-1">
+
+      <p className="break-words text-[15px] font-bold leading-5 text-[#17345D]">
+        Before you continue
+      </p>
+
+      <p className="mt-1.5 break-words text-[14px] font-medium leading-6 text-[#2A4A73]">
+        {isUpgrade
+          ? "Confirming activates your upgraded subscription immediately."
+          : "Payment marks your registration as paid. Your hotel is then submitted to the admin for review and activation."}
+      </p>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+      {/* ==========================================================
+          TOTAL + ACTIONS
+      ========================================================== */}
+      <div className="min-w-0 rounded-xl border border-[#E2EAF5] bg-[#F8FAFF] p-4 sm:p-5">
+
+
+        {/* TOTAL LABEL */}
+        <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[#5B6472]">
+          Total Due Today
+        </p>
+
+
+        {/* TOTAL */}
+        <div className="mt-2 flex items-end justify-between gap-3">
+
+          <p className="min-w-0 break-words text-[30px] font-bold tracking-[-0.03em] text-[#17345D] sm:text-[30px]">
+            {formatCurrency(total)}
+          </p>
+
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#17345D] text-white">
+            <CreditCard size={18} />
+          </div>
+
+        </div>
+
+
+        <div className="my-5 border-t border-[#E2EAF5]" />
+
+
+        {/* ========================================================
+            PAY NOW
+        ======================================================== */}
+        <button
+          type="button"
+          onClick={handlePayNow}
+          disabled={isPaying}
+          className="
+            flex
+            min-h-[50px]
+            w-full
+            cursor-pointer
+            items-center
+            justify-center
+            gap-2
+            rounded-xl
+            bg-[#347BE9]
+            px-4
+            py-3.5
+            text-[15px]
+            font-bold
+            text-white
+            shadow-[0_2px_5px_rgba(52,123,233,0.25)]
+            transition
+            hover:bg-[#2467D5]
+            active:scale-[0.99]
+            disabled:cursor-not-allowed
+            disabled:opacity-60
+            sm:px-5
+          "
+        >
+          <CreditCard
+            size={18}
+            className="shrink-0"
+          />
+
+          <span className="truncate">
+            Pay Now
+          </span>
+
+          <span className="shrink-0">
+            {formatCurrency(total)}
+          </span>
+
+          <ArrowRight
+            size={17}
+            className="ml-auto shrink-0"
+          />
+        </button>
+
+
+      
+
+     
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+        
+
+      </main>
+
+      {/* ======================================================
+          PAYMENT MODAL
+      ====================================================== */}
+      {isPaymentModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0B1220]/60 px-4 py-5 backdrop-blur-[3px]">
+          {/* BACKDROP */}
+          <button
+            type="button"
+            aria-label="Close payment modal"
+            disabled={isPaying}
+            onClick={() => setIsPaymentModalOpen(false)}
+            className="absolute inset-0 cursor-default"
+          />
+
+          {/* MODAL */}
+          <div className="relative z-10 flex max-h-[92vh] w-full max-w-[880px] flex-col overflow-hidden rounded-[24px] border border-[#E2EAF5] bg-white shadow-[0_25px_80px_rgba(6,15,35,0.45)]">
+            {/* =====================================================
+                MODAL HEADER — solid navy for immediate hierarchy
+                and guaranteed text contrast
+            ===================================================== */}
+            <div className="flex shrink-0 items-center justify-between bg-[#17345D] px-5 py-5 sm:px-7">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white ring-1 ring-white/20">
+                  <CreditCard size={19} strokeWidth={2.2} />
+                </div>
+
+                <div>
+                  <h2 className="text-[18px] font-bold tracking-[-0.01em] text-white sm:text-[20px]">
+                    Confirm Payment
+                  </h2>
+                  <p className="mt-0.5 text-[12px] font-medium text-[#B9C8DF]">
+                    Review your order carefully before completing payment.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                disabled={isPaying}
+                onClick={() => setIsPaymentModalOpen(false)}
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-white/15 bg-white/5 text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <X size={17} />
+              </button>
+            </div>
+
+            {/* =====================================================
+                MODAL CONTENT
+            ===================================================== */}
+            <div className="overflow-y-auto">
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px]">
+                {/* =================================================
+                    LEFT SIDE
+                ================================================= */}
+                <div className="border-b border-[#E2EAF5] p-5 sm:p-7 lg:border-b-0 lg:border-r">
+                  {/* PAYMENT AMOUNT */}
+                  <div className="rounded-xl border border-[#E2EAF5] bg-[#F8FAFF] p-5">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#5B6472]">
+                          Amount Due
+                        </p>
+                        <p className="mt-1 text-[30px] font-bold tracking-[-0.02em] text-[#17345D] sm:text-[34px]">
+                          {formatCurrency(total)}
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg bg-[#EAF3FF] px-3 py-2 text-[11px] font-bold text-[#3479E8]">
+                        {getBillingLabel(billingCycle)}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ORDER DETAILS */}
+                  <div className="mt-5">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-[#17345D]">
+                      Order Details
+                    </p>
+
+                    <div className="mt-3 overflow-hidden rounded-xl border border-[#E2EAF5] bg-white">
+                      <ModalRow label="Hotel" value={hotelName} />
+                      <ModalRow label="Plan" value={selectedPlan.planName} />
+                      <ModalRow label="Billing Cycle" value={getBillingLabel(billingCycle)} />
+                      <ModalRow label="Subscription" value={formatCurrency(price)} />
+                      <ModalRow label="Setup Fee" value={setupFee > 0 ? formatCurrency(setupFee) : "Free"} />
+                      <ModalRow label="Tax" value={formatCurrency(tax)} last />
+                    </div>
+                  </div>
+
+                  {/* PAYMENT NOTICE */}
+                  <div className="mt-5 flex items-start gap-3 rounded-xl border border-[#BFD8FF] bg-[#EAF3FF] p-4">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-[#3479E8]">
+                      <Info size={16} />
+                    </div>
+
+                    <div>
+                      <p className="text-[12px] font-bold text-[#17345D]">Payment Information</p>
+                      <p className="mt-1 text-[11px] font-medium leading-5 text-[#2A4A73]">
+                        After confirmation, your payment will be marked as paid and your hotel
+                        application will continue through the registration process.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* =================================================
+                    RIGHT SIDE — BILL
+                ================================================= */}
+                <div className="bg-[#F4F7FC] p-5 sm:p-7">
+                  <div className="lg:sticky lg:top-0">
+                    {/* BILL HEADER */}
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#5B6472]">
+                        Billing Summary
+                      </p>
+                      <h3 className="mt-1 text-[19px] font-bold tracking-[-0.01em] text-[#17345D]">
+                        Your Order Summary
+                      </h3>
+                    </div>
+
+                    {/* BILL */}
+                    <div className="mt-5 rounded-xl border border-[#E2EAF5] bg-white p-5">
+                      {/* PLAN */}
+                      <div className="flex items-start justify-between gap-4">
+                        <div >
+                          <p className="text-[13px] p-4 font-bold text-[#17345D]">{selectedPlan.planName}</p>
+                          <p className="mt-1 text-[11px] p-4 font-medium text-[#5B6472]">
+                            {getBillingLabel(billingCycle)} subscription
+                          </p>
+                        </div>
+
+                        <p className="text-[13px] font-bold text-[#17345D]">{formatCurrency(price)}</p>
+                      </div>
+
+                      <div className="my-4 border-t border-dashed border-[#D6DBE3]" />
+
+                      {/* SETUP */}
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-[12px] font-medium text-[#5B6472]">Platform Setup Fee</span>
+                        <span className="text-[12px] font-bold text-[#17345D]">
+                          {setupFee > 0 ? formatCurrency(setupFee) : "Free"}
+                        </span>
+                      </div>
+
+                      {/* TAX */}
+                      <div className="mt-3 flex items-center justify-between gap-4">
+                        <span className="text-[12px] font-medium text-[#5B6472]">Tax</span>
+                        <span className="text-[12px] font-bold text-[#17345D]">{formatCurrency(tax)}</span>
+                      </div>
+
+                      {/* TOTAL */}
+                      <div className="mt-5 rounded-lg bg-[#17345D] p-4">
+                        <div className="flex items-end justify-between gap-3">
+                          <div>
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#C4DAFF]">
+                              Total Due Today
+                            </p>
+                            <p className="mt-1 text-[24px] font-bold tracking-[-0.02em] text-white">
+                              {formatCurrency(total)}
+                            </p>
+                          </div>
+
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#3479E8] text-white">
+                            <CreditCard size={17} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* CONFIRM BUTTON */}
+                    <button
+                      type="button"
+                      disabled={isPaying}
+                      onClick={handleConfirmPayment}
+                      className="mt-4 flex min-h-[50px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#347BE9] px-5 py-3.5 text-[13px] font-bold text-white shadow-[0_1px_2px_rgba(11,36,71,0.3)] transition hover:bg-[#2467D5] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isPaying ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 size={16} />
+                          Confirm Payment
+                          <span className="ml-1">{formatCurrency(total)}</span>
+                        </>
+                      )}
+                    </button>
+
+                    {/* CANCEL */}
+                    <button
+                      type="button"
+                      disabled={isPaying}
+                      onClick={() => setIsPaymentModalOpen(false)}
+                      className="mt-2.5 flex min-h-[46px] w-full cursor-pointer items-center justify-center rounded-lg border border-[#C9D8EB] bg-white px-5 py-3 text-[12px] font-semibold text-[#344054] transition hover:bg-[#F4F7FC]"
+                    >
+                      Cancel
+                    </button>
+
+                   
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
+// ============================================================
+// PLAN LIMIT
+// ============================================================
+
+const PlanLimit = ({ icon: Icon, label, value }) => {
+  return (
+    <div className="rounded-xl border border-[#E2EAF5] bg-[#F8FAFF] p-3">
+      <div className="flex items-center gap-2">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#17345D] text-white">
+          <Icon size={15} />
+        </div>
+
+        <div className="min-w-0">
+          <p className="text-[12px] font-medium text-[#5B6472]">{label}</p>
+          <p className="mt-0.5 truncate text-[16px] font-bold text-[#17345D]">{value ?? 0}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================
+// FEATURE ITEM
+// ============================================================
+
+const FeatureItem = ({ icon: Icon, label, enabled }) => {
+  return (
+    <div
+      className={`flex items-center gap-2.5 rounded-xl border px-3 py-3 ${
+        enabled ? "border-[#BFE4D2] bg-[#F1FAF6]" : "border-[#E2EAF5] bg-[#F8FAFF]"
+      }`}
+    >
+      <div
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+          enabled ? "bg-[#E7F6EF] text-[#0F7A5E]" : "bg-[#EEF0F3] text-[#94A3B8]"
+        }`}
+      >
+        <Icon size={15} />
+      </div>
+
+      <div className="min-w-0">
+        <p className={`text-[13px] font-bold ${enabled ? "text-[#17345D]" : "text-[#94A3B8]"}`}>
+          {label}
+        </p>
+        <p className={`mt-0.5 text-[11px] font-semibold ${enabled ? "text-[#0F7A5E]" : "text-[#94A3B8]"}`}>
+          {enabled ? "Included" : "Not included"}
+        </p>
+      </div>
+
+      <div className="ml-auto shrink-0">
+        {enabled ? (
+          <CheckCircle2 size={15} className="text-[#0F7A5E]" />
+        ) : (
+          <span className="text-[10px] font-bold text-[#94A3B8]">—</span>
+        )}
+      </div>
+    </div>
+  );
+};
 
 // ============================================================
 // PROFILE INFO
 // ============================================================
 
-const ProfileInfo = ({
-  icon: Icon,
-  label,
-  value,
-}) => {
+const ProfileInfo = ({ icon: Icon, label, value }) => {
   return (
-    <div className="rounded-xl border border-[#E1E3EA] bg-[#FAFAFD] p-4">
-
+    <div className="rounded-xl border border-[#E2EAF5] bg-[#F8FAFF] p-4">
       <div className="flex items-start gap-3">
-
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EEEEFF] text-[#4338CA]">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#17345D] text-white">
           <Icon size={15} />
         </div>
 
         <div className="min-w-0">
-
-          <p className="text-[9px] font-bold uppercase tracking-[0.08em] text-[#64748B]">
-            {label}
-          </p>
-
-          <p className="mt-1 break-words text-[12px] font-bold text-[#111827]">
-            {value}
-          </p>
-
+          <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#5B6472]">{label}</p>
+          <p className="mt-1 break-words text-[14px] font-bold text-[#17345D]">{value}</p>
         </div>
-
       </div>
-
     </div>
   );
 };
-
 
 // ============================================================
 // CONTACT VALUE
 // ============================================================
 
-const ContactValue = ({
-  icon: Icon,
-  value,
-}) => {
+const ContactValue = ({ icon: Icon, value }) => {
   return (
     <div className="flex min-w-0 items-center gap-2.5">
-
-      <Icon
-        size={14}
-        className="shrink-0 text-[#4338CA]"
-      />
-
-      <span className="truncate text-[11px] font-semibold text-[#475569]">
-        {value}
-      </span>
-
+      <Icon size={14} className="shrink-0 text-[#3479E8]" />
+      <span className="truncate text-[13px] font-medium text-[#344054]">{value}</span>
     </div>
   );
 };
-
 
 // ============================================================
 // SUMMARY PRICE ROW
 // ============================================================
 
-const SummaryPriceRow = ({
-  label,
-  description,
-  value,
-}) => {
+const SummaryPriceRow = ({ label, description, value }) => {
   return (
     <div className="flex items-start justify-between gap-4">
-
-      <div className="min-w-0">
-
-        <p className="text-[12px] font-bold text-[#334155]">
-          {label}
-        </p>
-
-        <p className="mt-0.5 text-[10px] font-medium text-[#94A3B8]">
-          {description}
-        </p>
-
+      <div className="min-w-0 p-4">
+        <p className="text-[14px]  font-semibold text-[#101828]">{label}</p>
+        <p className="mt-0.5 text-[12px] font-medium text-[#5B6472]">{description}</p>
       </div>
 
-      <span className="shrink-0 text-[12px] font-extrabold text-[#111827]">
-        {formatCurrency(value)}
-      </span>
-
+      <span className="shrink-0 p-4 text-[14px] font-bold text-[#17345D]">{formatCurrency(value)}</span>
     </div>
   );
 };
-
 
 // ============================================================
 // SUMMARY ROW
 // ============================================================
 
-const SummaryRow = ({
-  label,
-  value,
-  icon: Icon,
-  strong = false,
-}) => {
+const SummaryRow = ({ label, value, icon: Icon, strong = false }) => {
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-[#E4E6EC] py-3 last:border-b-0">
-
+    <div className="flex items-center justify-between gap-4 border-b border-[#E2EAF5] py-3 last:border-b-0">
       <div className="flex min-w-0 items-center gap-2">
-
-        {Icon && (
-          <Icon
-            size={14}
-            className="shrink-0 text-[#64748B]"
-          />
-        )}
-
-        <span className="text-[11px] font-medium text-[#64748B]">
-          {label}
-        </span>
-
+        {Icon && <Icon size={14} className="shrink-0 text-[#5B6472]" />}
+        <span className="text-[13px] font-medium text-[#5B6472]">{label}</span>
       </div>
 
       <span
-        className={`
-          max-w-[60%]
-          break-words
-          text-right
-          ${
-            strong
-              ? "text-[13px] font-extrabold text-[#111827]"
-              : "text-[11px] font-bold text-[#334155]"
-          }
-        `}
+        className={`max-w-[60%] break-words text-right ${
+          strong ? "text-[15px] font-bold text-[#17345D]" : "text-[13px] font-bold text-[#344054]"
+        }`}
       >
         {value}
       </span>
-
     </div>
   );
 };
-
 
 // ============================================================
 // MODAL ROW
 // ============================================================
 
-const ModalRow = ({
-  label,
-  value,
-  last = false,
-  strong = false,
-}) => {
+const ModalRow = ({ label, value, last = false, strong = false }) => {
   return (
-    <div
-      className={`
-        flex
-        items-center
-        justify-between
-        gap-4
-        py-2.5
-        ${
-          !last
-            ? "border-b border-[#E5E7EB]"
-            : ""
-        }
-      `}
-    >
-
-      <span className="text-[11px] font-medium text-[#64748B]">
-        {label}
-      </span>
-
+    <div className={`flex items-center justify-between gap-4 px-4 py-2.5 ${!last ? "border-b border-[#E5E7EB]" : ""}`}>
+      <span className="text-[13px] font-medium text-[#5B6472]">{label}</span>
       <span
-        className={`
-          max-w-[60%]
-          break-words
-          text-right
-          ${
-            strong
-              ? "text-[13px] font-extrabold text-[#111827]"
-              : "text-[11px] font-bold text-[#334155]"
-          }
-        `}
+        className={`max-w-[60%] break-words text-right ${
+          strong ? "text-[15px] font-bold text-[#17345D]" : "text-[13px] font-bold text-[#101828]"
+        }`}
       >
         {value}
       </span>
-
     </div>
   );
 };
-
 
 export default SaaSUserCheckout;

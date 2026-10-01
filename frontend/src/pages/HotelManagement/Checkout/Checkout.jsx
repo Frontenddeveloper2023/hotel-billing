@@ -970,18 +970,14 @@ const lateCheckoutDescription = hasLateCheckout
     : money(roomTotal / Math.max(1, totalBookedNights));
 
   return (
-    <main className="min-h-[calc(100vh-64px)] w-full bg-[#F4F6F8] px-4 sm:px-6 lg:px-8 py-5 sm:py-7">
+    <main className="min-h-[calc(100vh-64px)] w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-7">
         {/* Breadcrumb + title */}
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 text-[11px] sm:text-[12px] uppercase tracking-[0.04em] font-semibold text-[#60666B]">
-              <span>Operations</span>
-              <span>/</span>
-              <span className="text-[#24282C]">Checkout &amp; Billing</span>
-            </div>
+           
 
-            <div className="mt-1.5 flex items-center gap-3">
-              <h1 className="text-[28px] sm:text-[31px] leading-tight font-bold tracking-[-0.8px] text-[#202326]">
+            <div className=" flex items-center gap-3">
+              <h1 className="text-[28px] sm:text-[31px] leading-tight font-bold tracking-[-0.8px] text-white">
                 Guest Checkout
                 {stay?.checkoutNumber || stay?.invoiceNumber || stay?.bookingNumber
                   ? ` #${stay.checkoutNumber || stay.invoiceNumber || stay.bookingNumber}`
@@ -998,18 +994,18 @@ const lateCheckoutDescription = hasLateCheckout
           {/* LEFT COLUMN */}
           <div className="space-y-5">
             {/* CUSTOMER INFORMATION */}
-            <section className="rounded-2xl bg-white border border-[#E7EAEC] shadow-[0_1px_3px_rgba(20,25,30,0.03)] overflow-hidden">
+            <section className="rounded-2xl bg-white border border-[#dbe6f5] shadow-[0_1px_3px_rgba(20,25,30,0.03)] overflow-hidden">
               <div className="px-6 pt-6 pb-4 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="h-7 w-7 flex items-center justify-center">
                     <Users className="w-[20px] h-[20px] text-[#17191B]" />
                   </div>
-                  <h2 className="text-[18px] font-bold tracking-[-0.3px] text-[#25282B]">
+                  <h2 className="text-[18px] font-bold tracking-[-0.3px] text-[#0e2a4a]">
                     Customer Information
                   </h2>
                 </div>
 
-                <span className="rounded-full bg-[#76E4D7] px-3 py-1 text-[11px] font-semibold text-[#087B78] whitespace-nowrap">
+                <span className="rounded-full bg-[#76E4D7] px-3 py-1 text-[11px] font-semibold text-[#2568e0] whitespace-nowrap">
                   {stay?.vipGuest ? "VIP Guest" : "Guest"}
                 </span>
               </div>
@@ -1017,7 +1013,7 @@ const lateCheckoutDescription = hasLateCheckout
               <div className="px-6 pb-6">
                 {/* No profile image — intentionally kept text-first like requested */}
                 <div className="pb-4">
-                  <p className="text-[17px] font-bold text-[#24272A]">
+                  <p className="text-[17px] font-bold text-[#0e2a4a]">
                     {customerName}
                   </p>
                   <p className="mt-1 text-[12.5px] text-[#61666B] break-words">
@@ -1057,31 +1053,31 @@ const lateCheckoutDescription = hasLateCheckout
             </section>
 
             {/* ACCOMMODATION */}
-            <section className="rounded-2xl bg-white border border-[#E7EAEC] shadow-[0_1px_3px_rgba(20,25,30,0.03)] overflow-hidden">
+            <section className="rounded-2xl bg-white border border-[#dbe6f5] shadow-[0_1px_3px_rgba(20,25,30,0.03)] overflow-hidden">
               <div className="px-6 pt-6 pb-4 flex items-center gap-3">
                 <BedDouble className="w-[21px] h-[21px] text-[#17191B]" />
-                <h2 className="text-[18px] font-bold tracking-[-0.3px] text-[#25282B]">
+                <h2 className="text-[18px] font-bold tracking-[-0.3px] text-[#0e2a4a]">
                   Accommodation &amp; Stay Details
                 </h2>
               </div>
 
               <div className="px-6 pb-6">
                 {/* Assigned room banner */}
-                <div className="rounded-xl bg-[#F0F2F4] px-3.5 py-3 grid grid-cols-2 gap-4">
-                  <div className="min-w-0">
-                    <p className="text-[10px] uppercase font-medium tracking-wide text-[#666C71]">
+                <div className="rounded-xl bg-[#f4f8fd] px-4 py-3.5 flex flex-col sm:flex-row sm:justify-between gap-4 border border-[#dbe6f5]">
+                  <div className="flex-1">
+                    <p className="text-[10px] uppercase font-medium tracking-wide text-[#6b7f99]">
                       ASSIGNED ROOM
                     </p>
-                    <p className="mt-0.5 text-[21px] leading-6 font-bold text-[#24272A] truncate">
+                    <p className="mt-0.5 text-[20px] leading-6 font-bold text-[#0e2a4a] break-words">
                       {assignedRoomText}
                     </p>
                   </div>
 
-                  <div className="text-right min-w-0">
-                    <p className="text-[10px] uppercase font-medium tracking-wide text-[#666C71]">
+                  <div className="sm:text-right flex-shrink-0">
+                    <p className="text-[10px] uppercase font-medium tracking-wide text-[#6b7f99]">
                       ROOM CATEGORY
                     </p>
-                    <p className="mt-0.5 text-[13px] font-medium text-[#2E3235] truncate">
+                    <p className="mt-0.5 text-[14px] font-semibold text-[#0e2a4a] break-words">
                       {roomCategoryText}
                     </p>
                   </div>
@@ -1129,7 +1125,7 @@ const lateCheckoutDescription = hasLateCheckout
                     <p className="text-[10px] uppercase font-medium tracking-wide text-[#686D72]">
                       NIGHTS STAYED
                     </p>
-                    <p className="mt-0.5 text-[16px] font-bold text-[#25282B]">
+                    <p className="mt-0.5 text-[16px] font-bold text-[#0e2a4a]">
                       {totalNightsDisplay} Night{Number(totalNightsDisplay) !== 1 ? "s" : ""}
                     </p>
                   </div>
@@ -1138,7 +1134,7 @@ const lateCheckoutDescription = hasLateCheckout
                     <p className="text-[10px] uppercase font-medium tracking-wide text-[#686D72]">
                       TARIFF RATE / NIGHT
                     </p>
-                    <p className="mt-0.5 text-[16px] font-bold text-[#25282B]">
+                    <p className="mt-0.5 text-[16px] font-bold text-[#0e2a4a]">
                       {tariffDisplay}
                     </p>
                   </div>
@@ -1149,12 +1145,12 @@ const lateCheckoutDescription = hasLateCheckout
                     {roomBreakdown.map((room, index) => (
                       <div
                         key={room._id || `${room.roomNumber}-${index}`}
-                        className="flex items-center justify-between rounded-lg bg-[#F7F8F9] px-3 py-2.5 text-[12px]"
+                        className="flex items-center justify-between rounded-lg bg-[#f4f8fd] px-3 py-2.5 text-[12px]"
                       >
-                        <span className="font-semibold text-[#303438]">
+                        <span className="font-semibold text-[#0e2a4a]">
                           Room {room.roomNumber || "—"}
                         </span>
-                        <span className="text-[#666C71]">
+                        <span className="text-[#6b7f99]">
                           {room.nights} night{Number(room.nights) !== 1 ? "s" : ""} × {money(room.rate)}
                         </span>
                       </div>
@@ -1168,88 +1164,120 @@ const lateCheckoutDescription = hasLateCheckout
           {/* RIGHT COLUMN */}
           <div className="space-y-5 min-w-0">
             {/* BILLING BREAKDOWN */}
-            <section className="rounded-2xl bg-white border border-[#E7EAEC] shadow-[0_1px_3px_rgba(20,25,30,0.03)] overflow-hidden">
+            <section className="rounded-2xl bg-white border border-[#dbe6f5] shadow-[0_1px_3px_rgba(20,25,30,0.03)] overflow-hidden">
               <div className="px-6 pt-6 pb-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <Receipt className="w-[20px] h-[20px] text-[#111315]" />
-                  <h2 className="text-[18px] font-bold tracking-[-0.3px] text-[#25282B]">
+                  <Receipt className="w-[20px] h-[20px] text-[#0e2a4a]" />
+                  <h2 className="text-[18px] font-bold tracking-[-0.3px] text-[#0e2a4a]">
                     Billing Breakdown
                   </h2>
                 </div>
-                <span className="font-mono text-[10px] text-[#676C70]">
+                <span className="font-mono text-[10px] text-[#6b7f99]">
                   {stay?.invoiceNo || stay?.invoiceNumber || "INV-PENDING"}
                 </span>
               </div>
 
               <div className="px-6 pb-1">
                 {/* Room rent */}
-                <div className="py-3.5 border-b border-[#E5E7E9] flex items-start justify-between gap-5">
+                <div className="py-3.5 border-b border-[#dbe6f5] flex items-start justify-between gap-5">
                   <div className="min-w-0">
-                    <p className="text-[14px] font-medium text-[#292C2F]">
+                    <p className="text-[14px] font-medium text-[#0e2a4a]">
                       {roomRentLabel}
                     </p>
-                    <p className="mt-0.5 text-[12.5px] leading-4 text-[#666B70] break-words">
+                    <p className="mt-0.5 text-[12.5px] leading-4 text-[#6b7f99] break-words">
                       {roomRentDescription}
                     </p>
                   </div>
-                  <p className="shrink-0 text-[13.5px] font-bold text-[#292C2F]">
+                  <p className="shrink-0 text-[13.5px] font-bold text-[#0e2a4a]">
                     {money(roomTotal)}
                   </p>
                 </div>
 
                 {/* Food */}
-                <div className="py-3.5 border-b border-[#E5E7E9] flex items-start justify-between gap-5">
-                  <div className="min-w-0">
-                    <p className="text-[14px] font-medium text-[#292C2F]">
-                      Food Services
-                    </p>
-                    <p className="mt-0.5 text-[12.5px] leading-4 text-[#666B70] break-words">
-                      {foodDescription}
+                <div className="py-3.5 border-b border-[#dbe6f5]">
+                  <div className="flex items-start justify-between gap-5">
+                    <div className="min-w-0">
+                      <p className="text-[14px] font-medium text-[#0e2a4a]">
+                        Food Services
+                      </p>
+                      <p className="mt-0.5 text-[12.5px] leading-4 text-[#6b7f99] break-words">
+                        {foodDescription}
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-[13.5px] font-bold text-[#0e2a4a]">
+                      {money(foodTotal)}
                     </p>
                   </div>
-                  <p className="shrink-0 text-[13.5px] font-bold text-[#292C2F]">
-                    {money(foodTotal)}
-                  </p>
+                  {foodTotal > 0 && selectedRooms.length > 0 && (
+                    <div className="mt-3 space-y-1.5 pl-3 border-l-2 border-[#eaf3ff]">
+                      {selectedRooms.map((room, idx) => {
+                        const rFoodTotal = getFoodTotal(room);
+                        if (rFoodTotal <= 0) return null;
+                        return (
+                          <div key={idx} className="flex justify-between items-center text-[12px]">
+                            <span className="text-[#6b7f99]">Room {room.roomNumber || "—"}</span>
+                            <span className="text-[#0e2a4a] font-medium">{money(rFoodTotal)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Room services */}
-                <div className="py-3.5 border-b border-[#E5E7E9] flex items-start justify-between gap-5">
-                  <div className="min-w-0">
-                    <p className="text-[14px] font-medium text-[#292C2F]">
-                      Room Services
-                    </p>
-                    <p className="mt-0.5 text-[12.5px] leading-4 text-[#666B70] break-words">
-                      {roomServiceDescription}
+                <div className="py-3.5 border-b border-[#dbe6f5]">
+                  <div className="flex items-start justify-between gap-5">
+                    <div className="min-w-0">
+                      <p className="text-[14px] font-medium text-[#0e2a4a]">
+                        Room Services
+                      </p>
+                      <p className="mt-0.5 text-[12.5px] leading-4 text-[#6b7f99] break-words">
+                        {roomServiceDescription}
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-[13.5px] font-bold text-[#0e2a4a]">
+                      {money(roomServiceTotal)}
                     </p>
                   </div>
-                  <p className="shrink-0 text-[13.5px] font-bold text-[#292C2F]">
-                    {money(roomServiceTotal)}
-                  </p>
+                  {roomServiceTotal > 0 && selectedRooms.length > 0 && (
+                    <div className="mt-3 space-y-1.5 pl-3 border-l-2 border-[#eaf3ff]">
+                      {selectedRooms.map((room, idx) => {
+                        const rServiceTotal = getRoomServiceTotal(room);
+                        if (rServiceTotal <= 0) return null;
+                        return (
+                          <div key={idx} className="flex justify-between items-center text-[12px]">
+                            <span className="text-[#6b7f99]">Room {room.roomNumber || "—"}</span>
+                            <span className="text-[#0e2a4a] font-medium">{money(rServiceTotal)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Late checkout */}
-                <div className="py-3.5 border-b border-[#E5E7E9]">
+                <div className="py-3.5 border-b border-[#dbe6f5]">
                   <div className="flex items-start justify-between gap-5">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-[14px] font-medium text-[#292C2F]">
+                        <p className="text-[14px] font-medium text-[#0e2a4a]">
                           Late Checkout Charge
                         </p>
-                        <span className="inline-flex items-center gap-1 rounded-md bg-[#75E4D8] px-2 py-0.5 text-[10px] font-semibold text-[#087B78]">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-[#eaf3ff] px-2 py-0.5 text-[10px] font-semibold text-[#2568e0]">
                           <RefreshCw className="w-3 h-3" />
                           Auto-applied
                         </span>
                       </div>
-                      <p className="mt-0.5 text-[12.5px] leading-4 text-[#666B70]">
+                      <p className="mt-0.5 text-[12.5px] leading-4 text-[#6b7f99]">
                         {lateCheckoutDescription}
                       </p>
                     </div>
-                    <p className="shrink-0 text-[13.5px] font-bold text-[#292C2F]">
+                    <p className="shrink-0 text-[13.5px] font-bold text-[#0e2a4a]">
                       {money(extraChargeTotal)}
                     </p>
                   </div>
 
-                  <div className="mt-2 rounded-md bg-[#ECEEEF] px-3 py-1.5 flex items-center gap-2 text-[10.5px] text-[#555B60]">
+                  <div className="mt-2 rounded-md bg-[#eaf3ff] px-3 py-1.5 flex items-center gap-2 text-[10.5px] text-[#6b7f99]">
                     <Info className="w-3.5 h-3.5 shrink-0" />
                     <span>
                       {hasLateCheckout
@@ -1268,38 +1296,38 @@ const lateCheckoutDescription = hasLateCheckout
                 {/* Totals */}
                 <div className="pt-4">
                   <div className="flex items-center justify-between py-2 text-[13.5px]">
-                    <span className="text-[#666B70]">Subtotal</span>
-                    <span className="font-semibold text-[#292C2F]">{money(subtotal)}</span>
+                    <span className="text-[#6b7f99]">Subtotal</span>
+                    <span className="font-semibold text-[#0e2a4a]">{money(subtotal)}</span>
                   </div>
 
                   <div className="flex items-center justify-between py-2 text-[13.5px]">
-                    <span className="text-[#666B70]">
+                    <span className="text-[#6b7f99]">
                       GST ({gstEnabled ? gstPercentage : 0}%)
                     </span>
-                    <span className="font-semibold text-[#292C2F]">{money(gstAmount)}</span>
+                    <span className="font-semibold text-[#0e2a4a]">{money(gstAmount)}</span>
                   </div>
 
-                  <div className="border-t border-[#E1E4E6] mt-1 pt-3 flex items-center justify-between">
-                    <span className="text-[18px] font-bold text-[#24272A]">
+                  <div className="border-t border-[#dbe6f5] mt-1 pt-3 flex items-center justify-between">
+                    <span className="text-[18px] font-bold text-[#0e2a4a]">
                       Grand Total
                     </span>
-                    <span className="text-[17px] font-bold text-[#24272A]">
+                    <span className="text-[17px] font-bold text-[#0e2a4a]">
                       {money(grandTotal)}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between py-3 border-b border-[#E1E4E6]">
-                    <span className="text-[13.5px] text-[#666B70]">Advance Paid</span>
-                    <span className="font-medium text-[#292C2F]">
+                  <div className="flex items-center justify-between py-3 border-b border-[#dbe6f5]">
+                    <span className="text-[13.5px] text-[#6b7f99]">Advance Paid</span>
+                    <span className="font-medium text-[#0e2a4a]">
                       - {money(advanceUsed)}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between py-4">
-                    <span className="text-[22px] font-bold tracking-[-0.4px] text-[#24272A]">
+                    <span className="text-[22px] font-bold tracking-[-0.4px] text-[#0e2a4a]">
                       Balance Due
                     </span>
-                    <span className="text-[22px] font-bold tracking-[-0.4px] text-[#007A73]">
+                    <span className="text-[22px] font-bold tracking-[-0.4px] text-[#2568e0]">
                       {money(balanceDue)}
                     </span>
                   </div>
@@ -1308,10 +1336,10 @@ const lateCheckoutDescription = hasLateCheckout
             </section>
 
             {/* PAYMENT METHOD */}
-            <section className="rounded-2xl bg-white border border-[#E7EAEC] shadow-[0_1px_3px_rgba(20,25,30,0.03)] overflow-hidden">
+            <section className="rounded-2xl bg-white border border-[#dbe6f5] shadow-[0_1px_3px_rgba(20,25,30,0.03)] overflow-hidden">
               <div className="px-6 pt-6 pb-4 flex items-center gap-3">
-                <CreditCard className="w-[21px] h-[21px] text-[#111315]" />
-                <h2 className="text-[18px] font-bold tracking-[-0.3px] text-[#25282B]">
+                <CreditCard className="w-[21px] h-[21px] text-[#0e2a4a]" />
+                <h2 className="text-[18px] font-bold tracking-[-0.3px] text-[#0e2a4a]">
                   Payment Method
                 </h2>
               </div>
@@ -1323,16 +1351,30 @@ const lateCheckoutDescription = hasLateCheckout
                   type="button"
                   disabled={roomBreakdown.length === 0 || settingsLoading}
                   onClick={() => setShowPaymentPage(true)}
-                  className="mt-6 cursor-pointer w-full min-h-[56px] rounded-xl bg-black hover:bg-[#17191A] disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-3 text-[15px] font-semibold shadow-[0_4px_10px_rgba(0,0,0,0.14)] transition flex items-center justify-center gap-2"
+                  className="
+                    group/co
+                    mt-6 w-full min-h-[56px] relative overflow-hidden cursor-pointer
+                    flex items-center justify-center gap-2
+                    rounded-xl
+                    bg-gradient-to-r from-orange-500 via-orange-500 to-amber-400
+                    hover:from-orange-600 hover:via-orange-500 hover:to-amber-500
+                    active:scale-[0.98]
+                    text-white text-[15px] font-bold
+                    shadow-[0_4px_14px_rgba(249,115,22,0.4)]
+                    hover:shadow-[0_6px_20px_rgba(249,115,22,0.55)]
+                    transition-all duration-200
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                  "
                 >
-                  <CheckCircle2 className="w-[18px] h-[18px]" />
-                  Confirm Payment &amp; Complete Checkout
+                  <span className="absolute inset-0 translate-x-[-100%] group-hover/co:translate-x-[100%] transition-transform duration-500 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+                  <CheckCircle2 className="w-[18px] h-[18px] transition-transform duration-200 group-hover/co:translate-x-0.5" />
+                  Confirm Payment & Complete Checkout
                 </button>
 
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="mt-3 w-full cursor-pointer rounded-xl border border-[#D8DCDE] bg-white hover:bg-[#F7F8F9] text-[#41464B] px-5 py-3 text-[13px] font-semibold transition"
+                  className="mt-3 w-full cursor-pointer rounded-xl border border-[#dbe6f5] bg-white hover:bg-[#f4f8fd] text-[#6b7f99] px-5 py-3 text-[13px] font-semibold transition"
                 >
                   Cancel
                 </button>

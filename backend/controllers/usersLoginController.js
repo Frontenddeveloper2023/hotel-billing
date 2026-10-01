@@ -1,7 +1,7 @@
 import User from "../models/users.js";
 import Hotels from "../models/hotels.js";
 import Subscription from "../models/subscription.js";
-import BranchHotels from "../models/BranchHotels.js";
+import BranchHotels from "../models/branchHotels.js";
 import { sendOTP } from "../util/email.js";
 import jwt from "jsonwebtoken";
 import { log } from "../util/logger.js";
@@ -9,6 +9,7 @@ import { log } from "../util/logger.js";
 /**
  * Helper to build sub-branch permissions based on parent hotel's subscription features
  */
+
 const buildBranchPermissions = (subscription) => {
     return {
         dashboard: true,
@@ -85,22 +86,10 @@ const sendOTPForLogin = async (req, res) => {
                 });
             }
 
-            // Check parent hotel's active subscription
+            // Check parent hotel's subscription (allow login even if expired so owner/branch can view status & upgrade)
             const subscription = await Subscription.findOne({
                 hotelId: branch.hotelId,
-                status: {
-                    $in: ["trial", "active", "expiring_soon", "grace_period"],
-                },
-                endDate: {
-                    $gt: new Date(),
-                },
-            });
-
-            if (!subscription) {
-                return res.status(403).json({
-                    message: "The subscription for this hotel has expired or is inactive. Please contact the hotel owner.",
-                });
-            }
+            }).sort({ endDate: -1, createdAt: -1 });
 
             // Ensure a User account exists for this branch with subscription-synced permissions
             const branchPermissions = buildBranchPermissions(subscription);
@@ -166,21 +155,29 @@ const sendOTPForLogin = async (req, res) => {
                 });
             }
 
-            // Check active subscription
+            // Check subscription: DO NOT block login if expired or inactive!
+            // Hotel owners MUST be allowed to login so they can click the Upgrade Plan button.
             const subscription = await Subscription.findOne({
                 hotelId: user.hotelId,
-                status: {
-                    $in: ["trial", "active", "expiring_soon", "grace_period"],
-                },
-                endDate: {
-                    $gt: new Date(),
-                },
-            });
+            }).sort({ endDate: -1, createdAt: -1 });
 
-            if (!subscription) {
-                return res.status(403).json({
-                    message: "Your subscription is inactive or expired. Please contact the administrator.",
-                });
+            if (subscription) {
+                const now = new Date();
+                const isExpired =
+                    subscription.status === "expired" ||
+                    subscription.status === "cancelled" ||
+                    subscription.status === "suspended" ||
+                    (subscription.endDate && new Date(subscription.endDate) <= now);
+
+                if (isExpired) {
+                    log.info(
+                        `[LOGIN] Hotel ${user.hotelId} subscription is expired/inactive. Login allowed so user can upgrade plan.`
+                    );
+                }
+            } else {
+                log.info(
+                    `[LOGIN] No subscription found for hotel ${user.hotelId}. Login allowed so user can purchase plan.`
+                );
             }
 
             // If this is a sub-branch user, sync permissions from active subscription features
@@ -284,13 +281,7 @@ const verifyOTP = async (req, res) => {
 
             const subscription = await Subscription.findOne({
                 hotelId: branch.hotelId,
-                status: {
-                    $in: ["trial", "active", "expiring_soon", "grace_period"],
-                },
-                endDate: {
-                    $gt: new Date(),
-                },
-            });
+            }).sort({ endDate: -1, createdAt: -1 });
 
             user = await User.create({
                 name: branch.branchName,
@@ -329,20 +320,25 @@ const verifyOTP = async (req, res) => {
                 });
             }
 
+            // Do NOT block login if subscription is expired or inactive!
+            // Hotel owners must be allowed to log in so they can click the Upgrade Plan button.
             const subscription = await Subscription.findOne({
                 hotelId: user.hotelId,
-                status: {
-                    $in: ["trial", "active", "expiring_soon", "grace_period"],
-                },
-                endDate: {
-                    $gt: new Date(),
-                },
-            });
+            }).sort({ endDate: -1, createdAt: -1 });
 
-            if (!subscription) {
-                return res.status(403).json({
-                    message: "Your subscription is inactive or expired. Please contact the administrator.",
-                });
+            if (subscription) {
+                const now = new Date();
+                const isExpired =
+                    subscription.status === "expired" ||
+                    subscription.status === "cancelled" ||
+                    subscription.status === "suspended" ||
+                    (subscription.endDate && new Date(subscription.endDate) <= now);
+
+                if (isExpired) {
+                    log.info(
+                        `[LOGIN] Hotel ${user.hotelId} subscription is expired/inactive. Verified login allowed for upgrade.`
+                    );
+                }
             }
         }
 
@@ -544,13 +540,321 @@ const getUser = async (req, res) => {
     }
 };
 
+
+
+// =====================================================
+// SEND OTP FOR HOTEL LOGIN
+// Allowed roles: hotelOwner, receptionist
+// =====================================================
+
+const sendHotelOTP = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                message: "Email is required",
+            });
+        }
+
+        const normalizedEmail = email.trim().toLowerCase();
+
+        log.info(
+            `[HOTEL LOGIN] Login request received for email: ${normalizedEmail}`
+        );
+
+        // -------------------------------------------------
+        // 1. FIND USER
+        // -------------------------------------------------
+
+        const user = await User.findOne({
+            email: normalizedEmail,
+        });
+
+        if (!user) {
+            return res.status(404).json({
+                message: "Hotel user account not found.",
+            });
+        }
+
+        // -------------------------------------------------
+        // 2. ROLE CHECK
+        // -------------------------------------------------
+
+        if (!["hotelOwner", "receptionist"].includes(user.role)) {
+            return res.status(403).json({
+                message: "This account is not allowed to access hotel login.",
+            });
+        }
+
+        // -------------------------------------------------
+        // 3. USER STATUS
+        // -------------------------------------------------
+
+        if (user.status !== "active") {
+            return res.status(401).json({
+                message:
+                    "Your account is inactive. Please contact the administrator.",
+            });
+        }
+
+        // -------------------------------------------------
+        // 4. HOTEL CHECK
+        // -------------------------------------------------
+
+        if (!user.hotelId) {
+            return res.status(403).json({
+                message: "Your account is not connected to a hotel.",
+            });
+        }
+
+        const hotel = await Hotels.findById(user.hotelId);
+
+        if (!hotel) {
+            return res.status(404).json({
+                message: "Hotel account was not found.",
+            });
+        }
+
+        if (hotel.status !== "active") {
+            return res.status(403).json({
+                message:
+                    "Your hotel account is not active. Please contact the administrator.",
+            });
+        }
+
+        // -------------------------------------------------
+        // 5. GENERATE OTP
+        // -------------------------------------------------
+
+        const otp = Math.floor(
+            100000 + Math.random() * 900000
+        ).toString();
+
+        const otpExpiresAt = new Date(
+            Date.now() + 5 * 60 * 1000
+        );
+
+        user.otp = otp;
+        user.otpExpiresAt = otpExpiresAt;
+
+        await user.save();
+
+        // -------------------------------------------------
+        // 6. SEND OTP
+        // -------------------------------------------------
+
+        await sendOTP(normalizedEmail, otp);
+
+        log.info(
+            `[HOTEL LOGIN] OTP sent successfully to ${normalizedEmail}`
+        );
+
+        return res.status(200).json({
+            message: "Hotel login OTP sent successfully",
+        });
+
+    } catch (error) {
+        console.error("[Hotel Send OTP] Error:", error);
+
+        log.error(
+            `[Hotel Send OTP] Error: ${error.message}`
+        );
+
+        return res.status(500).json({
+            message:
+                "Unable to send hotel login OTP right now. Please try again later.",
+        });
+    }
+};
+
+
+// =====================================================
+// VERIFY OTP FOR HOTEL LOGIN
+// Allowed roles: hotelOwner, receptionist
+// =====================================================
+
+const verifyHotelOTP = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+
+        if (!email || !otp) {
+            return res.status(400).json({
+                message: "Email and OTP are required",
+            });
+        }
+
+        const normalizedEmail = email.trim().toLowerCase();
+
+        log.info(
+            `[HOTEL LOGIN] OTP verification request for: ${normalizedEmail}`
+        );
+
+        // 1. FIND USER
+        const user = await User.findOne({
+            email: normalizedEmail,
+        });
+
+        if (!user) {
+            return res.status(404).json({
+                message: "Hotel user account not found.",
+            });
+        }
+
+        // 2. ROLE CHECK
+        if (!["hotelOwner", "receptionist"].includes(user.role)) {
+            return res.status(403).json({
+                message:
+                    "This account is not allowed to access hotel login.",
+            });
+        }
+
+        // 3. USER STATUS
+        if (user.status !== "active") {
+            return res.status(401).json({
+                message:
+                    "Your account is inactive. Please contact the administrator.",
+            });
+        }
+
+        // 4. HOTEL CHECK
+        if (!user.hotelId) {
+            return res.status(403).json({
+                message: "Your account is not connected to a hotel.",
+            });
+        }
+
+        const hotel = await Hotels.findById(user.hotelId);
+
+        if (!hotel) {
+            return res.status(404).json({
+                message: "Hotel account was not found.",
+            });
+        }
+
+        if (hotel.status !== "active") {
+            return res.status(403).json({
+                message:
+                    "Your hotel account is not active. Please contact the administrator.",
+            });
+        }
+
+        // 5. CHECK OTP EXPIRY
+        if (
+            !user.otpExpiresAt ||
+            new Date() > new Date(user.otpExpiresAt)
+        ) {
+            return res.status(400).json({
+                message: "OTP has expired. Please request a new OTP.",
+            });
+        }
+
+        // 6. CHECK OTP
+        if (String(user.otp) !== String(otp)) {
+            return res.status(400).json({
+                message: "Invalid OTP. Please enter the correct OTP.",
+            });
+        }
+
+        // 7. CREATE JWT
+        const token = jwt.sign(
+            {
+                id: user._id,
+                name: user.name,
+                role: user.role,
+                hotelId: user.hotelId || null,
+                branchId: user.branchId || null,
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: "24h",
+            }
+        );
+
+        // 8. SET COOKIE
+        res.cookie("hotelbilling", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite:
+                process.env.NODE_ENV === "production"
+                    ? "none"
+                    : "lax",
+            maxAge: 24 * 60 * 60 * 1000,
+            path: "/",
+        });
+
+        // 9. CLEAR OTP
+        user.otp = null;
+        user.otpExpiresAt = null;
+
+        await user.save();
+
+        // 10. BRANCH DETAILS
+        let branchData = null;
+
+        if (user.branchId) {
+            branchData = await BranchHotels.findById(
+                user.branchId
+            ).select(
+                "branchName branchCode isMainBranch status"
+            );
+        }
+
+        log.info(
+            `[HOTEL LOGIN] Login successful for ${normalizedEmail}`
+        );
+
+        // 11. RESPONSE
+        return res.status(200).json({
+            message: "Hotel login successful",
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                hotelId: user.hotelId,
+                branchId: user.branchId,
+                status: user.status,
+                permission: user.permission || {},
+
+                isMainBranch:
+                    branchData?.isMainBranch ?? false,
+
+                branchName:
+                    branchData?.branchName || null,
+
+                branchCode:
+                    branchData?.branchCode || null,
+            },
+        });
+
+    } catch (error) {
+        console.error(
+            "[Hotel Verify OTP] Error:",
+            error
+        );
+
+        log.error(
+            `[Hotel Verify OTP] Error: ${error.message}`
+        );
+
+        return res.status(500).json({
+            message:
+                "Unable to verify hotel login OTP right now. Please try again later.",
+        });
+    }
+};
+
 // =====================================================
 // EXPORT
 // =====================================================
 
+
 export {
     sendOTPForLogin,
     verifyOTP,
+    sendHotelOTP,
+    verifyHotelOTP,
     logout,
     getUser,
 };

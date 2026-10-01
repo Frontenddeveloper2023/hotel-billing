@@ -42,6 +42,8 @@ import dashboardRoutes from "./routers/dashboardRoutes.js";
 import reportsRoutes from "./routers/reportsRoutes.js";
 import customersManagementRoutes from "./routers/customersManagementRoutes.js";
 
+import emailRoutes from "./routers/emailRoutes.js";
+
 
 // ----------------------------------
 // PATH SETUP
@@ -266,6 +268,9 @@ apiRouter.use(
   "/hotel-registrations",
   hotelRegistrationRoutes
 );
+
+
+apiRouter.use("/emails", emailRoutes);
 
 
 apiRouter.use(

@@ -1,5 +1,5 @@
 import Settings from "../models/settings.js";
-import BranchHotels from "../models/BranchHotels.js";
+import BranchHotels from "../models/branchHotels.js";
 
 import fs from "fs";
 import path from "path";

@@ -1,7 +1,7 @@
-/* reports.css - Professional Styling for PDF Export */
+/* reports.css - Professional Styling for PDF Export (navy / blue theme) */
 .pdf-export-container {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  color: #121921;
+  color: #0f2a63;
   background: #ffffff;
   padding: 32px;
   width: 800px;
@@ -11,7 +11,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  border-bottom: 2px solid #08838d;
+  border-bottom: 2px solid #2563eb;
   padding-bottom: 16px;
   margin-bottom: 24px;
 }
@@ -19,7 +19,7 @@
 .pdf-title h1 {
   font-size: 22px;
   font-weight: 800;
-  color: #121921;
+  color: #0f2a63;
   margin: 0;
 }
 
@@ -43,8 +43,8 @@
 
 .pdf-summary-card {
   flex: 1;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
   border-radius: 8px;
   padding: 12px 16px;
 }
@@ -59,7 +59,7 @@
 .pdf-summary-card h3 {
   font-size: 16px;
   font-weight: 700;
-  color: #121921;
+  color: #0f2a63;
   margin: 4px 0 0 0;
 }
 
@@ -70,21 +70,25 @@
 }
 
 .pdf-table th {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: #0f2a63;
+  color: #ffffff;
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   padding: 10px 12px;
   text-align: left;
-  border-bottom: 1px solid #cbd5e1;
+  border-bottom: 1px solid #1e40af;
 }
 
 .pdf-table td {
   padding: 10px 12px;
   font-size: 11px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
   color: #334155;
+}
+
+.pdf-table tbody tr:nth-child(even) td {
+  background: #f8fafc;
 }
 
 .pdf-badge {
@@ -97,3 +101,4 @@
 .pdf-badge.paid { background: #dcfce7; color: #166534; }
 .pdf-badge.pending { background: #fef9c3; color: #854d0e; }
 .pdf-badge.refunded { background: #fee2e2; color: #991b1b; }
+.pdf-badge.issued { background: #dbeafe; color: #1e40af; }

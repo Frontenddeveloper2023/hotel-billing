@@ -1,0 +1,53 @@
+/* Food Management theme: navy + blue. Import once in FoodManagement.jsx */
+.fm-root {
+  --navy: #0a1a3f;
+  --navy-2: #12306b;
+  --blue: #2563eb;
+  --blue-2: #3b82f6;
+  --sky: #38bdf8;
+  --tint: #eff6ff;
+  --line: #dbe6f8;
+}
+
+@keyframes fm-rise { from { opacity: 0; transform: translate3d(0, 12px, 0); } to { opacity: 1; transform: none; } }
+@keyframes fm-pop  { from { opacity: 0; transform: translate3d(0, 14px, 0) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes fm-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fm-drop { from { opacity: 0; transform: translate3d(0, -6px, 0); } to { opacity: 1; transform: none; } }
+
+/* one-time entrance (stagger via --i) */
+.fm-rise { animation: fm-rise .5s cubic-bezier(.22, 1, .36, 1) both; animation-delay: calc(var(--i, 0) * 50ms); }
+.fm-pop  { animation: fm-pop .32s cubic-bezier(.22, 1, .36, 1) both; }
+.fm-fade { animation: fm-fade .25s ease-out both; }
+.fm-drop { animation: fm-drop .2s ease-out both; }
+
+/* card: hover lift + blue top bar sliding in (transform/opacity only) */
+.fm-card {
+  position: relative;
+  transition: transform .3s cubic-bezier(.22, 1, .36, 1), box-shadow .3s ease, border-color .3s ease;
+}
+.fm-card::before {
+  content: "";
+  position: absolute; inset: 0 0 auto 0; height: 3px; z-index: 2;
+  background: linear-gradient(90deg, var(--blue), var(--sky));
+  transform: scaleX(0); transform-origin: left;
+  transition: transform .4s cubic-bezier(.22, 1, .36, 1);
+}
+@media (hover: hover) {
+  .fm-card:hover { transform: translate3d(0, -4px, 0); border-color: #bfd4f6; box-shadow: 0 18px 36px -14px rgba(37, 99, 235, .35); }
+  .fm-card:hover::before { transform: scaleX(1); }
+  .fm-card:hover .fm-img { transform: scale(1.05); }
+}
+.fm-img { transition: transform .6s cubic-bezier(.22, 1, .36, 1); }
+
+/* shimmer skeleton */
+.fm-skel { background: linear-gradient(100deg, #e8eefb 30%, #f6f9ff 50%, #e8eefb 70%); background-size: 200% 100%; animation: fm-shimmer 1.3s linear infinite; }
+@keyframes fm-shimmer { to { background-position: -200% 0; } }
+
+.fm-btn { transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease; }
+.fm-btn:active { transform: scale(.97); }
+
+@media (prefers-reduced-motion: reduce) {
+  .fm-rise, .fm-pop, .fm-fade, .fm-drop, .fm-skel { animation: none !important; }
+  .fm-card, .fm-card::before, .fm-img, .fm-btn { transition: none !important; }
+  .fm-card:hover { transform: none !important; }
+}

@@ -1,251 +1,251 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
-  Building2,
-  Search,
-  RefreshCw,
-  CheckCircle2,
-  XCircle,
-  Clock3,
-  MapPin,
-  Mail,
-  Phone,
-  Eye,
-  X,
-  AlertCircle,
-  Users,
-  CalendarDays,
-  CreditCard,
-  ShieldCheck,
-  Ban,
-  FileCheck2,
+  Building2, Search, RefreshCw, CheckCircle2, XCircle, Clock3, MapPin, Mail, Phone, Eye, X,
+  AlertCircle, Users, CalendarDays, CreditCard, ShieldCheck, Ban, FileCheck2,
+  ChevronLeft, ChevronRight, Activity, ArrowRight,
 } from "lucide-react";
 
 import { getAllHotels } from "../../service/hotelApi";
+import { getAllRegistrations, approveRegistration, rejectRegistration } from "../../service/hotelRegistrationApi";
+
+
 import {
-  getAllRegistrations,
-  approveRegistration,
-  rejectRegistration,
-} from "../../service/hotelRegistrationApi";
+  sendAdminEmail,
+  getEmailHistory,
+} from "../../service/emailApi";
+
 
 /* =========================================================
    HELPERS
 ========================================================= */
 
 const getArrayFromResponse = (response, type) => {
-  if (Array.isArray(response)) {
-    return response;
-  }
-
-  if (Array.isArray(response?.data)) {
-    return response.data;
-  }
-
-  if (type === "hotels") {
-    return response?.data?.hotels || response?.hotels || [];
-  }
-
-  if (type === "registrations") {
-    return (
-      response?.data?.registrations ||
-      response?.registrations ||
-      []
-    );
-  }
-
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.data)) return response.data;
+  if (type === "hotels") return response?.data?.hotels || response?.hotels || [];
+  if (type === "registrations") return response?.data?.registrations || response?.registrations || [];
   return [];
 };
 
-/* =========================================================
-   DATE
-========================================================= */
-
 const formatDate = (date) => {
-  if (!date) {
-    return "N/A";
-  }
-
-  const parsedDate = new Date(date);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return "N/A";
-  }
-
-  return parsedDate.toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  if (!date) return "N/A";
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return "N/A";
+  return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 };
 
-/* =========================================================
-   CURRENCY
-========================================================= */
-
-const formatCurrency = (amount) => {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(Number(amount || 0));
-};
-
-/* =========================================================
-   GENERAL STATUS
-========================================================= */
+const formatCurrency = (amount) =>
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(amount || 0));
 
 const formatStatus = (status) => {
-  if (!status) {
-    return "Unknown";
-  }
-
-  return status
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+  if (!status) return "Unknown";
+  return status.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
 };
-
-/* =========================================================
-   PAYMENT STATUS
-========================================================= */
 
 const formatPaymentStatus = (status) => {
   const labels = {
-    paid: "Paid",
-    partially_paid: "Partially Paid",
-    pending: "Payment Pending",
-    payment_pending: "Payment Pending",
-    payment_failed: "Payment Failed",
-    payment_reversed: "Payment Reversed",
-    reversed: "Payment Reversed",
-    failed: "Payment Failed",
-    unpaid: "Payment Pending",
+    paid: "Paid", partially_paid: "Partially Paid", pending: "Payment Pending",
+    payment_pending: "Payment Pending", payment_failed: "Payment Failed",
+    payment_reversed: "Payment Reversed", reversed: "Payment Reversed",
+    failed: "Payment Failed", unpaid: "Payment Pending",
   };
-
   return labels[status] || formatStatus(status);
 };
 
-/* =========================================================
-   APPLICATION STATUS
-========================================================= */
-
 const formatApplicationStatus = (status) => {
-  const labels = {
-    pending: "Pending Review",
-    approved: "Approved",
-    rejected: "Rejected",
-  };
-
+  const labels = { pending: "Pending Review", approved: "Approved", rejected: "Rejected" };
   return labels[status] || "Unknown";
 };
 
-/* =========================================================
-   STATUS CLASS
-========================================================= */
-
 const getStatusClass = (status) => {
-  switch (status) {
-    case "active":
-    case "approved":
-    case "paid":
+  switch (String(status || "").toLowerCase()) {
+    case "active": case "approved": case "paid":
       return "bg-emerald-50 text-emerald-700 border-emerald-200";
-
-    case "pending":
-    case "trial":
-    case "expiring_soon":
-    case "partially_paid":
+    case "pending": case "trial": case "expiring_soon": case "partially_paid":
       return "bg-amber-50 text-amber-700 border-amber-200";
-
-    case "rejected":
-    case "expired":
-    case "cancelled":
-    case "payment_failed":
-    case "failed":
-    case "payment_reversed":
-    case "reversed":
+    case "rejected": case "expired": case "cancelled": case "payment_failed":
+    case "failed": case "payment_reversed": case "reversed":
       return "bg-red-50 text-red-700 border-red-200";
-
     case "suspended":
       return "bg-orange-50 text-orange-700 border-orange-200";
-
     default:
       return "bg-slate-50 text-slate-600 border-slate-200";
   }
 };
 
-/* =========================================================
-   REJECTION REASONS
-========================================================= */
-
 const rejectionReasons = [
-  {
-    value: "",
-    label: "Select a reason...",
-  },
-  {
-    value: "gstin_mismatch",
-    label: "GSTIN or legal name does not match",
-  },
-  {
-    value: "invalid_trade_license",
-    label: "Hospitality trade license is expired or invalid",
-  },
-  {
-    value: "duplicate_registration",
-    label: "Duplicate hotel registration",
-  },
-  {
-    value: "payment_reversal",
-    label: "Payment was reversed or could not be verified",
-  },
-  {
-    value: "incomplete_documents",
-    label: "Required documents are incomplete",
-  },
-  {
-    value: "other",
-    label: "Other reason",
-  },
+  { value: "", label: "Select a reason..." },
+  { value: "payment_reversed", label: "Payment reversed" },
+  { value: "payment_pending", label: "Payment pending" },
+  { value: "duplicate_registration", label: "Duplicate hotel registration" },
+  { value: "other", label: "Other reason" },
 ];
 
 /* =========================================================
-   STAT CARD
+   SHARED UI
 ========================================================= */
 
-const StatCard = ({
-  title,
-  value,
-  icon: Icon,
-  wrapperClass,
-  loading,
-  description,
-}) => {
+const styles = `
+@keyframes sh-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes sh-fade{from{opacity:0}to{opacity:1}}
+@keyframes sh-pop{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes sh-row{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+.sh-in{opacity:0;animation:sh-up .5s cubic-bezier(.2,.7,.2,1) forwards}
+.sh-row{opacity:0;animation:sh-row .4s ease-out forwards}
+.sh-fade{animation:sh-fade .2s ease-out}
+.sh-pop{animation:sh-pop .28s cubic-bezier(.2,.8,.2,1)}
+.sh-scroll{scrollbar-width:thin;scrollbar-color:#9db8e6 transparent;scroll-behavior:smooth}
+.sh-scroll::-webkit-scrollbar{height:7px}
+.sh-scroll::-webkit-scrollbar-thumb{background:#9db8e6;border-radius:9px}
+@media (prefers-reduced-motion:reduce){.sh-in,.sh-row{animation:none;opacity:1}.sh-pop,.sh-fade{animation:none}.sh-scroll{scroll-behavior:auto}}
+`;
+
+const delay = (i, step = 60) => ({ animationDelay: `${Math.min(i, 12) * step}ms` });
+const card = "rounded-3xl bg-white shadow-[0_18px_45px_rgba(6,20,52,0.28)]";
+const inputCls = "w-full border border-[#dbe6f5] rounded-xl text-sm outline-none bg-[#f6f9fe] focus:bg-white focus:ring-2 focus:ring-[#3b82f0]/25 focus:border-[#3b82f0] transition";
+const btnGhost = "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#dbe6f5] bg-white text-[#0e2a4a] hover:bg-[#eaf3ff] hover:border-[#a8cbff] text-xs font-semibold transition active:scale-95";
+const btnGreen = "bg-emerald-600 hover:bg-emerald-700 text-white";
+const btnRed = "bg-red-600 hover:bg-red-700 text-white";
+
+const Badge = memo(({ status, label, children }) => (
+  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold whitespace-nowrap ${getStatusClass(status)}`}>
+    {children}
+    {label}
+  </span>
+));
+
+const StatusIcon = ({ status }) =>
+  status === "approved" || status === "active" ? <CheckCircle2 size={12} />
+  : status === "rejected" ? <XCircle size={12} />
+  : status === "pending" ? <Clock3 size={12} /> : null;
+
+const Avatar = ({ name }) => (
+  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#5b9bf5] to-[#2568e0] text-white flex items-center justify-center shrink-0 font-bold text-sm shadow-md shadow-blue-500/25">
+    {(name || "H").trim().charAt(0).toUpperCase()}
+  </div>
+);
+
+const Th = ({ children, right }) => (
+  <th className={`px-3 py-1 text-[11px] font-bold text-[#5b7089] uppercase tracking-[0.1em] whitespace-nowrap ${right ? "text-right" : "text-left"}`}>
+    {children}
+  </th>
+);
+
+const Info = ({ label, icon: Icon, children, mono }) => (
+  <div className="p-4 bg-[#f4f8fd] rounded-2xl">
+    <div className="flex items-center gap-2">
+      {Icon && <Icon size={15} className="text-[#6b7f99]" />}
+      <p className="text-xs text-[#6b7f99]">{label}</p>
+    </div>
+    <p className={`mt-1 font-semibold text-[#0e2a4a] break-all ${mono ? "text-xs" : "text-sm"}`}>{children}</p>
+  </div>
+);
+
+const Skeleton = () => (
+  <div className="p-5 space-y-3">
+    {[1, 2, 3, 4, 5].map((i) => <div key={i} className="h-16 rounded-2xl bg-slate-100 animate-pulse" />)}
+  </div>
+);
+
+const Empty = ({ icon: Icon, title, text }) => (
+  <div className="p-12 text-center">
+    <div className="w-14 h-14 mx-auto rounded-2xl bg-[#eaf3ff] text-[#2568e0] flex items-center justify-center"><Icon size={26} /></div>
+    <h3 className="mt-3 font-bold text-[#0e2a4a]">{title}</h3>
+    <p className="text-sm text-[#6b7f99] mt-1">{text}</p>
+  </div>
+);
+
+/* Horizontally scrollable table with click-and-drag (grab-to-scroll) */
+const TableScroller = ({ minWidth, children }) => {
+  const ref = useRef(null);
+  const [edge, setEdge] = useState({ left: true, right: false });
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollStartLeft = useRef(0);
+  const [isGrabbing, setIsGrabbing] = useState(false);
+
+  const update = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    setEdge({
+      left: el.scrollLeft <= 6,
+      right: el.scrollLeft + el.clientWidth >= el.scrollWidth - 6,
+    });
+  }, []);
+
+  useEffect(() => {
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [update, children]);
+
+  const handleMouseDown = (e) => {
+    // Only drag on primary left click and not on interactive buttons/links/inputs
+    if (e.button !== 0) return;
+    if (e.target.closest("button, a, input, select, textarea")) return;
+    isDragging.current = true;
+    startX.current = e.pageX - ref.current.offsetLeft;
+    scrollStartLeft.current = ref.current.scrollLeft;
+    setIsGrabbing(true);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging.current || !ref.current) return;
+    e.preventDefault();
+    const x = e.pageX - ref.current.offsetLeft;
+    const walk = (x - startX.current) * 1.5;
+    ref.current.scrollLeft = scrollStartLeft.current - walk;
+    update();
+  };
+
+  const handleMouseUpOrLeave = () => {
+    isDragging.current = false;
+    setIsGrabbing(false);
+  };
+
+  const scrollBy = (dir) => {
+    ref.current?.scrollBy({ left: dir * 350, behavior: "smooth" });
+  };
+
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-xs text-slate-500 font-semibold uppercase tracking-wide">
-            {title}
-          </p>
-
-          {loading ? (
-            <div className="mt-3 h-8 w-16 bg-slate-100 rounded-lg animate-pulse" />
-          ) : (
-            <p className="mt-2 text-2xl font-bold text-slate-900">
-              {value}
-            </p>
-          )}
-
-          {description && (
-            <p className="mt-1.5 text-xs text-slate-400">
-              {description}
-            </p>
-          )}
+    <div className="relative select-none">
+      <div className="flex items-center justify-between gap-3 px-5 py-2.5 bg-[#f4f8fd] border-b border-[#e7eff8]">
+       
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            aria-label="Scroll table left"
+            onClick={() => scrollBy(-1)}
+            disabled={edge.left}
+            className="h-8 w-8 rounded-xl bg-white border border-[#dbe6f5] text-[#2568e0] flex items-center justify-center hover:bg-[#2568e0] hover:text-white disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-[#2568e0] disabled:cursor-not-allowed transition shadow-sm"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <button
+            type="button"
+            aria-label="Scroll table right"
+            onClick={() => scrollBy(1)}
+            disabled={edge.right}
+            className="h-8 w-8 rounded-xl bg-white border border-[#dbe6f5] text-[#2568e0] flex items-center justify-center hover:bg-[#2568e0] hover:text-white disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-[#2568e0] disabled:cursor-not-allowed transition shadow-sm"
+          >
+            <ChevronRight size={16} />
+          </button>
         </div>
+      </div>
 
-        <div
-          className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${wrapperClass}`}
-        >
-          <Icon size={21} />
-        </div>
+      <div
+        ref={ref}
+        onScroll={update}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUpOrLeave}
+        onMouseLeave={handleMouseUpOrLeave}
+        className={`sh-scroll overflow-x-auto ${isGrabbing ? "cursor-grabbing select-none" : "cursor-grab"}`}
+      >
+        <table className="w-full" style={{ minWidth }}>
+          {children}
+        </table>
       </div>
     </div>
   );
@@ -256,234 +256,154 @@ const StatCard = ({
 ========================================================= */
 
 const SaaSAdminHotels = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get("tab");
+  const registrationIdFromUrl = searchParams.get("registrationId");
+
   const [hotels, setHotels] = useState([]);
   const [registrations, setRegistrations] = useState([]);
-
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
   const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState(tabFromUrl === "hotels" ? "hotels" : "applications");
 
-  const [activeTab, setActiveTab] = useState("applications");
+  useEffect(() => {
+    const currentTab = searchParams.get("tab");
+    if (currentTab === "hotels" || currentTab === "applications") setActiveTab(currentTab);
+  }, [searchParams]);
 
   const [search, setSearch] = useState("");
-
-  const [selectedRegistration, setSelectedRegistration] =
-    useState(null);
-
+  const [selectedRegistration, setSelectedRegistration] = useState(null);
   const [selectedHotel, setSelectedHotel] = useState(null);
-
-  const [showDetailsModal, setShowDetailsModal] =
-    useState(false);
-
-  const [showRejectModal, setShowRejectModal] =
-    useState(false);
-
-  const [rejectionReason, setRejectionReason] =
-    useState("");
-
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
-
   const [actionError, setActionError] = useState("");
-
   const [successMessage, setSuccessMessage] = useState("");
 
-  /* =======================================================
-     FETCH DATA
-  ======================================================= */
 
-  const fetchData = useCallback(
-    async (isRefresh = false) => {
-      try {
-        setError("");
+  const [showEmailModal, setShowEmailModal] = useState(false);
+const [showEmailHistoryModal, setShowEmailHistoryModal] = useState(false);
 
-        if (isRefresh) {
-          setRefreshing(true);
-        } else {
-          setLoading(true);
-        }
+const [emailLoading, setEmailLoading] = useState(false);
+const [emailHistoryLoading, setEmailHistoryLoading] = useState(false);
 
-        const results = await Promise.allSettled([
-          getAllHotels(),
-          getAllRegistrations(),
-        ]);
+const [emailHistory, setEmailHistory] = useState([]);
 
-        const hotelsResult = results[0];
-        const registrationsResult = results[1];
+const [emailForm, setEmailForm] = useState({
+  recipientEmail: "",
+  recipientName: "",
+  subject: "",
+  message: "",
+});
 
-        const hotels =
-          hotelsResult.status === "fulfilled"
-            ? getArrayFromResponse(
-                hotelsResult.value,
-                "hotels"
-              )
-            : [];
 
-        const registrations =
-          registrationsResult.status === "fulfilled"
-            ? getArrayFromResponse(
-                registrationsResult.value,
-                "registrations"
-              )
-            : [];
+  /* FETCH DATA */
+  const fetchData = useCallback(async (isRefresh = false) => {
+    try {
+      setError("");
+      if (isRefresh) setRefreshing(true);
+      else setLoading(true);
 
-        const failed = [];
+      const results = await Promise.allSettled([getAllHotels(), getAllRegistrations()]);
+      const hotelsResult = results[0];
+      const registrationsResult = results[1];
 
-        if (hotelsResult.status === "rejected") {
-          failed.push("Hotels");
-        }
+      const hotels = hotelsResult.status === "fulfilled" ? getArrayFromResponse(hotelsResult.value, "hotels") : [];
+      const registrations = registrationsResult.status === "fulfilled" ? getArrayFromResponse(registrationsResult.value, "registrations") : [];
 
-        if (registrationsResult.status === "rejected") {
-          failed.push("Applications");
-        }
+      const failed = [];
+      if (hotelsResult.status === "rejected") failed.push("Hotels");
+      if (registrationsResult.status === "rejected") failed.push("Applications");
 
-        if (failed.length > 0) {
-          setError(
-            `${failed.join(
-              " and "
-            )} data could not be loaded. Please check your permissions and backend APIs.`
-          );
-        }
-
-        setHotels(hotels);
-        setRegistrations(registrations);
-      } catch (err) {
-        console.error("SaaS Admin Hotels error:", err);
-
-        setError(
-          err?.message ||
-            "Unable to load hotel data."
-        );
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
+      if (failed.length > 0) {
+        setError(`${failed.join(" and ")} data could not be loaded. Please check your permissions and backend APIs.`);
       }
-    },
-    []
-  );
 
-  /* =======================================================
-     INITIAL LOAD
-  ======================================================= */
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  /* =======================================================
-     CLEAR SUCCESS MESSAGE
-  ======================================================= */
-
-  useEffect(() => {
-    if (!successMessage) {
-      return;
+      setHotels(hotels);
+      setRegistrations(registrations);
+    } catch (err) {
+      console.error("SaaS Admin Hotels error:", err);
+      setError(err?.message || "Unable to load hotel data.");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
+  }, []);
 
-    const timer = setTimeout(() => {
-      setSuccessMessage("");
-    }, 4000);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
+  useEffect(() => {
+    if (!successMessage) return;
+    const timer = setTimeout(() => setSuccessMessage(""), 4000);
     return () => clearTimeout(timer);
   }, [successMessage]);
 
-  /* =======================================================
-     COUNTS
-  ======================================================= */
+  /* COUNTS */
+  const pendingCount = registrations.filter((i) => i.status === "pending").length;
+  const rejectedCount = registrations.filter((i) => i.status === "rejected").length;
+  const activeHotelCount = hotels.filter((h) => h.status === "active").length;
 
-  const pendingCount = registrations.filter(
-    (item) => item.status === "pending"
-  ).length;
+  const totalOverview = activeHotelCount + pendingCount + rejectedCount;
+  const overviewDenom = totalOverview > 0 ? totalOverview : 1;
+  const activePercent = totalOverview > 0 ? Math.round((activeHotelCount / overviewDenom) * 100) : 0;
+  const pendingPercent = totalOverview > 0 ? Math.round((pendingCount / overviewDenom) * 100) : 0;
+  const rejectedPercent = totalOverview > 0 ? Math.round((rejectedCount / overviewDenom) * 100) : 0;
 
-  const approvedCount = registrations.filter(
-    (item) => item.status === "approved"
-  ).length;
+  const donutGradient = totalOverview === 0
+    ? "#E2E8F0 0% 100%"
+    : `conic-gradient(#10B981 0% ${activePercent}%, #F59E0B ${activePercent}% ${activePercent + pendingPercent}%, #EF4444 ${activePercent + pendingPercent}% 100%)`;
 
-  const rejectedCount = registrations.filter(
-    (item) => item.status === "rejected"
-  ).length;
+  /* RECENT ACTIVITIES (Last 5 events) */
+  const recentActivities = useMemo(() => {
+    const list = registrations.map((r) => ({
+      _id: r._id,
+      hotelName: r.hotelName || "Unnamed Hotel",
+      ownerName: r.ownerName,
+      status: r.status,
+      actionText:
+        r.status === "approved"
+          ? "Approved by Admin"
+          : r.status === "rejected"
+          ? "Rejected"
+          : "Pending Approval",
+      date: r.updatedAt || r.createdAt,
+      raw: r,
+    }));
 
-  const activeHotelCount = hotels.filter(
-    (hotel) => hotel.status === "active"
-  ).length;
+    return list
+      .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+      .slice(0, 5);
+  }, [registrations]);
 
-  /* =======================================================
-     FILTER APPLICATIONS
-  ======================================================= */
+  /* FILTERS */
+  const matches = (item, query) =>
+    item.hotelName?.toLowerCase().includes(query) ||
+    item.ownerName?.toLowerCase().includes(query) ||
+    item.email?.toLowerCase().includes(query) ||
+    item.phone?.toLowerCase().includes(query) ||
+    item.status?.toLowerCase().includes(query);
 
   const filteredRegistrations = useMemo(() => {
     const query = search.trim().toLowerCase();
-
-    if (!query) {
-      return registrations;
-    }
-
-    return registrations.filter((item) => {
-      return (
-        item.hotelName
-          ?.toLowerCase()
-          .includes(query) ||
-        item.ownerName
-          ?.toLowerCase()
-          .includes(query) ||
-        item.email
-          ?.toLowerCase()
-          .includes(query) ||
-        item.phone
-          ?.toLowerCase()
-          .includes(query) ||
-        item.status
-          ?.toLowerCase()
-          .includes(query)
-      );
-    });
+    if (!query) return registrations;
+    return registrations.filter((item) => matches(item, query));
   }, [registrations, search]);
-
-  /* =======================================================
-     FILTER HOTELS
-  ======================================================= */
 
   const filteredHotels = useMemo(() => {
     const query = search.trim().toLowerCase();
-
-    if (!query) {
-      return hotels;
-    }
-
-    return hotels.filter((hotel) => {
-      return (
-        hotel.hotelName
-          ?.toLowerCase()
-          .includes(query) ||
-        hotel.ownerName
-          ?.toLowerCase()
-          .includes(query) ||
-        hotel.email
-          ?.toLowerCase()
-          .includes(query) ||
-        hotel.phone
-          ?.toLowerCase()
-          .includes(query) ||
-        hotel.status
-          ?.toLowerCase()
-          .includes(query)
-      );
-    });
+    if (!query) return hotels;
+    return hotels.filter((hotel) => matches(hotel, query));
   }, [hotels, search]);
 
-  /* =======================================================
-     VIEW REGISTRATION
-  ======================================================= */
-
+  /* VIEW */
   const handleViewRegistration = (registration) => {
     setSelectedRegistration(registration);
     setSelectedHotel(null);
     setShowDetailsModal(true);
     setActionError("");
   };
-
-  /* =======================================================
-     VIEW HOTEL
-  ======================================================= */
 
   const handleViewHotel = (hotel) => {
     setSelectedHotel(hotel);
@@ -492,114 +412,88 @@ const SaaSAdminHotels = () => {
     setActionError("");
   };
 
-  /* =======================================================
-     APPROVE APPLICATION
-  ======================================================= */
+  const openedRegistrationId = useRef(null);
 
+  useEffect(() => {
+    if (registrationIdFromUrl && openedRegistrationId.current !== registrationIdFromUrl) {
+      if (registrations.length > 0) {
+        const regMatch = registrations.find(r => r._id === registrationIdFromUrl);
+        if (regMatch) {
+          openedRegistrationId.current = registrationIdFromUrl;
+          handleViewRegistration(regMatch);
+          return;
+        }
+      }
+      if (hotels.length > 0) {
+        const hotelMatch = hotels.find(h => h.registrationId === registrationIdFromUrl || h._id === registrationIdFromUrl);
+        if (hotelMatch) {
+          openedRegistrationId.current = registrationIdFromUrl;
+          handleViewHotel(hotelMatch);
+        }
+      }
+    } else if (!registrationIdFromUrl) {
+      openedRegistrationId.current = null;
+    }
+  }, [hotels, registrations, registrationIdFromUrl]);
+
+  /* APPROVE */
   const handleApprove = async (registration) => {
     if (!registration?._id) {
       setActionError("Application ID is missing.");
       return;
     }
 
-    const confirmed = window.confirm(
-      `Are you sure you want to approve "${registration.hotelName}"?`
-    );
-
-    if (!confirmed) {
-      return;
-    }
+    const confirmed = window.confirm(`Are you sure you want to approve "${registration.hotelName}"?`);
+    if (!confirmed) return;
 
     try {
       setActionLoading(true);
       setActionError("");
       setSuccessMessage("");
 
-      console.log(
-        "Approving registration:",
-        registration._id
-      );
-
-      const response = await approveRegistration(
-        registration._id
-      );
-
-      console.log(
-        "Approve API response:",
-        response
-      );
-
+      const response = await approveRegistration(registration._id);
       if (!response?.success) {
-        throw new Error(
-          response?.message ||
-            "Application approval failed."
-        );
+        throw new Error(response?.message || "Application approval failed.");
       }
 
       setRegistrations((prev) =>
         prev.map((item) =>
-          String(item._id) ===
-          String(registration._id)
-            ? {
-                ...item,
-                status: "approved",
-                paymentStatus: "paid",
-              }
+          String(item._id) === String(registration._id)
+            ? { ...item, status: "approved", paymentStatus: "paid" }
             : item
         )
       );
 
-      setSuccessMessage(
-        `${registration.hotelName} has been approved successfully.`
-      );
+      // Refresh data in background to get new active hotel
+      fetchData(true);
 
+      setSuccessMessage(`${registration.hotelName} has been approved successfully.`);
       setShowDetailsModal(false);
       setSelectedRegistration(null);
     } catch (err) {
-      console.error(
-        "Approve application error:",
-        err
-      );
-
-      setActionError(
-        err?.message ||
-          err?.data?.message ||
-          "Unable to approve this application."
-      );
+      console.error("Approve application error:", err);
+      setActionError(err?.message || err?.data?.message || "Unable to approve this application.");
     } finally {
       setActionLoading(false);
     }
   };
 
-  /* =======================================================
-     OPEN REJECT MODAL
-  ======================================================= */
-
+  /* REJECT */
   const handleOpenReject = (registration) => {
     setSelectedRegistration(registration);
     setRejectionReason("");
-    setActionError("");
     setShowRejectModal(true);
   };
 
-  /* =======================================================
-     REJECT APPLICATION
-  ======================================================= */
-
   const handleReject = async () => {
     const reason = rejectionReason.trim();
-
     if (reason.length < 5) {
-      setActionError(
-        "Please provide a rejection reason with at least 5 characters."
-      );
+      setActionError("Please provide a rejection reason with at least 5 characters.");
       return;
     }
 
     if (!selectedRegistration?._id) {
-      setActionError(
-        "Application information is missing."
-      );
+      setActionError("Application information is missing.");
       return;
     }
 
@@ -608,1626 +502,1254 @@ const SaaSAdminHotels = () => {
       setActionError("");
       setSuccessMessage("");
 
-      await rejectRegistration(
-        selectedRegistration._id,
-        reason
+      await rejectRegistration(selectedRegistration._id, reason);
+
+      setRegistrations((prev) =>
+        prev.map((item) =>
+          String(item._id) === String(selectedRegistration._id)
+            ? { ...item, status: "rejected", rejectionReason: reason }
+            : item
+        )
       );
 
-      setSuccessMessage(
-        `${selectedRegistration.hotelName} has been rejected.`
-      );
-
+      setSuccessMessage(`${selectedRegistration.hotelName} has been rejected.`);
       setShowRejectModal(false);
       setShowDetailsModal(false);
-
       setSelectedRegistration(null);
       setRejectionReason("");
-
-      await fetchData(true);
     } catch (err) {
-      console.error(
-        "Reject application error:",
-        err
-      );
-
-      setActionError(
-        err?.message ||
-          err?.data?.message ||
-          "Unable to reject this application."
-      );
+      console.error("Reject application error:", err);
+      setActionError(err?.message || err?.data?.message || "Unable to reject this application.");
     } finally {
       setActionLoading(false);
     }
   };
 
-  /* =======================================================
-     ADDRESS
-  ======================================================= */
-
   const getAddress = (address) => {
-    if (!address) {
-      return "Address not provided";
-    }
-
-    return [
-      address.street,
-      address.city,
-      address.state,
-      address.country,
-      address.pincode,
-    ]
-      .filter(Boolean)
-      .join(", ");
+    if (!address) return "Address not provided";
+    return [address.street, address.city, address.state, address.country, address.pincode].filter(Boolean).join(", ");
   };
-
-  /* =======================================================
-     CLOSE DETAILS MODAL
-  ======================================================= */
 
   const closeDetailsModal = () => {
     setShowDetailsModal(false);
     setSelectedRegistration(null);
     setSelectedHotel(null);
     setActionError("");
+
+    if (registrationIdFromUrl) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("registrationId");
+      setSearchParams(newParams);
+    }
   };
 
-  /* =======================================================
+
+  const openEmailModal = (user) => {
+  if (!user?.email) {
+    setActionError("This user does not have an email address.");
+    return;
+  }
+
+  setEmailForm({
+    recipientEmail: user.email || "",
+    recipientName:
+      user.ownerName ||
+      user.hotelName ||
+      "Hotel Owner",
+    subject: "",
+    message: "",
+  });
+
+  setShowEmailModal(true);
+  setActionError("");
+};
+
+const handleSendEmail = async () => {
+  if (!selectedRegistration && !selectedHotel) return;
+
+  const selectedUser =
+    selectedRegistration || selectedHotel;
+
+  if (!emailForm.recipientEmail.trim()) {
+    setActionError("Recipient email is required.");
+    return;
+  }
+
+  if (!emailForm.subject.trim()) {
+    setActionError("Email subject is required.");
+    return;
+  }
+
+  if (!emailForm.message.trim()) {
+    setActionError("Email message is required.");
+    return;
+  }
+
+  try {
+    setEmailLoading(true);
+    setActionError("");
+
+    const response = await sendAdminEmail({
+      hotelId:
+        selectedUser.hotelId?._id ||
+        selectedUser.hotelId ||
+        selectedUser._id,
+
+      subHotelId:
+        selectedUser.subHotelId?._id ||
+        selectedUser.subHotelId ||
+        null,
+
+      recipientEmail:
+        emailForm.recipientEmail.trim(),
+
+      recipientName:
+        emailForm.recipientName.trim(),
+
+      subject:
+        emailForm.subject.trim(),
+
+      message:
+        emailForm.message.trim(),
+
+      registrationId:
+        selectedRegistration?._id || null,
+
+      subscriptionId: null,
+    });
+
+    if (!response?.success) {
+      throw new Error(
+        response?.message ||
+          "Failed to send email."
+      );
+    }
+
+    setShowEmailModal(false);
+
+    setEmailForm({
+      recipientEmail: "",
+      recipientName: "",
+      subject: "",
+      message: "",
+    });
+
+    setSuccessMessage(
+      "Email sent successfully."
+    );
+  } catch (error) {
+    console.error(
+      "Send admin email error:",
+      error
+    );
+
+    setActionError(
+      error?.message ||
+        "Unable to send email."
+    );
+  } finally {
+    setEmailLoading(false);
+  }
+};
+
+const handleViewEmailHistory = async () => {
+  const selectedUser =
+    selectedRegistration || selectedHotel;
+
+  if (!selectedUser) return;
+
+  try {
+    setEmailHistoryLoading(true);
+    setActionError("");
+
+    const hotelId =
+      selectedUser.hotelId?._id ||
+      selectedUser.hotelId ||
+      selectedUser._id;
+
+    const subHotelId =
+      selectedUser.subHotelId?._id ||
+      selectedUser.subHotelId ||
+      null;
+
+    const response =
+      await getEmailHistory({
+        hotelId,
+        subHotelId,
+      });
+
+    if (!response?.success) {
+      throw new Error(
+        response?.message ||
+          "Unable to load email history."
+      );
+    }
+
+    setEmailHistory(
+      response.data || []
+    );
+
+    setShowEmailHistoryModal(true);
+  } catch (error) {
+    console.error(
+      "Email history error:",
+      error
+    );
+
+    setActionError(
+      error?.message ||
+        "Unable to load email history."
+    );
+  } finally {
+    setEmailHistoryLoading(false);
+  }
+};
+
+
+  const ActionError = () =>
+    actionError ? (
+      <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex gap-2">
+        <AlertCircle size={17} className="text-red-600 shrink-0" />
+        <p className="text-sm text-red-700">{actionError}</p>
+      </div>
+    ) : null;
+
+  const switchTab = (tab) => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+    setSearch("");
+  };
+
+  const tabs = [
+    ["applications", "ALL", `${pendingCount} Pending`],
+    ["hotels", "Approved Hotels", activeHotelCount],
+  ];
+
+  const addressBlock = (address) => (
+    <div className="p-4 border border-[#e2ebf7] rounded-2xl">
+      <div className="flex items-center gap-2 mb-2">
+        <MapPin size={17} className="text-[#2568e0]" />
+        <h3 className="text-sm font-bold text-[#0e2a4a]">Hotel Address</h3>
+      </div>
+      <p className="text-sm text-[#60758D]">{getAddress(address)}</p>
+    </div>
+  );
+
+  /* =========================================================
      RENDER
-  ======================================================= */
+  ========================================================= */
 
   return (
-    <div className="min-h-screen bg-[#F8F7FC]">
-      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
+    <div className="min-h-full font-['Inter'] text-[#0e2a4a]">
+      <style>{styles}</style>
+      <div className="max-w-[1500px] mx-auto space-y-5">
 
-        {/* =================================================
-            HEADER
-        ================================================= */}
-
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 mb-6">
-
+        {/* HEADER */}
+        <div className="sh-in flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
-            <div className="flex flex-wrap items-center gap-3">
-
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#101936]">
-                Hotels & Applications
-              </h1>
-
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-                Live Onboarding
-              </span>
-
-            </div>
-
-            <p className="text-sm text-slate-500 mt-1.5 max-w-2xl">
-              Review hotel applications, verify details,
-              and manage approved properties.
-            </p>
+             
+            <h1 className="mt-1.5 text-[18px] sm:text-[24px] lg:text-[28px] leading-tight font-extrabold tracking-[-0.035em] text-white">
+              Hotels &amp; Applications
+            </h1>
+           
           </div>
 
-          <button
-            type="button"
-            onClick={() => fetchData(true)}
-            disabled={loading || refreshing}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#4338CA] hover:bg-[#3730A3] text-white text-sm font-semibold disabled:opacity-60 disabled:cursor-not-allowed transition shadow-sm"
-          >
-            <RefreshCw
-              size={16}
-              className={
-                refreshing
-                  ? "animate-spin"
-                  : ""
-              }
-            />
-
-            {refreshing
-              ? "Refreshing..."
-              : "Refresh Data"}
-          </button>
-
+       
         </div>
 
-        {/* =================================================
-            SUCCESS MESSAGE
-        ================================================= */}
-
+        {/* SUCCESS */}
         {successMessage && (
-          <div className="mb-5 p-4 rounded-xl border border-emerald-200 bg-emerald-50 flex items-start gap-3">
-
-            <CheckCircle2
-              size={20}
-              className="text-emerald-600 shrink-0 mt-0.5"
-            />
-
+          <div className="sh-pop p-4 rounded-2xl border border-emerald-200 bg-emerald-50 flex items-start gap-3">
+            <CheckCircle2 size={20} className="text-emerald-600 shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-semibold text-emerald-800">
-                Action completed successfully
-              </p>
-
-              <p className="text-sm text-emerald-700 mt-0.5">
-                {successMessage}
-              </p>
+              <p className="text-sm font-semibold text-emerald-800">Action completed successfully</p>
+              <p className="text-sm text-emerald-700 mt-0.5">{successMessage}</p>
             </div>
-
           </div>
         )}
 
-        {/* =================================================
-            ERROR MESSAGE
-        ================================================= */}
-
+        {/* ERROR */}
         {error && (
-          <div className="mb-5 p-4 rounded-xl border border-red-200 bg-red-50 flex items-start gap-3">
-
-            <AlertCircle
-              size={20}
-              className="text-red-600 shrink-0 mt-0.5"
-            />
-
+          <div className="sh-pop p-4 rounded-2xl border border-red-200 bg-red-50 flex items-start gap-3">
+            <AlertCircle size={20} className="text-red-600 shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-semibold text-red-800">
-                Unable to load some data
-              </p>
-
-              <p className="text-sm text-red-700 mt-1">
-                {error}
-              </p>
+              <p className="text-sm font-semibold text-red-800">Unable to load some data</p>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
             </div>
-
           </div>
         )}
 
-        {/* =================================================
-            STATISTICS
-        ================================================= */}
+        {/* =========================================================
+            TOP SECTION: 2-COLUMN SPLIT (LIKE REFERENCE UI)
+            1. Left: Hotels Status Donut & Breakdown
+            2. Right: Recent Activity (Recent 5 activities)
+        ========================================================= */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-
-          <StatCard
-            title="Total Hotels"
-            value={hotels.length}
-            icon={Building2}
-            wrapperClass="bg-indigo-50 text-indigo-600"
-            loading={loading}
-            description="All registered properties"
-          />
-
-          <StatCard
-            title="Active Hotels"
-            value={activeHotelCount}
-            icon={CheckCircle2}
-            wrapperClass="bg-emerald-50 text-emerald-600"
-            loading={loading}
-            description="Currently active properties"
-          />
-
-          <StatCard
-            title="Pending Applications"
-            value={pendingCount}
-            icon={Clock3}
-            wrapperClass="bg-amber-50 text-amber-600"
-            loading={loading}
-            description="Waiting for review"
-          />
-
-          <StatCard
-            title="Rejected Applications"
-            value={rejectedCount}
-            icon={XCircle}
-            wrapperClass="bg-red-50 text-red-600"
-            loading={loading}
-            description="Applications not approved"
-          />
-
-        </div>
-
-        {/* =================================================
-            MAIN CONTENT
-        ================================================= */}
-
-        <div className="bg-white border border-[#E9E6F5] rounded-2xl shadow-[0_3px_15px_rgba(42,35,95,0.04)] overflow-hidden">
-
-          {/* =================================================
-              TABS + SEARCH
-          ================================================= */}
-
-          <div className="p-4 sm:p-5 border-b border-slate-100">
-
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-
-              {/* TABS */}
-
-              <div className="flex items-center gap-1 p-1 bg-[#F3F2FF] rounded-xl w-fit">
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab("applications");
-                    setSearch("");
-                  }}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
-                    activeTab === "applications"
-                      ? "bg-white text-indigo-600 shadow-sm"
-                      : "text-slate-500 hover:text-slate-800"
-                  }`}
-                >
-                  Applications Queue
-
-                  <span
-                    className={`ml-2 px-2 py-0.5 rounded-full text-[11px] ${
-                      activeTab === "applications"
-                        ? "bg-indigo-100 text-indigo-700"
-                        : "bg-slate-200 text-slate-600"
-                    }`}
-                  >
-                    {pendingCount} Pending
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab("hotels");
-                    setSearch("");
-                  }}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
-                    activeTab === "hotels"
-                      ? "bg-white text-indigo-600 shadow-sm"
-                      : "text-slate-500 hover:text-slate-800"
-                  }`}
-                >
-                  Active Properties
-
-                  <span
-                    className={`ml-2 px-2 py-0.5 rounded-full text-[11px] ${
-                      activeTab === "hotels"
-                        ? "bg-indigo-100 text-indigo-700"
-                        : "bg-slate-200 text-slate-600"
-                    }`}
-                  >
-                    {activeHotelCount}
-                  </span>
-                </button>
-
+          {/* LEFT: HOTELS STATUS (DONUT CHART) */}
+          <section style={delay(1)} className={`sh-in lg:col-span-5 ${card} p-5 sm:p-6 flex flex-col justify-between`}>
+            <div>
+              <div className="flex items-center justify-between gap-3 border-b border-[#edf2f8] pb-3.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-[#EAF3FF] text-[#2568e0] flex items-center justify-center shrink-0">
+                    <Building2 size={17} />
+                  </div>
+                  <h2 className="text-base font-bold text-[#0e2a4a]">Hotels Update Status</h2>
+                </div>
+              
               </div>
 
-              {/* SEARCH */}
+              {/* Donut Chart */}
+              <div className="mt-5 flex flex-col items-center">
+                <div
+                  className="relative h-[135px] w-[135px] sm:h-[155px] sm:w-[155px] rounded-full transition-all duration-700 shadow-md"
+                  style={{ background: donutGradient }}
+                >
+                  <div className="absolute inset-[13px] rounded-full bg-white flex flex-col items-center justify-center shadow-inner">
+                    <span className="text-2xl sm:text-3xl font-extrabold text-[#0e2a4a] tracking-tight">
+                      {loading ? "—" : totalOverview}
+                    </span>
+                    <span className="text-[11px] font-semibold text-[#667C92] uppercase tracking-wider">Num of Hotels</span>
+                  </div>
+                </div>
 
-              <div className="relative w-full lg:w-[360px]">
+                {/* Legend Row */}
+                <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs font-semibold text-[#0e2a4a]">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
+                    <span>Active ({activeHotelCount} • {activePercent}%)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" />
+                    <span>Pending ({pendingCount} • {pendingPercent}%)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#EF4444]" />
+                    <span>Rejected ({rejectedCount} • {rejectedPercent}%)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-                <Search
-                  size={17}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                />
+            <div className="mt-5 flex items-center justify-between gap-3 rounded-2xl bg-[#F4F8FD] px-3.5 py-2.5 text-xs">
+              <span className="font-medium text-[#46516B]">Approved Active Rate</span>
+              <span className="font-bold text-[#087A58]">{loading ? "—" : `${activePercent}%`}</span>
+            </div>
+          </section>
 
+          {/* RIGHT: RECENT ACTIVITY SECTION (LIKE "SERVICES" IN REFERENCE UI) */}
+          <section style={delay(2)} className={`sh-in lg:col-span-7 ${card} p-5 sm:p-6 flex flex-col justify-between`}>
+            <div>
+              <div className="flex items-center justify-between gap-3 border-b border-[#edf2f8] pb-3.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-[#E1FAF0] text-[#087A58] flex items-center justify-center shrink-0">
+                    <Activity size={17} />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-[#0e2a4a]">Recent Activity</h2>
+                  </div>
+                </div>
+                <span className="text-[11px] font-bold text-[#2568e0] bg-[#EAF3FF] px-2.5 py-1 rounded-full">
+                  Recent 5
+                </span>
+              </div>
+
+              {/* Activity List / Table */}
+              <div className="mt-3 divide-y divide-[#f0f4fa]">
+                {loading ? (
+                  <Skeleton />
+                ) : recentActivities.length === 0 ? (
+                  <Empty icon={Clock3} title="No activity recorded" text="Recent hotel applications or status changes will appear here." />
+                ) : (
+                  recentActivities.map((act) => (
+                      <div
+                        key={act._id}
+                        onClick={() => handleViewRegistration(act.raw)}
+                        className="py-2.5 flex items-center justify-between gap-3 hover:bg-[#F8FAFD] rounded-xl px-2 transition-colors cursor-pointer"
+                      >
+                      <div className="min-w-0 flex items-center gap-3">
+                        <Avatar name={act.hotelName} />
+                        <div className="min-w-0">
+                          <p className="text-xs sm:text-sm font-bold text-[#0e2a4a] truncate">{act.hotelName}</p>
+                          <p className="text-[11px] text-[#60758D] truncate">
+                            {act.ownerName ? `Owner: ${act.ownerName}` : "Application record"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-semibold ${getStatusClass(act.status)}`}>
+                          {act.actionText}
+                        </span>
+
+                        <span className="text-[11px] text-[#7890A8] hidden sm:inline">
+                          {formatDate(act.date)}
+                        </span>
+
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+           
+          </section>
+        </div>
+
+        {/* =========================================================
+            BOTTOM SECTION: FULL-WIDTH TABLE ("NODE DETAILS" IN UI)
+            Grab-to-scroll horizontal scroller with tabs and search
+        ========================================================= */}
+        <section style={delay(3)} className={`sh-in ${card} overflow-hidden`}>
+
+          {/* TABLE HEADER & CONTROLS */}
+          <div className="p-4 sm:p-5 border-b border-[#e7eff8]">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+
+              {/* Title & Tabs */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-[#EAF3FF] text-[#2568e0] flex items-center justify-center shrink-0">
+                    <FileCheck2 size={17} />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-[#0e2a4a]">Hotel Records</h2>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1 p-1 bg-[#eef4fc] rounded-2xl overflow-x-auto sh-scroll w-fit">
+                  {tabs.map(([key, label, count]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => switchTab(key)}
+                      className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap cursor-pointer ${
+                        activeTab === key ? "bg-white text-[#2568e0] shadow-sm" : "text-[#5b7089] hover:text-[#0e2a4a]"
+                      }`}
+                    >
+                      {label}
+                      <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] ${activeTab === key ? "bg-[#dbeaff] text-[#2568e0]" : "bg-slate-200 text-slate-600"}`}>
+                        {count}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Search Bar */}
+              <div className="relative w-full lg:w-[320px]">
+                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7d90a8]" />
                 <input
                   type="text"
                   value={search}
-                  onChange={(e) =>
-                    setSearch(e.target.value)
-                  }
-                  placeholder={
-                    activeTab === "applications"
-                      ? "Search by hotel, owner, email, or phone..."
-                      : "Search by hotel, owner, email, or location..."
-                  }
-                  className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm outline-none bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={activeTab === "applications" ? "Search hotel, owner, email..." : "Search properties by name, city..."}
+                  className={`${inputCls} pl-10 pr-4 py-2 text-xs sm:text-sm`}
                 />
-
               </div>
-
             </div>
-
           </div>
 
-          {/* =================================================
-              APPLICATIONS
-          ================================================= */}
-
+          {/* APPLICATIONS QUEUE TABLE */}
           {activeTab === "applications" && (
-            <div>
-
-              {loading ? (
-                <div className="p-6 space-y-3">
-
-                  {[1, 2, 3, 4, 5].map(
-                    (item) => (
-                      <div
-                        key={item}
-                        className="h-20 rounded-xl bg-slate-100 animate-pulse"
-                      />
-                    )
-                  )}
-
-                </div>
-              ) : filteredRegistrations.length === 0 ? (
-
-                <div className="p-14 text-center">
-
-                  <div className="w-14 h-14 mx-auto rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center">
-                    <FileCheck2 size={27} />
-                  </div>
-
-                  <h3 className="mt-4 font-semibold text-slate-800">
-                    No applications found
-                  </h3>
-
-                  <p className="text-sm text-slate-500 mt-1">
-                    {search
-                      ? "Try a different search term."
-                      : "There are no hotel applications waiting to be reviewed."}
-                  </p>
-
-                </div>
-
-              ) : (
-
-                <div className="overflow-x-auto">
-
-                  <table className="w-full min-w-[1050px]">
-
-                    <thead>
-                      <tr className="bg-[#F7F6FD] border-b border-slate-200">
-
-                        <th className="text-left px-5 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                          Hotel / Property
-                        </th>
-
-                        <th className="text-left px-5 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                          Owner & Contact
-                        </th>
-
-                        <th className="text-left px-5 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                          Subscription Plan
-                        </th>
-
-                        <th className="text-left px-5 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                          Payment Status
-                        </th>
-
-                        <th className="text-left px-5 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                          Application Status
-                        </th>
-
-                        <th className="text-right px-5 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                          Actions
-                        </th>
-
-                      </tr>
-                    </thead>
-
-                    <tbody className="divide-y divide-slate-100">
-
-                      {filteredRegistrations.map(
-                        (registration) => (
-
-                          <tr
-                            key={registration._id}
-                            className="hover:bg-slate-50/70 transition"
-                          >
-
-                            {/* HOTEL */}
-
-                            <td className="px-5 py-4">
-
-                              <div className="flex items-center gap-3">
-
-                                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                                  <Building2 size={18} />
-                                </div>
-
-                                <div className="min-w-0">
-
-                                  <p className="font-semibold text-sm text-slate-900">
-                                    {registration.hotelName ||
-                                      "Unnamed Hotel"}
-                                  </p>
-
-                                  <p className="text-xs text-slate-500 mt-1">
-                                    Applied{" "}
-                                    {formatDate(
-                                      registration.createdAt
-                                    )}
-                                  </p>
-
-                                </div>
-
-                              </div>
-
-                            </td>
-
-                            {/* OWNER */}
-
-                            <td className="px-5 py-4">
-
-                              <p className="text-sm font-semibold text-slate-800">
-                                {registration.ownerName ||
-                                  "Owner not provided"}
-                              </p>
-
-                              <div className="flex items-center gap-1.5 mt-1">
-                                <Mail
-                                  size={12}
-                                  className="text-slate-400"
-                                />
-
-                                <p className="text-xs text-slate-500">
-                                  {registration.email ||
-                                    "Email not provided"}
-                                </p>
-                              </div>
-
-                              {registration.phone && (
-                                <div className="flex items-center gap-1.5 mt-1">
-                                  <Phone
-                                    size={12}
-                                    className="text-slate-400"
-                                  />
-
-                                  <p className="text-xs text-slate-500">
-                                    {registration.phone}
-                                  </p>
-                                </div>
-                              )}
-
-                            </td>
-
-                            {/* PLAN */}
-
-                            <td className="px-5 py-4">
-
-                              <p className="text-sm font-semibold text-slate-800">
-                                {registration.planId
-                                  ?.planName ||
-                                  "Subscription Plan"}
-                              </p>
-
-                              <p className="text-xs text-slate-500 mt-1">
-                                {formatStatus(
-                                  registration.billingCycle
-                                )}
-                              </p>
-
-                              {registration.planId
-                                ?.price && (
-                                <p className="text-xs text-slate-500 mt-0.5">
-                                  {formatCurrency(
-                                    registration.planId.price
-                                  )}
-                                </p>
-                              )}
-
-                            </td>
-
-                            {/* PAYMENT */}
-
-                            <td className="px-5 py-4">
-
-                              <span
-                                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-[11px] font-semibold ${getStatusClass(
-                                  registration.paymentStatus
-                                )}`}
-                              >
-                                {registration.paymentStatus ===
-                                  "paid" && (
-                                  <CheckCircle2 size={12} />
-                                )}
-
-                                {formatPaymentStatus(
-                                  registration.paymentStatus
-                                )}
-                              </span>
-
-                            </td>
-
-                            {/* APPLICATION STATUS */}
-
-                            <td className="px-5 py-4">
-
-                              <span
-                                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-[11px] font-semibold ${getStatusClass(
-                                  registration.status
-                                )}`}
-                              >
-                                {registration.status ===
-                                  "approved" && (
-                                  <CheckCircle2 size={12} />
-                                )}
-
-                                {registration.status ===
-                                  "rejected" && (
-                                  <XCircle size={12} />
-                                )}
-
-                                {registration.status ===
-                                  "pending" && (
-                                  <Clock3 size={12} />
-                                )}
-
-                                {formatApplicationStatus(
-                                  registration.status
-                                )}
-                              </span>
-
-                            </td>
-
-                            {/* ACTIONS */}
-
-                            <td className="px-5 py-4">
-
-                              <div className="flex justify-end gap-2 flex-wrap">
-
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleViewRegistration(
-                                      registration
-                                    )
-                                  }
-                                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold transition"
-                                >
-                                  <Eye size={14} />
-                                  View Details
-                                </button>
-
-                                {registration.status ===
-                                  "pending" && (
-                                  <>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleApprove(
-                                          registration
-                                        )
-                                      }
-                                      disabled={
-                                        actionLoading
-                                      }
-                                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold disabled:opacity-50 transition"
-                                    >
-                                      <CheckCircle2
-                                        size={14}
-                                      />
-
-                                      {actionLoading
-                                        ? "Processing..."
-                                        : "Approve"}
-                                    </button>
-
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleOpenReject(
-                                          registration
-                                        )
-                                      }
-                                      disabled={
-                                        actionLoading
-                                      }
-                                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold disabled:opacity-50 transition"
-                                    >
-                                      <Ban size={14} />
-                                      Reject
-                                    </button>
-                                  </>
-                                )}
-
-                                {registration.status ===
-                                  "approved" && (
-                                  <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
-                                    <CheckCircle2 size={14} />
-                                    Approved
-                                  </span>
-                                )}
-
-                                {registration.status ===
-                                  "rejected" && (
-                                  <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
-                                    <XCircle size={14} />
-                                    Rejected
-                                  </span>
-                                )}
-
-                              </div>
-
-                            </td>
-
-                          </tr>
-                        )
-                      )}
-
-                    </tbody>
-
-                  </table>
-
-                </div>
-              )}
-
-            </div>
+            loading ? (
+              <Skeleton />
+            ) : filteredRegistrations.length === 0 ? (
+              <Empty icon={FileCheck2} title="No applications found" text={search ? "Try a different search term." : "There are no hotel applications waiting to be reviewed."} />
+            ) : (
+              <TableScroller minWidth={1150}>
+                <thead>
+                  <tr className="bg-[#f4f8fd] border-b border-[#e2ebf7]">
+                    <Th>Hotel / Property</Th>
+                    <Th>Owner &amp; Contact</Th>
+                    <Th>Subscription Plan</Th>
+                    <Th>Payment Status</Th>
+                    <Th>Application Status</Th>
+                    <Th right>Actions</Th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#eef3fa]">
+                  {filteredRegistrations.map((registration, i) => (
+<tr
+  key={registration._id}
+  style={delay(i, 30)}
+  onClick={() => handleViewRegistration(registration)}
+  className="sh-row hover:bg-[#f4f9ff] transition-colors cursor-pointer"
+>
+  
+                       <td className="px-3 py-1">
+                        <div className="flex items-center gap-3">
+                          <Avatar name={registration.hotelName} />
+                          <div className="min-w-0">
+                            <p className="font-semibold text-sm text-[#0e2a4a] truncate max-w-[200px]">
+                              {registration.hotelName || "Unnamed Hotel"}
+                            </p>
+                            <p className="text-xs text-[#6b7f99] mt-0.5">Applied {formatDate(registration.createdAt)}</p>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-3 py-1">
+                        <p className="text-sm font-semibold text-[#0e2a4a]">{registration.ownerName || "Owner not provided"}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <Mail size={12} className="text-[#8fa2ba]" />
+                          <p className="text-xs text-[#6b7f99] truncate max-w-[220px]">{registration.email || "Email not provided"}</p>
+                        </div>
+                        {registration.phone && (
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <Phone size={12} className="text-[#8fa2ba]" />
+                            <p className="text-xs text-[#6b7f99]">{registration.phone}</p>
+                          </div>
+                        )}
+                      </td>
+
+                      <td className="px-3 py-1">
+                        <p className="text-sm font-semibold text-[#0e2a4a]">{registration.planId?.planName || "Subscription Plan"}</p>
+                        <p className="text-xs text-[#6b7f99] mt-0.5">{formatStatus(registration.billingCycle)}</p>
+                        {registration.planId?.price && (
+                          <p className="text-xs font-semibold text-[#2568e0] mt-0.5">{formatCurrency(registration.planId.price)}</p>
+                        )}
+                      </td>
+
+                      <td className="px-3 py-1">
+                        <Badge status={registration.paymentStatus} label={formatPaymentStatus(registration.paymentStatus)}>
+                          {registration.paymentStatus === "paid" && <CheckCircle2 size={12} />}
+                        </Badge>
+                      </td>
+
+                      <td className="px-3 py-1">
+                        <Badge status={registration.status} label={formatApplicationStatus(registration.status)}>
+                          <StatusIcon status={registration.status} />
+                        </Badge>
+                      </td>
+
+                     <td
+  className="px-3 py-1"
+  onClick={() => handleViewRegistration(registration)}
+>
+  <div
+    className="flex justify-end items-center gap-2"
+    onClick={(e) => e.stopPropagation()}
+  >
+    {registration.status === "pending" && (
+      <>
+        <button
+          type="button"
+          onClick={() => handleApprove(registration)}
+          disabled={actionLoading}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold disabled:opacity-50 transition active:scale-95 cursor-pointer ${btnGreen}`}
+        >
+          <CheckCircle2 size={13} />
+          {actionLoading ? "..." : "Approve"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleOpenReject(registration)}
+          disabled={actionLoading}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold disabled:opacity-50 transition active:scale-95 cursor-pointer ${btnRed}`}
+        >
+          <Ban size={13} />
+          Reject
+        </button>
+      </>
+    )}
+  </div>
+</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </TableScroller>
+            )
           )}
 
-          {/* =================================================
-              ACTIVE PROPERTIES
-          ================================================= */}
-
+          {/* ACTIVE PROPERTIES TABLE */}
           {activeTab === "hotels" && (
-            <div>
-
-              {loading ? (
-                <div className="p-6 space-y-3">
-
-                  {[1, 2, 3, 4, 5].map(
-                    (item) => (
-                      <div
-                        key={item}
-                        className="h-20 rounded-xl bg-slate-100 animate-pulse"
-                      />
-                    )
-                  )}
-
-                </div>
-              ) : filteredHotels.length === 0 ? (
-
-                <div className="p-14 text-center">
-
-                  <div className="w-14 h-14 mx-auto rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center">
-                    <Building2 size={27} />
-                  </div>
-
-                  <h3 className="mt-4 font-semibold text-slate-800">
-                    No properties found
-                  </h3>
-
-                  <p className="text-sm text-slate-500 mt-1">
-                    {search
-                      ? "Try a different search term."
-                      : "No approved hotel properties are available yet."}
-                  </p>
-
-                </div>
-
-              ) : (
-
-                <div className="overflow-x-auto">
-
-                  <table className="w-full min-w-[950px]">
-
-                    <thead>
-                      <tr className="bg-[#F7F6FD] border-b border-slate-200">
-
-                        <th className="text-left px-5 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                          Hotel / Property
-                        </th>
-
-                        <th className="text-left px-5 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                          Hotel Owner
-                        </th>
-
-                        <th className="text-left px-5 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                          Contact
-                        </th>
-
-                        <th className="text-left px-5 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                          Location
-                        </th>
-
-                        <th className="text-left px-5 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                          Property Status
-                        </th>
-
-                        <th className="text-right px-5 py-3.5 text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                          Actions
-                        </th>
-
-                      </tr>
-                    </thead>
-
-                    <tbody className="divide-y divide-slate-100">
-
-                      {filteredHotels.map(
-                        (hotel) => (
-
-                          <tr
-                            key={hotel._id}
-                            className="hover:bg-slate-50/70 transition"
-                          >
-
-                            {/* HOTEL */}
-
-                            <td className="px-5 py-4">
-
-                              <div className="flex items-center gap-3">
-
-                                <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                                  <Building2 size={18} />
-                                </div>
-
-                                <div>
-
-                                  <p className="font-semibold text-sm text-slate-900">
-                                    {hotel.hotelName ||
-                                      "Unnamed Hotel"}
-                                  </p>
-
-                                  <p className="text-xs text-slate-500 mt-1">
-                                    Added{" "}
-                                    {formatDate(
-                                      hotel.createdAt
-                                    )}
-                                  </p>
-
-                                </div>
-
-                              </div>
-
-                            </td>
-
-                            {/* OWNER */}
-
-                            <td className="px-5 py-4">
-
-                              <p className="text-sm font-semibold text-slate-800">
-                                {hotel.ownerName ||
-                                  "Owner not provided"}
-                              </p>
-
-                            </td>
-
-                            {/* CONTACT */}
-
-                            <td className="px-5 py-4">
-
-                              <div className="flex items-center gap-1.5">
-                                <Mail
-                                  size={13}
-                                  className="text-slate-400"
-                                />
-
-                                <p className="text-xs text-slate-600">
-                                  {hotel.email ||
-                                    "Email not provided"}
-                                </p>
-                              </div>
-
-                              <div className="flex items-center gap-1.5 mt-1">
-                                <Phone
-                                  size={13}
-                                  className="text-slate-400"
-                                />
-
-                                <p className="text-xs text-slate-500">
-                                  {hotel.phone ||
-                                    "Phone not provided"}
-                                </p>
-                              </div>
-
-                            </td>
-
-                            {/* LOCATION */}
-
-                            <td className="px-5 py-4">
-
-                              <div className="flex items-start gap-1.5 text-xs text-slate-600 max-w-[230px]">
-
-                                <MapPin
-                                  size={14}
-                                  className="shrink-0 text-slate-400 mt-0.5"
-                                />
-
-                                <span>
-                                  {getAddress(
-                                    hotel.address
-                                  )}
-                                </span>
-
-                              </div>
-
-                            </td>
-
-                            {/* STATUS */}
-
-                            <td className="px-5 py-4">
-
-                              <span
-                                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-[11px] font-semibold ${getStatusClass(
-                                  hotel.status
-                                )}`}
-                              >
-                                {hotel.status ===
-                                  "active" && (
-                                  <CheckCircle2 size={12} />
-                                )}
-
-                                {formatStatus(
-                                  hotel.status
-                                )}
-                              </span>
-
-                            </td>
-
-                            {/* ACTION */}
-
-                            <td className="px-5 py-4 text-right">
-
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleViewHotel(hotel)
-                                }
-                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold transition"
-                              >
-                                <Eye size={14} />
-                                View Details
-                              </button>
-
-                            </td>
-
-                          </tr>
-                        )
-                      )}
-
-                    </tbody>
-
-                  </table>
-
-                </div>
-              )}
-
-            </div>
+            loading ? (
+              <Skeleton />
+            ) : filteredHotels.length === 0 ? (
+              <Empty icon={Building2} title="No properties found" text={search ? "Try a different search term." : "No active hotels are registered yet."} />
+            ) : (
+              <TableScroller minWidth={1050}>
+                <thead>
+                  <tr className="bg-[#f4f8fd] border-b border-[#e2ebf7]">
+                    <Th>Hotel / Property</Th>
+                    <Th>Hotel Owner</Th>
+                    <Th>Contact</Th>
+                    <Th>Location</Th>
+                    <Th>Property Status</Th>
+                    <Th right>Actions</Th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#eef3fa]">
+                  {filteredHotels.map((hotel, i) => (
+                    <tr 
+                      key={hotel._id} 
+                      style={delay(i, 30)} 
+                      onClick={() => handleViewHotel(hotel)}
+                      className="sh-row hover:bg-[#f4f9ff] transition-colors cursor-pointer"
+                    >
+                      <td className="px-3 py-1">
+                        <div className="flex items-center gap-3">
+                          <Avatar name={hotel.hotelName} />
+                          <div>
+                            <p className="font-semibold text-sm text-[#0e2a4a] truncate max-w-[200px]">
+                              {hotel.hotelName || "Unnamed Hotel"}
+                            </p>
+                            <p className="text-xs text-[#6b7f99] mt-0.5">Added {formatDate(hotel.createdAt)}</p>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-3 py-1">
+                        <p className="text-sm font-semibold text-[#0e2a4a]">{hotel.ownerName || "Owner not provided"}</p>
+                      </td>
+
+                      <td className="px-3 py-1">
+                        <div className="flex items-center gap-1.5">
+                          <Mail size={13} className="text-[#8fa2ba]" />
+                          <p className="text-xs text-[#46607d] truncate max-w-[200px]">{hotel.email || "Email not provided"}</p>
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <Phone size={13} className="text-[#8fa2ba]" />
+                          <p className="text-xs text-[#6b7f99]">{hotel.phone || "Phone not provided"}</p>
+                        </div>
+                      </td>
+
+                      <td className="px-3 py-1">
+                        <div className="flex items-start gap-1.5 text-xs text-[#46607d] max-w-[240px]">
+                          <MapPin size={13} className="shrink-0 text-[#8fa2ba] mt-0.5" />
+                          <span className="truncate">{getAddress(hotel.address)}</span>
+                        </div>
+                      </td>
+
+                      <td className="px-3 py-1">
+                        <Badge status={hotel.status} label={formatStatus(hotel.status)}>
+{hotel.status === "active" && (
+  <CheckCircle2 size={12} />
+)}                        </Badge>
+                      </td>
+
+                  <td
+  className="px-3 py-1 text-right"
+  onClick={(e) => e.stopPropagation()}
+>
+  <div className="flex justify-end items-center gap-2">
+    {/* Future Cancel button will go here */}
+  </div>
+</td>
+
+
+                    </tr>
+                  ))}
+                </tbody>
+              </TableScroller>
+            )
           )}
-
-        </div>
+        </section>
       </div>
 
-      {/* =====================================================
-          HOTEL APPLICATION / PROPERTY DETAILS MODAL
-      ===================================================== */}
-
+      {/* =========================================================
+          VIEW DETAILS MODAL (RESPONSIVE)
+      ========================================================= */}
       {showDetailsModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="sh-fade fixed inset-0 z-50 bg-[#0b1d3d]/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={closeDetailsModal}>
+          <div className="sh-pop bg-white w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-2xl" onClick={(e) => e.stopPropagation()}>
 
-          <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl">
-
-            {/* MODAL HEADER */}
-
-            <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-5 sm:px-6 py-4 flex items-center justify-between">
-
+            <div className="sticky top-0 z-10 bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] text-white px-5 sm:px-6 py-4 flex items-center justify-between">
               <div className="min-w-0">
-
-                <h2 className="text-lg font-bold text-slate-900">
-                  {selectedRegistration
-                    ? "Hotel Application Details"
-                    : "Property Details"}
-                </h2>
-
-                <p className="text-xs text-slate-500 mt-1">
+                <h2 className="text-lg font-bold">{selectedRegistration ? "Hotel Application Details" : "Property Details"}</h2>
+                <p className="text-xs text-blue-100 mt-0.5">
                   {selectedRegistration
                     ? "Review the hotel, owner, subscription, payment, and application details."
                     : "Review the property information and account details."}
                 </p>
-
               </div>
-
-              <button
-                type="button"
-                onClick={closeDetailsModal}
-                className="w-9 h-9 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500 shrink-0"
-              >
+              <button type="button" onClick={closeDetailsModal} className="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center shrink-0 transition cursor-pointer">
                 <X size={19} />
               </button>
-
             </div>
 
-            {/* MODAL BODY */}
-
             <div className="p-5 sm:p-6">
-
-              {/* =================================================
-                  APPLICATION DETAILS
-              ================================================= */}
-
               {selectedRegistration && (
-                <div className="space-y-5">
-
-                  {/* HOTEL HEADER */}
-
-                  <div className="flex items-start gap-4">
-
-                    <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                      <Building2 size={22} />
-                    </div>
-
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3.5">
+                    <Avatar name={selectedRegistration.hotelName} />
                     <div className="min-w-0">
-
-                      <h3 className="text-xl font-bold text-slate-900">
-                        {selectedRegistration.hotelName ||
-                          "Unnamed Hotel"}
-                      </h3>
-
-                      <div className="flex flex-wrap gap-2 mt-2">
-
-                        <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-semibold ${getStatusClass(
-                            selectedRegistration.status
-                          )}`}
-                        >
-                          {selectedRegistration.status ===
-                            "pending" && (
-                            <Clock3 size={12} />
-                          )}
-
-                          {selectedRegistration.status ===
-                            "approved" && (
-                            <CheckCircle2 size={12} />
-                          )}
-
-                          {selectedRegistration.status ===
-                            "rejected" && (
-                            <XCircle size={12} />
-                          )}
-
-                          {formatApplicationStatus(
-                            selectedRegistration.status
-                          )}
-                        </span>
-
-                        <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-semibold ${getStatusClass(
-                            selectedRegistration.paymentStatus
-                          )}`}
-                        >
+                      <h3 className="text-xl font-bold text-[#0e2a4a]">{selectedRegistration.hotelName || "Unnamed Hotel"}</h3>
+                      <div className="flex flex-wrap gap-2 mt-1.5">
+                        <Badge status={selectedRegistration.status} label={formatApplicationStatus(selectedRegistration.status)}>
+                          <StatusIcon status={selectedRegistration.status} />
+                        </Badge>
+                        <Badge status={selectedRegistration.paymentStatus} label={formatPaymentStatus(selectedRegistration.paymentStatus)}>
                           <CreditCard size={12} />
-
-                          {formatPaymentStatus(
-                            selectedRegistration.paymentStatus
-                          )}
-                        </span>
-
+                        </Badge>
                       </div>
-
                     </div>
-
                   </div>
 
-                  {/* OWNER & CONTACT */}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                    <div className="p-4 bg-slate-50 rounded-xl">
-                      <p className="text-xs text-slate-500">
-                        Hotel Owner
-                      </p>
-
-                      <p className="mt-1 text-sm font-semibold text-slate-900">
-                        {selectedRegistration.ownerName ||
-                          "Not provided"}
-                      </p>
-                    </div>
-
-                    <div className="p-4 bg-slate-50 rounded-xl">
-                      <p className="text-xs text-slate-500">
-                        Email Address
-                      </p>
-
-                      <p className="mt-1 text-sm font-semibold text-slate-900 break-all">
-                        {selectedRegistration.email ||
-                          "Not provided"}
-                      </p>
-                    </div>
-
-                    <div className="p-4 bg-slate-50 rounded-xl">
-                      <p className="text-xs text-slate-500">
-                        Phone Number
-                      </p>
-
-                      <p className="mt-1 text-sm font-semibold text-slate-900">
-                        {selectedRegistration.phone ||
-                          "Not provided"}
-                      </p>
-                    </div>
-
-                    <div className="p-4 bg-slate-50 rounded-xl">
-                      <p className="text-xs text-slate-500">
-                        GSTIN
-                      </p>
-
-                      <p className="mt-1 text-sm font-semibold text-slate-900">
-                        {selectedRegistration.gstNumber ||
-                          "Not provided"}
-                      </p>
-                    </div>
-
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Info label="Hotel Owner">{selectedRegistration.ownerName || "Not provided"}</Info>
+                    <Info label="Email Address">{selectedRegistration.email || "Not provided"}</Info>
+                    <Info label="Phone Number">{selectedRegistration.phone || "Not provided"}</Info>
+                    <Info label="GSTIN">{selectedRegistration.gstNumber || "Not provided"}</Info>
                   </div>
 
-                  {/* SUBSCRIPTION */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+  <button
+    type="button"
+    onClick={() => openEmailModal(selectedRegistration)}
+    disabled={!selectedRegistration.email}
+    className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-[#2568e0] hover:bg-[#1d5bc4] text-white text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    <Mail size={16} />
+    Send Email
+  </button>
 
-                  <div className="p-4 border border-slate-200 rounded-xl">
+  <button
+    type="button"
+    onClick={handleViewEmailHistory}
+    disabled={emailHistoryLoading}
+    className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-[#dbe6f5] bg-white hover:bg-[#f4f8fd] text-[#0e2a4a] text-sm font-semibold transition disabled:opacity-50"
+  >
+    <Mail size={16} />
+    {emailHistoryLoading ? "Loading..." : "View Sent Email History"}
+  </button>
+</div>
 
-                    <div className="flex items-center gap-2 mb-4">
-
-                      <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                        <CreditCard size={17} />
-                      </div>
-
-                      <h3 className="text-sm font-bold text-slate-900">
-                        Subscription Plan
-                      </h3>
-
+                  <div className="p-4 border border-[#e2ebf7] rounded-2xl">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-7 h-7 rounded-lg bg-[#eaf3ff] text-[#2568e0] flex items-center justify-center"><CreditCard size={15} /></div>
+                      <h3 className="text-sm font-bold text-[#0e2a4a]">Subscription Plan</h3>
                     </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-
-                      <div>
-                        <p className="text-xs text-slate-500">
-                          Plan
-                        </p>
-
-                        <p className="mt-1 text-sm font-semibold text-slate-900">
-                          {selectedRegistration.planId
-                            ?.planName ||
-                            "Not selected"}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs text-slate-500">
-                          Billing Frequency
-                        </p>
-
-                        <p className="mt-1 text-sm font-semibold text-slate-900">
-                          {formatStatus(
-                            selectedRegistration.billingCycle
-                          )}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-xs text-slate-500">
-                          Payment Status
-                        </p>
-
-                        <p className="mt-1 text-sm font-semibold text-slate-900">
-                          {formatPaymentStatus(
-                            selectedRegistration.paymentStatus
-                          )}
-                        </p>
-                      </div>
-
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {[
+                        ["Plan", selectedRegistration.planId?.planName || "Not selected"],
+                        ["Billing Frequency", formatStatus(selectedRegistration.billingCycle)],
+                        ["Payment Status", formatPaymentStatus(selectedRegistration.paymentStatus)],
+                      ].map(([l, v]) => (
+                        <div key={l}>
+                          <p className="text-xs text-[#6b7f99]">{l}</p>
+                          <p className="mt-0.5 text-sm font-semibold text-[#0e2a4a]">{v}</p>
+                        </div>
+                      ))}
                     </div>
-
                   </div>
 
-                  {/* ADDRESS */}
+                  {addressBlock(selectedRegistration.address)}
 
-                  <div className="p-4 border border-slate-200 rounded-xl">
-
-                    <div className="flex items-center gap-2 mb-2">
-
-                      <MapPin
-                        size={17}
-                        className="text-indigo-600"
-                      />
-
-                      <h3 className="text-sm font-bold text-slate-900">
-                        Hotel Address
-                      </h3>
-
-                    </div>
-
-                    <p className="text-sm text-slate-600">
-                      {getAddress(
-                        selectedRegistration.address
-                      )}
-                    </p>
-
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Info label="Application Date" icon={CalendarDays}>{formatDate(selectedRegistration.createdAt)}</Info>
+                    <Info label="Application ID" icon={FileCheck2} mono>{selectedRegistration._id}</Info>
                   </div>
-
-                  {/* APPLICATION INFORMATION */}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                    <div className="p-4 bg-slate-50 rounded-xl">
-
-                      <div className="flex items-center gap-2">
-
-                        <CalendarDays
-                          size={16}
-                          className="text-slate-500"
-                        />
-
-                        <p className="text-xs text-slate-500">
-                          Application Date
-                        </p>
-
-                      </div>
-
-                      <p className="mt-1 text-sm font-semibold text-slate-900">
-                        {formatDate(
-                          selectedRegistration.createdAt
-                        )}
-                      </p>
-
-                    </div>
-
-                    <div className="p-4 bg-slate-50 rounded-xl">
-
-                      <div className="flex items-center gap-2">
-
-                        <FileCheck2
-                          size={16}
-                          className="text-slate-500"
-                        />
-
-                        <p className="text-xs text-slate-500">
-                          Application ID
-                        </p>
-
-                      </div>
-
-                      <p className="mt-1 text-xs font-medium text-slate-700 break-all">
-                        {selectedRegistration._id}
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                  {/* REJECTION INFORMATION */}
 
                   {selectedRegistration.rejectionReason && (
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-2xl">
                       <div className="flex items-center gap-2">
-
-                        <XCircle
-                          size={16}
-                          className="text-red-600"
-                        />
-
-                        <p className="text-xs font-semibold text-red-700">
-                          Reason for Rejection
-                        </p>
-
+                        <XCircle size={16} className="text-red-600" />
+                        <p className="text-xs font-semibold text-red-700">Reason for Rejection</p>
                       </div>
-
-                      <p className="mt-1 text-sm text-red-800">
-                        {
-                          selectedRegistration.rejectionReason
-                        }
-                      </p>
-
+                      <p className="mt-1 text-sm text-red-800">{selectedRegistration.rejectionReason}</p>
                     </div>
                   )}
 
-                  {/* ERROR */}
+                  {ActionError()}
 
-                  {actionError && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex gap-2">
-
-                      <AlertCircle
-                        size={17}
-                        className="text-red-600 shrink-0"
-                      />
-
-                      <p className="text-sm text-red-700">
-                        {actionError}
-                      </p>
-
-                    </div>
-                  )}
-
-                  {/* ACTIONS */}
-
-                  {selectedRegistration.status ===
-                    "pending" && (
+                  {selectedRegistration.status === "pending" && (
                     <div className="flex flex-col sm:flex-row gap-3 pt-2">
-
                       <button
                         type="button"
-                        onClick={() =>
-                          handleApprove(
-                            selectedRegistration
-                          )
-                        }
+                        onClick={() => handleApprove(selectedRegistration)}
                         disabled={actionLoading}
-                        className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold disabled:opacity-50 transition"
+                        className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 transition cursor-pointer ${btnGreen}`}
                       >
                         <CheckCircle2 size={16} />
-
-                        {actionLoading
-                          ? "Processing..."
-                          : "Approve Application"}
+                        {actionLoading ? "Processing..." : "Approve Application"}
                       </button>
-
                       <button
                         type="button"
-                        onClick={() =>
-                          handleOpenReject(
-                            selectedRegistration
-                          )
-                        }
+                        onClick={() => handleOpenReject(selectedRegistration)}
                         disabled={actionLoading}
-                        className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold disabled:opacity-50 transition"
+                        className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 transition cursor-pointer ${btnRed}`}
                       >
-                        <Ban size={16} />
-                        Reject Application
+                        <Ban size={16} /> Reject Application
                       </button>
-
                     </div>
                   )}
-
                 </div>
               )}
-
-              {/* =================================================
-                  PROPERTY DETAILS
-              ================================================= */}
 
               {selectedHotel && (
-                <div className="space-y-5">
-
-                  {/* PROPERTY HEADER */}
-
-                  <div className="flex items-start gap-4">
-
-                    <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                      <Building2 size={22} />
-                    </div>
-
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3.5">
+                    <Avatar name={selectedHotel.hotelName} />
                     <div>
-
-                      <h3 className="text-xl font-bold text-slate-900">
-                        {selectedHotel.hotelName ||
-                          "Unnamed Hotel"}
-                      </h3>
-
-                      <span
-                        className={`inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-full border text-[11px] font-semibold ${getStatusClass(
-                          selectedHotel.status
-                        )}`}
-                      >
-                        {selectedHotel.status ===
-                          "active" && (
-                          <CheckCircle2 size={12} />
-                        )}
-
-                        {formatStatus(
-                          selectedHotel.status
-                        )}
-                      </span>
-
+                      <h3 className="text-xl font-bold text-[#0e2a4a]">{selectedHotel.hotelName || "Unnamed Hotel"}</h3>
+                      <div className="mt-1.5">
+                        <Badge status={selectedHotel.status} label={formatStatus(selectedHotel.status)}>
+                          {hotel.status === "active" && <CheckCircle2 size={12} />}
+                        </Badge>
+                      </div>
                     </div>
-
                   </div>
 
-                  {/* OWNER / CONTACT */}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                    <div className="p-4 bg-slate-50 rounded-xl">
-
-                      <div className="flex items-center gap-2">
-
-                        <Users size={16} className="text-slate-500" />
-
-                        <p className="text-xs text-slate-500">
-                          Hotel Owner
-                        </p>
-
-                      </div>
-
-                      <p className="mt-1 text-sm font-semibold text-slate-900">
-                        {selectedHotel.ownerName ||
-                          "Not provided"}
-                      </p>
-
-                    </div>
-
-                    <div className="p-4 bg-slate-50 rounded-xl">
-
-                      <div className="flex items-center gap-2">
-
-                        <Mail size={16} className="text-slate-500" />
-
-                        <p className="text-xs text-slate-500">
-                          Email Address
-                        </p>
-
-                      </div>
-
-                      <p className="mt-1 text-sm font-semibold break-all text-slate-900">
-                        {selectedHotel.email ||
-                          "Not provided"}
-                      </p>
-
-                    </div>
-
-                    <div className="p-4 bg-slate-50 rounded-xl">
-
-                      <div className="flex items-center gap-2">
-
-                        <Phone
-                          size={16}
-                          className="text-slate-500"
-                        />
-
-                        <p className="text-xs text-slate-500">
-                          Phone Number
-                        </p>
-
-                      </div>
-
-                      <p className="mt-1 text-sm font-semibold text-slate-900">
-                        {selectedHotel.phone ||
-                          "Not provided"}
-                      </p>
-
-                    </div>
-
-                    <div className="p-4 bg-slate-50 rounded-xl">
-
-                      <div className="flex items-center gap-2">
-
-                        <ShieldCheck
-                          size={16}
-                          className="text-slate-500"
-                        />
-
-                        <p className="text-xs text-slate-500">
-                          GSTIN
-                        </p>
-
-                      </div>
-
-                      <p className="mt-1 text-sm font-semibold text-slate-900">
-                        {selectedHotel.gstNumber ||
-                          "Not provided"}
-                      </p>
-
-                    </div>
-
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Info label="Hotel Owner" icon={Users}>{selectedHotel.ownerName || "Not provided"}</Info>
+                    <Info label="Email Address" icon={Mail}>{selectedHotel.email || "Not provided"}</Info>
+                    <Info label="Phone Number" icon={Phone}>{selectedHotel.phone || "Not provided"}</Info>
+                    <Info label="GSTIN" icon={ShieldCheck}>{selectedHotel.gstNumber || "Not provided"}</Info>
                   </div>
 
-                  {/* ADDRESS */}
 
-                  <div className="p-4 border border-slate-200 rounded-xl">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+  <button
+    type="button"
+    onClick={() => openEmailModal(selectedHotel)}
+    disabled={!selectedHotel.email}
+    className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-[#2568e0] hover:bg-[#1d5bc4] text-white text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    <Mail size={16} />
+    Send Email
+  </button>
 
-                    <div className="flex items-center gap-2 mb-2">
+  <button
+    type="button"
+    onClick={handleViewEmailHistory}
+    disabled={emailHistoryLoading}
+    className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-[#dbe6f5] bg-white hover:bg-[#f4f8fd] text-[#0e2a4a] text-sm font-semibold transition disabled:opacity-50"
+  >
+    <Mail size={16} />
+    {emailHistoryLoading ? "Loading..." : "View Sent Email History"}
+  </button>
+</div>
 
-                      <MapPin
-                        size={17}
-                        className="text-indigo-600"
-                      />
+                  {addressBlock(selectedHotel.address)}
 
-                      <h3 className="text-sm font-bold text-slate-900">
-                        Hotel Address
-                      </h3>
-
-                    </div>
-
-                    <p className="text-sm text-slate-600">
-                      {getAddress(
-                        selectedHotel.address
-                      )}
-                    </p>
-
-                  </div>
-
-                  {/* PROPERTY ID */}
-
-                  <div className="p-4 bg-slate-50 rounded-xl">
-
-                    <p className="text-xs text-slate-500">
-                      Property ID
-                    </p>
-
-                    <p className="mt-1 text-xs font-medium break-all text-slate-700">
-                      {selectedHotel._id}
-                    </p>
-
-                  </div>
-
+                  <Info label="Property ID" mono>{selectedHotel._id}</Info>
                 </div>
               )}
-
             </div>
           </div>
         </div>
       )}
 
-      {/* =====================================================
-          REJECT APPLICATION MODAL
-      ===================================================== */}
 
-      {showRejectModal && (
-        <div className="fixed inset-0 z-[60] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+      {/* =========================================================
+    SEND EMAIL MODAL
+========================================================= */}
+{showEmailModal && (
+  <div
+    className="sh-fade fixed inset-0 z-[70] bg-[#0b1d3d]/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+    onClick={() => {
+      if (!emailLoading) {
+        setShowEmailModal(false);
+        setActionError("");
+      }
+    }}
+  >
+    <div
+      className="sh-pop bg-white w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-2xl"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] text-white px-5 sm:px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
+            <Mail size={20} />
+          </div>
 
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+          <div>
+            <h2 className="text-lg font-bold">
+              Send Email
+            </h2>
 
-            {/* HEADER */}
+            <p className="text-xs text-blue-100 mt-0.5">
+              Send a professional message to this hotel user.
+            </p>
+          </div>
+        </div>
 
-            <div className="px-5 py-4 border-b border-slate-200 flex items-start justify-between">
+        <button
+          type="button"
+          onClick={() => {
+            if (!emailLoading) {
+              setShowEmailModal(false);
+              setActionError("");
+            }
+          }}
+          disabled={emailLoading}
+          className="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center transition disabled:opacity-50"
+        >
+          <X size={19} />
+        </button>
+      </div>
 
-              <div className="flex items-start gap-3">
+      {/* Body */}
+      <div className="p-5 sm:p-6 space-y-5">
 
-                <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0">
-                  <Ban size={20} />
+        {/* Recipient */}
+        <div className="p-4 rounded-2xl bg-[#f4f8fd] border border-[#e2ebf7]">
+          <div className="flex items-center gap-3">
+            <Avatar name={emailForm.recipientName} />
+
+            <div className="min-w-0">
+              <p className="text-xs text-[#6b7f99]">
+                Sending to
+              </p>
+
+              <p className="text-sm font-bold text-[#0e2a4a] truncate">
+                {emailForm.recipientName || "Hotel User"}
+              </p>
+
+              <p className="text-xs text-[#60758D] truncate">
+                {emailForm.recipientEmail}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Recipient Name */}
+        <div>
+          <label className="block text-xs font-bold text-[#5b7089] uppercase tracking-wide mb-2">
+            Recipient Name
+          </label>
+
+          <input
+            type="text"
+            value={emailForm.recipientName}
+            onChange={(e) =>
+              setEmailForm((prev) => ({
+                ...prev,
+                recipientName: e.target.value,
+              }))
+            }
+            placeholder="Enter recipient name"
+            className={`${inputCls} px-3 py-2.5`}
+          />
+        </div>
+
+        {/* Email */}
+        <div>
+          <label className="block text-xs font-bold text-[#5b7089] uppercase tracking-wide mb-2">
+            Email Address
+          </label>
+
+          <input
+            type="email"
+            value={emailForm.recipientEmail}
+            onChange={(e) =>
+              setEmailForm((prev) => ({
+                ...prev,
+                recipientEmail: e.target.value,
+              }))
+            }
+            placeholder="example@gmail.com"
+            className={`${inputCls} px-3 py-2.5`}
+          />
+        </div>
+
+        {/* Subject */}
+        <div>
+          <label className="block text-xs font-bold text-[#5b7089] uppercase tracking-wide mb-2">
+            Subject
+          </label>
+
+          <input
+            type="text"
+            value={emailForm.subject}
+            onChange={(e) =>
+              setEmailForm((prev) => ({
+                ...prev,
+                subject: e.target.value,
+              }))
+            }
+            placeholder="Enter email subject"
+            maxLength={200}
+            className={`${inputCls} px-3 py-2.5`}
+          />
+        </div>
+
+        {/* Message */}
+        <div>
+          <label className="block text-xs font-bold text-[#5b7089] uppercase tracking-wide mb-2">
+            Message
+          </label>
+
+          <textarea
+            value={emailForm.message}
+            onChange={(e) =>
+              setEmailForm((prev) => ({
+                ...prev,
+                message: e.target.value,
+              }))
+            }
+            rows={8}
+            maxLength={10000}
+            placeholder="Write your message..."
+            className={`${inputCls} px-3 py-3 resize-none`}
+          />
+
+          <div className="mt-1 flex justify-end">
+            <span className="text-[11px] text-[#8fa2ba]">
+              {emailForm.message.length}/10000
+            </span>
+          </div>
+        </div>
+
+        {actionError && (
+          <ActionError />
+        )}
+
+        {/* Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-1">
+          <button
+            type="button"
+            onClick={() => {
+              setShowEmailModal(false);
+              setActionError("");
+            }}
+            disabled={emailLoading}
+            className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition disabled:opacity-50"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            onClick={handleSendEmail}
+            disabled={
+              emailLoading ||
+              !emailForm.recipientEmail.trim() ||
+              !emailForm.subject.trim() ||
+              !emailForm.message.trim()
+            }
+            className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#2568e0] hover:bg-[#1d5bc4] text-white text-sm font-semibold transition disabled:opacity-50"
+          >
+            <Mail size={16} />
+
+            {emailLoading
+              ? "Sending..."
+              : "Send Email"}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+
+{/* =========================================================
+    EMAIL HISTORY MODAL
+========================================================= */}
+{showEmailHistoryModal && (
+  <div
+    className="sh-fade fixed inset-0 z-[75] bg-[#0b1d3d]/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+    onClick={() => setShowEmailHistoryModal(false)}
+  >
+    <div
+      className="sh-pop bg-white w-full max-w-3xl max-h-[92vh] overflow-hidden rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Header */}
+      <div className="bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] text-white px-5 sm:px-6 py-4 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
+            <Mail size={20} />
+          </div>
+
+          <div>
+            <h2 className="text-lg font-bold">
+              Sent Email History
+            </h2>
+
+            <p className="text-xs text-blue-100 mt-0.5">
+              Previous emails sent to this user.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowEmailHistoryModal(false)}
+          className="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center transition"
+        >
+          <X size={19} />
+        </button>
+      </div>
+
+      {/* History */}
+      <div className="overflow-y-auto p-5 sm:p-6">
+        {emailHistory.length === 0 ? (
+          <div className="py-12 text-center">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-[#eaf3ff] text-[#2568e0] flex items-center justify-center">
+              <Mail size={25} />
+            </div>
+
+            <h3 className="mt-3 text-sm font-bold text-[#0e2a4a]">
+              No emails sent yet
+            </h3>
+
+            <p className="mt-1 text-xs text-[#6b7f99]">
+              Sent emails will appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {emailHistory.map((email) => (
+              <div
+                key={email._id}
+                className="p-4 rounded-2xl border border-[#e2ebf7] bg-[#f9fbfe]"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-[#0e2a4a] break-words">
+                      {email.subject}
+                    </p>
+
+                    <p className="text-xs text-[#6b7f99] mt-1">
+                      To: {email.recipientEmail}
+                    </p>
+
+                    {email.sentBy && (
+                      <p className="text-xs text-[#8fa2ba] mt-0.5">
+                        Sent by:{" "}
+                        {email.sentBy.name ||
+                          email.sentBy.email ||
+                          "Admin"}
+                      </p>
+                    )}
+                  </div>
+
+                  <span
+                    className={`shrink-0 inline-flex items-center px-2.5 py-1 rounded-full border text-[11px] font-semibold ${
+                      email.status === "sent"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-red-50 text-red-700 border-red-200"
+                    }`}
+                  >
+                    {email.status === "sent"
+                      ? "Sent"
+                      : "Failed"}
+                  </span>
                 </div>
 
-                <div>
-
-                  <h2 className="text-lg font-bold text-slate-900">
-                    Reject Application
-                  </h2>
-
-                  <p className="text-xs text-slate-500 mt-1">
-                    Please provide a clear reason for rejecting this hotel application.
+                <div className="mt-3 p-3 rounded-xl bg-white border border-[#e8eef6]">
+                  <p className="text-sm text-[#46516B] whitespace-pre-wrap break-words">
+                    {email.message}
                   </p>
-
                 </div>
 
-              </div>
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <span className="text-[11px] text-[#8fa2ba]">
+                    {email.sentAt
+                      ? new Date(email.sentAt).toLocaleString(
+                          "en-IN",
+                          {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )
+                      : "Date unavailable"}
+                  </span>
 
+                  {email.errorMessage && (
+                    <span className="text-[11px] text-red-600">
+                      {email.errorMessage}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
+      {/* =========================================================
+          REJECT MODAL (RESPONSIVE)
+      ========================================================= */}
+      {showRejectModal && (
+        <div className="sh-fade fixed inset-0 z-[60] bg-[#0b1d3d]/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="sh-pop bg-white w-full max-w-md max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-2xl">
+
+            <div className="px-5 py-4 border-b border-[#e7eff8] flex items-start justify-between">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0"><Ban size={20} /></div>
+                <div>
+                  <h2 className="text-lg font-bold text-[#0e2a4a]">Reject Application</h2>
+                  <p className="text-xs text-[#6b7f99] mt-1">Please provide a clear reason for rejecting this hotel application.</p>
+                </div>
+              </div>
               <button
                 type="button"
-                onClick={() => {
-                  setShowRejectModal(false);
-                  setActionError("");
-                }}
-                className="w-9 h-9 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500 shrink-0"
+                onClick={() => { setShowRejectModal(false); setActionError(""); }}
+                className="w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-500 shrink-0 cursor-pointer"
               >
                 <X size={18} />
               </button>
-
             </div>
 
-            {/* BODY */}
-
             <div className="p-5">
-
-              {/* SELECTED HOTEL */}
-
-              <div className="mb-5 p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
-
-                <p className="text-xs text-slate-500">
-                  Hotel Application
-                </p>
-
-                <p className="mt-1 text-sm font-semibold text-slate-900">
-                  {selectedRegistration?.hotelName ||
-                    "Selected Hotel"}
-                </p>
-
+              <div className="mb-4 p-3.5 bg-[#f4f8fd] rounded-2xl">
+                <p className="text-xs text-[#6b7f99]">Hotel Application</p>
+                <p className="mt-0.5 text-sm font-semibold text-[#0e2a4a]">{selectedRegistration?.hotelName || "Selected Hotel"}</p>
                 {selectedRegistration?.ownerName && (
-                  <p className="mt-0.5 text-xs text-slate-500">
-                    Owner:{" "}
-                    {selectedRegistration.ownerName}
-                  </p>
+                  <p className="mt-0.5 text-xs text-[#6b7f99]">Owner: {selectedRegistration.ownerName}</p>
                 )}
-
               </div>
 
-              {/* STANDARD REASON */}
-
-              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">
-                Reason for Rejection
-              </label>
-
-              <select
-                value={rejectionReason}
-                onChange={(e) =>
-                  setRejectionReason(
-                    e.target.value
-                  )
-                }
-                className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm outline-none bg-[#F5F6FF] text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
-              >
-                {rejectionReasons.map(
-                  (reason) => (
-                    <option
-                      key={reason.value}
-                      value={reason.value}
-                    >
-                      {reason.label}
-                    </option>
-                  )
-                )}
+              <label className="block text-xs font-bold text-[#5b7089] uppercase tracking-wide mb-2">Reason for Rejection</label>
+              <select value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} className={`${inputCls} px-3 py-2.5`}>
+                {rejectionReasons.map((reason) => (
+                  <option key={reason.value} value={reason.value}>{reason.label}</option>
+                ))}
               </select>
 
-              {/* CUSTOM EXPLANATION */}
-
-              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mt-5 mb-2">
-                Additional Details
-              </label>
-
+              <label className="block text-xs font-bold text-[#5b7089] uppercase tracking-wide mt-4 mb-2">Additional Details</label>
               <textarea
                 value={
-                  rejectionReasons.some(
-                    (item) =>
-                      item.value ===
-                      rejectionReason
-                  ) &&
-                  rejectionReason !== "other"
-                    ? rejectionReasons.find(
-                        (item) =>
-                          item.value ===
-                          rejectionReason
-                      )?.label || ""
+                  rejectionReasons.some((item) => item.value === rejectionReason) && rejectionReason !== "other"
+                    ? rejectionReasons.find((item) => item.value === rejectionReason)?.label || ""
                     : rejectionReason
                 }
-                onChange={(e) =>
-                  setRejectionReason(
-                    e.target.value
-                  )
-                }
-                rows={4}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                rows={3}
                 placeholder="Explain why this application cannot be approved..."
-                className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm outline-none resize-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                className={`${inputCls} px-3 py-2.5 resize-none`}
               />
+              <p className="mt-1 text-xs text-[#8fa2ba]">Please provide at least 5 characters.</p>
 
-              <p className="mt-1 text-xs text-slate-400">
-                Please provide at least 5 characters.
-              </p>
-
-              {/* ERROR */}
-
-              {actionError && (
-                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl flex gap-2">
-
-                  <AlertCircle
-                    size={17}
-                    className="text-red-600 shrink-0"
-                  />
-
-                  <p className="text-sm text-red-700">
-                    {actionError}
-                  </p>
-
-                </div>
-              )}
-
-              {/* BUTTONS */}
+              {actionError && <div className="mt-3">{ActionError()}</div>}
 
               <div className="flex gap-3 mt-5">
-
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowRejectModal(false);
-                    setActionError("");
-                  }}
+                  onClick={() => { setShowRejectModal(false); setActionError(""); }}
                   disabled={actionLoading}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold disabled:opacity-50 transition"
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold disabled:opacity-50 transition cursor-pointer"
                 >
                   Cancel
                 </button>
-
                 <button
                   type="button"
                   onClick={handleReject}
-                  disabled={
-                    actionLoading ||
-                    rejectionReason.trim()
-                      .length < 5
-                  }
-                  className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold disabled:opacity-50 transition"
+                  disabled={actionLoading || rejectionReason.trim().length < 5}
+                  className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 transition cursor-pointer ${btnRed}`}
                 >
-                  <Ban size={16} />
-
-                  {actionLoading
-                    ? "Rejecting..."
-                    : "Confirm Rejection"}
+                  <Ban size={15} />
+                  {actionLoading ? "Rejecting..." : "Confirm Rejection"}
                 </button>
-
               </div>
-
             </div>
-
           </div>
-
         </div>
       )}
-
     </div>
   );
 };

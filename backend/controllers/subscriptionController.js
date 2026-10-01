@@ -1,8 +1,14 @@
 import mongoose from "mongoose";
 
-import Subscription from "../models/Subscription.js";
-import Hotels from "../models/Hotels.js";
-import Plans from "../models/Plans.js";
+import Subscription from "../models/subscription.js";
+import Hotels from "../models/hotels.js";
+import Users from "../models/users.js";
+import Plans from "../models/plans.js";
+import SaasNotification from "../models/saasNotification.js";
+import {
+  sendSubscriptionCancelledNotification,
+  sendSubscriptionExpiredNotification,
+} from "../util/email.js";
 
 import { log } from "../util/logger.js";
 
@@ -693,10 +699,10 @@ export const getMySubscription = async (req, res) => {
         }
 
         // --------------------------------------------------------
-        // 4. Get current subscription
+        // 4. Get current or latest subscription (including expired)
         // --------------------------------------------------------
 
-        const subscription =
+        let subscription =
             await Subscription.findOne({
                 hotelId,
                 status: {
@@ -712,10 +718,32 @@ export const getMySubscription = async (req, res) => {
                     "planId",
                     "planName description pricing trialDays setupFee limits features validityDays autoRenewalAllowed isActive"
                 )
+                .populate(
+                    "hotelId",
+                    "hotelName ownerName email phone address gstNumber status"
+                )
                 .sort({
                     endDate: -1,
                 })
                 .lean();
+
+        // If no active subscription, find the latest expired or cancelled subscription
+        if (!subscription) {
+            subscription = await Subscription.findOne({ hotelId })
+                .populate(
+                    "planId",
+                    "planName description pricing trialDays setupFee limits features validityDays autoRenewalAllowed isActive"
+                )
+                .populate(
+                    "hotelId",
+                    "hotelName ownerName email phone address gstNumber status"
+                )
+                .sort({
+                    endDate: -1,
+                    createdAt: -1,
+                })
+                .lean();
+        }
 
         // --------------------------------------------------------
         // 5. Subscription not found
@@ -725,24 +753,32 @@ export const getMySubscription = async (req, res) => {
             return res.status(404).json({
                 success: false,
                 message:
-                    "Your hotel does not currently have an active subscription.",
+                    "Your hotel does not currently have any subscription record.",
             });
         }
 
         // --------------------------------------------------------
-        // 6. Check subscription expiry
+        // 6. Check subscription expiry or cancellation
         // --------------------------------------------------------
 
         const now = new Date();
+        const isExpired =
+            subscription.status === "expired" ||
+            subscription.status === "cancelled" ||
+            subscription.status === "suspended" ||
+            (subscription.endDate && new Date(subscription.endDate) <= now);
 
-        if (
-            subscription.endDate &&
-            new Date(subscription.endDate) <= now
-        ) {
-            return res.status(403).json({
-                success: false,
+        if (isExpired) {
+            return res.status(200).json({
+                success: true,
+                isExpired: true,
                 message:
-                    "Your subscription has expired. Please renew your plan.",
+                    "Your subscription has expired or is inactive. Please upgrade or renew your plan.",
+                data: {
+                    ...subscription,
+                    isExpired: true,
+                },
+                hotel,
             });
         }
 
@@ -756,9 +792,11 @@ export const getMySubscription = async (req, res) => {
 
         return res.status(200).json({
             success: true,
+            isExpired: false,
             message:
                 "Your current subscription retrieved successfully.",
             data: subscription,
+            hotel,
         });
     } catch (error) {
         log.error(
@@ -823,6 +861,8 @@ export const updateSubscription = async (req, res) => {
           "Subscription not found. It may have been deleted or the ID may be incorrect.",
       });
     }
+
+    const previousStatus = subscription.status;
 
     // --------------------------------------------------------
     // 3. Validate billing cycle
@@ -1185,6 +1225,52 @@ export const updateSubscription = async (req, res) => {
       `Subscription updated successfully: ${updatedSubscription._id}`
     );
 
+    // If status changed to cancelled, suspended, or expired, send email to hotel owner
+    if (status !== undefined && status !== previousStatus) {
+      try {
+        const hotel = await Hotels.findById(subscription.hotelId);
+        const plan = await Plans.findById(subscription.planId);
+        const ownerUser = await Users.findOne({
+          hotelId: subscription.hotelId,
+          role: "hotelOwner",
+        });
+        const recipientEmail = ownerUser?.email || hotel?.email;
+
+        if (recipientEmail) {
+          if (status === "cancelled" || status === "suspended") {
+            await sendSubscriptionCancelledNotification({
+              to: recipientEmail,
+              hotelName: hotel?.hotelName || "Valued Hotel",
+              planName: plan?.planName || "Current Plan",
+              reason:
+                req.body?.reason ||
+                `Subscription status updated to ${status} by administrator.`,
+              status,
+              hotelId: hotel?._id,
+            });
+            log.info(
+              `[updateSubscription] Status notification sent to ${recipientEmail} (${status})`
+            );
+          } else if (status === "expired") {
+            await sendSubscriptionExpiredNotification({
+              to: recipientEmail,
+              hotelName: hotel?.hotelName || "Valued Hotel",
+              planName: plan?.planName || "Current Plan",
+              endDate: subscription.endDate,
+              hotelId: hotel?._id,
+            });
+            log.info(
+              `[updateSubscription] Expiry notification sent to ${recipientEmail}`
+            );
+          }
+        }
+      } catch (emailErr) {
+        log.error(
+          `[updateSubscription] Failed sending status email: ${emailErr.message}`
+        );
+      }
+    }
+
     return res.status(200).json({
       success: true,
       message:
@@ -1210,6 +1296,10 @@ export const updateSubscription = async (req, res) => {
 export const cancelSubscription = async (req, res) => {
   try {
     const { id } = req.params;
+    const reason =
+      req.body?.reason ||
+      req.query?.reason ||
+      "Subscription cancelled by system administrator.";
 
     // --------------------------------------------------------
     // 1. Validate subscription ID
@@ -1223,10 +1313,11 @@ export const cancelSubscription = async (req, res) => {
     }
 
     // --------------------------------------------------------
-    // 2. Find subscription
+    // 2. Find subscription with hotel and plan populated
     // --------------------------------------------------------
-    const subscription =
-      await Subscription.findById(id);
+    const subscription = await Subscription.findById(id)
+      .populate("hotelId")
+      .populate("planId");
 
     if (!subscription) {
       return res.status(404).json({
@@ -1251,29 +1342,258 @@ export const cancelSubscription = async (req, res) => {
     // 4. Cancel subscription
     // --------------------------------------------------------
     subscription.status = "cancelled";
+    subscription.cancellationReason = reason;
     subscription.autoRenewal = false;
 
     await subscription.save();
 
     log.info(
-      `Subscription cancelled successfully: ${id}`
+      `[cancelSubscription] Subscription ${id} cancelled. Reason: ${reason}`
     );
+
+    // --------------------------------------------------------
+    // 5. Send cancellation email to hotel owner
+    // --------------------------------------------------------
+    const hotel = subscription.hotelId;
+    const ownerUser = await Users.findOne({
+      hotelId: hotel?._id || subscription.hotelId,
+      role: "hotelOwner",
+    });
+    const recipientEmail = ownerUser?.email || hotel?.email;
+
+    if (recipientEmail) {
+      try {
+        await sendSubscriptionCancelledNotification({
+          to: recipientEmail,
+          hotelName: hotel?.hotelName || "Valued Hotel",
+          planName: subscription.planId?.planName || "Current Plan",
+          reason: reason,
+          status: "cancelled",
+          hotelId: hotel?._id,
+        });
+
+        log.info(
+          `[cancelSubscription] Cancellation notification email sent to ${recipientEmail} for hotel: ${hotel?.hotelName}`
+        );
+      } catch (emailErr) {
+        log.error(
+          `[cancelSubscription] Error sending cancellation email to ${recipientEmail}: ${emailErr.message}`
+        );
+      }
+    } else {
+      log.warn(
+        `[cancelSubscription] No hotel owner or hotel email found for subscription ${id}`
+      );
+    }
 
     return res.status(200).json({
       success: true,
       message:
-        "Subscription cancelled successfully.",
+        "Subscription cancelled successfully and notification email sent to hotel.",
       data: subscription,
     });
   } catch (error) {
     log.error(
-      `Error cancelling subscription: ${error.message}`
+      `[cancelSubscription] Error cancelling subscription: ${error.message}`
     );
 
     return res.status(500).json({
       success: false,
       message:
         "Unable to cancel the subscription right now. Please try again later.",
+    });
+  }
+};
+
+// ============================================================
+// UPGRADE HOTEL SUBSCRIPTION (FOR LOGGED-IN HOTEL USERS)
+// ============================================================
+//
+// Immediately upgrades the hotel's plan.
+// Cancels/supersedes the existing active subscription.
+// Activates the newly chosen plan immediately (status: active, paymentStatus: paid).
+// Updates limits (rooms, branches, receptionists) and features immediately.
+// NO ADMIN APPROVAL REQUIRED for existing hotels upgrading their plan!
+//
+// ============================================================
+export const upgradeHotelSubscription = async (req, res) => {
+  try {
+    const hotelId = req.user?.hotelId;
+
+    if (!hotelId) {
+      return res.status(403).json({
+        success: false,
+        message: "Your account is not associated with any hotel.",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(hotelId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid hotel ID.",
+      });
+    }
+
+    const hotel = await Hotels.findById(hotelId);
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: "Hotel account not found.",
+      });
+    }
+
+    const { planId, billingCycle = "monthly" } = req.body;
+
+    if (!planId) {
+      return res.status(400).json({
+        success: false,
+        message: "Please select a plan to upgrade.",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(planId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid plan ID.",
+      });
+    }
+
+    const plan = await Plans.findById(planId);
+    if (!plan) {
+      return res.status(404).json({
+        success: false,
+        message: "Selected plan not found.",
+      });
+    }
+
+    if (!plan.isActive) {
+      return res.status(400).json({
+        success: false,
+        message: "The selected plan is currently not active.",
+      });
+    }
+
+    const allowedBillingCycles = [
+      "monthly",
+      "quarterly",
+      "halfYearly",
+      "yearly",
+      "custom",
+    ];
+
+    const cycle = allowedBillingCycles.includes(billingCycle)
+      ? billingCycle
+      : "monthly";
+
+    // 1. Calculate validity dates
+    const startDate = new Date();
+    let validityDays = 30;
+    if (cycle === "quarterly") validityDays = 90;
+    else if (cycle === "halfYearly") validityDays = 180;
+    else if (cycle === "yearly") validityDays = 365;
+    else if (plan.validityDays) validityDays = Number(plan.validityDays);
+
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + validityDays);
+
+    // 2. Calculate amount
+    let amount = 0;
+    if (plan.pricing && plan.pricing[cycle] !== undefined) {
+      amount = Number(plan.pricing[cycle] || 0);
+    } else if (plan.pricing?.monthly) {
+      amount = Number(plan.pricing.monthly || 0);
+    }
+
+    // 3. Discontinue previous active subscriptions
+    await Subscription.updateMany(
+      {
+        hotelId: hotel._id,
+        status: {
+          $in: ["trial", "active", "expiring_soon", "grace_period"],
+        },
+      },
+      {
+        $set: {
+          status: "cancelled",
+          autoRenewal: false,
+        },
+      }
+    );
+
+    // 4. Create newly upgraded subscription (Instantly active!)
+    const transactionId = `UPG-${Date.now()}-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    const newSubscription = await Subscription.create({
+      hotelId: hotel._id,
+      planId: plan._id,
+      billingCycle: cycle,
+      startDate,
+      endDate,
+      status: "active",
+      paymentStatus: "paid",
+      autoRenewal: plan.autoRenewalAllowed || false,
+      trialStatus: "not_started",
+      limits: {
+        rooms: Number(plan.limits?.rooms || 0),
+        branches: Number(plan.limits?.branches || 0),
+        receptionists: Number(plan.limits?.receptionists || 0),
+      },
+      features: {
+        foodService: plan.features?.foodService === true,
+        roomService: plan.features?.roomService === true,
+      },
+      amount,
+      discount: 0,
+      tax: 0,
+      finalAmount: amount,
+      paymentTransactionId: transactionId,
+    });
+
+    log.info(
+      `[upgradeHotelSubscription] Hotel ${hotel.hotelName} (${hotel._id}) upgraded to plan "${plan.planName}" (${plan._id}). Subscription ${newSubscription._id} activated immediately without admin approval.`
+    );
+
+    // 5. Notify SaaS Admin of upgrade event
+    try {
+      await SaasNotification.create({
+        type: "payment_verified",
+        title: "Hotel Plan Upgraded",
+        message: `${hotel.hotelName} successfully upgraded to the "${plan.planName}" plan (${cycle}). New limits and features are active immediately.`,
+        hotelId: hotel._id,
+        isRead: false,
+        metadata: {
+          hotelName: hotel.hotelName,
+          ownerName: hotel.ownerName,
+          email: hotel.email,
+          phone: hotel.phone,
+          planName: plan.planName,
+          billingCycle: cycle,
+          amount,
+          transactionId,
+        },
+      });
+    } catch (notifErr) {
+      log.error(`[upgradeHotelSubscription] Notification error: ${notifErr.message}`);
+    }
+
+    const populated = await Subscription.findById(newSubscription._id)
+      .populate(
+        "planId",
+        "planName description pricing trialDays setupFee limits features validityDays autoRenewalAllowed isActive"
+      )
+      .populate("hotelId", "hotelName ownerName email phone address gstNumber");
+
+    return res.status(200).json({
+      success: true,
+      message: `Your subscription has been successfully upgraded to ${plan.planName}! All upgraded room, branch, and staff limits are now active immediately.`,
+      data: populated,
+    });
+  } catch (error) {
+    log.error(`[upgradeHotelSubscription] Error: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to upgrade plan right now. Please try again later.",
+      error: error.message,
     });
   }
 };

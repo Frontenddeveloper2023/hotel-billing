@@ -2320,15 +2320,15 @@ setSavedInvoice(savedInvoiceData);
   // =========================================================
 
   return (
-    <div className="fixed inset-0 z-[60] overflow-y-auto bg-slate-950/35 p-3 backdrop-blur-[2px] sm:p-4">
+    <div className="fixed inset-0 z-[60] overflow-y-auto bg-[#040e24]/35 p-3 backdrop-blur-[2px] sm:p-4">
       <div className="flex min-h-full w-full items-center justify-center">
-        <div className="flex w-full max-w-[720px] flex-col overflow-hidden rounded-[18px] bg-[#F7F8F9] shadow-[0_25px_70px_rgba(0,0,0,0.20)]">
+        <div className="flex w-full max-w-[720px] flex-col overflow-hidden rounded-[18px] bg-[#f4f8fd] shadow-[0_25px_70px_rgba(0,0,0,0.20)]">
 
           {/* =================================================
               HEADER
           ================================================= */}
 
-          <div className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
+          <div className="flex items-center justify-between border-b border-[#dbe6f5] bg-white px-5 py-4 sm:px-6">
 
             <div className="flex min-w-0 items-center gap-3">
 
@@ -2338,7 +2338,7 @@ setSavedInvoice(savedInvoiceData);
                 disabled={
                   isProcessing
                 }
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#dbe6f5] bg-white text-[#3d5473] transition hover:bg-[#f4f8fd] disabled:opacity-50"
                 aria-label="Back to checkout"
               >
                 <ArrowLeft
@@ -2348,11 +2348,11 @@ setSavedInvoice(savedInvoiceData);
 
               <div className="min-w-0">
 
-                <h1 className="text-[18px] font-bold tracking-[-0.02em] text-slate-900 sm:text-[19px]">
+                <h1 className="text-[18px] font-bold tracking-[-0.02em] text-[#0e2a4a] sm:text-[19px]">
                   Payment
                 </h1>
 
-                <p className="mt-0.5 text-[10px] text-slate-500 sm:text-[11px]">
+                <p className="mt-0.5 text-[10px] text-[#6b7f99] sm:text-[11px]">
                   Complete checkout payment
                 </p>
 
@@ -2362,7 +2362,7 @@ setSavedInvoice(savedInvoiceData);
 
             <div className="text-right">
 
-              <p className="text-[8px] font-bold uppercase tracking-[0.1em] text-slate-400">
+              <p className="text-[8px] font-bold uppercase tracking-[0.1em] text-[#9aabc0]">
                 Amount Due
               </p>
 
@@ -2389,9 +2389,9 @@ setSavedInvoice(savedInvoiceData);
                   PAYMENT DETAILS
               ============================================= */}
 
-              <section className="overflow-hidden rounded-[15px] border border-slate-200 bg-white shadow-[0_2px_10px_rgba(15,23,42,0.035)]">
+              <section className="overflow-hidden rounded-[15px] border border-[#dbe6f5] bg-white shadow-[0_2px_10px_rgba(15,23,42,0.035)]">
 
-                <div className="border-b border-slate-100 px-5 py-4 sm:px-6">
+                <div className="border-b border-[#e7eff8] px-5 py-4 sm:px-6">
 
                   <div className="flex items-center gap-2.5">
 
@@ -2399,7 +2399,7 @@ setSavedInvoice(savedInvoiceData);
                       className="h-[18px] w-[18px] text-black"
                     />
 
-                    <h2 className="text-[16px] font-bold text-slate-900">
+                    <h2 className="text-[16px] font-bold text-[#0e2a4a]">
                       Payment Details
                     </h2>
 
@@ -2417,16 +2417,16 @@ setSavedInvoice(savedInvoiceData);
 
                     <div className="rounded-xl bg-[#F1F3F5] px-4 py-3.5">
 
-                      <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-slate-900">
+                      <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#0e2a4a]">
                         Customer
                       </p>
 
-                      <p className="mt-1.5 text-[15px] font-bold leading-5 text-slate-900">
+                      <p className="mt-1.5 text-[15px] font-bold leading-5 text-[#0e2a4a]">
                         {customer.customerName ||
                           "Guest"}
                       </p>
 
-                      <p className="mt-1 text-[12px] font-medium text-slate-900">
+                      <p className="mt-1 text-[12px] font-medium text-[#0e2a4a]">
                         {customer.phoneNumber ||
                           "Mobile number unavailable"}
                       </p>
@@ -2437,15 +2437,15 @@ setSavedInvoice(savedInvoiceData);
 
                     <div className="rounded-xl bg-[#F1F3F5] px-4 py-3.5">
 
-                      <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-slate-900">
+                      <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#0e2a4a]">
                         Room
                       </p>
 
-                      <p className="mt-1.5 text-[15px] font-bold leading-5 text-slate-900">
+                      <p className="mt-1.5 text-[15px] font-bold leading-5 text-[#0e2a4a]">
                         {displayRoomNumbers}
                       </p>
 
-                      <p className="mt-1 text-[12px] font-medium text-slate-900">
+                      <p className="mt-1 text-[12px] font-medium text-[#0e2a4a]">
                         {firstRoom.roomType ||
                           "Room"}
                       </p>
@@ -2458,17 +2458,17 @@ setSavedInvoice(savedInvoiceData);
                       AMOUNT SUMMARY
                   ========================================= */}
 
-                  <div className="mt-3 overflow-hidden rounded-xl border border-slate-200">
+                  <div className="mt-3 overflow-hidden rounded-xl border border-[#dbe6f5]">
 
                     {/* TOTAL */}
 
-                    <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-4 py-3.5">
+                    <div className="flex items-center justify-between gap-4 border-b border-[#e7eff8] px-4 py-3.5">
 
-                      <span className="text-[15px] font-medium text-slate-900">
+                      <span className="text-[15px] font-medium text-[#0e2a4a]">
                         Total Amount
                       </span>
 
-                      <span className="text-[16px] font-bold tabular-nums text-slate-900">
+                      <span className="text-[16px] font-bold tabular-nums text-[#0e2a4a]">
                         ₹
                         {grandTotal.toFixed(
                           2
@@ -2479,7 +2479,7 @@ setSavedInvoice(savedInvoiceData);
 
                     {/* ADVANCE */}
 
-                    <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-4 py-3.5">
+                    <div className="flex items-center justify-between gap-4 border-b border-[#e7eff8] px-4 py-3.5">
 
                       <span className="text-[15px] font-medium text-green-700">
                         Advance Paid
@@ -2504,7 +2504,7 @@ setSavedInvoice(savedInvoiceData);
                           Balance Due
                         </p>
 
-                        <p className="mt-0.5 text-[12px] font-medium text-slate-900">
+                        <p className="mt-0.5 text-[12px] font-medium text-[#0e2a4a]">
                           Amount to collect
                         </p>
 
@@ -2545,7 +2545,7 @@ setSavedInvoice(savedInvoiceData);
                   PAYMENT METHOD
               ============================================= */}
 
-              <section className="mt-3 overflow-hidden rounded-[15px] border border-slate-200 bg-white shadow-[0_2px_10px_rgba(15,23,42,0.035)]">
+              <section className="mt-3 overflow-hidden rounded-[15px] border border-[#dbe6f5] bg-white shadow-[0_2px_10px_rgba(15,23,42,0.035)]">
 
                 <div className="px-5 pb-2 pt-5 sm:px-6">
 
@@ -2555,7 +2555,7 @@ setSavedInvoice(savedInvoiceData);
                       className="h-[19px] w-[19px] text-black"
                     />
 
-                    <h2 className="text-[17px] font-bold tracking-[-0.01em] text-slate-900">
+                    <h2 className="text-[17px] font-bold tracking-[-0.01em] text-[#0e2a4a]">
                       Payment Method
                     </h2>
 
@@ -2615,8 +2615,8 @@ setSavedInvoice(savedInvoiceData);
                           className={`flex h-[72px] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border text-[11px] font-semibold transition-all duration-200 ${
                             paymentMethod ===
                             key
-                              ? "border-black bg-black text-white shadow-[0_7px_16px_rgba(0,0,0,0.14)]"
-                              : "border-slate-200 bg-[#F6F7F8] text-slate-800 hover:border-slate-300 hover:bg-slate-50"
+                              ? "border-black bg-[#2568e0] text-white shadow-[0_7px_16px_rgba(0,0,0,0.14)]"
+                              : "border-[#dbe6f5] bg-[#F6F7F8] text-[#0e2a4a] hover:border-[#c7d8f0] hover:bg-[#f4f8fd]"
                           } disabled:cursor-not-allowed disabled:opacity-60`}
                         >
 
@@ -2647,14 +2647,23 @@ setSavedInvoice(savedInvoiceData);
 
                   <button
                     type="button"
-                    onClick={
-                      handlePayment
-                    }
-                    disabled={
-                      isProcessing
-                    }
-                    className="mt-4 flex h-[54px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-black px-5 text-[13px] font-semibold text-white shadow-[0_8px_18px_rgba(0,0,0,0.14)] transition hover:bg-[#111111] disabled:cursor-not-allowed disabled:bg-slate-400"
+                    onClick={handlePayment}
+                    disabled={isProcessing}
+                    className="
+                      group/co
+                      mt-4 flex h-[54px] w-full cursor-pointer relative overflow-hidden
+                      items-center justify-center gap-2 rounded-xl
+                      bg-gradient-to-r from-orange-500 via-orange-500 to-amber-400
+                      hover:from-orange-600 hover:via-orange-500 hover:to-amber-500
+                      active:scale-[0.98]
+                      text-[15px] font-bold text-white
+                      shadow-[0_4px_14px_rgba(249,115,22,0.4)]
+                      hover:shadow-[0_6px_20px_rgba(249,115,22,0.55)]
+                      transition-all duration-200
+                      disabled:opacity-50 disabled:cursor-not-allowed
+                    "
                   >
+                    <span className="absolute inset-0 translate-x-[-100%] group-hover/co:translate-x-[100%] transition-transform duration-500 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
 
                     {isProcessing ? (
                       <>
@@ -2721,7 +2730,7 @@ setSavedInvoice(savedInvoiceData);
 
           {/* SUCCESS MODAL */}
 
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-[6px]">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#040e24]/45 p-4 backdrop-blur-[6px]">
 
             <div className="w-full max-w-[448px] overflow-hidden rounded-[18px] bg-white shadow-[0_30px_80px_rgba(0,0,0,0.28)] animate-[paymentSuccessIn_.32s_ease-out]">
 
@@ -2740,13 +2749,13 @@ setSavedInvoice(savedInvoiceData);
 
                 {/* TITLE */}
 
-                <h2 className="mt-5 text-[22px] font-bold tracking-tight text-slate-900">
+                <h2 className="mt-5 text-[22px] font-bold tracking-tight text-[#0e2a4a]">
                   Checkout Successful!
                 </h2>
 
-                <p className="mt-1.5 text-[12px] text-slate-500">
+                <p className="mt-1.5 text-[12px] text-[#6b7f99]">
                   Invoice{" "}
-                  <span className="font-semibold text-slate-800">
+                  <span className="font-semibold text-[#0e2a4a]">
                     {savedInvoice
                       ?.invoiceNo ||
                       "—"}
@@ -2760,7 +2769,7 @@ setSavedInvoice(savedInvoiceData);
 
                   <div className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 text-[12px]">
 
-                    <span className="text-slate-500">
+                    <span className="text-[#6b7f99]">
                       Room Status:
                     </span>
 
@@ -2768,19 +2777,19 @@ setSavedInvoice(savedInvoiceData);
                       Marked Available &amp; Cleaning
                     </span>
 
-                    <span className="text-slate-500">
+                    <span className="text-[#6b7f99]">
                       Customer State:
                     </span>
 
-                    <span className="text-right font-semibold text-slate-800">
+                    <span className="text-right font-semibold text-[#0e2a4a]">
                       Checked Out
                     </span>
 
-                    <span className="text-slate-500">
+                    <span className="text-[#6b7f99]">
                       Balance Settled:
                     </span>
 
-                    <span className="text-right font-semibold tabular-nums text-slate-800">
+                    <span className="text-right font-semibold tabular-nums text-[#0e2a4a]">
                       ₹
                       {currentPayment.toFixed(
                         2
@@ -2802,7 +2811,7 @@ setSavedInvoice(savedInvoiceData);
                     onClick={
                       handleComplete
                     }
-                    className="flex h-12 items-center justify-center rounded-xl bg-[#E5E7EB] px-4 text-[13px] font-semibold text-slate-800 transition hover:bg-[#DDE0E4]"
+                    className="flex h-12 items-center justify-center rounded-xl bg-[#E5E7EB] px-4 text-[13px] font-semibold text-[#0e2a4a] transition hover:bg-[#DDE0E4]"
                   >
                     Close
                   </button>
@@ -2823,7 +2832,7 @@ setSavedInvoice(savedInvoiceData);
                     disabled={
                       isDownloading
                     }
-                    className="flex h-12 items-center justify-center gap-2 rounded-xl bg-black px-4 text-[13px] font-semibold text-white transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:bg-slate-400"
+                    className="flex h-12 items-center justify-center gap-2 rounded-xl bg-[#2568e0] px-4 text-[13px] font-semibold text-white transition hover:bg-[#061434] disabled:cursor-not-allowed disabled:bg-slate-400"
                   >
 
                     {isDownloading ? (
@@ -2849,7 +2858,7 @@ setSavedInvoice(savedInvoiceData);
                       true
                     )
                   }
-                  className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-[12px] font-semibold text-slate-800 transition hover:bg-slate-50"
+                  className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#dbe6f5] bg-white text-[12px] font-semibold text-[#0e2a4a] transition hover:bg-[#f4f8fd]"
                 >
                   <Receipt className="h-4 w-4" />
 

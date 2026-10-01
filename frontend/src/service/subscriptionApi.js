@@ -94,6 +94,36 @@ export const getMySubscription = async () => {
 
 
 // ==========================================
+// UPGRADE HOTEL SUBSCRIPTION (IMMEDIATE)
+// ==========================================
+//
+// Immediately activates upgraded plan for logged-in hotel
+// without needing admin approval.
+//
+// ==========================================
+export const upgradeHotelSubscription = async ({ planId, billingCycle }) => {
+  try {
+    const response = await api.post(
+      "/subscriptions/upgrade",
+      {
+        planId,
+        billingCycle,
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw (
+      error.response?.data || {
+        success: false,
+        message: error.message,
+      }
+    );
+  }
+};
+
+
+// ==========================================
 // GET HOTEL SUBSCRIPTION
 // ==========================================
 //
@@ -146,10 +176,13 @@ export const updateSubscription = async (
 // ==========================================
 // CANCEL SUBSCRIPTION
 // ==========================================
-export const cancelSubscription = async (id) => {
+export const cancelSubscription = async (id, reason = "") => {
   try {
     const response = await api.delete(
-      `/subscriptions/cancel-subscription/${id}`
+      `/subscriptions/cancel-subscription/${id}`,
+      {
+        data: { reason },
+      }
     );
 
     return response.data;

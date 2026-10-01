@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from "react";
-import SaaSSetupProgress from "./SaaSSetupProgress";
-
 import {
   Check,
+  CheckCircle2,
   ArrowRight,
   Building2,
   Loader2,
   AlertCircle,
   RefreshCw,
-  Sparkles,
 } from "lucide-react";
 
-import { useNavigate } from "react-router-dom";
-
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../../Context/AuthContext";
 import { getPublicActivePlans } from "../../service/planApi";
+import { getMySubscription } from "../../service/subscriptionApi";
+import { getPublicHotelInfo } from "../../service/hotelApi";
+import SaaSSetupProgress from "./SaaSSetupProgress";
+
 
 // ============================================================
 // HELPERS
@@ -56,21 +58,19 @@ const getPlanPrice = (plan, cycle) => {
 
 const SaaSUserChoosePlan = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, userData } = useAuth();
 
   // ==========================================================
   // STATE
   // ==========================================================
 
   const [plans, setPlans] = useState([]);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState("");
-
   const [selectedPlan, setSelectedPlan] = useState(null);
-
-  const [billingCycle, setBillingCycle] =
-    useState("monthly");
+  const [billingCycle, setBillingCycle] = useState("monthly");
+  const [currentSubscription, setCurrentSubscription] = useState(null);
+  const [isExistingHotel, setIsExistingHotel] = useState(false);
 
   // ==========================================================
   // FETCH PLANS
@@ -81,50 +81,29 @@ const SaaSUserChoosePlan = () => {
       setLoading(true);
       setError("");
 
-      const response =
-        await getPublicActivePlans();
+      const response = await getPublicActivePlans();
 
       if (!response?.success) {
-        throw new Error(
-          response?.message ||
-            "Unable to load subscription plans."
-        );
+        throw new Error(response?.message || "Unable to load subscription plans.");
       }
 
-      const fetchedPlans =
-        Array.isArray(response?.data)
-          ? response.data
-          : Array.isArray(
-              response?.data?.plans
-            )
-          ? response.data.plans
-          : Array.isArray(
-              response?.plans
-            )
-          ? response.plans
-          : [];
+      const fetchedPlans = Array.isArray(response?.data)
+        ? response.data
+        : Array.isArray(response?.data?.plans)
+        ? response.data.plans
+        : Array.isArray(response?.plans)
+        ? response.plans
+        : [];
 
       setPlans(fetchedPlans);
 
-      if (
-        fetchedPlans.length > 0 &&
-        !selectedPlan
-      ) {
-        setSelectedPlan(
-          fetchedPlans[0]
-        );
+      if (fetchedPlans.length > 0 && !selectedPlan) {
+        setSelectedPlan(fetchedPlans[0]);
       }
     } catch (err) {
-      console.error(
-        "Get public plans error:",
-        err
-      );
+      console.error("Get public plans error:", err);
 
-      setError(
-        err?.message ||
-          err?.data?.message ||
-          "Unable to load subscription plans."
-      );
+      setError(err?.message || err?.data?.message || "Unable to load subscription plans.");
     } finally {
       setLoading(false);
     }
@@ -138,630 +117,668 @@ const SaaSUserChoosePlan = () => {
     fetchPlans();
   }, []);
 
+  const [searchParams] = useSearchParams();
+  const urlHotelId = searchParams.get("hotelId");
+
+  // Check if current user is an existing hotel owner upgrading plan (or arrived from email with hotelId)
+  useEffect(() => {
+    const checkExistingSubscription = async () => {
+      try {
+        const response = await getMySubscription();
+        if (response?.success && response?.data) {
+          setCurrentSubscription(response.data);
+          setIsExistingHotel(true);
+          return;
+        }
+      } catch (err) {
+        // Not logged in or no subscription yet
+      }
+
+      if (isAuthenticated && userData?.hotelId) {
+        setIsExistingHotel(true);
+        return;
+      }
+
+      // If user came via email button with ?hotelId=...
+      if (urlHotelId) {
+        try {
+          const hotelRes = await getPublicHotelInfo(urlHotelId);
+          if (hotelRes?.success && hotelRes?.data) {
+            setIsExistingHotel(true);
+            setCurrentSubscription({
+              hotelId: hotelRes.data,
+            });
+            sessionStorage.setItem("saasIsUpgrade", "true");
+            sessionStorage.setItem("saasHotelDetails", JSON.stringify(hotelRes.data));
+          }
+        } catch (hErr) {
+          console.error("Could not fetch hotel info for ID:", urlHotelId, hErr);
+        }
+      }
+    };
+
+    checkExistingSubscription();
+  }, [isAuthenticated, userData, urlHotelId]);
+
   // ==========================================================
   // CONTINUE
   // ==========================================================
 
   const handleContinue = () => {
     if (!selectedPlan?._id) {
-      setError(
-        "Please select a plan to continue."
-      );
+      setError("Please select a plan to continue.");
       return;
     }
 
-    sessionStorage.setItem(
-      "saasSelectedPlan",
-      JSON.stringify(selectedPlan)
-    );
+    sessionStorage.setItem("saasSelectedPlan", JSON.stringify(selectedPlan));
+    sessionStorage.setItem("saasBillingCycle", billingCycle);
 
-    sessionStorage.setItem(
-      "saasBillingCycle",
-      billingCycle
-    );
+    // If existing hotel owner upgrading: BYPASS REGISTRATION DIRECTLY TO CHECKOUT!
+    if (isExistingHotel || (isAuthenticated && userData?.hotelId)) {
+      sessionStorage.setItem("saasIsUpgrade", "true");
 
-    navigate(
-      "/saas-user/registration",
-      {
+      let hotelInfo = currentSubscription?.hotelId;
+      if (!hotelInfo || !hotelInfo.hotelName) {
+        try {
+          const cached = sessionStorage.getItem("saasHotelDetails");
+          if (cached) hotelInfo = JSON.parse(cached);
+        } catch (_) {}
+      }
+
+      if (!hotelInfo || !hotelInfo.hotelName) {
+        hotelInfo = {
+          hotelName: userData?.hotelName || "Your Hotel",
+          ownerName: userData?.name || "Hotel Owner",
+          email: userData?.email || "",
+          phone: userData?.phone || "",
+        };
+      }
+
+      sessionStorage.setItem("saasHotelDetails", JSON.stringify(hotelInfo));
+
+      navigate("/saas-user/checkout", {
         state: {
           selectedPlan: selectedPlan,
           billingCycle: billingCycle,
+          isUpgrade: true,
+          hotelDetails: hotelInfo,
+          currentSubscription: currentSubscription,
         },
-      }
-    );
+      });
+      return;
+    }
+
+    // New customer registration flow
+    sessionStorage.removeItem("saasIsUpgrade");
+    sessionStorage.removeItem("saasHotelDetails");
+
+    navigate("/saas-user/registration", {
+      state: {
+        selectedPlan: selectedPlan,
+        billingCycle: billingCycle,
+      },
+    });
   };
 
   // ==========================================================
   // LOADING
   // ==========================================================
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#F8F7FF] flex items-center justify-center px-4">
-        <div className="flex flex-col items-center">
-          <Loader2
-            size={34}
-            className="text-[#4338CA] animate-spin"
-          />
+ if (loading) {
+  return (
+    <div
+      className="relative flex min-h-screen items-center justify-center overflow-hidden px-4"
+      style={{
+        backgroundImage: `url("https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=2200&q=85")`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-[#06182F]/65" />
 
-          <p className="mt-4 text-sm font-medium text-[#59647C]">
-            Loading subscription plans...
-          </p>
-        </div>
+      {/* Loading content */}
+      <div className="relative z-10 flex flex-col items-center rounded-2xl border border-white/20 bg-white/95 px-8 py-7 shadow-2xl backdrop-blur-sm">
+        <Loader2
+          size={34}
+          className="animate-spin text-[#0B2447]"
+        />
+
+        <p className="mt-4 text-sm font-semibold text-[#0B2447]">
+          Loading subscription plans...
+        </p>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   // ==========================================================
   // MAIN
   // ==========================================================
 
   return (
-    <div className="min-h-screen bg-[#F8F7FF] text-[#101936] pb-28">
-
-      {/* =====================================================
-          TOP HEADER
-      ===================================================== */}
-
-      <header className="h-[58px] border-b border-[#E8E5F5] bg-white">
+    <>
+                           <SaaSSetupProgress  />
 
 
-<SaaSSetupProgress activeStep={1} />
-
-        <div className="h-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-
-          {/* LOGO AREA */}
-
-          <div className="flex items-center gap-2.5">
-
-            <div className="w-8 h-8 rounded-lg bg-[#4F46E5] flex items-center justify-center">
-              <Building2
-                size={17}
-                className="text-white"
-              />
-            </div>
-
-            <span className="text-sm sm:text-base font-bold tracking-[-0.02em] text-[#101936]">
-              Hotel Management SaaS
-            </span>
-
-          </div>
-
+<div
+        className="relative min-h-screen overflow-hidden pb-28 font-sans text-[#10233F] antialiased sm:pb-24"
+        style={{
+  backgroundImage: `url("https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=2200&q=85")`,
+  backgroundSize: "cover",
+  backgroundPosition: "center",
+  backgroundAttachment: "fixed",
+}}
+      >
+        <div className="absolute inset-0 bg-[#071B33]/58" />
+        <main className="relative z-10 mx-auto w-full max-w-[1250px] px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
        
 
-        </div>
+       
+        {/* HEADER */}
+        <section className="text-center">
+          <h1 className="text-[26px] font-bold leading-tight tracking-[-0.02em] text-white sm:text-[32px] lg:text-[34px]">
+            {isExistingHotel ? "Upgrade Your Subscription Plan" : "Select your Plan"}
+          </h1>
 
-      </header>
+          <p className="mx-auto mt-2 max-w-2xl text-[13px] font-normal leading-5 text-white/85 sm:text-[14px]">
+            {isExistingHotel
+              ? "Select a higher plan to immediately expand your hotel room capacity and staff."
+              : "Select the subscription plan that best fits your hotel's needs."}
+          </p>
 
-      {/* =====================================================
-          MAIN CONTAINER
-      ===================================================== */}
+          {/* BILLING SWITCH */}
+          {plans.length > 0 && (
+            <div className="mt-5 flex justify-center">
+              <div className="inline-flex max-w-full items-center overflow-x-auto rounded-full border border-white/30 bg-white/95 p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.16)] backdrop-blur-md">
+                <BillingButton
+                  label="Monthly"
+                  active={billingCycle === "monthly"}
+                  onClick={() => setBillingCycle("monthly")}
+                />
+                <BillingButton
+                  label="Quarterly"
+                  active={billingCycle === "quarterly"}
+                  onClick={() => setBillingCycle("quarterly")}
+                />
+                <BillingButton
+                  label="Half Yearly"
+                  active={billingCycle === "halfYearly"}
+                  onClick={() => setBillingCycle("halfYearly")}
+                />
+                <BillingButton
+                  label="Yearly"
+                  sublabel="save 10%"
+                  active={billingCycle === "yearly"}
+                  onClick={() => setBillingCycle("yearly")}
+                />
+              </div>
+            </div>
+          )}
+        </section>
 
-      <main className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-
-        {/* ===================================================
-            HEADER
-        =================================================== */}
-
-      <section className="pt-7 sm:pt-9">
-
-  <div className="flex flex-col items-center gap-5">
-
-    {/* TITLE */}
-
-    <div className="text-center">
-      <h1 className="mt-2 text-[27px] sm:text-[34px] lg:text-[39px] leading-[1.05] font-bold tracking-[-0.045em] text-[#101936]">
-        Choose Your Plan
-      </h1>
-
-      <p className="mt-2 text-xs sm:text-sm leading-5 text-[#59647C]">
-        Select the subscription plan that best fits your hotel's needs.
-      </p>
-    </div>
-
-    {/* BILLING SWITCH */}
-
-    {plans.length > 0 && (
-      <div className="flex justify-center">
-
-        <div className="inline-flex items-center gap-0.5 rounded-xl bg-[#E9E7FF] p-1">
-
-          <BillingButton
-            label="Monthly"
-            active={billingCycle === "monthly"}
-            onClick={() =>
-              setBillingCycle("monthly")
-            }
-          />
-
-          <BillingButton
-            label="Quarterly"
-            active={billingCycle === "quarterly"}
-            onClick={() =>
-              setBillingCycle("quarterly")
-            }
-          />
-
-          <BillingButton
-            label="Half Yearly"
-            active={billingCycle === "halfYearly"}
-            onClick={() =>
-              setBillingCycle("halfYearly")
-            }
-          />
-
-          <BillingButton
-            label="Yearly"
-            active={billingCycle === "yearly"}
-            onClick={() =>
-              setBillingCycle("yearly")
-            }
-          />
-
-        </div>
-
-      </div>
-    )}
-
-  </div>
-
-</section>
-
-        {/* ===================================================
-            ERROR
-        =================================================== */}
-
+        {/* ERROR */}
         {error && (
-          <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-3">
+          <div className="mx-auto mt-7 flex max-w-3xl items-start gap-3 rounded-xl border border-red-200 bg-white px-4 py-3 shadow-xl">
+            <AlertCircle size={18} className="mt-0.5 shrink-0 text-red-600" />
 
-            <AlertCircle
-              size={18}
-              className="text-red-600 shrink-0 mt-0.5"
-            />
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-bold text-[#991B1B] sm:text-sm">Unable to load plans</p>
 
-            <div className="flex-1 min-w-0">
-
-              <p className="text-xs sm:text-sm font-bold text-red-800">
-                Unable to load plans
-              </p>
-
-              <p className="mt-1 text-xs sm:text-sm text-red-700">
-                {error}
-              </p>
-
+              <p className="mt-1 text-[12px] font-medium text-[#B91C1C] sm:text-[13px]">{error}</p>
             </div>
 
             <button
               type="button"
               onClick={fetchPlans}
-              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-red-700 hover:text-red-900"
+              className="inline-flex shrink-0 items-center gap-1.5 text-[12px] font-bold text-[#991B1B] transition-colors hover:text-[#111111] sm:text-[13px]"
             >
               <RefreshCw size={14} />
               Retry
             </button>
-
           </div>
         )}
 
-        {/* ===================================================
-            NO PLANS
-        =================================================== */}
+        {/* NO PLANS */}
+        {!error && plans.length === 0 && (
+          <div className="mx-auto mt-9 rounded-2xl border border-white/70 bg-white/80 p-10 text-center shadow-sm backdrop-blur-sm sm:p-14">
+            <Building2 size={40} className="mx-auto text-[#66788F]" />
 
-        {!error &&
-          plans.length === 0 && (
-            <div className="mt-8 rounded-2xl border border-[#E8E5F5] bg-white p-10 sm:p-14 text-center">
+            <h2 className="mt-4 text-[19px] font-bold text-[#0B2447]">No Plans Available</h2>
 
-              <Building2
-                size={40}
-                className="mx-auto text-[#69728A]"
-              />
+            <p className="mt-2 text-[13px] font-medium text-[#52637A]">
+              There are currently no active subscription plans.
+            </p>
+          </div>
+        )}
 
-              <h2 className="mt-4 text-lg font-bold text-[#101936]">
-                No Plans Available
-              </h2>
+        {/* PLANS */}
+       {plans.length > 0 && (
+  <section className="mt-8 sm:mt-10">
+    <div className="mx-auto grid w-full max-w-[1120px] grid-cols-1 items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {[...plans]
+        .sort((a, b) => {
+          const priceA = Number(getPlanPrice(a, billingCycle) || 0);
+          const priceB = Number(getPlanPrice(b, billingCycle) || 0);
 
-              <p className="mt-2 text-sm text-[#69728A]">
-                There are currently no active subscription plans.
-              </p>
+          return priceA - priceB;
+        })
+        .map((plan, planIndex) => {
+          const price = getPlanPrice(plan, billingCycle);
 
-            </div>
-          )}
+          const currentSubPlanId =
+            currentSubscription?.planId?._id ||
+            currentSubscription?.planId;
 
-        {/* ===================================================
-            PLANS
-        =================================================== */}
+          const isCurrentPlan =
+            currentSubPlanId &&
+            String(currentSubPlanId) === String(plan._id);
 
-        {plans.length > 0 && (
-        <section className="mt-7 sm:mt-9">
+          const limitValue = (value) =>
+            Number(value || 0) === 0 ? "Unlimited" : value;
 
-  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          /*
+           * CLICK CARD
+           * Select the plan and directly continue.
+           */
+          const handlePlanClick = () => {
+            setSelectedPlan(plan);
+            handleContinue(plan);
+          };
 
-    {[...plans]
-      .sort((a, b) => {
-        const priceA = Number(
-          getPlanPrice(a, billingCycle) || 0
-        );
+          return (
+            <div
+              key={plan._id}
+              className="flex min-w-0"
+              style={{
+                animation: `fadeUp 0.45s ease-out ${
+                  planIndex * 0.08
+                }s both`,
+              }}
+            >
+              {/* =====================================================
+                  PLAN CARD
+              ====================================================== */}
+              <div
+                onClick={handlePlanClick}
+                className="
+                  group
+                  relative
+                  flex
+                  min-h-[560px]
+                  w-full
+                  cursor-pointer
+                  flex-col
+                  overflow-hidden
+                  rounded-2xl
+                  border
+                  border-[#E6E8ED]
+                  bg-white
+                  text-[#171717]
+                  shadow-[0_5px_22px_rgba(15,23,42,0.06)]
+                  transition-all
+                  duration-300
+                  ease-out
 
-        const priceB = Number(
-          getPlanPrice(b, billingCycle) || 0
-        );
+                  hover:-translate-y-1
+                  hover:border-[#3B82F6]
+                  hover:bg-[#F4F9FF]
+                  hover:shadow-[0_18px_40px_rgba(37,99,235,0.16)]
 
-        return priceA - priceB;
-      })
-      .map((plan, index) => {
+                  active:translate-y-0
+                  active:scale-[0.99]
+                "
+              >
+                {/* =================================================
+                    TOP BLUE ACCENT
+                ================================================== */}
+                <div
+                  className="
+                    pointer-events-none
+                    absolute
+                    left-0
+                    right-0
+                    top-0
+                    h-[3px]
+                    bg-gradient-to-r
+                    from-[#60A5FA]
+                    via-[#3B82F6]
+                    to-[#2563EB]
+                    opacity-0
+                    transition-opacity
+                    duration-300
+                    group-hover:opacity-100
+                  "
+                />
 
-        const price = getPlanPrice(
-          plan,
-          billingCycle
-        );
+                {/* =================================================
+                    SOFT HOVER GLOW
+                ================================================== */}
+                <div
+                  className="
+                    pointer-events-none
+                    absolute
+                    -right-20
+                    -top-20
+                    h-44
+                    w-44
+                    rounded-full
+                    bg-[#3B82F6]/10
+                    blur-3xl
+                    opacity-0
+                    transition-opacity
+                    duration-300
+                    group-hover:opacity-100
+                  "
+                />
 
-        const isSelected =
-          selectedPlan?._id === plan._id;
-
-        return (
-          <div
-            key={plan._id}
-            onClick={() => setSelectedPlan(plan)}
-            className={`
-              group
-              relative
-              flex
-              flex-col
-              min-h-[455px]
-              bg-white
-              rounded-[18px]
-              border
-              cursor-pointer
-              overflow-hidden
-              transition-all
-              duration-200
-              ${
-                isSelected
-                  ? "border-[#4338CA] border-2"
-                  : "border-[#E1E3EC] hover:border-[#B7B9D9]"
-              }
-            `}
-          >
-
-            {/* =====================================================
-                SELECTED TOP ACCENT
-            ===================================================== */}
-
-            {isSelected && (
-              <div className="absolute top-0 left-0 right-0 h-1 bg-[#4338CA]" />
-            )}
-
-            {/* =====================================================
-                RECOMMENDED BADGE
-            ===================================================== */}
-
-            {index === 1 && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 z-20">
-                <div className="bg-[#4338CA] text-white px-4 py-2 rounded-b-lg text-[8px] font-bold tracking-wide whitespace-nowrap">
-                  ★ RECOMMENDED • MOST POPULAR
-                </div>
-              </div>
-            )}
-
-            {/* =====================================================
-                CARD CONTENT
-            ===================================================== */}
-
-            <div className="flex flex-col flex-1 p-5 sm:p-6">
-
-              {/* ===================================================
-                  HEADER
-              =================================================== */}
-
-              <div className="flex items-start justify-between gap-4">
-
-                <div className="min-w-0">
-
-                  <div className="flex items-center gap-2 flex-wrap">
-
-                    <h2 className="text-[20px] sm:text-[22px] font-bold tracking-[-0.025em] text-[#111827]">
+                {/* =================================================
+                    TOP CONTENT
+                ================================================== */}
+                <div className="relative z-10 p-5 sm:p-6">
+                  <div className="flex min-h-[28px] items-start justify-between gap-3">
+                    <h2
+                      className="
+                        truncate
+                        text-[18px]
+                        font-bold
+                        leading-6
+                        tracking-[-0.02em]
+                        text-[#171717]
+                        transition-colors
+                        duration-300
+                        group-hover:text-[#1769D2]
+                        sm:text-[19px]
+                      "
+                    >
                       {plan.planName}
                     </h2>
 
-                    {isSelected && (
-                      <span className="inline-flex items-center rounded-full bg-[#EDE9FE] px-2 py-0.5 text-[9px] font-bold text-[#4338CA]">
-                        Selected
+                    {isCurrentPlan && (
+                      <span
+                        className="
+                          inline-flex
+                          shrink-0
+                          items-center
+                          gap-1.5
+                          rounded-full
+                          border
+                          border-[#D9E8FF]
+                          bg-[#EEF6FF]
+                          px-2.5
+                          py-1
+                          text-[9px]
+                          font-bold
+                          whitespace-nowrap
+                          text-[#1769D2]
+                        "
+                      >
+                        <CheckCircle2 size={10} />
+                        Current Plan
                       </span>
                     )}
-
                   </div>
 
-                  {plan.description && (
-                    <p className="mt-1 text-sm font-medium leading-5 text-[#64748B]">
-                      {plan.description}
-                    </p>
-                  )}
+                  {/* DESCRIPTION */}
+                  <p
+                    className="
+                      mt-2
+                      min-h-[40px]
+                      text-[11px]
+                      font-medium
+                      leading-5
+                      text-[#667085]
+                      transition-colors
+                      duration-300
+                      group-hover:text-[#52677D]
+                      sm:text-[12px]
+                    "
+                  >
+                    {plan.description ||
+                      "Get advanced features and flexibility. Perfect for frequent, professional use."}
+                  </p>
 
+                  {/* =================================================
+                      PRICE
+                  ================================================== */}
+                  <div className="mt-6 flex items-end gap-1.5">
+                    <span
+                      className="
+                        text-[31px]
+                        font-extrabold
+                        leading-none
+                        tracking-[-0.045em]
+                        text-[#171717]
+                        transition-colors
+                        duration-300
+                        group-hover:text-[#1769D2]
+                        sm:text-[34px]
+                      "
+                    >
+                      {formatCurrency(price)}
+                    </span>
+
+                    <span
+                      className="
+                        mb-0.5
+                        text-[10px]
+                        font-semibold
+                        text-[#7B8492]
+                        sm:text-[11px]
+                      "
+                    >
+                      per {getBillingLabel(billingCycle)}
+                    </span>
+                  </div>
                 </div>
 
-                {/* PLAN ICON */}
-
+                {/* =================================================
+                    DIVIDER
+                ================================================== */}
                 <div
-                  className={`
-                    flex
-                    h-10
-                    w-10
-                    shrink-0
-                    items-center
-                    justify-center
-                    rounded-xl
-                    ${
-                      isSelected
-                        ? "bg-[#4338CA] text-white"
-                        : "bg-[#EEF0FF] text-[#4338CA]"
-                    }
-                  `}
-                >
-                  {isSelected ? (
-                    <Check
-                      size={19}
-                      strokeWidth={2.7}
-                    />
-                  ) : (
-                    <Building2
-                      size={19}
-                      strokeWidth={2}
-                    />
-                  )}
-                </div>
-
-              </div>
-
-              {/* ===================================================
-                  PRICE
-              =================================================== */}
-
-              <div className="mt-7">
-
-                <div className="flex items-end">
-
-                  <span className="text-[34px] sm:text-[38px] font-extrabold leading-none tracking-[-0.055em] text-[#0F172A]">
-                    {formatCurrency(price)}
-                  </span>
-
-                  <span className="mb-1.5 ml-1.5 text-sm font-medium text-[#64748B]">
-                    / {getBillingLabel(billingCycle)}
-                  </span>
-
-                </div>
-
-                <div className="mt-2 flex items-center gap-1.5">
-
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#059669]" />
-
-                  <span className="text-[10px] font-semibold text-[#047857]">
-                    Billed as per chosen frequency
-                  </span>
-
-                </div>
-
-              </div>
-
-              {/* ===================================================
-                  TRIAL
-              =================================================== */}
-
-              {Number(plan.trialDays || 0) > 0 && (
-                <div className="mt-3 self-start">
-
-                  <span className="inline-flex items-center rounded-lg bg-[#ECFDF5] px-2.5 py-1 text-[10px] font-bold text-[#047857]">
-                    {plan.trialDays} days free trial
-                  </span>
-
-                </div>
-              )}
-
-              {/* ===================================================
-                  DIVIDER
-              =================================================== */}
-
-              <div className="my-6 h-px bg-[#E8EAF1]" />
-
-              {/* ===================================================
-                  LIMITS
-              =================================================== */}
-
-              <div className="rounded-xl border border-[#E2E4F1] bg-[#F6F6FF] px-3 py-4">
-
-                <div className="grid grid-cols-3 divide-x divide-[#DCDFF0]">
-
-                  <PlanLimit
-                    label="Rooms"
-                    value={
-                      plan?.limits?.rooms
-                    }
-                  />
-
-                  <PlanLimit
-                    label="Branches"
-                    value={
-                      plan?.limits?.branches
-                    }
-                  />
-
-                  <PlanLimit
-                    label="Receptionists"
-                    value={
-                      plan?.limits?.receptionists
-                    }
-                  />
-
-                </div>
-
-              </div>
-
-              {/* ===================================================
-                  FEATURES
-              =================================================== */}
-
-              <div className="mt-6">
-
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#475569]">
-                  Included Capabilities
-                </p>
-
-                <div className="mt-3 space-y-3">
-
-                  {/* EXISTING TEXT — NOT CHANGED */}
-
-                  <Feature
-                    label="Food Service"
-                    enabled={
-                      plan?.features
-                        ?.foodService
-                    }
-                  />
-
-                  {/* EXISTING TEXT — NOT CHANGED */}
-
-                  <Feature
-                    label="Room Service"
-                    enabled={
-                      plan?.features
-                        ?.roomService
-                    }
-                  />
-
-                </div>
-
-              </div>
-
-              {/* ===================================================
-                  BUTTON
-              =================================================== */}
-
-              <div className="mt-auto pt-7">
-
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-
-                    setSelectedPlan(plan);
-                  }}
-                  className={`
-                    w-full
-                    cursor-pointer
-                    h-11
-                    rounded-xl
-                    text-sm
-                    font-bold
-                    flex
-                    items-center
-                    justify-center
-                    gap-2
+                  className="
+                    relative
+                    z-10
+                    h-px
+                    bg-[#ECEEF2]
                     transition-colors
-                    ${
-                      isSelected
-                        ? "bg-[#4338CA] text-white hover:bg-[#3730A3]"
-                        : "bg-[#E4E8FF] text-[#172033] hover:bg-[#D9DEFF]"
-                    }
-                  `}
+                    duration-300
+                    group-hover:bg-[#D7E7FA]
+                  "
+                />
+
+                {/* =================================================
+                    FEATURES
+                ================================================== */}
+                <div
+                  className="
+                    relative
+                    z-10
+                    flex
+                    flex-1
+                    flex-col
+                    px-5
+                    py-5
+                    sm:px-6
+                    sm:py-6
+                  "
                 >
+                  <p
+                    className="
+                      mb-4
+                      text-[11px]
+                      font-bold
+                      uppercase
+                      tracking-[0.04em]
+                      text-[#344054]
+                    "
+                  >
+                    Included with this plan
+                  </p>
 
-                  {isSelected && (
-                    <Check
-                      size={15}
-                      strokeWidth={3}
+                  <div className="space-y-2.5">
+                    {/* ROOMS */}
+                    <PlanFeatureRow
+                      label={`Up to ${limitValue(
+                        plan?.limits?.rooms
+                      )} rooms`}
+                      selected={false}
                     />
-                  )}
 
-                  {isSelected
-                    ? "Selected"
-                    : "Select Plan"}
+                    {/* BRANCHES */}
+                    <PlanFeatureRow
+                      label={`Up to ${limitValue(
+                        plan?.limits?.branches
+                      )} branches`}
+                      selected={false}
+                    />
 
-                </button>
+                    {/* RECEPTIONISTS */}
+                    <PlanFeatureRow
+                      label={`Up to ${limitValue(
+                        plan?.limits?.receptionists
+                      )} receptionists`}
+                      selected={false}
+                    />
 
+                    {/* FOOD SERVICE */}
+                    <PlanFeatureRow
+                      label="Food Service"
+                      enabled={plan?.features?.foodService}
+                      selected={false}
+                    />
+
+                    {/* ROOM SERVICE */}
+                    <PlanFeatureRow
+                      label="Room Service"
+                      enabled={plan?.features?.roomService}
+                      selected={false}
+                    />
+
+                    {/* FREE TRIAL */}
+                    {Number(plan.trialDays || 0) > 0 && (
+                      <PlanFeatureRow
+                        label={`${plan.trialDays} days free trial`}
+                        selected={false}
+                      />
+                    )}
+                  </div>
+
+                  {/* =================================================
+                      CTA
+                  ================================================== */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+
+                      setSelectedPlan(plan);
+                      handleContinue(plan);
+                    }}
+                    className="
+                      mt-auto
+                      flex
+                      h-11
+                      w-full
+                      items-center
+                      justify-center
+                      gap-2
+                      rounded-xl
+                      border
+                      border-[#D7DCE5]
+                      bg-white
+                      px-4
+                      text-[11px]
+                      font-bold
+                      text-[#17324D]
+                      shadow-[0_3px_10px_rgba(15,23,42,0.05)]
+                      transition-all
+                      duration-200
+
+                      group-hover:border-[#3B82F6]
+                      group-hover:bg-[#1769D2]
+                      group-hover:text-white
+                      group-hover:shadow-[0_8px_20px_rgba(37,99,235,0.18)]
+
+                      active:scale-[0.98]
+
+                      sm:text-[12px]
+                    "
+                  >
+                    {isCurrentPlan
+                      ? "Current Plan"
+                      : price === 0
+                      ? "Get Started for Free"
+                      : "Select Plan"}
+
+                    {!isCurrentPlan && (
+                      <ArrowRight
+                        size={14}
+                        className="
+                          transition-transform
+                          duration-200
+                          group-hover:translate-x-0.5
+                        "
+                      />
+                    )}
+                  </button>
+                </div>
               </div>
-
             </div>
-
-          </div>
-        );
-      })}
-
-  </div>
-
-</section>
-        )}
+          );
+        })}
+    </div>
+  </section>
+)}
 
       </main>
+    </div>
+    </>
+  );
+};
 
-      {/* =====================================================
-          BOTTOM SELECTED PLAN BAR
-      ===================================================== */}
+// ============================================================
+// PLAN FEATURE ROW
+// ============================================================
 
-      {selectedPlan && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#E5E1F3] bg-white/95 backdrop-blur-md shadow-[0_-5px_20px_rgba(39,35,91,0.08)]">
+const PlanFeatureRow = ({ label, enabled = true, selected = false }) => {
+  return (
+    <div className="flex items-start gap-2.5">
+      <span
+        className={`
+          mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full
+          ${selected ? "text-white" : "text-[#7C3AED]"}
+        `}
+      >
+        {enabled ? (
+          <Check size={12} strokeWidth={3} />
+        ) : (
+          <span
+            className={`text-[11px] font-bold ${
+              selected ? "text-white/45" : "text-[#B6BAC3]"
+            }`}
+          >
+            —
+          </span>
+        )}
+      </span>
 
-          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3">
-
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-
-              {/* SELECTED PLAN */}
-
-              <div className="flex items-center gap-2.5 min-w-0">
-
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#4338CA] flex items-center justify-center shrink-0">
-
-                  <Check
-                    size={16}
-                    className="text-white"
-                  />
-
-                </div>
-
-                <div className="min-w-0">
-
-                  <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.08em] text-[#69728A]">
-                    Selected
-                  </p>
-
-                  <p className="text-xs sm:text-sm font-bold text-[#101936] truncate">
-                    {selectedPlan.planName}
-                    {" • "}
-                    {formatCurrency(
-                      getPlanPrice(
-                        selectedPlan,
-                        billingCycle
-                      )
-                    )}
-                    /
-                    {getBillingLabel(
-                      billingCycle
-                    )}
-                  </p>
-
-                </div>
-
-              </div>
-
-              {/* CONTINUE */}
-
-              <button
-                type="button"
-                onClick={
-                  handleContinue
-                }
-                className="w-full cursor-pointer sm:w-auto min-w-[220px] px-5 py-2.5 rounded-lg bg-[#4338CA] hover:bg-[#3730A3] text-white text-xs sm:text-sm font-bold transition shadow-[0_4px_12px_rgba(67,56,202,0.22)] flex items-center justify-center gap-2"
-              >
-                Continue
-                <ArrowRight
-                  size={16}
-                />
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-      )}
+      <span
+        className={`
+          text-[12px] font-normal leading-5 sm:text-[13px]
+          ${
+            selected
+              ? enabled
+                ? "text-white"
+                : "text-white/45"
+              : enabled
+              ? "text-[#272B32]"
+              : "text-[#A3A7AF]"
+          }
+        `}
+      >
+        {label}
+      </span>
     </div>
   );
 };
@@ -770,109 +787,34 @@ const SaaSUserChoosePlan = () => {
 // BILLING BUTTON
 // ============================================================
 
-const BillingButton = ({
-  label,
-  active,
-  onClick,
-}) => {
+const BillingButton = ({ label, sublabel, active, onClick }) => {
   return (
     <button
       type="button"
       onClick={onClick}
       className={`
-        px-3 sm:px-4
-        py-2
-        rounded-lg
-        text-[10px] sm:text-xs
-        font-semibold
-        transition-all
-        whitespace-nowrap
+        shrink-0 cursor-pointer rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200
+        sm:px-5 sm:py-2.5 sm:text-sm
         ${
           active
-            ? "bg-white text-[#4338CA] shadow-[0_2px_6px_rgba(67,56,202,0.10)]"
-            : "text-[#59647C] hover:text-[#29334D] hover:bg-white/60"
+            ? "bg-gradient-to-r from-[#0B2447] to-[#12345F] text-white shadow-[0_4px_12px_rgba(11,36,71,0.30)]"
+            : "text-[#52637A] hover:text-[#0B2447]"
         }
       `}
     >
       {label}
+      {sublabel && (
+        <span className={`ml-1 font-medium ${active ? "text-white/85" : "text-[#0B5CAD]"}`}>
+          ({sublabel})
+        </span>
+      )}
     </button>
   );
 };
+    
+    
 
-// ============================================================
-// PLAN LIMIT
-// ============================================================
 
-const PlanLimit = ({
-  label,
-  value,
-}) => {
-  const unlimited =
-    Number(value || 0) === 0;
-
-  return (
-    <div className="text-center min-w-0">
-
-      <p className="text-sm sm:text-base font-bold text-[#4338CA] truncate">
-        {unlimited
-          ? "Unlimited"
-          : value}
-      </p>
-
-      <p className="mt-0.5 text-[9px] sm:text-[10px] text-[#59647C] truncate">
-        {label}
-      </p>
-
-    </div>
-  );
-};
-
-// ============================================================
-// FEATURE
-// ============================================================
-
-const Feature = ({
-  label,
-  enabled,
-}) => {
-  return (
-    <div className="flex items-center gap-2">
-
-      <div
-        className={`
-          w-[17px]
-          h-[17px]
-          rounded-full
-          flex
-          items-center
-          justify-center
-          shrink-0
-          ${
-            enabled
-              ? "bg-[#E1FAF0] text-[#087A58]"
-              : "bg-[#F1F1F4] text-[#A3A7B4]"
-          }
-        `}
-      >
-        <Check size={11} />
-      </div>
-
-      <span
-        className={`
-          text-[11px] sm:text-xs
-          leading-5
-          ${
-            enabled
-              ? "text-[#29334D]"
-              : "text-[#A3A7B4] line-through"
-          }
-        `}
-      >
-        {label}
-      </span>
-
-    </div>
-  );
-};
+    
 
 export default SaaSUserChoosePlan;

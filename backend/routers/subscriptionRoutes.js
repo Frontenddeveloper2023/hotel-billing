@@ -6,6 +6,7 @@ import {
     getSubscriptionById,
     getHotelSubscription,
     getMySubscription,
+    upgradeHotelSubscription,
     updateSubscription,
     cancelSubscription,
 } from "../controllers/subscriptionController.js";
@@ -19,22 +20,25 @@ const router = express.Router();
 
 
 // ============================================================
-// MY CURRENT HOTEL SUBSCRIPTION
+// MY CURRENT HOTEL SUBSCRIPTION & UPGRADE
 // ============================================================
 //
-// This route is for logged-in hotel users.
-//
-// IMPORTANT:
+// These routes are for logged-in hotel users.
 // hotelId comes from req.user.hotelId in the controller.
-// Frontend does NOT send hotelId.
 //
 // ============================================================
 
 router.get(
     "/my-subscription",
     authVerify,
-    permissionVerify("users"),
     getMySubscription
+);
+
+// Immediately upgrade hotel's plan without requiring admin approval
+router.post(
+    "/upgrade",
+    authVerify,
+    upgradeHotelSubscription
 );
 
 

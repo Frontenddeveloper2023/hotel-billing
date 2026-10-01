@@ -458,24 +458,23 @@ export default function CurrentStays({ onCheckout }) {
   };
 
   return (
-    <div className="max-w-7xl pt-5 bg-white space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="max-w-7xl  space-y-3 font-['Inter']">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+       
+          <h1 className="mt-2 text-[clamp(1.4rem,1rem+1.4vw,2rem)] font-extrabold tracking-[-0.03em] text-white">
             Current Stays
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Manage active guests, rooms, food and room services.
-          </p>
+        
         </div>
 
-        <div className="relative w-full md:w-80">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <div className="relative w-full md:w-72">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9aabc0]" />
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search name, room no, phone..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-600 shadow-sm"
+            placeholder="Search name, room, phone..."
+            className="w-full pl-10 pr-4 py-2.5 bg-[#f6f9fe] border border-[#dbe6f5] rounded-xl text-sm text-[#0e2a4a] placeholder:text-[#9aabc0] focus:outline-none focus:bg-white focus:border-[#3b82f0] focus:ring-2 focus:ring-[#3b82f0]/20 transition"
           />
         </div>
       </div>
@@ -493,24 +492,7 @@ export default function CurrentStays({ onCheckout }) {
 
 <div className="space-y-5">
 
-  {/* SECTION HEADER */}
-  <div className="flex items-center justify-between">
-    <div>
-      <h2 className="text-lg font-bold text-slate-900">
-        Active Guests
-      </h2>
-
-      <p className="text-xs text-slate-500 mt-1">
-        {filteredGroups.length} active guest
-        {filteredGroups.length !== 1 ? "s" : ""}
-      </p>
-    </div>
-
-    <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500">
-      <span className="w-2 h-2 rounded-full bg-emerald-500" />
-      Currently Staying
-    </div>
-  </div>
+  
 
 
   {/* ==========================================
@@ -518,15 +500,18 @@ export default function CurrentStays({ onCheckout }) {
   ========================================== */}
 
   {loading ? (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
+    <div className="bg-white border border-[#dbe6f5] rounded-2xl shadow-[0_2px_8px_rgba(6,20,52,0.08)] p-12 text-center">
 
-      <div className="w-8 h-8 mx-auto border-[3px] border-slate-200 border-t-teal-600 rounded-full animate-spin" />
+      <div className="relative mx-auto w-10 h-10">
+        <div className="h-10 w-10 rounded-full border-[3px] border-[#dbe6f5]" />
+        <div className="absolute inset-0 h-10 w-10 rounded-full border-[3px] border-transparent border-t-[#2568e0] animate-spin" />
+      </div>
 
-      <p className="mt-4 text-sm font-semibold text-slate-600">
+      <p className="mt-4 text-sm font-semibold text-[#6b7f99]">
         Loading current stays...
       </p>
 
-      <p className="mt-1 text-xs text-slate-400">
+      <p className="mt-1 text-xs text-[#9aabc0]">
         Please wait while we fetch active guests.
       </p>
 
@@ -537,17 +522,17 @@ export default function CurrentStays({ onCheckout }) {
         EMPTY STATE
     ========================================== */
 
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-12 text-center">
+    <div className="bg-white border border-[#dbe6f5] rounded-2xl shadow-[0_2px_8px_rgba(6,20,52,0.08)] p-12 text-center">
 
-      <div className="w-14 h-14 mx-auto rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center">
-        <BedDouble className="w-7 h-7 text-slate-400" />
+      <div className="w-14 h-14 mx-auto rounded-2xl bg-[#f4f8fd] border border-[#dbe6f5] flex items-center justify-center">
+        <BedDouble className="w-7 h-7 text-[#9aabc0]" />
       </div>
 
-      <h3 className="mt-4 text-sm font-bold text-slate-800">
+      <h3 className="mt-4 text-sm font-bold text-[#0e2a4a]">
         No active stays
       </h3>
 
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-[#6b7f99]">
         There are currently no guests staying at the hotel.
       </p>
 
@@ -565,31 +550,15 @@ export default function CurrentStays({ onCheckout }) {
 
         <div
           key={String(group.customerId)}
-          className="
-            bg-white
-            border border-slate-200
-            rounded-2xl
-            shadow-sm
-            overflow-hidden
-            transition
-            hover:shadow-md
-          "
+          className="bg-white border border-[#dbe6f5] rounded-3xl shadow-[0_18px_45px_rgba(6,20,52,0.16)] overflow-hidden transition-all duration-300 hover:shadow-[0_24px_55px_rgba(6,20,52,0.22)] hover:-translate-y-1 group"
         >
 
           {/* ==================================
               CUSTOMER HEADER
           ================================== */}
 
-          <div className="
-            px-5 sm:px-6
-            py-4
-            bg-gradient-to-r from-slate-50 to-white
-            border-b border-slate-200
-            flex flex-col sm:flex-row
-            sm:items-center
-            sm:justify-between
-            gap-4
-          ">
+          <div className="relative px-5 sm:px-6 py-4 bg-gradient-to-r from-[#f4f8fd] to-white border-b border-[#e7eff8] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300" />
 
             <div className="flex items-center gap-3">
 
@@ -604,7 +573,7 @@ export default function CurrentStays({ onCheckout }) {
 
                 <div className="flex flex-wrap items-center gap-2">
 
-                  <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                  <h3 className="text-sm sm:text-base font-bold text-[#0e2a4a]">
                     {group.customer?.customerName || "-"}
                   </h3>
 
@@ -631,11 +600,11 @@ export default function CurrentStays({ onCheckout }) {
 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
 
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-[#6b7f99]">
                     {group.customer?.phoneNumber || "No phone number"}
                   </span>
 
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-[#9aabc0]">
                     {group.rooms.length} room
                     {group.rooms.length !== 1 ? "s" : ""}
                   </span>
@@ -653,26 +622,25 @@ export default function CurrentStays({ onCheckout }) {
               type="button"
               onClick={() => openCheckout(group)}
               className="
+                group/co
                 w-full sm:w-auto
-                inline-flex
-                items-center
-                justify-center
-                gap-2
-                px-5
-                py-2.5
+                relative overflow-hidden
+                inline-flex items-center justify-center gap-2
+                px-5 py-2.5
                 rounded-xl
-                bg-orange-500
-                hover:bg-orange-600
-                active:bg-orange-700
-                text-white
-                text-xs
-                font-bold
+                bg-gradient-to-r from-orange-500 via-orange-500 to-amber-400
+                hover:from-orange-600 hover:via-orange-500 hover:to-amber-500
+                active:scale-[0.97]
+                text-white text-xs font-bold
                 cursor-pointer
-                shadow-sm
-                transition
+                shadow-[0_4px_14px_rgba(249,115,22,0.4)]
+                hover:shadow-[0_6px_20px_rgba(249,115,22,0.55)]
+                transition-all duration-200
               "
             >
-              <LogOut className="w-4 h-4" />
+              {/* shimmer sweep on hover */}
+              <span className="absolute inset-0 translate-x-[-100%] group-hover/co:translate-x-[100%] transition-transform duration-500 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+              <LogOut className="w-4 h-4 transition-transform duration-200 group-hover/co:translate-x-0.5" />
               Checkout Guest
             </button>
 
@@ -690,13 +658,13 @@ export default function CurrentStays({ onCheckout }) {
             gap-4
             px-5
             py-3
-            bg-slate-50/70
-            border-b border-slate-100
+            bg-[#f4f8fd]/70
+            border-b border-[#e7eff8]
             text-[10px]
             font-bold
             uppercase
             tracking-wider
-            text-slate-400
+            text-[#9aabc0]
           ">
 
             <div>Room</div>
@@ -712,7 +680,7 @@ export default function CurrentStays({ onCheckout }) {
               ROOM ROWS
           ================================== */}
 
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-[#e7eff8]">
 
             {group.rooms.map((room) => {
 
@@ -727,7 +695,7 @@ export default function CurrentStays({ onCheckout }) {
                   className="
                     px-5 sm:px-6
                     py-5
-                    hover:bg-slate-50/60
+                    hover:bg-[#f4f8fd]/60
                     transition
                   "
                 >
@@ -748,17 +716,7 @@ export default function CurrentStays({ onCheckout }) {
 
                     <div>
 
-                      <div className="
-                        inline-flex
-                        items-center
-                        gap-2
-                        px-3
-                        py-2
-                        rounded-xl
-                        bg-teal-500
-                        border
-                        border-teal-100
-                      ">
+                      <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-br from-[#5b9bf5] to-[#2568e0] shadow-md shadow-blue-500/25">
 
                         <BedDouble className="w-4 h-4 text-white" />
 
@@ -775,11 +733,11 @@ export default function CurrentStays({ onCheckout }) {
 
                     <div>
 
-                      <p className="text-sm font-bold text-slate-800">
+                      <p className="text-sm font-bold text-[#0e2a4a]">
                         {room.roomType || "-"}
                       </p>
 
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-[#9aabc0] mt-1">
                         {room.bedType || "-"}
                       </p>
 
@@ -792,15 +750,15 @@ export default function CurrentStays({ onCheckout }) {
 
                       <div className="flex items-start gap-2">
 
-                        <CalendarDays className="w-4 h-4 mt-0.5 text-teal-600 shrink-0" />
+                        <CalendarDays className="w-4 h-4 mt-0.5 text-[#2568e0] shrink-0" />
 
                         <div>
 
-                          <p className="text-xs font-bold text-slate-800">
+                          <p className="text-xs font-bold text-[#0e2a4a]">
                             {formatDate(room.checkIn)}
                           </p>
 
-                          <p className="text-xs text-slate-500 mt-0.5">
+                          <p className="text-xs text-[#6b7f99] mt-0.5">
                             {formatTime(room.checkInTime)}
                           </p>
 
@@ -821,11 +779,11 @@ export default function CurrentStays({ onCheckout }) {
 
                         <div>
 
-                          <p className="text-xs font-bold text-slate-800">
+                          <p className="text-xs font-bold text-[#0e2a4a]">
                             {formatDate(room.checkOut)}
                           </p>
 
-                          <p className="text-xs text-slate-500 mt-0.5">
+                          <p className="text-xs text-[#6b7f99] mt-0.5">
                             {formatTime(room.checkOutTime)}
                           </p>
 
@@ -893,14 +851,14 @@ export default function CurrentStays({ onCheckout }) {
                           px-3
                           py-2.5
                           rounded-xl
-                          bg-teal-600
-                          hover:bg-teal-700
-                          active:bg-teal-800
+                          bg-[#2568e0]
+                          hover:bg-[#1d56c4]
+                          active:bg-[#17429e]
                           text-white
                           text-[11px]
                           font-bold
                           transition
-                          shadow-sm
+                          shadow-[0_2px_8px_rgba(6,20,52,0.08)]
                         "
                       >
                         <PlusCircle className="w-3.5 h-3.5" />
@@ -932,20 +890,20 @@ export default function CurrentStays({ onCheckout }) {
                         <div className="
                           w-10 h-10
                           rounded-xl
-                          bg-teal-50
-                          border border-teal-100
+                          bg-[#eaf3ff]
+                          border border-[#dbe6f5]
                           flex items-center justify-center
                         ">
-                          <BedDouble className="w-4 h-4 text-teal-700" />
+                          <BedDouble className="w-4 h-4 text-[#2568e0]" />
                         </div>
 
                         <div>
 
-                          <p className="text-sm font-extrabold text-slate-900">
+                          <p className="text-sm font-extrabold text-[#0e2a4a]">
                             Room {room.roomNumber}
                           </p>
 
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-[#6b7f99]">
                             {room.roomType || "-"} • {room.bedType || "-"}
                           </p>
 
@@ -999,8 +957,8 @@ export default function CurrentStays({ onCheckout }) {
                       <div className="
                         p-3
                         rounded-xl
-                        bg-slate-50
-                        border border-slate-100
+                        bg-[#f4f8fd]
+                        border border-[#e7eff8]
                       ">
 
                         <p className="
@@ -1008,16 +966,16 @@ export default function CurrentStays({ onCheckout }) {
                           uppercase
                           tracking-wider
                           font-bold
-                          text-slate-400
+                          text-[#9aabc0]
                         ">
                           Check-In
                         </p>
 
-                        <p className="mt-1 text-xs font-bold text-slate-800">
+                        <p className="mt-1 text-xs font-bold text-[#0e2a4a]">
                           {formatDate(room.checkIn)}
                         </p>
 
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-[#6b7f99]">
                           {formatTime(room.checkInTime)}
                         </p>
 
@@ -1027,8 +985,8 @@ export default function CurrentStays({ onCheckout }) {
                       <div className="
                         p-3
                         rounded-xl
-                        bg-slate-50
-                        border border-slate-100
+                        bg-[#f4f8fd]
+                        border border-[#e7eff8]
                       ">
 
                         <p className="
@@ -1036,16 +994,16 @@ export default function CurrentStays({ onCheckout }) {
                           uppercase
                           tracking-wider
                           font-bold
-                          text-slate-400
+                          text-[#9aabc0]
                         ">
                           Check-Out
                         </p>
 
-                        <p className="mt-1 text-xs font-bold text-slate-800">
+                        <p className="mt-1 text-xs font-bold text-[#0e2a4a]">
                           {formatDate(room.checkOut)}
                         </p>
 
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-[#6b7f99]">
                           {formatTime(room.checkOutTime)}
                         </p>
 
@@ -1075,8 +1033,8 @@ export default function CurrentStays({ onCheckout }) {
                         px-4
                         py-3
                         rounded-xl
-                        bg-teal-600
-                        hover:bg-teal-700
+                        bg-[#2568e0]
+                        hover:bg-[#1d56c4]
                         text-white
                         text-xs
                         font-bold
@@ -1104,8 +1062,8 @@ export default function CurrentStays({ onCheckout }) {
           <div className="
             px-5 sm:px-6
             py-3
-            bg-slate-50/70
-            border-t border-slate-100
+            bg-[#f4f8fd]/70
+            border-t border-[#e7eff8]
             flex
             flex-col
             sm:flex-row
@@ -1116,7 +1074,7 @@ export default function CurrentStays({ onCheckout }) {
 
           
 
-            <p className="text-[11px] font-semibold text-slate-500">
+            <p className="text-[11px] font-semibold text-[#6b7f99]">
               {group.rooms.length} active room
               {group.rooms.length !== 1 ? "s" : ""}
             </p>
@@ -1137,7 +1095,7 @@ export default function CurrentStays({ onCheckout }) {
     <div
         className="
             fixed inset-0 z-[100]
-            bg-slate-950/60
+            bg-[#040e24]/60
             backdrop-blur-sm
             flex items-end sm:items-center justify-center
             p-0 sm:p-4
@@ -1158,7 +1116,7 @@ export default function CurrentStays({ onCheckout }) {
                 rounded-t-3xl
                 sm:rounded-3xl
                 shadow-2xl
-                border border-slate-200
+                border border-[#dbe6f5]
                 overflow-hidden
                 flex flex-col
             "
@@ -1172,7 +1130,7 @@ export default function CurrentStays({ onCheckout }) {
                     shrink-0
                     px-4 sm:px-6
                     py-4 sm:py-5
-                    border-b border-slate-200
+                    border-b border-[#dbe6f5]
                     bg-white
                 "
             >
@@ -1184,8 +1142,8 @@ export default function CurrentStays({ onCheckout }) {
                                 w-10 h-10
                                 sm:w-11 sm:h-11
                                 rounded-xl
-                                bg-teal-50
-                                border border-teal-100
+                                bg-[#eaf3ff]
+                                border border-[#dbe6f5]
                                 flex items-center justify-center
                                 shrink-0
                             "
@@ -1193,7 +1151,7 @@ export default function CurrentStays({ onCheckout }) {
                             <CheckCircle2
                                 className="
                                     w-5 h-5
-                                    text-teal-700
+                                    text-[#2568e0]
                                 "
                             />
                         </div>
@@ -1204,7 +1162,7 @@ export default function CurrentStays({ onCheckout }) {
                                     text-base
                                     sm:text-lg
                                     font-bold
-                                    text-slate-900
+                                    text-[#0e2a4a]
                                 "
                             >
                                 Confirm Guest Checkout
@@ -1215,7 +1173,7 @@ export default function CurrentStays({ onCheckout }) {
                                     text-xs
                                     sm:text-sm
                                     font-semibold
-                                    text-slate-700
+                                    text-[#3d5473]
                                     mt-1
                                     truncate
                                 "
@@ -1228,7 +1186,7 @@ export default function CurrentStays({ onCheckout }) {
                                 className="
                                     text-[11px]
                                     sm:text-xs
-                                    text-slate-600
+                                    text-[#6b7f99]
                                     mt-0.5
                                 "
                             >
@@ -1250,12 +1208,12 @@ export default function CurrentStays({ onCheckout }) {
                             w-9 h-9
                             sm:w-10 sm:h-10
                             rounded-xl
-                            bg-slate-100
-                            border border-slate-200
+                            bg-[#eaf3ff]
+                            border border-[#dbe6f5]
                             flex items-center justify-center
-                            text-slate-600
-                            hover:bg-slate-200
-                            hover:text-slate-900
+                            text-[#6b7f99]
+                            hover:bg-[#dbe6f5]
+                            hover:text-[#0e2a4a]
                             transition
                             shrink-0
                         "
@@ -1284,19 +1242,19 @@ export default function CurrentStays({ onCheckout }) {
                     className="
                         flex items-center gap-3
                         rounded-xl
-                        bg-teal-50
-                        border border-teal-100
+                        bg-[#eaf3ff]
+                        border border-[#dbe6f5]
                         px-3.5 py-3
                     "
                 >
                    
 
                     <div className="min-w-0">
-                        <p className="text-xs sm:text-sm font-bold text-slate-900">
+                        <p className="text-xs sm:text-sm font-bold text-[#0e2a4a]">
                             Checkout Details
                         </p>
 
-                        <p className="text-[11px] sm:text-xs text-slate-600 mt-0.5">
+                        <p className="text-[11px] sm:text-xs text-[#6b7f99] mt-0.5">
                             Select the room(s) and confirm the checkout time.
                         </p>
                     </div>
@@ -1313,7 +1271,7 @@ export default function CurrentStays({ onCheckout }) {
                                     block
                                     text-sm
                                     font-bold
-                                    text-slate-900
+                                    text-[#0e2a4a]
                                 "
                             >
                                 Select Room(s)
@@ -1325,7 +1283,7 @@ export default function CurrentStays({ onCheckout }) {
                             <p
                                 className="
                                     text-xs
-                                    text-slate-600
+                                    text-[#6b7f99]
                                     mt-1
                                 "
                             >
@@ -1347,12 +1305,12 @@ export default function CurrentStays({ onCheckout }) {
                                     px-3
                                     py-1.5
                                     rounded-lg
-                                    bg-teal-50
-                                    border border-teal-100
+                                    bg-[#eaf3ff]
+                                    border border-[#dbe6f5]
                                     text-xs
                                     font-bold
-                                    text-teal-800
-                                    hover:bg-teal-100
+                                    text-[#0e2a4a]
+                                    hover:bg-[#dbe6f5]
                                     transition
                                 "
                             >
@@ -1397,16 +1355,16 @@ export default function CurrentStays({ onCheckout }) {
                                         ${
                                             selected
                                                 ? `
-                                                    bg-teal-50
-                                                    border-teal-500
+                                                    bg-[#eaf3ff]
+                                                    border-[#2568e0]
                                                     ring-2
-                                                    ring-teal-100
+                                                    ring-[#dbe6f5]
                                                 `
                                                 : `
                                                     bg-white
-                                                    border-slate-300
-                                                    hover:border-teal-400
-                                                    hover:bg-slate-50
+                                                    border-[#c7d8f0]
+                                                    hover:border-[#5b9bf5]
+                                                    hover:bg-[#f4f8fd]
                                                 `
                                         }
                                     `}
@@ -1421,8 +1379,8 @@ export default function CurrentStays({ onCheckout }) {
                                                 shrink-0
                                                 ${
                                                     selected
-                                                        ? "bg-teal-600 text-white"
-                                                        : "bg-slate-100 text-slate-600"
+                                                        ? "bg-[#2568e0] text-white"
+                                                        : "bg-[#eaf3ff] text-[#6b7f99]"
                                                 }
                                             `}
                                         >
@@ -1439,8 +1397,8 @@ export default function CurrentStays({ onCheckout }) {
                                                     truncate
                                                     ${
                                                         selected
-                                                            ? "text-teal-900"
-                                                            : "text-slate-900"
+                                                            ? "text-[#0e2a4a]"
+                                                            : "text-[#0e2a4a]"
                                                     }
                                                 `}
                                             >
@@ -1451,7 +1409,7 @@ export default function CurrentStays({ onCheckout }) {
                                                 <p
                                                     className="
                                                         text-[11px]
-                                                        text-slate-600
+                                                        text-[#6b7f99]
                                                         mt-0.5
                                                         truncate
                                                     "
@@ -1471,14 +1429,14 @@ export default function CurrentStays({ onCheckout }) {
                                             <CheckSquare
                                                 className="
                                                     w-5 h-5
-                                                    text-teal-700
+                                                    text-[#2568e0]
                                                 "
                                             />
                                         ) : (
                                             <Square
                                                 className="
                                                     w-5 h-5
-                                                    text-slate-400
+                                                    text-[#9aabc0]
                                                 "
                                             />
                                         )}
@@ -1499,14 +1457,14 @@ export default function CurrentStays({ onCheckout }) {
                             flex items-center justify-between gap-3
                             ${
                                 selectedRooms.length > 0
-                                    ? "bg-teal-50 border-teal-200"
+                                    ? "bg-[#eaf3ff] border-[#c7d8f0]"
                                     : "bg-red-50 border-red-200"
                             }
                         `}
                     >
                         <div className="flex items-center gap-2">
                             {selectedRooms.length > 0 ? (
-                                <CheckCircle2 className="w-4 h-4 text-teal-700 shrink-0" />
+                                <CheckCircle2 className="w-4 h-4 text-[#2568e0] shrink-0" />
                             ) : (
                                 <X className="w-4 h-4 text-red-700 shrink-0" />
                             )}
@@ -1518,7 +1476,7 @@ export default function CurrentStays({ onCheckout }) {
                                     font-semibold
                                     ${
                                         selectedRooms.length > 0
-                                            ? "text-teal-900"
+                                            ? "text-[#0e2a4a]"
                                             : "text-red-800"
                                     }
                                 `}
@@ -1544,7 +1502,7 @@ export default function CurrentStays({ onCheckout }) {
                             block
                             text-sm
                             font-bold
-                            text-slate-900
+                            text-[#0e2a4a]
                             mb-2
                         "
                     >
@@ -1558,8 +1516,8 @@ export default function CurrentStays({ onCheckout }) {
                             gap-3
                             px-3.5
                             py-3.5
-                            bg-slate-50
-                            border border-slate-200
+                            bg-[#f4f8fd]
+                            border border-[#dbe6f5]
                             rounded-xl
                         "
                     >
@@ -1568,20 +1526,20 @@ export default function CurrentStays({ onCheckout }) {
                                 w-9 h-9
                                 rounded-lg
                                 bg-white
-                                border border-slate-200
+                                border border-[#dbe6f5]
                                 flex items-center justify-center
                                 shrink-0
                             "
                         >
-                            <CalendarDays className="w-4 h-4 text-teal-700" />
+                            <CalendarDays className="w-4 h-4 text-[#2568e0]" />
                         </div>
 
                         <div>
-                            <p className="text-sm font-bold text-slate-900">
+                            <p className="text-sm font-bold text-[#0e2a4a]">
                                 {getTodayDisplay()}
                             </p>
 
-                            <p className="text-xs text-slate-600 mt-0.5">
+                            <p className="text-xs text-[#6b7f99] mt-0.5">
                                 Today
                             </p>
                         </div>
@@ -1597,7 +1555,7 @@ export default function CurrentStays({ onCheckout }) {
                             block
                             text-sm
                             font-bold
-                            text-slate-900
+                            text-[#0e2a4a]
                             mb-2
                         "
                     >
@@ -1608,7 +1566,7 @@ export default function CurrentStays({ onCheckout }) {
                     <p
                         className="
                             text-xs
-                            text-slate-600
+                            text-[#6b7f99]
                             mb-2
                         "
                     >
@@ -1638,12 +1596,12 @@ export default function CurrentStays({ onCheckout }) {
                             ${
                                 showTimePicker
                                     ? `
-                                        border-teal-500
+                                        border-[#2568e0]
                                         ring-2
-                                        ring-teal-100
+                                        ring-[#dbe6f5]
                                     `
                                     : `
-                                        border-slate-300
+                                        border-[#c7d8f0]
                                         hover:border-slate-400
                                     `
                             }
@@ -1654,20 +1612,20 @@ export default function CurrentStays({ onCheckout }) {
                                 className="
                                     w-9 h-9
                                     rounded-lg
-                                    bg-teal-50
+                                    bg-[#eaf3ff]
                                     flex items-center justify-center
                                     shrink-0
                                 "
                             >
-                                <Clock className="w-4 h-4 text-teal-700" />
+                                <Clock className="w-4 h-4 text-[#2568e0]" />
                             </div>
 
                             <div>
-                                <p className="text-sm font-bold text-slate-900">
+                                <p className="text-sm font-bold text-[#0e2a4a]">
                                     {checkoutTime} {checkoutAmPm}
                                 </p>
 
-                                <p className="text-[11px] text-slate-600 mt-0.5">
+                                <p className="text-[11px] text-[#6b7f99] mt-0.5">
                                     Tap to change time
                                 </p>
                             </div>
@@ -1677,10 +1635,10 @@ export default function CurrentStays({ onCheckout }) {
                             className="
                                 px-2.5 py-1.5
                                 rounded-lg
-                                bg-slate-100
+                                bg-[#eaf3ff]
                                 text-[11px]
                                 font-bold
-                                text-slate-700
+                                text-[#3d5473]
                                 shrink-0
                             "
                         >
@@ -1701,7 +1659,7 @@ export default function CurrentStays({ onCheckout }) {
             mb-2
             z-[120]
             bg-white
-            border border-slate-200
+            border border-[#dbe6f5]
             rounded-2xl
             shadow-2xl
             overflow-hidden
@@ -1715,17 +1673,17 @@ export default function CurrentStays({ onCheckout }) {
                 px-4
                 sm:px-5
                 py-3.5
-                bg-slate-50
-                border-b border-slate-200
+                bg-[#f4f8fd]
+                border-b border-[#dbe6f5]
             "
         >
             <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                    <p className="text-sm font-bold text-slate-900">
+                    <p className="text-sm font-bold text-[#0e2a4a]">
                         Checkout Time
                     </p>
 
-                    <p className="text-xs text-slate-600 mt-0.5">
+                    <p className="text-xs text-[#6b7f99] mt-0.5">
                         Select the time for guest checkout
                     </p>
                 </div>
@@ -1738,11 +1696,11 @@ export default function CurrentStays({ onCheckout }) {
                         w-8 h-8
                         rounded-lg
                         bg-white
-                        border border-slate-200
+                        border border-[#dbe6f5]
                         flex items-center justify-center
-                        text-slate-600
-                        hover:bg-slate-100
-                        hover:text-slate-900
+                        text-[#6b7f99]
+                        hover:bg-[#eaf3ff]
+                        hover:text-[#0e2a4a]
                         transition
                         shrink-0
                     "
@@ -1759,8 +1717,8 @@ export default function CurrentStays({ onCheckout }) {
             <div
                 className="
                     rounded-xl
-                    bg-teal-50
-                    border border-teal-200
+                    bg-[#eaf3ff]
+                    border border-[#c7d8f0]
                     px-4
                     py-3
                 "
@@ -1771,21 +1729,21 @@ export default function CurrentStays({ onCheckout }) {
                         uppercase
                         tracking-wider
                         font-bold
-                        text-teal-800
+                        text-[#0e2a4a]
                     "
                 >
                     Selected Checkout Time
                 </p>
 
                 <div className="flex items-center gap-2 mt-1">
-                    <Clock className="w-5 h-5 text-teal-700" />
+                    <Clock className="w-5 h-5 text-[#2568e0]" />
 
                     <span
                         className="
                             text-xl
                             sm:text-2xl
                             font-bold
-                            text-slate-900
+                            text-[#0e2a4a]
                         "
                     >
                         {checkoutTime}
@@ -1796,7 +1754,7 @@ export default function CurrentStays({ onCheckout }) {
                             text-sm
                             sm:text-base
                             font-bold
-                            text-teal-800
+                            text-[#0e2a4a]
                         "
                     >
                         {checkoutAmPm}
@@ -1825,7 +1783,7 @@ export default function CurrentStays({ onCheckout }) {
                         className="
                             text-xs
                             font-bold
-                            text-slate-800
+                            text-[#0e2a4a]
                             mb-2
                         "
                     >
@@ -1838,8 +1796,8 @@ export default function CurrentStays({ onCheckout }) {
                             sm:h-44
                             overflow-y-auto
                             rounded-xl
-                            border border-slate-200
-                            bg-slate-50
+                            border border-[#dbe6f5]
+                            bg-[#f4f8fd]
                             p-1.5
                         "
                     >
@@ -1874,15 +1832,15 @@ export default function CurrentStays({ onCheckout }) {
                                             ${
                                                 selected
                                                     ? `
-                                                        bg-teal-600
+                                                        bg-[#2568e0]
                                                         text-white
-                                                        shadow-sm
+                                                        shadow-[0_2px_8px_rgba(6,20,52,0.08)]
                                                     `
                                                     : `
                                                         bg-white
-                                                        text-slate-700
-                                                        hover:bg-teal-50
-                                                        hover:text-teal-800
+                                                        text-[#3d5473]
+                                                        hover:bg-[#eaf3ff]
+                                                        hover:text-[#0e2a4a]
                                                     `
                                             }
                                         `}
@@ -1903,7 +1861,7 @@ export default function CurrentStays({ onCheckout }) {
                         className="
                             text-xs
                             font-bold
-                            text-slate-800
+                            text-[#0e2a4a]
                             mb-2
                         "
                     >
@@ -1916,8 +1874,8 @@ export default function CurrentStays({ onCheckout }) {
                             sm:h-44
                             overflow-y-auto
                             rounded-xl
-                            border border-slate-200
-                            bg-slate-50
+                            border border-[#dbe6f5]
+                            bg-[#f4f8fd]
                             p-1.5
                         "
                     >
@@ -1952,15 +1910,15 @@ export default function CurrentStays({ onCheckout }) {
                                             ${
                                                 selected
                                                     ? `
-                                                        bg-teal-600
+                                                        bg-[#2568e0]
                                                         text-white
-                                                        shadow-sm
+                                                        shadow-[0_2px_8px_rgba(6,20,52,0.08)]
                                                     `
                                                     : `
                                                         bg-white
-                                                        text-slate-700
-                                                        hover:bg-teal-50
-                                                        hover:text-teal-800
+                                                        text-[#3d5473]
+                                                        hover:bg-[#eaf3ff]
+                                                        hover:text-[#0e2a4a]
                                                     `
                                             }
                                         `}
@@ -1981,7 +1939,7 @@ export default function CurrentStays({ onCheckout }) {
                         className="
                             text-xs
                             font-bold
-                            text-slate-800
+                            text-[#0e2a4a]
                             mb-2
                         "
                     >
@@ -2010,18 +1968,18 @@ export default function CurrentStays({ onCheckout }) {
                                         ${
                                             selected
                                                 ? `
-                                                    bg-teal-600
+                                                    bg-[#2568e0]
                                                     text-white
-                                                    border-teal-600
-                                                    shadow-sm
+                                                    border-[#2568e0]
+                                                    shadow-[0_2px_8px_rgba(6,20,52,0.08)]
                                                 `
                                                 : `
                                                     bg-white
-                                                    text-slate-700
-                                                    border-slate-300
-                                                    hover:bg-teal-50
+                                                    text-[#3d5473]
+                                                    border-[#c7d8f0]
+                                                    hover:bg-[#eaf3ff]
                                                     hover:border-teal-300
-                                                    hover:text-teal-800
+                                                    hover:text-[#0e2a4a]
                                                 `
                                         }
                                     `}
@@ -2046,9 +2004,9 @@ export default function CurrentStays({ onCheckout }) {
                     mt-4
                     min-h-[46px]
                     rounded-xl
-                    bg-teal-600
-                    hover:bg-teal-700
-                    active:bg-teal-800
+                    bg-[#2568e0]
+                    hover:bg-[#1d56c4]
+                    active:bg-[#17429e]
                     text-white
                     text-sm
                     font-bold
@@ -2057,7 +2015,7 @@ export default function CurrentStays({ onCheckout }) {
                     justify-center
                     gap-2
                     transition
-                    shadow-sm
+                    shadow-[0_2px_8px_rgba(6,20,52,0.08)]
                 "
             >
                 <CheckCircle2 className="w-4 h-4" />
@@ -2078,7 +2036,7 @@ export default function CurrentStays({ onCheckout }) {
                     shrink-0
                     px-4 sm:px-5 lg:px-6
                     py-4
-                    border-t border-slate-200
+                    border-t border-[#dbe6f5]
                     bg-white
                 "
             >
@@ -2104,12 +2062,12 @@ export default function CurrentStays({ onCheckout }) {
                             px-4
                             py-3
                             rounded-xl
-                            bg-slate-100
-                            hover:bg-slate-200
-                            border border-slate-200
+                            bg-[#eaf3ff]
+                            hover:bg-[#dbe6f5]
+                            border border-[#dbe6f5]
                             text-sm
                             font-bold
-                            text-slate-800
+                            text-[#0e2a4a]
                             transition
                         "
                     >
@@ -2128,8 +2086,8 @@ export default function CurrentStays({ onCheckout }) {
                             px-4
                             py-3
                             rounded-xl
-                            bg-teal-600
-                            hover:bg-teal-700
+                            bg-[#2568e0]
+                            hover:bg-[#1d56c4]
                             text-white
                             text-sm
                             font-bold
@@ -2139,7 +2097,7 @@ export default function CurrentStays({ onCheckout }) {
                             justify-center
                             gap-2
                             disabled:bg-slate-300
-                            disabled:text-slate-600
+                            disabled:text-[#6b7f99]
                             disabled:cursor-not-allowed
                         "
                     >

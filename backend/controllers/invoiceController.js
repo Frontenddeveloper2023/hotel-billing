@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 import Invoice from "../models/invoice.js";
 import InvoiceCounter from "../models/InvoiceCounter.js";
 import Customer from "../models/customers.js";
-import BranchHotels from "../models/BranchHotels.js";
+import Hotels from "../models/hotels.js";
+import BranchHotels from "../models/branchHotels.js";
 import CheckoutBill from "../models/checkoutBill.js";
 import Booking from "../models/booking.js";
 
@@ -218,13 +219,116 @@ const handleControllerError = (
 // ============================================================
 // GENERATE INVOICE NUMBER
 // ============================================================
+// RESOLVE UNIQUE HOTEL CODE
+// ============================================================
+
+const generateHotelCode = (hotelName) => {
+    const raw = String(hotelName || "HOTEL").trim();
+    const clean = raw.replace(/[^A-Za-z0-9 ]/g, "").trim();
+    const words = clean.split(/\s+/).filter(Boolean);
+
+    let code = "";
+    if (words.length >= 2) {
+        const first = words[0].toUpperCase();
+        if (first.length >= 3 && first !== "THE" && first !== "HOTEL") {
+            code = first.slice(0, 6);
+        } else {
+            code = words.map((w) => w[0]).join("").toUpperCase().slice(0, 5);
+        }
+    } else if (words.length === 1) {
+        code = words[0].slice(0, 6).toUpperCase();
+    }
+
+    if (!code || code.length < 2) {
+        code = "HTL";
+    }
+
+    return code;
+};
+
+const resolveHotelCode = async (hotelId) => {
+    try {
+        const hotel = await Hotels.findById(hotelId);
+        if (!hotel) {
+            return "HTL";
+        }
+
+        if (hotel.hotelCode && String(hotel.hotelCode).trim()) {
+            return String(hotel.hotelCode).trim().toUpperCase();
+        }
+
+        let baseCode = generateHotelCode(hotel.hotelName);
+
+        // Check if another hotel already has this hotelCode
+        const existing = await Hotels.findOne({
+            _id: { $ne: hotel._id },
+            hotelCode: baseCode,
+        });
+
+        if (existing) {
+            const suffix = String(hotel._id).slice(-4).toUpperCase();
+            baseCode = `${baseCode}${suffix}`;
+        }
+
+        // Persist hotelCode on the hotel document so it stays constant
+        hotel.hotelCode = baseCode;
+        await hotel.save();
+
+        log.info(
+            `[Invoice] Assigned unique hotelCode: ${baseCode} to hotel: ${hotel.hotelName} (${hotel._id})`
+        );
+
+        return baseCode;
+    } catch (err) {
+        log.error(`[Invoice] Error resolving hotelCode: ${err.message}`);
+        return "HTL";
+    }
+};
+
+// ============================================================
+// RESOLVE UNIQUE BRANCH CODE
+// ============================================================
+
+const resolveBranchCode = async (branchId) => {
+    let branchCode = "MAIN";
+
+    try {
+        const branch = await BranchHotels.findById(branchId)
+            .select("branchCode branchName isMainBranch")
+            .lean();
+
+        if (branch?.branchCode && String(branch.branchCode).trim()) {
+            branchCode = String(branch.branchCode).trim().toUpperCase();
+        } else if (branch?.isMainBranch) {
+            branchCode = "MAIN";
+        } else if (branch?.branchName && String(branch.branchName).trim()) {
+            const clean = String(branch.branchName)
+                .replace(/[^A-Za-z0-9]/g, "")
+                .slice(0, 5)
+                .toUpperCase();
+            branchCode = clean || "SUB";
+        }
+    } catch (error) {
+        log.warn(
+            `[Invoice] Unable to resolve branch code. branchId=${branchId}, error=${error.message}`
+        );
+    }
+
+    return branchCode;
+};
+
+// ============================================================
+// GENERATE UNIQUE INVOICE NUMBER
 //
-// Sequence is scoped by:
-// hotelId + branchId + year
+// Sequence is scoped by: hotelId + branchId + year
+//
+// Format:
+// INV-[HOTEL_CODE]-[BRANCH_CODE]-[YEAR]-[SEQUENCE]
 //
 // Example:
-// INV-MAIN-2026-000001
-// INV-MAIN-2026-000002
+// INV-TEST-MAIN-2026-000001
+// INV-TEST-BR1-2026-000001
+// INV-MANI-MAIN-2026-000001
 //
 // ============================================================
 
@@ -241,38 +345,12 @@ const generateInvoiceNumber = async (
         `year=${year}`
     );
 
-    let branchCode = "MAIN";
+    const hotelCode = await resolveHotelCode(hotelId);
+    const branchCode = await resolveBranchCode(branchId);
 
-    try {
-        const branch = await BranchHotels.findById(
-            branchId
-        )
-            .select("branchCode")
-            .lean();
-
-        if (
-            branch?.branchCode &&
-            String(branch.branchCode).trim()
-        ) {
-            branchCode = String(
-                branch.branchCode
-            )
-                .trim()
-                .toUpperCase();
-        }
-
-        log.info(
-            `[Invoice] Branch code resolved. ` +
-            `branchId=${branchId}, ` +
-            `branchCode=${branchCode}`
-        );
-    } catch (error) {
-        log.warn(
-            `[Invoice] Unable to resolve branch code. ` +
-            `branchId=${branchId}, ` +
-            `error=${error.message}`
-        );
-    }
+    log.info(
+        `[Invoice] Codes resolved: hotelCode=${hotelCode}, branchCode=${branchCode}`
+    );
 
     const latestInvoice =
         await Invoice.findOne({
@@ -351,6 +429,7 @@ const generateInvoiceNumber = async (
             },
             {
                 new: true,
+                upsert: true,
             }
         );
 
@@ -372,14 +451,17 @@ const generateInvoiceNumber = async (
             updatedCounter.sequence
         );
 
+    // Format: INV-[HOTEL_CODE]-[BRANCH_CODE]-[YEAR]-[SEQUENCE]
     const invoiceNo =
-        `INV-${branchCode}-${year}-${String(
+        `INV-${hotelCode}-${branchCode}-${year}-${String(
             invoiceSequence
         ).padStart(6, "0")}`;
 
     log.info(
         `[Invoice] Invoice number generated successfully. ` +
         `invoiceNo=${invoiceNo}, ` +
+        `hotelCode=${hotelCode}, ` +
+        `branchCode=${branchCode}, ` +
         `invoiceYear=${year}, ` +
         `invoiceSequence=${invoiceSequence}`
     );

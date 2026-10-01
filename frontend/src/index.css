@@ -1,1 +1,30 @@
 @import "tailwindcss";
+
+
+/* =====================================================
+   STAYLIO CUSTOM SCROLLBAR
+===================================================== */
+
+.staylio-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #5b9bf5 transparent;
+}
+
+/* Chrome / Edge / Safari */
+.staylio-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.staylio-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.staylio-scrollbar::-webkit-scrollbar-thumb {
+  background: #5b9bf5;
+  border-radius: 999px;
+}
+
+.staylio-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #2568e0;
+}

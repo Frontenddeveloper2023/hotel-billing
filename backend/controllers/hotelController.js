@@ -1,4 +1,4 @@
-import Hotels from "../models/Hotels.js";
+import Hotels from "../models/hotels.js";
 import { log } from "../util/logger.js";
 
 // ============================================================
@@ -542,3 +542,43 @@ export const deleteHotel = async (req, res) => {
     });
   }
 };
+
+// ============================================================
+// GET PUBLIC HOTEL INFO (FOR PLAN UPGRADE AUTO-LINKING)
+// ============================================================
+export const getPublicHotelInfo = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid hotel ID.",
+      });
+    }
+
+    const hotel = await Hotels.findById(id).select(
+      "hotelName ownerName email phone address gstNumber status"
+    );
+
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: "Hotel not found.",
+      });
+    }
+
+    log.info(`[getPublicHotelInfo] Retrieved hotel info for ID: ${id}`);
+
+    return res.status(200).json({
+      success: true,
+      data: hotel,
+    });
+  } catch (error) {
+    log.error(`[getPublicHotelInfo] Error: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to retrieve hotel details.",
+    });
+  }
+};

@@ -1,6 +1,6 @@
 import Subscription from "../models/subscription.js";
 import Hotels from "../models/hotels.js";
-import BranchHotels from "../models/BranchHotels.js";
+import BranchHotels from "../models/branchHotels.js";
 import { log } from "../util/logger.js";
 
 /**

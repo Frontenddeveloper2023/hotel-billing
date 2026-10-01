@@ -8,6 +8,13 @@ const hotelSchema = new mongoose.Schema(
       trim: true,
     },
 
+    hotelCode: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      default: "",
+    },
+
     ownerName: {
       type: String,
       required: true,

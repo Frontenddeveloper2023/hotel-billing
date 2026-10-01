@@ -1,4 +1,4 @@
-import Plans from "../models/Plans.js";
+import Plans from "../models/plans.js";
 import { log } from "../util/logger.js";
 
 // ============================================================
@@ -702,19 +702,16 @@ export const deletePlan = async (req, res) => {
     }
 
     // --------------------------------------------------------
-    // 3. Soft delete / deactivate plan
+    // 3. Delete plan
     // --------------------------------------------------------
-    plan.isActive = false;
+    await Plans.findByIdAndDelete(id);
 
-    await plan.save();
-
-    log.info(`Plan deactivated successfully: ${id}`);
+    log.info(`Plan deleted successfully: ${id}`);
 
     return res.status(200).json({
       success: true,
-      message:
-        "Subscription plan has been deactivated successfully.",
-      data: plan,
+      message: "Subscription plan has been deleted successfully.",
+      data: { _id: id },
     });
   } catch (error) {
     log.error(`Error deleting plan: ${error.message}`);
@@ -722,7 +719,7 @@ export const deletePlan = async (req, res) => {
     return res.status(500).json({
       success: false,
       message:
-        "Unable to deactivate the subscription plan right now. Please try again later.",
+        "Unable to delete the subscription plan right now. Please try again later.",
     });
   }
 };

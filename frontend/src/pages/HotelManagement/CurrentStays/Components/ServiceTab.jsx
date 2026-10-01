@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Wrench, Plus, Trash2, ReceiptText, Loader2, CheckCircle2, History, Clock } from "lucide-react";
+import { useToast } from "../../../../Context/ToastContext.jsx";
 import {
   addRoomService,
   getBookingById,
@@ -20,6 +21,7 @@ export default function ServiceTab({
   bookingId,
   roomId,
 }) {
+  const toast = useToast();
   const [availableMasterServices, setAvailableMasterServices] = useState([]);
   const [selectedServiceId, setSelectedServiceId] = useState("");
   const [serviceName, setServiceName] = useState("");
@@ -208,22 +210,22 @@ export default function ServiceTab({
       serviceFee === "" ||
       Number(serviceFee) < 0
     ) {
-      alert("Please select a valid service from the dropdown.");
+      toast.warn("Please select a valid service from the dropdown.");
       return;
     }
 
     if (!customerId) {
-      alert("Customer ID is missing. Please select a valid customer.");
+      toast.warn("Customer ID is missing. Please select a valid customer.");
       return;
     }
 
     if (!bookingId) {
-      alert("Booking ID is missing. Please select a valid booking.");
+      toast.warn("Booking ID is missing. Please select a valid booking.");
       return;
     }
 
     if (!roomId) {
-      alert("Booking room ID is missing. Please select a valid room.");
+      toast.warn("Booking room ID is missing. Please select a valid room.");
       return;
     }
 
@@ -254,10 +256,11 @@ export default function ServiceTab({
       setSelectedServiceId("");
       setServiceName("");
       setServiceFee("");
+
+      toast.success(`"${serviceName}" added to service list.`);
     } catch (err) {
       console.error("Failed to add room service:", err);
-
-      alert(
+      toast.error(
         err?.response?.data?.message ||
           err?.message ||
           "Failed to add service record."
@@ -267,41 +270,43 @@ export default function ServiceTab({
     }
   };
 
- const removeService = async (serviceId) => {
+ const removeService = async (serviceId, serviceName) => {
   if (!serviceId) {
-    alert("Room service ID is missing.");
+    toast.warn("Room service ID is missing.");
     return;
   }
 
   if (!bookingId || !roomId) {
-    alert("Booking or room ID is missing.");
+    toast.warn("Booking or room ID is missing.");
     return;
   }
 
-  try {
-    setRemovingId(serviceId);
-    setError("");
+  // confirm before delete
+  toast.confirm(
+    `Remove "${serviceName || "this service"}" from the service list?`,
+    async () => {
+      try {
+        setRemovingId(serviceId);
+        setError("");
 
-    await deleteRoomService(
-      bookingId,
-      roomId,
-      serviceId
-    );
+        await deleteRoomService(bookingId, roomId, serviceId);
+        await fetchBookingServices();
 
-    await fetchBookingServices();
-  } catch (err) {
-    console.error("Failed to delete room service:", err);
-
-    const message =
-      err?.response?.data?.message ||
-      err?.message ||
-      "Failed to remove room service.";
-
-    setError(message);
-    alert(message);
-  } finally {
-    setRemovingId(null);
-  }
+        toast.success("Service removed successfully.");
+      } catch (err) {
+        console.error("Failed to delete room service:", err);
+        const message =
+          err?.response?.data?.message ||
+          err?.message ||
+          "Failed to remove room service.";
+        setError(message);
+        toast.error(message);
+      } finally {
+        setRemovingId(null);
+      }
+    },
+    { title: "Remove Service", confirmText: "Remove", cancelText: "Keep" }
+  );
 };
 
   const totalServiceFees = serviceList.reduce(
@@ -321,7 +326,7 @@ export default function ServiceTab({
 
 const handleSubmitServices = async () => {
   if (serviceList.length === 0) {
-    alert("Please add at least one service.");
+    toast.warn("Please add at least one service.");
     return;
   }
 
@@ -329,15 +334,14 @@ const handleSubmitServices = async () => {
     setConfirming(true);
     setError("");
 
-    // Confirm Service Bill does NOT mark services as Paid.
-    // Services remain Pending until the final Checkout Payment.
     await fetchBookingServices();
 
     setConfirmedSuccess(true);
+    toast.success("Service bill confirmed. Payment will be collected at checkout.");
   } catch (err) {
     console.error("Failed to confirm service bill:", err);
     setError(err?.message || "Failed to confirm service bill.");
-    alert(err?.message || "Failed to confirm service bill.");
+    toast.error(err?.message || "Failed to confirm service bill.");
   } finally {
     setConfirming(false);
   }
@@ -354,9 +358,9 @@ const handleSubmitServices = async () => {
   if (subscriptionLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[280px] text-center">
-        <Loader2 className="w-7 h-7 text-teal-600 animate-spin mb-3" />
-        <p className="text-sm font-semibold text-slate-700">Checking Room Service access...</p>
-        <p className="text-xs text-slate-400 mt-1">Verifying your subscription and plan.</p>
+        <Loader2 className="w-7 h-7 text-[#2568e0] animate-spin mb-3" />
+        <p className="text-sm font-semibold text-[#3d5473]">Checking Room Service access...</p>
+        <p className="text-xs text-[#9aabc0] mt-1">Verifying your subscription and plan.</p>
       </div>
     );
   }
@@ -367,8 +371,8 @@ const handleSubmitServices = async () => {
         <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mb-4">
           <Wrench className="w-7 h-7 text-amber-600" />
         </div>
-        <h3 className="text-base font-bold text-slate-900">Room Service Not Available</h3>
-        <p className="text-xs text-slate-500 max-w-md mt-2">
+        <h3 className="text-base font-bold text-[#0e2a4a]">Room Service Not Available</h3>
+        <p className="text-xs text-[#6b7f99] max-w-md mt-2">
           {featureMessage || "Room Service is not included in your current subscription plan."}
         </p>
       </div>
@@ -380,16 +384,16 @@ const handleSubmitServices = async () => {
       {/* Left 2 Cols: Dropdown Form Input, Active Queue & Past Confirmed History */}
       <div className="lg:col-span-2 space-y-6">
         {/* Top Form Container */}
-        <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-200 space-y-4">
+        <div className="bg-[#f4f8fd]/50 p-5 rounded-2xl border border-[#dbe6f5] space-y-4">
           <div>
-            <h3 className="font-bold text-slate-900 text-sm">Add Service Charge</h3>
+            <h3 className="font-bold text-[#0e2a4a] text-sm">Add Service Charge</h3>
             <div className="flex items-center gap-2 mt-0.5">
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[#9aabc0]">
                 Select a service from the catalog list to automatically fill fees.
               </p>
 
               {roomNumber && (
-                <span className="px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-100 text-[10px] font-bold">
+                <span className="px-2 py-0.5 rounded-full bg-[#eaf3ff] text-[#2568e0] border border-[#dbe6f5] text-[10px] font-bold">
                   Room {roomNumber}
                 </span>
               )}
@@ -411,12 +415,12 @@ const handleSubmitServices = async () => {
 
           <form onSubmit={handleAddService} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Select Service</label>
+              <label className="block text-xs font-semibold text-[#6b7f99] mb-1">Select Service</label>
               <select
                 value={selectedServiceId}
                 onChange={handleServiceSelectionChange}
                 disabled={fetchingCatalog}
-                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-teal-600 shadow-xs"
+                className="w-full px-3 py-2 bg-white border border-[#dbe6f5] rounded-xl text-xs focus:outline-none focus:border-[#2568e0] shadow-[0_1px_4px_rgba(6,20,52,0.06)]"
               >
                 <option value="">-- Choose a Service --</option>
                 {availableMasterServices.map((srv) => {
@@ -431,13 +435,13 @@ const handleSubmitServices = async () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Service Fee (₹)</label>
+              <label className="block text-xs font-semibold text-[#6b7f99] mb-1">Service Fee (₹)</label>
               <input
                 type="number"
                 placeholder="Auto-filled"
                 value={serviceFee}
                 readOnly
-                className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-600 focus:outline-none shadow-xs cursor-not-allowed"
+                className="w-full px-3 py-2 bg-[#eaf3ff] border border-[#dbe6f5] rounded-xl text-xs text-[#6b7f99] focus:outline-none shadow-[0_1px_4px_rgba(6,20,52,0.06)] cursor-not-allowed"
               />
             </div>
 
@@ -445,7 +449,7 @@ const handleSubmitServices = async () => {
               <button
                 type="submit"
                 disabled={submitting || !selectedServiceId}
-                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 disabled:bg-teal-400 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm transition w-full sm:w-auto"
+                className="px-4 py-2 bg-[#2568e0] hover:bg-[#1d56c4] disabled:bg-[#5b9bf5] text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 shadow-[0_2px_8px_rgba(6,20,52,0.08)] transition w-full sm:w-auto"
               >
                 {submitting ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -458,20 +462,20 @@ const handleSubmitServices = async () => {
           </form>
 
           {/* Active Queued Services List */}
-          <div className="border-t border-slate-200 pt-4">
-            <h4 className="font-bold text-slate-800 text-xs uppercase mb-3 flex items-center justify-between">
+          <div className="border-t border-[#dbe6f5] pt-4">
+            <h4 className="font-bold text-[#0e2a4a] text-xs uppercase mb-3 flex items-center justify-between">
               <span>Queued Services (To Be Billed)</span>
-              <span className="bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full text-[10px]">
+              <span className="bg-[#dbe6f5] text-[#0e2a4a] px-2 py-0.5 rounded-full text-[10px]">
                 {serviceList.length} items
               </span>
             </h4>
             <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-5 h-5 text-teal-600 animate-spin" />
+                  <Loader2 className="w-5 h-5 text-[#2568e0] animate-spin" />
                 </div>
               ) : serviceList.length === 0 ? (
-                <p className="text-xs text-slate-400 py-6 text-center">
+                <p className="text-xs text-[#9aabc0] py-6 text-center">
                   No new services added for this billing session.
                 </p>
               ) : (
@@ -490,16 +494,16 @@ const handleSubmitServices = async () => {
                   return (
                     <div
                       key={serviceId}
-                      className="bg-white p-3 rounded-xl border border-slate-200 flex items-center justify-between shadow-xs"
+                      className="bg-white p-3 rounded-xl border border-[#dbe6f5] flex items-center justify-between shadow-[0_1px_4px_rgba(6,20,52,0.06)]"
                     >
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center text-teal-700 flex-shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-[#eaf3ff] flex items-center justify-center text-[#2568e0] flex-shrink-0">
                           <Wrench className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-900 truncate">{name}</p>
+                          <p className="text-xs font-bold text-[#0e2a4a] truncate">{name}</p>
                           <div className="flex items-center gap-2">
-                            <p className="text-[10px] text-slate-500 font-semibold">
+                            <p className="text-[10px] text-[#6b7f99] font-semibold">
                               Room {service.roomNumber || service.roomNo || service.room?.roomNumber || roomNumber || "-"}
                             </p>
                             <p className="text-[11px] text-amber-600 font-semibold">
@@ -509,12 +513,13 @@ const handleSubmitServices = async () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className="text-xs font-bold text-slate-900">₹{fee}</span>
+                        <span className="text-xs font-bold text-[#0e2a4a]">₹{fee}</span>
                         <button
                           type="button"
                           disabled={removingId === serviceId}
-                          onClick={() => removeService(serviceId)}
-                          className="text-slate-400 hover:text-rose-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() => removeService(serviceId, name)}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-[#9aabc0] hover:bg-rose-50 hover:text-rose-600 border border-transparent hover:border-rose-200 transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                          title="Remove service"
                         >
                           {removingId === serviceId ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -532,17 +537,17 @@ const handleSubmitServices = async () => {
         </div>
 
         {/* Previously Confirmed Bills History Section */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-            <History className="w-4 h-4 text-slate-600" />
-            <h4 className="font-bold text-slate-800 text-xs uppercase">
+        <div className="bg-white p-5 rounded-2xl border border-[#dbe6f5] space-y-3">
+          <div className="flex items-center gap-2 pb-2 border-b border-[#e7eff8]">
+            <History className="w-4 h-4 text-[#6b7f99]" />
+            <h4 className="font-bold text-[#0e2a4a] text-xs uppercase">
               Previously Confirmed Bills ({historyList.length})
             </h4>
           </div>
 
           <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
             {historyList.length === 0 ? (
-              <p className="text-xs text-slate-400 py-4 text-center">No past confirmed bills found.</p>
+              <p className="text-xs text-[#9aabc0] py-4 text-center">No past confirmed bills found.</p>
             ) : (
               historyList.map((item, idx) => {
                 const id = item._id || item.id || idx;
@@ -560,11 +565,11 @@ const handleSubmitServices = async () => {
                 return (
                   <div
                     key={id}
-                    className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center justify-between"
+                    className="bg-[#f4f8fd] p-3 rounded-xl border border-[#e7eff8] flex items-center justify-between"
                   >
                     <div className="space-y-1 min-w-0">
-                      <p className="text-xs font-bold text-slate-800 truncate">{name}</p>
-                      <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                      <p className="text-xs font-bold text-[#0e2a4a] truncate">{name}</p>
+                      <div className="flex items-center gap-2 text-[10px] text-[#9aabc0]">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" /> {timestamp}
                         </span>
@@ -573,7 +578,7 @@ const handleSubmitServices = async () => {
                         </span>
                       </div>
                     </div>
-                    <span className="text-xs font-bold text-slate-700 flex-shrink-0">₹{fee}</span>
+                    <span className="text-xs font-bold text-[#3d5473] flex-shrink-0">₹{fee}</span>
                   </div>
                 );
               })
@@ -583,18 +588,18 @@ const handleSubmitServices = async () => {
       </div>
 
       {/* Right Sticky Sidebar: Current Active Payment Details */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between h-[350px] sticky top-0 shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#dbe6f5] rounded-2xl p-4 flex flex-col justify-between h-[350px] sticky top-0 shadow-[0_2px_8px_rgba(6,20,52,0.08)] overflow-hidden">
         <div className="flex flex-col h-full">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 flex-shrink-0">
-            <ReceiptText className="w-4 h-4 text-teal-600" />
-            <h3 className="font-bold text-slate-900 text-sm">Active Bill Summary</h3>
+          <div className="flex items-center gap-2 pb-3 border-b border-[#e7eff8] flex-shrink-0">
+            <ReceiptText className="w-4 h-4 text-[#2568e0]" />
+            <h3 className="font-bold text-[#0e2a4a] text-sm">Active Bill Summary</h3>
           </div>
 
           <div className="space-y-3 my-3 flex-1 overflow-y-auto pr-1">
             {serviceList.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center space-y-2 py-12">
-                <p className="text-xs text-slate-400">No active items in the current bill.</p>
-                <p className="text-[11px] text-slate-400">Select services from dropdown to calculate total.</p>
+                <p className="text-xs text-[#9aabc0]">No active items in the current bill.</p>
+                <p className="text-[11px] text-[#9aabc0]">Select services from dropdown to calculate total.</p>
               </div>
             ) : (
               serviceList.map((s) => {
@@ -610,24 +615,24 @@ const handleSubmitServices = async () => {
                   ) * Number(s.quantity ?? 1);
 
                 return (
-                  <div key={sId} className="flex justify-between text-xs text-slate-600">
+                  <div key={sId} className="flex justify-between text-xs text-[#6b7f99]">
                     <span className="truncate pr-2">{sName}</span>
-                    <span className="font-semibold text-slate-900 flex-shrink-0">₹{sFee}</span>
+                    <span className="font-semibold text-[#0e2a4a] flex-shrink-0">₹{sFee}</span>
                   </div>
                 );
               })
             )}
           </div>
 
-          <div className="border-t border-slate-100 pt-3 space-y-3 flex-shrink-0 bg-white">
-            <div className="flex items-center justify-between text-sm font-bold text-slate-900">
+          <div className="border-t border-[#e7eff8] pt-3 space-y-3 flex-shrink-0 bg-white">
+            <div className="flex items-center justify-between text-sm font-bold text-[#0e2a4a]">
               <span>Current Total:</span>
-              <span className="text-teal-700">₹{totalServiceFees}</span>
+              <span className="text-[#2568e0]">₹{totalServiceFees}</span>
             </div>
             <button
               onClick={handleSubmitServices}
               disabled={serviceList.length === 0 || confirming}
-              className="w-full py-2.5 bg-teal-600 hover:bg-teal-700 disabled:bg-slate-200 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center justify-center gap-2 active:scale-95"
+              className="w-full py-2.5 bg-[#2568e0] hover:bg-[#1d56c4] disabled:bg-[#dbe6f5] text-white rounded-xl text-xs font-semibold shadow-[0_2px_8px_rgba(6,20,52,0.08)] transition flex items-center justify-center gap-2 active:scale-95"
             >
               {confirming ? (
                 <>
