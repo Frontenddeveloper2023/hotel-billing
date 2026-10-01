@@ -42,6 +42,11 @@ expiryReminder7DaysSentAt: {
   default: null,
 },
 
+expiryReminder3DaysSentAt: {
+  type: Date,
+  default: null,
+},
+
 expiryReminder1DaySentAt: {
   type: Date,
   default: null,
@@ -50,6 +55,11 @@ expiryReminder1DaySentAt: {
 expiryNotificationSentAt: {
   type: Date,
   default: null,
+},
+
+cancellationReason: {
+  type: String,
+  default: "",
 },
 
 status: {

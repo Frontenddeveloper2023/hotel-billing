@@ -5,9 +5,10 @@ import {
   CreditCard,
   ShieldCheck,
   ClipboardCheck,
+  ChevronRight,
 } from "lucide-react";
 
-const steps = [
+const defaultSteps = [
   {
     number: "01",
     title: "Choose Plan",
@@ -40,193 +41,103 @@ const steps = [
   },
 ];
 
-const SaaSSetupProgress = ({ activeStep = 1 }) => {
+const upgradeSteps = [
+  {
+    number: "01",
+    title: "Choose Plan",
+    subtitle: "Select Higher Tier",
+    icon: Check,
+  },
+  {
+    number: "02",
+    title: "Hotel Account",
+    subtitle: "Verified & Linked",
+    icon: Building2,
+  },
+  {
+    number: "03",
+    title: "Checkout & Pay",
+    subtitle: "Review & Confirm",
+    icon: CreditCard,
+  },
+  {
+    number: "04",
+    title: "Instant Activation",
+    subtitle: "No Approval Needed",
+    icon: ShieldCheck,
+  },
+];
+
+// ============================================================
+// Compact breadcrumb-style progress indicator:
+// (✓) Step  >  (●) Step  >  (3) Step
+// Mirrors a lightweight checkout-flow breadcrumb: a filled green
+// check for completed steps, a filled blue circle for the active
+// step, and a plain numbered outline circle for upcoming steps,
+// each joined by a light chevron separator.
+// ============================================================
+
+const SaaSSetupProgress = ({ activeStep = 1, isUpgrade = false }) => {
+  const steps = isUpgrade ? upgradeSteps : defaultSteps;
+
   return (
-    <div className="w-full bg-[#F4F3FF] border-b border-[#E7E5F2]">
+    <div className="w-full border-b border-[#ECEDF1] bg-white">
+      
+      <div className="mx-auto max-w-[1120px] px-4 sm:px-6 lg:px-8">
+        <div className="flex min-h-[52px] w-full items-center justify-center overflow-x-auto py-2.5 sm:min-h-[58px]">
+          <div className="flex min-w-max items-center gap-1.5 sm:gap-2.5">
+            {steps.map((step, index) => {
+              const stepNumber = index + 1;
+              const isActive = activeStep === stepNumber;
+              const isCompleted = activeStep > stepNumber;
+              const isLast = index === steps.length - 1;
 
-      <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-12">
-
-        <div className="flex items-center w-full h-[58px] sm:h-[64px]">
-
-          {steps.map((step, index) => {
-
-            const isActive =
-              activeStep === index + 1;
-
-            const isCompleted =
-              activeStep > index + 1;
-
-            const isLast =
-              index === steps.length - 1;
-
-            /*
-              Connector:
-              completed path = green
-              active path = purple
-              upcoming = light gray
-            */
-            const connectorCompleted =
-              activeStep > index + 2;
-
-            const connectorActive =
-              activeStep === index + 2;
-
-            return (
-              <React.Fragment key={step.number}>
-
-                {/* ==============================
-                    STEP
-                ============================== */}
-
-                <div className="flex items-center shrink-0">
-
-                  {/* CIRCLE */}
-
-                  <div
-                    className={`
-                      flex
-                      items-center
-                      justify-center
-                      w-7
-                      h-7
-                      rounded-full
-                      shrink-0
-                      text-[9px]
-                      font-bold
-                      ${
-                        isCompleted
-                          ? "bg-[#087A58] text-white"
-                          : isActive
-                          ? "bg-[#4338CA] text-white"
-                          : "bg-[#E9EBF7] text-[#8B91A1]"
-                      }
-                    `}
-                  >
-                    {isCompleted ? (
-                      <Check
-                        size={13}
-                        strokeWidth={3}
-                      />
-                    ) : (
-                      step.number
-                    )}
-                  </div>
-
-                  {/* TEXT */}
-
-                  <div className="ml-2">
-
-                    {/* STEP LABEL */}
-
-                    <p
+              return (
+                <React.Fragment key={step.number}>
+                  <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+                    {/* STEP MARKER */}
+                    <span
                       className={`
-                        text-[7px]
-                        sm:text-[8px]
-                        font-bold
-                        uppercase
-                        tracking-[0.05em]
-                        leading-[9px]
-                        whitespace-nowrap
+                        flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full
+                        text-[9px] font-bold sm:h-[22px] sm:w-[22px] sm:text-[10px]
                         ${
                           isCompleted
-                            ? "text-[#087A58]"
+                            ? "bg-[#17B26A] text-white"
                             : isActive
-                            ? "text-[#4338CA]"
-                            : "text-[#8B91A1]"
+                              ? "bg-[#2F6FED] text-white"
+                              : "border border-[#D0D5DD] bg-white text-[#98A2B3]"
                         }
                       `}
                     >
-                      {isActive
-                        ? "ACTIVE STEP"
-                        : `STEP ${step.number}`}
-                    </p>
+                      {isCompleted ? <Check size={12} strokeWidth={3} /> : stepNumber}
+                    </span>
 
-                    {/* TITLE */}
-
-                    <p
+                    {/* STEP LABEL */}
+                    <span
                       className={`
-                        text-[9px]
-                        sm:text-[10px]
-                        font-semibold
-                        leading-[12px]
-                        whitespace-nowrap
+                        whitespace-nowrap text-[12px] leading-none sm:text-[13.5px]
                         ${
-                          isCompleted || isActive
-                            ? "text-[#111827]"
-                            : "text-[#7D8392]"
+                          isActive
+                            ? "font-semibold text-[#2F6FED]"
+                            : isCompleted
+                              ? "font-medium text-[#101828]"
+                              : "font-medium text-[#98A2B3]"
                         }
                       `}
                     >
                       {step.title}
-                    </p>
-
-                    {/* SUBTITLE */}
-
-                    {isActive ? (
-                      <div className="flex items-center gap-1">
-
-                        <span className="w-1 h-1 rounded-full bg-[#087A58]" />
-
-                        <span className="text-[7px] sm:text-[8px] font-medium leading-[9px] text-[#087A58] whitespace-nowrap">
-                          Active Step
-                        </span>
-
-                      </div>
-                    ) : (
-                      <p
-                        className={`
-                          text-[7px]
-                          sm:text-[8px]
-                          leading-[9px]
-                          whitespace-nowrap
-                          ${
-                            isCompleted
-                              ? "text-[#69728A]"
-                              : "text-[#969BAB]"
-                          }
-                        `}
-                      >
-                        {step.subtitle}
-                      </p>
-                    )}
-
+                    </span>
                   </div>
 
-                </div>
-
-                {/* ==============================
-                    CONNECTOR
-                ============================== */}
-
-                {!isLast && (
-                  <div className="flex-1 mx-3 sm:mx-5 lg:mx-8">
-
-                    <div
-                      className={`
-                        h-[2px]
-                        w-full
-                        rounded-full
-                        ${
-                          connectorCompleted
-                            ? "bg-[#087A58]"
-                            : connectorActive
-                            ? "bg-[#4338CA]"
-                            : "bg-[#D9DBEA]"
-                        }
-                      `}
-                    />
-
-                  </div>
-                )}
-
-              </React.Fragment>
-            );
-          })}
-
+                  {!isLast && (
+                    <ChevronRight size={15} className="shrink-0 text-[#D0D5DD]" />
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
         </div>
-
       </div>
-
     </div>
   );
 };

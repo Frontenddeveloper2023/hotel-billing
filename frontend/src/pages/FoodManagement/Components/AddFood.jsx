@@ -1,18 +1,7 @@
-
 import React, { useEffect, useState } from "react";
-import {
-    X,
-    Upload,
-    Utensils,
-    CheckCircle2,
-    AlertCircle,
-} from "lucide-react";
+import { X, Upload, Utensils, CheckCircle2, AlertCircle } from "lucide-react";
 
-export default function AddFood({
-    onClose,
-    onSave,
-    saving = false,
-}) {
+export default function AddFood({ onClose, onSave, saving = false }) {
     const [foodName, setFoodName] = useState("");
     const [description, setDescription] = useState("");
     const [foodPrice, setFoodPrice] = useState("");
@@ -20,14 +9,7 @@ export default function AddFood({
     const [imageFile, setImageFile] = useState(null);
     const [preview, setPreview] = useState("");
 
-    // ----------------------------------
-    // VALIDATION ERRORS
-    // ----------------------------------
     const [errors, setErrors] = useState({});
-
-    // ----------------------------------
-    // TOUCHED FIELDS
-    // ----------------------------------
     const [touched, setTouched] = useState({});
 
     // ----------------------------------
@@ -35,9 +17,7 @@ export default function AddFood({
     // ----------------------------------
     useEffect(() => {
         return () => {
-            if (preview) {
-                URL.revokeObjectURL(preview);
-            }
+            if (preview) URL.revokeObjectURL(preview);
         };
     }, [preview]);
 
@@ -47,49 +27,24 @@ export default function AddFood({
     const validateField = (field, value) => {
         let error = "";
 
-        // -------------------------------
-        // FOOD NAME
-        // -------------------------------
         if (field === "foodName") {
-            const valueTrimmed = value.trim();
-
-            if (!valueTrimmed) {
-                error =
-                    "Food name is required. Example: Chicken Biryani.";
-            } else if (valueTrimmed.length < 2) {
-                error =
-                    "Food name should contain at least 2 characters.";
-            } else if (valueTrimmed.length > 100) {
-                error =
-                    "Food name should not be longer than 100 characters.";
-            }
+            const v = value.trim();
+            if (!v) error = "Food name is required. Example: Chicken Biryani.";
+            else if (v.length < 2) error = "Food name should contain at least 2 characters.";
+            else if (v.length > 100) error = "Food name should not be longer than 100 characters.";
         }
 
-        // -------------------------------
-        // DESCRIPTION
-        // -------------------------------
         if (field === "description") {
             // Description is optional
             if (value.trim().length > 500) {
-                error =
-                    "Description is too long. Please keep it under 500 characters.";
+                error = "Description is too long. Please keep it under 500 characters.";
             }
         }
 
-        // -------------------------------
-        // FOOD PRICE
-        // -------------------------------
         if (field === "foodPrice") {
-            if (value === "") {
-                error =
-                    "Food price is required. Example: ₹250.";
-            } else if (Number.isNaN(Number(value))) {
-                error =
-                    "Please enter a valid price. Example: ₹250.";
-            } else if (Number(value) < 0) {
-                error =
-                    "Food price cannot be negative.";
-            }
+            if (value === "") error = "Food price is required. Example: ₹250.";
+            else if (Number.isNaN(Number(value))) error = "Please enter a valid price. Example: ₹250.";
+            else if (Number(value) < 0) error = "Food price cannot be negative.";
         }
 
         return error;
@@ -101,41 +56,16 @@ export default function AddFood({
     const validateForm = () => {
         const newErrors = {};
 
-        const foodNameError = validateField(
-            "foodName",
-            foodName
-        );
+        const foodNameError = validateField("foodName", foodName);
+        const descriptionError = validateField("description", description);
+        const foodPriceError = validateField("foodPrice", foodPrice);
 
-        const descriptionError = validateField(
-            "description",
-            description
-        );
-
-        const foodPriceError = validateField(
-            "foodPrice",
-            foodPrice
-        );
-
-        if (foodNameError) {
-            newErrors.foodName = foodNameError;
-        }
-
-        if (descriptionError) {
-            newErrors.description = descriptionError;
-        }
-
-        if (foodPriceError) {
-            newErrors.foodPrice = foodPriceError;
-        }
+        if (foodNameError) newErrors.foodName = foodNameError;
+        if (descriptionError) newErrors.description = descriptionError;
+        if (foodPriceError) newErrors.foodPrice = foodPriceError;
 
         setErrors(newErrors);
-
-        // Mark required/used fields as touched
-        setTouched({
-            foodName: true,
-            description: true,
-            foodPrice: true,
-        });
+        setTouched({ foodName: true, description: true, foodPrice: true });
 
         return Object.keys(newErrors).length === 0;
     };
@@ -145,49 +75,25 @@ export default function AddFood({
     // ----------------------------------
     const handleFoodNameChange = (e) => {
         const value = e.target.value;
-
         setFoodName(value);
-
         if (touched.foodName) {
-            setErrors((prev) => ({
-                ...prev,
-                foodName: validateField(
-                    "foodName",
-                    value
-                ),
-            }));
+            setErrors((prev) => ({ ...prev, foodName: validateField("foodName", value) }));
         }
     };
 
     const handleDescriptionChange = (e) => {
         const value = e.target.value;
-
         setDescription(value);
-
         if (touched.description) {
-            setErrors((prev) => ({
-                ...prev,
-                description: validateField(
-                    "description",
-                    value
-                ),
-            }));
+            setErrors((prev) => ({ ...prev, description: validateField("description", value) }));
         }
     };
 
     const handlePriceChange = (e) => {
         const value = e.target.value;
-
         setFoodPrice(value);
-
         if (touched.foodPrice) {
-            setErrors((prev) => ({
-                ...prev,
-                foodPrice: validateField(
-                    "foodPrice",
-                    value
-                ),
-            }));
+            setErrors((prev) => ({ ...prev, foodPrice: validateField("foodPrice", value) }));
         }
     };
 
@@ -195,17 +101,8 @@ export default function AddFood({
     // BLUR VALIDATION
     // ----------------------------------
     const handleBlur = (field, value) => {
-        setTouched((prev) => ({
-            ...prev,
-            [field]: true,
-        }));
-
-        const error = validateField(field, value);
-
-        setErrors((prev) => ({
-            ...prev,
-            [field]: error,
-        }));
+        setTouched((prev) => ({ ...prev, [field]: true }));
+        setErrors((prev) => ({ ...prev, [field]: validateField(field, value) }));
     };
 
     // ----------------------------------
@@ -213,24 +110,14 @@ export default function AddFood({
     // ----------------------------------
     const handleImageChange = (e) => {
         const file = e.target.files?.[0];
+        if (!file) return;
 
-        if (!file) {
-            return;
-        }
-
-        // Validate image type
         if (!file.type.startsWith("image/")) {
             setErrors((prev) => ({
                 ...prev,
-                image:
-                    "Please select a valid image. JPG, JPEG, PNG or WEBP are recommended.",
+                image: "Please select a valid image. JPG, JPEG, PNG or WEBP are recommended.",
             }));
-
-            setTouched((prev) => ({
-                ...prev,
-                image: true,
-            }));
-
+            setTouched((prev) => ({ ...prev, image: true }));
             return;
         }
 
@@ -238,52 +125,28 @@ export default function AddFood({
         if (file.size > 5 * 1024 * 1024) {
             setErrors((prev) => ({
                 ...prev,
-                image:
-                    "Image size is too large. Please choose an image smaller than 5 MB.",
+                image: "Image size is too large. Please choose an image smaller than 5 MB.",
             }));
-
-            setTouched((prev) => ({
-                ...prev,
-                image: true,
-            }));
-
+            setTouched((prev) => ({ ...prev, image: true }));
             return;
         }
 
-        // Remove old preview
-        if (preview) {
-            URL.revokeObjectURL(preview);
-        }
+        if (preview) URL.revokeObjectURL(preview);
 
         setImageFile(file);
         setPreview(URL.createObjectURL(file));
-
-        setErrors((prev) => ({
-            ...prev,
-            image: "",
-        }));
-
-        setTouched((prev) => ({
-            ...prev,
-            image: true,
-        }));
+        setErrors((prev) => ({ ...prev, image: "" }));
+        setTouched((prev) => ({ ...prev, image: true }));
     };
 
     // ----------------------------------
     // REMOVE IMAGE
     // ----------------------------------
     const handleRemoveImage = () => {
-        if (preview) {
-            URL.revokeObjectURL(preview);
-        }
-
+        if (preview) URL.revokeObjectURL(preview);
         setImageFile(null);
         setPreview("");
-
-        setErrors((prev) => ({
-            ...prev,
-            image: "",
-        }));
+        setErrors((prev) => ({ ...prev, image: "" }));
     };
 
     // ----------------------------------
@@ -295,51 +158,26 @@ export default function AddFood({
         const isValid = validateForm();
 
         if (!isValid) {
-            // Find first invalid field
             if (!foodName.trim()) {
-                document
-                    .getElementById("foodName")
-                    ?.focus();
+                document.getElementById("foodName")?.focus();
                 return;
             }
-
             if (foodPrice === "") {
-                document
-                    .getElementById("foodPrice")
-                    ?.focus();
+                document.getElementById("foodPrice")?.focus();
                 return;
             }
-
             return;
         }
 
-        // Check image validation before submit
-        if (errors.image) {
-            return;
-        }
+        if (errors.image) return;
 
         const formData = new FormData();
-
-        formData.append(
-            "foodName",
-            foodName.trim()
-        );
-
-        formData.append(
-            "description",
-            description.trim()
-        );
-
-        formData.append(
-            "foodPrice",
-            Number(foodPrice)
-        );
+        formData.append("foodName", foodName.trim());
+        formData.append("description", description.trim());
+        formData.append("foodPrice", Number(foodPrice));
 
         if (imageFile) {
-            formData.append(
-                "foodImage",
-                imageFile
-            );
+            formData.append("foodImage", imageFile);
         }
 
         await onSave(formData);
@@ -349,173 +187,44 @@ export default function AddFood({
     // INPUT STYLE
     // ----------------------------------
     const getInputClass = (field) => {
-        const hasError =
-            touched[field] && errors[field];
-
-        return `
-            w-full
-            rounded-xl
-            border
-            px-3.5
-            sm:px-4
-            py-3
-            text-sm
-            text-slate-900
-            outline-none
-            transition-all
-            placeholder:text-slate-400
-            disabled:bg-slate-100
-            disabled:cursor-not-allowed
-            ${
-                hasError
-                    ? `
-                        border-rose-400
-                        bg-rose-50/30
-                        focus:border-rose-500
-                        focus:ring-2
-                        focus:ring-rose-100
-                    `
-                    : `
-                        border-slate-200
-                        bg-slate-50/50
-                        focus:bg-white
-                        focus:border-teal-500
-                        focus:ring-2
-                        focus:ring-teal-100
-                    `
-            }
-        `;
+        const hasError = touched[field] && errors[field];
+        return `w-full rounded-xl border px-3.5 py-3 text-sm text-[#0a1a3f] outline-none transition-all placeholder:text-slate-400 disabled:cursor-not-allowed disabled:bg-slate-100 sm:px-4 ${
+            hasError
+                ? "border-rose-400 bg-rose-50/30 focus:border-rose-500 focus:ring-2 focus:ring-rose-100"
+                : "border-[var(--line)] bg-[var(--tint)]/40 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+        }`;
     };
+
+    const renderError = (field) =>
+        touched[field] && errors[field] ? (
+            <div className="fm-drop mt-1.5 flex items-start gap-1.5 text-rose-600">
+                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <p className="text-[11px] sm:text-xs">{errors[field]}</p>
+            </div>
+        ) : null;
+
+    const labelCls = "mb-1.5 block text-xs font-bold text-slate-600 sm:text-[13px]";
 
     return (
         <div
-            className="
-                fixed
-                inset-0
-                z-[9999]
-
-                flex
-                items-center
-                justify-center
-
-                bg-slate-900/60
-                backdrop-blur-sm
-
-                p-3
-                sm:p-4
-
-                overflow-y-auto
-            "
+            className="fm-fade fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-[#0a1a3f]/60 p-3 backdrop-blur-sm sm:p-4"
             onMouseDown={(e) => {
-                if (
-                    e.target === e.currentTarget &&
-                    !saving
-                ) {
-                    onClose();
-                }
+                if (e.target === e.currentTarget && !saving) onClose();
             }}
         >
-            {/* ==================================================
-                MODAL
-            ================================================== */}
             <div
-                className="
-                    w-full
-                    max-w-lg
-
-                    max-h-[94vh]
-                    sm:max-h-[90vh]
-
-                    overflow-y-auto
-
-                    bg-white
-                    rounded-2xl
-                    sm:rounded-3xl
-
-                    shadow-2xl
-
-                    border
-                    border-slate-200
-
-                    my-auto
-                "
-                onMouseDown={(e) =>
-                    e.stopPropagation()
-                }
+                className="fm-pop my-auto max-h-[94vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[var(--line)] bg-white shadow-2xl sm:max-h-[90vh] sm:rounded-3xl"
+                onMouseDown={(e) => e.stopPropagation()}
             >
-                {/* ==================================================
-                    HEADER
-                ================================================== */}
-                <div
-                    className="
-                        sticky
-                        top-0
-                        z-10
-
-                        flex
-                        items-center
-                        justify-between
-
-                        px-4
-                        sm:px-6
-
-                        py-4
-                        sm:py-5
-
-                        bg-white
-
-                        border-b
-                        border-slate-100
-                    "
-                >
-                    <div className="flex items-center gap-3 min-w-0">
-                        <div
-                            className="
-                                w-10
-                                h-10
-
-                                rounded-xl
-
-                                bg-teal-50
-
-                                flex
-                                items-center
-                                justify-center
-
-                                shrink-0
-                            "
-                        >
-                            <Utensils
-                                className="
-                                    w-5
-                                    h-5
-                                    text-[var(--teal-dark,#065b62)]
-                                "
-                            />
+                {/* HEADER */}
+                <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[var(--line)] bg-white/95 px-4 py-4 backdrop-blur sm:px-6 sm:py-5">
+                    <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#12306b] to-blue-500 text-white shadow-md shadow-blue-500/30 sm:h-11 sm:w-11">
+                            <Utensils className="h-5 w-5" />
                         </div>
-
                         <div className="min-w-0">
-                            <h2
-                                className="
-                                    text-base
-                                    sm:text-lg
-
-                                    font-bold
-                                    text-slate-900
-                                "
-                            >
-                                Add Food
-                            </h2>
-
-                            <p
-                                className="
-                                    text-[10px]
-                                    sm:text-xs
-
-                                    text-slate-500
-                                    mt-0.5
-                                "
-                            >
+                            <h2 className="text-base font-bold text-[#0a1a3f] sm:text-lg">Add Food</h2>
+                            <p className="mt-0.5 text-[11px] text-slate-400 sm:text-xs">
                                 Add a new item to your menu
                             </p>
                         </div>
@@ -525,484 +234,109 @@ export default function AddFood({
                         type="button"
                         onClick={onClose}
                         disabled={saving}
-                        className="
-                            w-9
-                            h-9
-
-                            rounded-xl
-
-                            flex
-                            items-center
-                            justify-center
-
-                            text-slate-400
-
-                            hover:bg-slate-100
-                            hover:text-slate-800
-
-                            active:scale-95
-
-                            transition-all
-
-                            cursor-pointer
-
-                            disabled:opacity-50
-                            disabled:cursor-not-allowed
-
-                            shrink-0
-                        "
                         aria-label="Close"
+                        className="fm-btn flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-slate-400 hover:bg-[var(--tint)] hover:text-blue-700 disabled:opacity-50"
                     >
-                        <X className="w-5 h-5" />
+                        <X className="h-5 w-5" />
                     </button>
                 </div>
 
-                {/* ==================================================
-                    FORM
-                ================================================== */}
-                <form
-                    onSubmit={handleSubmit}
-                    noValidate
-                    className="
-                        p-4
-                        sm:p-6
-
-                        space-y-5
-                    "
-                >
-                    {/* ==================================================
-                        FOOD NAME
-                    ================================================== */}
+                <form onSubmit={handleSubmit} noValidate className="space-y-5 p-4 sm:p-6">
+                    {/* FOOD NAME */}
                     <div>
-                        <label
-                            htmlFor="foodName"
-                            className="
-                                block
-                                text-sm
-                                font-semibold
-                                text-slate-800
-                                mb-1.5
-                            "
-                        >
-                            Food Name
-                            <span className="text-rose-500 ml-1">
-                                *
-                            </span>
+                        <label htmlFor="foodName" className={labelCls}>
+                            Food Name<span className="ml-1 text-rose-500">*</span>
                         </label>
-
                         <input
                             id="foodName"
                             type="text"
                             value={foodName}
                             onChange={handleFoodNameChange}
-                            onBlur={() =>
-                                handleBlur(
-                                    "foodName",
-                                    foodName
-                                )
-                            }
-                            placeholder="e.g. Chicken Biryani"
+                            onBlur={() => handleBlur("foodName", foodName)}
                             disabled={saving}
-                            autoComplete="off"
-                            className={getInputClass(
-                                "foodName"
-                            )}
+                            placeholder="e.g. Chicken Biryani"
+                            className={getInputClass("foodName")}
                         />
-
-                        {touched.foodName &&
-                        errors.foodName ? (
-                            <div
-                                className="
-                                    flex
-                                    items-start
-                                    gap-1.5
-                                    mt-1.5
-                                    text-rose-600
-                                "
-                            >
-                                <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-
-                                <p className="text-[11px] sm:text-xs leading-relaxed">
-                                    {errors.foodName}
-                                </p>
-                            </div>
-                        ) : (
-                            <p
-                                className="
-                                    text-[10px]
-                                    sm:text-[11px]
-                                    text-slate-400
-                                    mt-1.5
-                                "
-                            >
-                                Example: Chicken Biryani,
-                                Paneer Butter Masala
-                            </p>
-                        )}
+                        {renderError("foodName")}
                     </div>
 
-                    {/* ==================================================
-                        DESCRIPTION
-                    ================================================== */}
+                    {/* DESCRIPTION */}
                     <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                            <label
-                                htmlFor="description"
-                                className="
-                                    block
-                                    text-sm
-                                    font-semibold
-                                    text-slate-800
-                                "
-                            >
-                                Description
-                            </label>
-
-                            <span
-                                className="
-                                    text-[10px]
-                                    text-slate-400
-                                "
-                            >
-                                Optional
-                            </span>
-                        </div>
-
+                        <label htmlFor="description" className={labelCls}>
+                            Description
+                        </label>
                         <textarea
                             id="description"
-                            value={description}
-                            onChange={
-                                handleDescriptionChange
-                            }
-                            onBlur={() =>
-                                handleBlur(
-                                    "description",
-                                    description
-                                )
-                            }
-                            placeholder="e.g. Basmati rice cooked with chicken and aromatic spices"
                             rows={3}
-                            maxLength={500}
+                            value={description}
+                            onChange={handleDescriptionChange}
+                            onBlur={() => handleBlur("description", description)}
                             disabled={saving}
-                            className={`
-                                ${getInputClass(
-                                    "description"
-                                )}
-                                resize-none
-                            `}
+                            maxLength={500}
+                            placeholder="e.g. Basmati rice cooked with chicken and aromatic spices"
+                            className={`${getInputClass("description")} resize-none`}
                         />
-
-                        <div className="flex justify-between gap-2 mt-1.5">
-                            {touched.description &&
-                            errors.description ? (
-                                <div
-                                    className="
-                                        flex
-                                        items-start
-                                        gap-1.5
-                                        text-rose-600
-                                    "
-                                >
-                                    <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-
-                                    <p className="text-[11px] sm:text-xs">
-                                        {
-                                            errors.description
-                                        }
-                                    </p>
-                                </div>
-                            ) : (
-                                <p
-                                    className="
-                                        text-[10px]
-                                        sm:text-[11px]
-                                        text-slate-400
-                                    "
-                                >
-                                    Briefly describe the
-                                    food item.
-                                </p>
-                            )}
-
-                            <span
-                                className="
-                                    text-[10px]
-                                    text-slate-400
-                                    shrink-0
-                                "
-                            >
+                        <div className="mt-1.5 flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                                {renderError("description")}
+                            </div>
+                            <span className="ml-auto shrink-0 text-[11px] text-slate-400">
                                 {description.length}/500
                             </span>
                         </div>
                     </div>
 
-                    {/* ==================================================
-                        FOOD PRICE
-                    ================================================== */}
+                    {/* PRICE */}
                     <div>
-                        <label
-                            htmlFor="foodPrice"
-                            className="
-                                block
-                                text-sm
-                                font-semibold
-                                text-slate-800
-                                mb-1.5
-                            "
-                        >
-                            Food Price
-                            <span className="text-rose-500 ml-1">
-                                *
-                            </span>
+                        <label htmlFor="foodPrice" className={labelCls}>
+                            Food Price<span className="ml-1 text-rose-500">*</span>
                         </label>
-
                         <div className="relative">
-                            <span
-                                className="
-                                    absolute
-                                    left-4
-                                    top-1/2
-                                    -translate-y-1/2
-
-                                    text-slate-500
-                                    font-semibold
-
-                                    pointer-events-none
-                                "
-                            >
+                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-blue-500">
                                 ₹
                             </span>
-
                             <input
                                 id="foodPrice"
                                 type="number"
                                 min="0"
                                 step="0.01"
+                                inputMode="decimal"
                                 value={foodPrice}
                                 onChange={handlePriceChange}
-                                onBlur={() =>
-                                    handleBlur(
-                                        "foodPrice",
-                                        foodPrice
-                                    )
-                                }
-                                placeholder="250"
+                                onBlur={() => handleBlur("foodPrice", foodPrice)}
                                 disabled={saving}
-                                inputMode="decimal"
-                                className={`
-                                    ${getInputClass(
-                                        "foodPrice"
-                                    )}
-                                    pl-9
-                                `}
+                                placeholder="250"
+                                className={`${getInputClass("foodPrice")} pl-8 sm:pl-9`}
                             />
                         </div>
-
-                        {touched.foodPrice &&
-                        errors.foodPrice ? (
-                            <div
-                                className="
-                                    flex
-                                    items-start
-                                    gap-1.5
-                                    mt-1.5
-                                    text-rose-600
-                                "
-                            >
-                                <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-
-                                <p className="text-[11px] sm:text-xs leading-relaxed">
-                                    {errors.foodPrice}
-                                </p>
-                            </div>
-                        ) : (
-                            <p
-                                className="
-                                    text-[10px]
-                                    sm:text-[11px]
-                                    text-slate-400
-                                    mt-1.5
-                                "
-                            >
-                                Example: ₹250
-                            </p>
-                        )}
+                        {renderError("foodPrice")}
                     </div>
 
-                    {/* ==================================================
-                        FOOD IMAGE
-                    ================================================== */}
+                    {/* IMAGE */}
                     <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                            <label
-                                className="
-                                    block
-                                    text-sm
-                                    font-semibold
-                                    text-slate-800
-                                "
-                            >
-                                Food Image
-                            </label>
+                        <label className={labelCls}>Food Image</label>
 
-                            <span
-                                className="
-                                    text-[10px]
-                                    text-slate-400
-                                "
-                            >
-                                Optional
-                            </span>
-                        </div>
-
-                        <label
-                            className={`
-                                block
-                                border-2
-                                border-dashed
-                                rounded-2xl
-                                overflow-hidden
-                                transition-all
-                                ${
-                                    errors.image
-                                        ? "border-rose-300 bg-rose-50/20"
-                                        : "border-slate-200 hover:border-teal-400 hover:bg-teal-50/20"
-                                }
-                                ${
-                                    saving
-                                        ? "cursor-not-allowed opacity-70"
-                                        : "cursor-pointer"
-                                }
-                            `}
-                        >
+                        <label className="group relative block h-40 cursor-pointer overflow-hidden rounded-xl border border-dashed border-blue-200 bg-[var(--tint)] transition-colors hover:border-blue-400 sm:h-44">
                             {preview ? (
-                                <div className="relative">
-                                    <img
-                                        src={preview}
-                                        alt="Food preview"
-                                        className="
-                                            w-full
-                                            h-48
-                                            sm:h-56
-                                            object-cover
-                                        "
-                                    />
-
-                                    {/* IMAGE OVERLAY */}
-                                    <div
-                                        className="
-                                            absolute
-                                            inset-0
-                                            bg-black/35
-                                            flex
-                                            items-center
-                                            justify-center
-                                            opacity-0
-                                            hover:opacity-100
-                                            transition-opacity
-                                        "
-                                    >
-                                        <span
-                                            className="
-                                                px-4
-                                                py-2
-                                                rounded-xl
-                                                bg-white
-                                                text-xs
-                                                sm:text-sm
-                                                font-semibold
-                                                text-slate-800
-                                            "
-                                        >
-                                            Change Image
+                                <>
+                                    <img src={preview} alt="Food preview" className="h-full w-full object-cover" />
+                                    <div className="absolute inset-0 flex items-center justify-center bg-[#0a1a3f]/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                                        <span className="inline-flex items-center gap-2 text-xs font-semibold text-white">
+                                            <Upload className="h-4 w-4" />
+                                            Change image
                                         </span>
                                     </div>
-
-                                    {/* IMAGE NAME */}
-                                    <div
-                                        className="
-                                            absolute
-                                            left-2
-                                            right-2
-                                            bottom-2
-
-                                            px-3
-                                            py-2
-
-                                            rounded-lg
-
-                                            bg-black/60
-                                            backdrop-blur-sm
-
-                                            text-white
-                                            text-[10px]
-                                            sm:text-xs
-
-                                            truncate
-                                        "
-                                    >
-                                        {imageFile?.name}
-                                    </div>
-                                </div>
+                                </>
                             ) : (
-                                <div
-                                    className="
-                                        h-40
-                                        sm:h-44
-
-                                        flex
-                                        flex-col
-                                        items-center
-                                        justify-center
-
-                                        px-4
-                                    "
-                                >
-                                    <div
-                                        className="
-                                            w-12
-                                            h-12
-
-                                            rounded-full
-
-                                            bg-teal-50
-
-                                            flex
-                                            items-center
-                                            justify-center
-                                        "
-                                    >
-                                        <Upload
-                                            className="
-                                                w-5
-                                                h-5
-                                                text-teal-700
-                                            "
-                                        />
+                                <div className="flex h-full flex-col items-center justify-center px-3">
+                                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm">
+                                        <Upload className="h-5 w-5 text-blue-600" />
                                     </div>
-
-                                    <span
-                                        className="
-                                            text-sm
-                                            font-semibold
-                                            text-slate-700
-                                            mt-3
-                                        "
-                                    >
+                                    <span className="mt-3 text-sm font-semibold text-[#12306b]">
                                         Upload food image
                                     </span>
-
-                                    <span
-                                        className="
-                                            text-[10px]
-                                            sm:text-xs
-                                            text-slate-400
-                                            mt-1
-                                            text-center
-                                        "
-                                    >
-                                        JPG, JPEG, PNG or WEBP
-                                        · Max 5 MB
+                                    <span className="mt-1 text-center text-[10px] text-slate-400 sm:text-xs">
+                                        JPG, JPEG, PNG or WEBP · Max 5 MB
                                     </span>
                                 </div>
                             )}
@@ -1010,151 +344,46 @@ export default function AddFood({
                             <input
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp,image/jpg"
-                                onChange={
-                                    handleImageChange
-                                }
+                                onChange={handleImageChange}
                                 className="hidden"
                                 disabled={saving}
                             />
                         </label>
 
-                        {/* IMAGE ERROR */}
                         {errors.image && (
-                            <div
-                                className="
-                                    flex
-                                    items-start
-                                    gap-1.5
-                                    mt-1.5
-                                    text-rose-600
-                                "
-                            >
-                                <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-
-                                <p className="text-[11px] sm:text-xs">
-                                    {errors.image}
-                                </p>
+                            <div className="fm-drop mt-1.5 flex items-start gap-1.5 text-rose-600">
+                                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                <p className="text-[11px] sm:text-xs">{errors.image}</p>
                             </div>
                         )}
 
-                        {/* REMOVE IMAGE */}
                         {preview && !saving && (
                             <button
                                 type="button"
                                 onClick={handleRemoveImage}
-                                className="
-                                    mt-2
-                                    text-[11px]
-                                    sm:text-xs
-                                    font-semibold
-                                    text-rose-500
-                                    hover:text-rose-700
-                                    cursor-pointer
-                                "
+                                className="mt-2 cursor-pointer text-[11px] font-semibold text-rose-500 hover:text-rose-700 sm:text-xs"
                             >
                                 Remove image
                             </button>
                         )}
                     </div>
 
-                    {/* ==================================================
-                        FORM INFORMATION
-                    ================================================== */}
-                    <div
-                        className="
-                            flex
-                            items-start
-                            gap-2.5
-
-                            rounded-xl
-
-                            bg-slate-50
-                            border
-                            border-slate-100
-
-                            px-3.5
-                            py-3
-                        "
-                    >
-                        <CheckCircle2
-                            className="
-                                w-4
-                                h-4
-                                text-teal-600
-                                mt-0.5
-                                shrink-0
-                            "
-                        />
-
-                        <p
-                            className="
-                                text-[10px]
-                                sm:text-[11px]
-                                text-slate-500
-                                leading-relaxed
-                            "
-                        >
-                            Fields marked with{" "}
-                            <span className="text-rose-500 font-bold">
-                                *
-                            </span>{" "}
-                            are required. You can add a
-                            description and image later if
-                            needed.
+                    {/* INFO */}
+                    <div className="flex items-start gap-2.5 rounded-xl border border-blue-100 bg-[var(--tint)] px-3.5 py-3">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
+                        <p className="text-[10px] leading-relaxed text-slate-500 sm:text-[11px]">
+                            Fields marked with <span className="font-bold text-rose-500">*</span> are
+                            required. You can add a description and image later if needed.
                         </p>
                     </div>
 
-                    {/* ==================================================
-                        BUTTONS
-                    ================================================== */}
-                    <div
-                        className="
-                            flex
-                            flex-col-reverse
-                            sm:flex-row
-
-                            gap-2.5
-
-                            pt-4
-
-                            border-t
-                            border-slate-100
-                        "
-                    >
+                    {/* BUTTONS */}
+                    <div className="flex flex-col-reverse gap-2.5 border-t border-[var(--line)] pt-4 sm:flex-row sm:justify-end">
                         <button
                             type="button"
                             onClick={onClose}
                             disabled={saving}
-                            className="
-                                w-full
-                                sm:w-auto
-
-                                px-5
-                                py-2.5
-
-                                rounded-xl
-
-                                border
-                                border-slate-200
-
-                                bg-white
-
-                                text-sm
-                                font-semibold
-                                text-slate-700
-
-                                hover:bg-slate-50
-                                hover:border-slate-300
-
-                                active:scale-[0.98]
-
-                                transition-all
-
-                                cursor-pointer
-
-                                disabled:opacity-50
-                                disabled:cursor-not-allowed
-                            "
+                            className="fm-btn w-full cursor-pointer rounded-xl border border-[var(--line)] bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-[var(--tint)] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
                             Cancel
                         </button>
@@ -1162,57 +391,12 @@ export default function AddFood({
                         <button
                             type="submit"
                             disabled={saving}
-                            className="
-                                w-full
-                                sm:w-auto
-
-                                sm:min-w-[130px]
-
-                                px-5
-                                py-2.5
-
-                                rounded-xl
-
-                                bg-[var(--teal-dark,#065b62)]
-
-                                text-white
-                                text-sm
-                                font-bold
-
-                                hover:bg-[var(--teal,#08838d)]
-
-                                active:scale-[0.98]
-
-                                transition-all
-
-                                cursor-pointer
-
-                                disabled:opacity-50
-                                disabled:cursor-not-allowed
-
-                                flex
-                                items-center
-                                justify-center
-                                gap-2
-                            "
+                            className="fm-btn flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#12306b] to-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-blue-600/25 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:min-w-[130px]"
                         >
                             {saving && (
-                                <span
-                                    className="
-                                        w-4
-                                        h-4
-                                        rounded-full
-                                        border-2
-                                        border-white/30
-                                        border-t-white
-                                        animate-spin
-                                    "
-                                />
+                                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                             )}
-
-                            {saving
-                                ? "Adding..."
-                                : "Add Food"}
+                            {saving ? "Adding..." : "Add Food"}
                         </button>
                     </div>
                 </form>

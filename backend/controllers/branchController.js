@@ -1,4 +1,4 @@
-import BranchHotels from "../models/BranchHotels.js";
+import BranchHotels from "../models/branchHotels.js";
 import Subscription from "../models/subscription.js";
 import Hotels from "../models/hotels.js";
 import Room from "../models/room.js";
@@ -305,7 +305,7 @@ export const createBranch = async (req, res) => {
         return res.status(409).json({
           success: false,
           message:
-            "This email address is already used by another branch in this hotel.",
+            "This email is already used. Please use a different email.",
         });
       }
     }
@@ -320,7 +320,7 @@ if (normalizedEmail) {
   if (existingUser) {
     return res.status(409).json({
       success: false,
-      message: "This email already exists. Please use another email.",
+      message: "This email is already used. Please use a different email.",
     });
   }
 }
@@ -701,7 +701,7 @@ if (
       return res.status(409).json({
         success: false,
         message:
-          "Another branch in this hotel is already using this email address.",
+          "This email is already used. Please use a different email.",
       });
     }
 

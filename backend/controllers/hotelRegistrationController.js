@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 
 import SaasHotelRegistration from "../models/saasHotelRegistration.js";
-import Hotels from "../models/Hotels.js";
-import BranchHotels from "../models/BranchHotels.js";
-import Plans from "../models/Plans.js";
-import Subscription from "../models/Subscription.js";
+import Hotels from "../models/hotels.js";
+import BranchHotels from "../models/branchHotels.js";
+import Plans from "../models/plans.js";
+import Subscription from "../models/subscription.js";
 import SaasNotification from "../models/saasNotification.js";
 import User from "../models/users.js";
 
@@ -863,8 +863,15 @@ export const approveRegistration = async (req, res) => {
     // STEP 10: CREATE HOTEL
     // ========================================================
 
+    const cleanHotelCode = registration.hotelName
+      .replace(/[^A-Za-z0-9]/g, "")
+      .slice(0, 6)
+      .toUpperCase() || "HTL";
+
     const hotel = await Hotels.create({
       hotelName: registration.hotelName,
+
+      hotelCode: cleanHotelCode,
 
       ownerName: registration.ownerName,
 
@@ -1440,30 +1447,36 @@ export const confirmDummyPayment = async (req, res) => {
     // CREATE ADMIN NOTIFICATION
     // ==========================================
 
-    await SaasNotification.create({
-      type: "payment_submitted",
+   await SaasNotification.create({
+  type: "registration_submitted",
 
-      title: "New Payment Received",
+  title: "New Hotel Registration",
 
-      message: `${registration.hotelName} has completed the subscription payment. Application is waiting for admin approval.`,
+  message: `${registration.ownerName} registered ${registration.hotelName}. The subscription payment has been completed and the hotel registration is waiting for admin approval.`,
 
-      registrationId: registration._id,
+  registrationId: registration._id,
 
-      hotelId: null,
+  hotelId: null,
 
-      isRead: false,
+  isRead: false,
 
-      metadata: {
-        hotelName: registration.hotelName,
-        ownerName: registration.ownerName,
-        email: registration.email,
-        phone: registration.phone,
-        planId: registration.planId,
-        billingCycle: registration.billingCycle,
-        paymentStatus: registration.paymentStatus,
-        paymentTransactionId: transactionId,
-      },
-    });
+  metadata: {
+    hotelName: registration.hotelName,
+    ownerName: registration.ownerName,
+    email: registration.email,
+    phone: registration.phone,
+
+    action: "new_hotel_registration",
+
+    planId: registration.planId,
+    billingCycle: registration.billingCycle,
+
+    paymentStatus: registration.paymentStatus,
+    paymentTransactionId: transactionId,
+
+    registeredAt: registration.createdAt || new Date(),
+  },
+});
 
     log(
       "info",

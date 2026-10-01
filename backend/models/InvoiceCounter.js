@@ -19,7 +19,6 @@ const invoiceCounterSchema = new mongoose.Schema(
     year: {
       type: Number,
       required: true,
-      index: true,
     },
 
     sequence: {

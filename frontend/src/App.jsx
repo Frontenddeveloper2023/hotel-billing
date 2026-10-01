@@ -42,6 +42,10 @@ const Login = lazy(() =>
   import("./pages/Login/Login")
 );
 
+const HotelLogin = lazy(() =>
+  import("./pages/HotelLogin/HotelLogin")
+);
+
 const Layout = lazy(() =>
   import("./Components/Layout")
 );
@@ -71,6 +75,12 @@ const ServiceManagement = lazy(() =>
 const BranchManagement = lazy(() =>
   import(
     "./pages/BranchManagement/BranchManagement"
+  )
+);
+
+const PlanUpgrade = lazy(() =>
+  import(
+    "./pages/HotelLogin/PlanUpgrade"
   )
 );
 
@@ -188,6 +198,15 @@ const PermissionRoute = ({
 
 
   // -------------------------------------------------
+  // HOTEL OWNER – full access to all hotel pages
+  // -------------------------------------------------
+
+  if (userData?.role === "hotelOwner") {
+    return children;
+  }
+
+
+  // -------------------------------------------------
   // USER PERMISSION
   // -------------------------------------------------
 
@@ -268,18 +287,23 @@ const defaultAuthenticatedRoute =
         ================================================= */}
 
         <Route
-          path="/login"
-          element={
-            !isAuthenticated ? (
-              <Login />
-            ) : (
-              <Navigate
-                to={defaultAuthenticatedRoute}
-                replace
-              />
-            )
-          }
-        />
+  path="/login"
+  element={
+    !isAuthenticated ? (
+      <Login />
+    ) : (
+      <Navigate
+        to={defaultAuthenticatedRoute}
+        replace
+      />
+    )
+  }
+/>
+
+<Route
+  path="/hotel-login"
+  element={<HotelLogin />}
+/>
 
 
         {/* =================================================
@@ -642,6 +666,22 @@ const defaultAuthenticatedRoute =
                 permission="reports"
               >
                 <Reports />
+              </PermissionRoute>
+            }
+          />
+
+
+          {/* =================================================
+              PLAN UPGRADE
+          ================================================= */}
+
+          <Route
+            path="plan-upgrade"
+            element={
+              <PermissionRoute
+                permission="upgradePlan"
+              >
+                <PlanUpgrade />
               </PermissionRoute>
             }
           />

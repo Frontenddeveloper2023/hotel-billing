@@ -6,6 +6,7 @@ import {
   getHotelById,
   updateHotel,
   deleteHotel,
+  getPublicHotelInfo,
 } from "../controllers/hotelController.js";
 
 import {
@@ -19,6 +20,9 @@ const router = express.Router();
 // ==========================================
 // HOTEL ROUTES
 // ==========================================
+
+// Public hotel info for plan upgrade/renewal
+router.get("/public/:id", getPublicHotelInfo);
 
 // Get all hotels
 router.get(

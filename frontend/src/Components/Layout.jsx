@@ -1,241 +1,98 @@
 import React, { useState, Suspense } from "react";
-import {
-  Outlet,
-  Link,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
-
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
-
+import { useToast } from "../Context/ToastContext";
 import {
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  X,
-  UserShield,
-  BedDouble,
-  FileText,
-  UtensilsCrossed,
-  Wrench,
-  Receipt,
-  Users,
-  SlidersHorizontal,
-  Building2,
-  ClipboardList,
-  CreditCard,
-  Bell,
+  LayoutDashboard, LogOut, Menu, X, ShieldCheck as UserShield, BedDouble, FileText,
+  UtensilsCrossed, Wrench, Receipt, Users, SlidersHorizontal, Building2, CreditCard, Bell,
 } from "lucide-react";
 
-import logoImg from "../../public/logo.png";
+
+import logoImg from "../../public/logo.png"
+
+import SubscriptionAlertBanner from "./SubscriptionAlertBanner";
+
+const ic = "w-5 h-5";
 
 export default function Layout() {
   const { logoutUser, userData } = useAuth();
-
   const location = useLocation();
   const navigate = useNavigate();
-
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  // =====================================================
-  // ROLE
-  // =====================================================
+  const toast = useToast();
 
   const isMainAdmin = userData?.role === "admin";
 
-  // =====================================================
-  // MAIN ADMIN NAVIGATION
-  // =====================================================
-
   const adminNavigation = [
-    {
-      name: "Dashboard",
-      href: "/saas-admin/dashboard",
-      permissionKey: "saasAdmin",
-      icon: <LayoutDashboard className="w-5 h-5" />,
-    },
-    {
-      name: "Hotels",
-      href: "/saas-admin/hotels",
-      permissionKey: "hotels",
-      icon: <Building2 className="w-5 h-5" />,
-    },
-    
-    {
-      name: "Plans",
-      href: "/saas-admin/plans",
-      permissionKey: "plans",
-      icon: <CreditCard className="w-5 h-5" />,
-    },
-    {
-      name: "Subscriptions",
-      href: "/saas-admin/subscriptions",
-      permissionKey: "subscriptions",
-      icon: <Receipt className="w-5 h-5" />,
-    },
-    {
-      name: "Notifications",
-      href: "/saas-admin/notifications",
-      permissionKey: "hotelRegistrations",
-      icon: <Bell className="w-5 h-5" />,
-    },
+    { name: "Dashboard", href: "/saas-admin/dashboard", permissionKey: "saasAdmin", icon: <LayoutDashboard className={ic} /> },
+    { name: "Hotels", href: "/saas-admin/hotels", permissionKey: "hotels", icon: <Building2 className={ic} /> },
+    { name: "Plans", href: "/saas-admin/plans", permissionKey: "plans", icon: <CreditCard className={ic} /> },
+    { name: "Subscriptions", href: "/saas-admin/subscriptions", permissionKey: "subscriptions", icon: <Receipt className={ic} /> },
+    { name: "Notifications", href: "/saas-admin/notifications", permissionKey: "hotelRegistrations", icon: <Bell className={ic} /> },
   ];
-
-  // =====================================================
-  // HOTEL USER NAVIGATION
-  // =====================================================
 
   const hotelNavigation = [
-    {
-      name: "Dashboard",
-      href: "/hotel/dashboard",
-      permissionKey: "dashboard",
-      icon: <LayoutDashboard className="w-5 h-5" />,
-    },
-    {
-      name: "Rooms Booking",
-      href: "/rooms-booking",
-      permissionKey: "roomsBooking",
-      icon: <BedDouble className="w-5 h-5" />,
-    },
-    {
-      name: "Food Management",
-      href: "/food-management",
-      permissionKey: "foodManagement",
-      icon: <UtensilsCrossed className="w-5 h-5" />,
-    },
-    {
-      name: "Service Management",
-      href: "/service-management",
-      permissionKey: "serviceManagement",
-      icon: <Wrench className="w-5 h-5" />,
-    },
-    {
-      name: "Reports",
-      href: "/reports",
-      permissionKey: "reports",
-      icon: <FileText className="w-5 h-5" />,
-    },
-    {
-      name: "Customer",
-      href: "/customer",
-      permissionKey: "customer",
-      icon: <Users className="w-5 h-5" />,
-    },
-    {
-      name: "Invoice Management",
-      href: "/invoice-management",
-      permissionKey: "invoice",
-      icon: <Receipt className="w-5 h-5" />,
-    },
-    {
-      name: "Branches",
-      href: "/branches",
-      permissionKey: "settings",
-      icon: <Building2 className="w-5 h-5" />,
-    },
-    {
-      name: "Settings",
-      href: "/settings",
-      permissionKey: "settings",
-      icon: <SlidersHorizontal className="w-5 h-5" />,
-    },
-    {
-      name: "Users",
-      href: "/users",
-      permissionKey: "users",
-      icon: <UserShield className="w-5 h-5" />,
-    },
+    { name: "Dashboard", href: "/hotel/dashboard", permissionKey: "dashboard", icon: <LayoutDashboard className={ic} /> },
+    { name: "Rooms Booking", href: "/rooms-booking", permissionKey: "roomsBooking", icon: <BedDouble className={ic} /> },
+    { name: "Food Management", href: "/food-management", permissionKey: "foodManagement", icon: <UtensilsCrossed className={ic} /> },
+    { name: "Service Management", href: "/service-management", permissionKey: "serviceManagement", icon: <Wrench className={ic} /> },
+    { name: "Reports", href: "/reports", permissionKey: "reports", icon: <FileText className={ic} /> },
+    { name: "Customer", href: "/customer", permissionKey: "customer", icon: <Users className={ic} /> },
+    { name: "Invoice Management", href: "/invoice-management", permissionKey: "invoice", icon: <Receipt className={ic} /> },
+    { name: "Branches", href: "/branches", permissionKey: "settings", icon: <Building2 className={ic} /> },
+    { name: "Settings", href: "/settings", permissionKey: "settings", icon: <SlidersHorizontal className={ic} /> },
+    { name: "Upgrade Plan", href: "/plan-upgrade", permissionKey: "upgradePlan", icon: <CreditCard className={ic} /> },
+    { name: "Users", href: "/users", permissionKey: "users", icon: <UserShield className={ic} /> },
   ];
 
-  // =====================================================
-  // SELECT SIDEBAR
-  // =====================================================
-
-  const navigation = isMainAdmin
-    ? adminNavigation
-    : hotelNavigation;
-
-  // =====================================================
-  // PERMISSION
-  // =====================================================
+  const navigation = isMainAdmin ? adminNavigation : hotelNavigation;
 
   const hasPermission = (permissionKey) => {
-    // Main Admin has SaaS-level access.
-    if (isMainAdmin) {
-      return true;
-    }
-
+    if (isMainAdmin) return true;
+    if (userData?.role === "hotelOwner") return true;
     return userData?.permission?.[permissionKey] === true;
   };
 
-  // =====================================================
-  // LOGOUT
-  // =====================================================
+ const handleLogout = async () => {
+  // Save the role before logout clears userData
+  const currentRole = userData?.role;
 
-  const handleLogout = async () => {
-    try {
-      await logoutUser();
-    } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
-      navigate("/login", { replace: true });
+  try {
+    await logoutUser();
+  } catch (error) {
+    console.error("Logout error:", error);
+  } finally {
+    if (currentRole === "admin") {
+      window.location.replace("/hotel-billing-system/hotel-login");
+    } else if (
+      currentRole === "hotelOwner" ||
+      currentRole === "receptionist"
+    ) {
+      window.location.replace("/hotel-billing-system/hotel-login");
+    } else {
+      window.location.replace("/hotel-billing-system/hotel-login");
     }
-  };
+  }
+};
 
-  // =====================================================
-  // NAVIGATION CLICK
-  // =====================================================
 
   const handleNavClick = (e, item, isMobile) => {
-    if (
-      item.permissionKey &&
-      !hasPermission(item.permissionKey)
-    ) {
+    if (item.permissionKey && !hasPermission(item.permissionKey)) {
       e.preventDefault();
-
-      alert("You don't have access to this section.");
-
+      toast.error("Access Restricted: You don't have permission to view this section.");
       return;
     }
-
-    if (isMobile) {
-      setSidebarOpen(false);
-    }
+    if (isMobile) setSidebarOpen(false);
   };
 
-  // =====================================================
-  // ACTIVE CHECK
-  // =====================================================
-
   const isItemActive = (item) => {
-    if (location.pathname === item.href) {
-      return true;
-    }
-
+    if (location.pathname === item.href) return true;
     return location.pathname.startsWith(`${item.href}/`);
   };
 
-  // =====================================================
-  // RENDER NAV ITEM
-  // =====================================================
-
-  const renderNavItem = (
-    item,
-    isMobile = false
-  ) => {
-    const allowed = hasPermission(
-      item.permissionKey
-    );
-
-    if (!allowed) {
-      return null;
-    }
-
-    // Sub-branches cannot access or manage branches
-    if (item.href === "/branches" && userData?.isMainBranch === false) {
-      return null;
-    }
+  const renderNavItem = (item, isMobile = false) => {
+    if (!hasPermission(item.permissionKey)) return null;
+    if (item.href === "/branches" && userData?.isMainBranch === false) return null;
 
     const isActive = isItemActive(item);
 
@@ -243,191 +100,94 @@ export default function Layout() {
       <Link
         key={item.name}
         to={item.href}
-        onClick={(e) =>
-          handleNavClick(e, item, isMobile)
-        }
-        className={`group flex items-center gap-3 px-3.5 sm:px-4 h-11 rounded-xl text-[13px] sm:text-sm font-medium font-['Inter'] transition-all duration-200 relative ${
+        onClick={(e) => handleNavClick(e, item, isMobile)}
+        className={`group flex items-center gap-3 px-3.5 sm:px-4 h-11 rounded-xl text-[13px] sm:text-sm font-semibold transition-all duration-200 relative ${
           isActive
-            ? "bg-[#5146e5] text-white"
-            : "text-slate-600 hover:bg-[#f4f2ff] hover:text-indigo-700"
+            ? "bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] text-white shadow-lg shadow-blue-500/30"
+            : "text-blue-100/70 hover:bg-white/10 hover:text-white hover:translate-x-0.5"
         }`}
       >
-        {isActive && (
-          <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-gradient-to-b from-indigo-500 to-indigo-500" />
-        )}
-
-        <span
-          className={`shrink-0 transition-colors ${
-            isActive
-              ? "text-white"
-              : "text-slate-500 group-hover:text-indigo-600"
-          }`}
-        >
+        <span className={`shrink-0 transition-transform group-hover:scale-110 ${isActive ? "text-white" : "text-blue-200/70 group-hover:text-white"}`}>
           {item.icon}
         </span>
-
-        <span className="truncate">
-          {item.name}
-        </span>
+        <span className="truncate">{item.name}</span>
       </Link>
     );
   };
-
-  // =====================================================
-  // HEADER TITLE
-  // =====================================================
+  
 
   const getHeaderTitle = () => {
-    if (isMainAdmin) {
-      return `${userData?.name || "Admin"} Admin`;
-    }
-
-    return (
-      userData?.hotelName ||
-      userData?.name ||
-      "Hotel"
-    );
+    if (isMainAdmin) return `${userData?.name || "Admin"} Admin`;
+    return userData?.hotelName || userData?.name || "Hotel";
   };
 
-  // =====================================================
-  // UI
-  // =====================================================
+  const brand = isMainAdmin ? "SaaS Admin" : "StayLio";
+
+  const logoutBtn = (extra = "") => (
+    <button
+      onClick={handleLogout}
+      className={`flex w-full items-center gap-3 px-3.5 h-11 rounded-xl text-sm font-semibold text-blue-100/70 hover:bg-red-500/15 hover:text-red-300 transition-colors cursor-pointer ${extra}`}
+    >
+      <LogOut className={ic} />
+      Sign Out
+    </button>
+  );
 
   return (
-    <div className="h-screen bg-[#f8f7ff] flex overflow-hidden font-['Inter']">
-
-      {/* =================================================
-          DESKTOP SIDEBAR
-      ================================================= */}
-
-      <aside className="hidden md:flex md:w-60 lg:w-64 md:flex-col bg-white border-r border-[#e7e4f4] shrink-0">
-
-        {/* BRAND */}
-        <div className="h-16 flex items-center gap-2.5 px-5 lg:px-6 border-b border-[#eeeaf8]">
-          <img
-            src={logoImg}
-            alt="SS Residency Logo"
-            className="w-9 h-9 lg:w-10 lg:h-10 object-contain shrink-0"
-          />
-
-          <span className="text-lg lg:text-xl font-semibold tracking-tight text-[#172033] font-['Inter'] truncate">
-            {isMainAdmin
-              ? "SaaS Admin"
-              : "SS Residency"}
-          </span>
+    <div className="h-screen flex overflow-hidden font-['Inter'] bg-[radial-gradient(ellipse_at_top,#2a5288_0%,#16345e_45%,#0f2447_100%)]">
+      {/* DESKTOP SIDEBAR */}
+      <aside className="hidden md:flex md:w-60 lg:w-64 flex-col bg-white/[0.06] backdrop-blur-xl border-r border-white/10 shrink-0">
+        <div className="h-16 flex items-center gap-2.5 px-5 lg:px-6 border-b border-white/10">
+          <img src={logoImg} alt="SS Residency Logo" className="w-9 h-9 lg:w-10 lg:h-10 object-contain shrink-0" />
+          <span className="text-lg lg:text-xl font-bold tracking-tight text-white truncate">{brand}</span>
         </div>
-
-        {/* NAVIGATION */}
-        <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-          {navigation.map((item) =>
-            renderNavItem(item, false)
-          )}
+<nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto staylio-scrollbar">          {navigation.map((item) => renderNavItem(item, false))}
         </nav>
-
-        {/* LOGOUT */}
-        <div className="p-3 border-t border-[#eeeaf8]">
-          <button
-            onClick={handleLogout}
-            className="flex w-full items-center gap-3 px-3.5 lg:px-4 h-11 rounded-xl text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
-          >
-            <LogOut className="w-5 h-5" />
-            Sign Out
-          </button>
-        </div>
+        <div className="p-3 border-t border-white/10">{logoutBtn()}</div>
       </aside>
 
-      {/* =================================================
-          MOBILE OVERLAY
-      ================================================= */}
-
+      {/* MOBILE OVERLAY */}
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 z-40 bg-[#0b1d3d]/60 backdrop-blur-sm md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* =================================================
-          MOBILE SIDEBAR
-      ================================================= */}
-
+      {/* MOBILE SIDEBAR */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-[78vw] max-w-64 bg-white border-r border-[#e7e4f4] flex flex-col transition-transform duration-300 md:hidden ${
-          sidebarOpen
-            ? "translate-x-0"
-            : "-translate-x-full"
+        className={`fixed top-0 bottom-0 left-0 z-50 w-[78vw] max-w-64 bg-[#132f57] border-r border-white/10 flex flex-col transition-transform duration-300 md:hidden ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-
-        {/* MOBILE BRAND */}
-        <div className="h-16 flex items-center justify-between px-4 sm:px-5 border-b border-[#eeeaf8]">
-
+        <div className="h-16 flex items-center justify-between px-4 sm:px-5 border-b border-white/10">
           <div className="flex items-center gap-2 min-w-0">
-            <img
-              src={logoImg}
-              alt="SS Residency Logo"
-              className="w-9 h-9 object-contain shrink-0"
-            />
-
-            <span className="text-lg font-semibold tracking-tight text-[#172033] font-['Inter'] truncate">
-              {isMainAdmin
-                ? "SaaS Admin"
-                : "SS Residency"}
-            </span>
+            <img src={logoImg} alt="SS Residency Logo" className="w-9 h-9 object-contain shrink-0" />
+            <span className="text-lg font-bold tracking-tight text-white truncate">{brand}</span>
           </div>
-
           <button
             onClick={() => setSidebarOpen(false)}
-            className="p-1.5 rounded-lg hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer shrink-0"
+            className="p-1.5 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer shrink-0"
           >
-            <X className="w-5 h-5 text-slate-500" />
+            <X className="w-5 h-5 text-blue-100" />
           </button>
         </div>
-
-        {/* MOBILE NAVIGATION */}
-        <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-          {navigation.map((item) =>
-            renderNavItem(item, true)
-          )}
+<nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto staylio-scrollbar">          {navigation.map((item) => renderNavItem(item, true))}
         </nav>
-
-        {/* MOBILE LOGOUT */}
-        <div className="p-3 border-t border-[#eeeaf8]">
-          <button
-            onClick={handleLogout}
-            className="flex w-full items-center gap-3 px-3.5 h-11 rounded-xl text-sm font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
-          >
-            <LogOut className="w-5 h-5" />
-            Sign Out
-          </button>
-        </div>
+        <div className="p-3 border-t border-white/10">{logoutBtn()}</div>
       </aside>
 
-      {/* =================================================
-          MAIN CONTAINER
-      ================================================= */}
-
+      {/* MAIN */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-
-        {/* HEADER */}
-        <header className="h-16 bg-white border-b border-[#eeeaf8] flex items-center justify-between px-4 sm:px-6 shrink-0">
-
+        <header className="h-16 bg-white/[0.06] backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-4 sm:px-6 shrink-0">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 md:hidden focus:outline-none focus:ring-2 focus:ring-indigo-400 cursor-pointer shrink-0"
+              className="p-1.5 rounded-lg text-blue-100 hover:text-white hover:bg-white/10 md:hidden focus:outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer shrink-0"
             >
               <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-
-            <h2 className="text-base lg:text-lg font-semibold text-[#172033] font-['Inter'] truncate">
-              {getHeaderTitle()}
-            </h2>
-
+            <h2 className="text-base lg:text-lg font-bold text-white truncate">{getHeaderTitle()}</h2>
             {userData?.branchName && (
-              <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 bg-[#f5f3ff] border border-[#e7e4f4] rounded-xl text-xs font-medium text-slate-600">
-                <Building2 className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 border border-white/15 rounded-xl text-xs font-medium text-blue-50">
+                <Building2 className="w-3.5 h-3.5 text-blue-200" />
                 {userData.branchName}
                 {userData?.isMainBranch ? " (Main Branch)" : ""}
               </span>
@@ -435,14 +195,13 @@ export default function Layout() {
           </div>
         </header>
 
-        {/* CONTENT */}
-        <main className="flex-1 p-3 sm:p-4 lg:p-5 bg-[#f8f7ff] flex flex-col overflow-y-auto">
+        <SubscriptionAlertBanner />
 
-          <Suspense
+<main className="flex-1 p-3 sm:p-4 lg:p-6 flex flex-col overflow-y-auto staylio-scrollbar">          <Suspense
             fallback={
               <div className="flex-1 flex items-center justify-center">
-                <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-100 border-t-indigo-600" />
+                <div className="flex items-center gap-2 text-sm text-blue-100">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
                   Loading page...
                 </div>
               </div>
@@ -450,16 +209,14 @@ export default function Layout() {
           >
             <Outlet />
           </Suspense>
-
         </main>
 
-        {/* FOOTER */}
-        <footer className="mt-auto pt-2 pb-2 text-center text-[11px] sm:text-xs text-slate-500 px-4 bg-[#f8f7ff]">
+        <footer className="mt-auto py-2 text-center text-[11px] sm:text-xs text-blue-100/60 px-4">
           <p>
             © {new Date().getFullYear()} Developed by{" "}
             <a
               href="https://jayamwebsolutions.com/"
-              className="font-medium text-indigo-600 hover:text-indigo-700 hover:underline transition-colors"
+              className="font-semibold text-blue-200 hover:text-white hover:underline transition-colors"
               title="Jayam Web Solutions"
               target="_blank"
               rel="noreferrer"
@@ -469,7 +226,6 @@ export default function Layout() {
             . All rights reserved.
           </p>
         </footer>
-
       </div>
     </div>
   );

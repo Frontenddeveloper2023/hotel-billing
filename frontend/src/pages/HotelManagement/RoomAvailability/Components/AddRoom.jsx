@@ -1,12 +1,15 @@
 import React, {
     useState,
 } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
     IndianRupee,
     Plus,
     RefreshCw,
     X,
+    Lock,
+    AlertCircle,
 } from "lucide-react";
 
 
@@ -15,7 +18,12 @@ export default function AddRoom({
     onClose,
     onSuccess,
     createRoom,
+    roomLimit = 0,
+    totalRooms = 0,
+    isRoomLimitReached = false,
+    planName = "Current Plan",
 }) {
+    const navigate = useNavigate();
 
     const [addingRoom, setAddingRoom] =
         useState(false);
@@ -96,6 +104,13 @@ export default function AddRoom({
     }
 
     setFormError("");
+
+    if (isRoomLimitReached) {
+        setFormError(
+            `Room allocation limit reached! Your current ${planName} plan allows a maximum of ${roomLimit} room(s) per branch (${totalRooms}/${roomLimit} used). Please upgrade your plan to add more rooms.`
+        );
+        return;
+    }
 
     // ==========================================
     // ROOM NUMBER
@@ -379,6 +394,43 @@ export default function AddRoom({
                     onSubmit={handleSubmit}
                     className="p-6"
                 >
+
+                    {/* QUOTA FULL ALERT */}
+                    {isRoomLimitReached && (
+                        <div className="
+                            mb-5
+                            p-4
+                            rounded-xl
+                            border
+                            border-amber-200
+                            bg-amber-50
+                            text-amber-900
+                            text-xs
+                            flex
+                            items-start
+                            gap-3
+                        ">
+                            <Lock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                            <div>
+                                <p className="font-bold text-amber-950">
+                                    Room Quota Reached ({totalRooms}/{roomLimit} Rooms)
+                                </p>
+                                <p className="mt-0.5 text-amber-800">
+                                    Your current <strong>{planName}</strong> plan allows a maximum of {roomLimit} room{roomLimit === 1 ? "" : "s"}. To add more rooms, please upgrade your subscription plan.
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        onClose();
+                                        navigate("/saas-user/choose-plan");
+                                    }}
+                                    className="inline-flex items-center gap-1 font-bold text-amber-700 hover:text-amber-800 mt-2 underline cursor-pointer"
+                                >
+                                    Upgrade Plan &rarr;
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* ERROR */}
 
@@ -679,8 +731,8 @@ export default function AddRoom({
 
                         <button
                             type="submit"
-                            disabled={addingRoom}
-                            className="
+                            disabled={addingRoom || isRoomLimitReached}
+                            className={`
                                 inline-flex
                                 items-center
                                 justify-center
@@ -688,12 +740,17 @@ export default function AddRoom({
                                 px-5
                                 py-2.5
                                 rounded-lg
-                                bg-[var(--teal-dark,#065b62)]
                                 text-white
                                 text-sm
                                 font-bold
+                                transition-all
+                                ${
+                                    isRoomLimitReached
+                                        ? "bg-amber-600 cursor-not-allowed opacity-80"
+                                        : "bg-[var(--teal-dark,#065b62)] hover:bg-[var(--teal,#08838d)]"
+                                }
                                 disabled:opacity-60
-                            "
+                            `}
                         >
 
                             {addingRoom ? (
@@ -709,6 +766,13 @@ export default function AddRoom({
 
                                     Adding...
 
+                                </>
+
+                            ) : isRoomLimitReached ? (
+
+                                <>
+                                    <Lock className="w-4 h-4" />
+                                    Limit Reached ({totalRooms}/{roomLimit})
                                 </>
 
                             ) : (

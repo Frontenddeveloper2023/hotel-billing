@@ -9,7 +9,7 @@ import {
   getBranchUsage,
 } from "../controllers/branchController.js";
 
-import BranchHotels from "../models/BranchHotels.js";
+import BranchHotels from "../models/branchHotels.js";
 import { authVerify } from "../middleware/userVerify.js";
 import { branchLimitVerify } from "../middleware/branchLimitVerify.js";
 

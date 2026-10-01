@@ -1,4 +1,13 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+    useCallback,
+    useDeferredValue,
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
+import { Plus } from "lucide-react";
+
+import "./Components/FoodTheme.css";
 
 import FoodSearch from "./Components/FoodSearch";
 import FoodList from "./Components/FoodList";
@@ -24,20 +33,20 @@ export default function FoodManagement() {
     const [error, setError] = useState("");
     const [selectedFood, setSelectedFood] = useState(null);
 
+    // Keeps typing responsive while a big list re-filters
+    const deferredSearch = useDeferredValue(search);
+
     // ----------------------------------
     // GET ALL FOODS
     // ----------------------------------
-    const fetchFoods = async () => {
+    const fetchFoods = useCallback(async () => {
         try {
             setLoading(true);
             setError("");
 
             const response = await getAllFoods();
 
-            const foodData =
-                response?.foods ||
-                response?.data ||
-                [];
+            const foodData = response?.foods || response?.data || [];
 
             setFoods(Array.isArray(foodData) ? foodData : []);
         } catch (error) {
@@ -51,100 +60,98 @@ export default function FoodManagement() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     // ----------------------------------
     // LOAD FOODS ON PAGE LOAD
     // ----------------------------------
     useEffect(() => {
         fetchFoods();
-    }, []);
+    }, [fetchFoods]);
 
     // ----------------------------------
     // SEARCH
     // ----------------------------------
-
     const filteredFoods = useMemo(() => {
-    // If user selected a specific food from search suggestions
-    if (selectedFood) {
-        return [selectedFood];
-    }
+        // If user selected a specific food from search suggestions
+        if (selectedFood) {
+            return [selectedFood];
+        }
 
-    const query = search.toLowerCase().trim();
+        const query = deferredSearch.toLowerCase().trim();
 
-    if (!query) {
-        return foods;
-    }
+        if (!query) {
+            return foods;
+        }
 
-    return foods.filter((food) => {
-        return (
-            food.foodName
-                ?.toLowerCase()
-                .includes(query) ||
-            food.description
-                ?.toLowerCase()
-                .includes(query)
-        );
-    });
-}, [foods, search, selectedFood]);
+        return foods.filter((food) => {
+            return (
+                food.foodName?.toLowerCase().includes(query) ||
+                food.description?.toLowerCase().includes(query)
+            );
+        });
+    }, [foods, deferredSearch, selectedFood]);
 
-// ----------------------------------
+    // ----------------------------------
     // ADD FOOD
     // ----------------------------------
-    const handleAddFood = async (formData) => {
-        try {
-            setSaving(true);
-            setError("");
+    const handleAddFood = useCallback(
+        async (formData) => {
+            try {
+                setSaving(true);
+                setError("");
 
-            await createFood(formData);
+                await createFood(formData);
 
-            setShowAdd(false);
-            await fetchFoods(); // Fetch fresh data from DB, exactly like update does
-        } catch (error) {
-            console.error("Create food error:", error);
+                setShowAdd(false);
+                await fetchFoods();
+            } catch (error) {
+                console.error("Create food error:", error);
 
-            alert(
-                error?.message ||
-                error?.error ||
-                "Failed to add food."
-            );
-        } finally {
-            setSaving(false);
-        }
-    };
+                alert(
+                    error?.message ||
+                    error?.error ||
+                    "Failed to add food."
+                );
+            } finally {
+                setSaving(false);
+            }
+        },
+        [fetchFoods]
+    );
 
     // ----------------------------------
-    // UPDATE FOOD (Fixed signature to safely capture ID from editingFood state)
+    // UPDATE FOOD
     // ----------------------------------
-   // ----------------------------------
-    // UPDATE FOOD (Updated to match component signature)
-    // ----------------------------------
-    const handleUpdateFood = async (id, formData) => {
-        try {
-            setSaving(true);
-            setError("");
+    const handleUpdateFood = useCallback(
+        async (id, formData) => {
+            try {
+                setSaving(true);
+                setError("");
 
-            await updateFood(id, formData);
+                await updateFood(id, formData);
 
-            setEditingFood(null);
-            await fetchFoods();
-        } catch (error) {
-            console.error("Update food error:", error);
+                setEditingFood(null);
+                await fetchFoods();
+            } catch (error) {
+                console.error("Update food error:", error);
 
-            alert(
-                error?.message ||
-                error?.error ||
-                "Failed to update food."
-            );
-        } finally {
-            setSaving(false);
-        }
-    };
+                alert(
+                    error?.message ||
+                    error?.error ||
+                    "Failed to update food."
+                );
+            } finally {
+                setSaving(false);
+            }
+        },
+        [fetchFoods]
+    );
 
     // ----------------------------------
     // DELETE FOOD
     // ----------------------------------
-    const handleDeleteFood = async () => {
+    const handleDeleteFood = useCallback(async () => {
         if (!deletingFood) {
             return;
         }
@@ -168,68 +175,84 @@ export default function FoodManagement() {
         } finally {
             setSaving(false);
         }
-    };
+    }, [deletingFood, fetchFoods]);
+
+    // stable close handlers (keeps modals from re-rendering needlessly)
+    const closeAdd = useCallback(() => setShowAdd(false), []);
+    const closeEdit = useCallback(() => setEditingFood(null), []);
+    const closeDelete = useCallback(() => setDeletingFood(null), []);
 
     return (
-        <div className="space-y-6 ">
+        <div className="fm-root mx-auto w-full max-w-7xl space-y-5 sm:space-y-6">
             {/* HEADER */}
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-900">
+            <div className="fm-rise flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div className="min-w-0">
+                  
+
+                    {/* Text is white for the navy gradient from Layout.
+                        If your Layout background is light, use text-[#0a1a3f] / text-slate-500 */}
+                    <h1 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">
                         Food Management
                     </h1>
-                    <p className="text-sm text-slate-500 mt-1">
-                        Manage food items, prices, stock and images.
-                    </p>
+                    
                 </div>
 
-               <button
-    type="button"
-    onClick={() => {
-        console.log("Add Food clicked");
-        setShowAdd(true);
-    }}
-    className="
-        inline-flex
-        items-center
-        justify-center
-        px-5
-        py-2.5
-        rounded-lg
-        bg-[var(--teal-dark,#065b62)]
-        text-white
-        text-sm
-        font-bold
-        hover:opacity-95
-        cursor-pointer
-    "
->
-    + Add Food
-</button>
+                <button
+                    type="button"
+                    onClick={() => setShowAdd(true)}
+                    className="fm-btn inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-[#12306b] shadow-lg shadow-[#0a1a3f]/20 hover:-translate-y-0.5 hover:shadow-xl sm:w-auto"
+                >
+                    <Plus className="h-4 w-4" />
+                    Add Food
+                </button>
             </div>
 
             {/* SEARCH */}
-            <FoodSearch
-    search={search}
-    setSearch={setSearch}
-    foods={foods}
-    onFoodSelect={setSelectedFood}
-/>
+            <div className="fm-rise relative z-40" style={{ "--i": 1 }}>
+                <FoodSearch
+                    search={search}
+                    setSearch={setSearch}
+                    foods={foods}
+                    onFoodSelect={setSelectedFood}
+                />
+            </div>
 
             {/* ERROR */}
             {error && (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-600">
+                <div
+                    role="alert"
+                    className="fm-drop rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-600"
+                >
                     {error}
                 </div>
             )}
 
             {/* LOADING */}
             {loading ? (
-                <section className="bg-white border border-slate-200 rounded-2xl p-12 text-center">
-                    <div className="w-8 h-8 mx-auto rounded-full border-4 border-slate-200 border-t-[var(--teal,#08838d)] animate-spin" />
-                    <p className="text-sm font-semibold text-slate-500 mt-4">
-                        Loading food items...
-                    </p>
+                <section
+                    aria-busy="true"
+                    aria-label="Loading food items"
+                    className="overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-sm"
+                >
+                    <div className="flex items-center gap-3 border-b border-[var(--line)] px-4 py-4 sm:px-5">
+                        <div className="fm-skel h-10 w-10 rounded-xl" />
+                        <div className="space-y-2">
+                            <div className="fm-skel h-3 w-24 rounded" />
+                            <div className="fm-skel h-2.5 w-16 rounded" />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:gap-5 sm:p-5 xl:grid-cols-3 2xl:grid-cols-4">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                            <div key={i} className="overflow-hidden rounded-2xl border border-[var(--line)]">
+                                <div className="fm-skel h-40 w-full sm:h-44" />
+                                <div className="space-y-2.5 p-4">
+                                    <div className="fm-skel h-3.5 w-3/4 rounded" />
+                                    <div className="fm-skel h-2.5 w-full rounded" />
+                                    <div className="fm-skel h-2.5 w-2/3 rounded" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </section>
             ) : (
                 <FoodList
@@ -242,19 +265,17 @@ export default function FoodManagement() {
             {/* ADD FOOD MODAL */}
             {showAdd && (
                 <AddFood
-                    onClose={() => setShowAdd(false)}
+                    onClose={closeAdd}
                     onSave={handleAddFood}
                     saving={saving}
                 />
             )}
 
-          
-
             {/* EDIT FOOD MODAL */}
             {editingFood && (
                 <EditFood
                     food={editingFood}
-                    onClose={() => setEditingFood(null)}
+                    onClose={closeEdit}
                     onSave={handleUpdateFood}
                     saving={saving}
                 />
@@ -264,7 +285,7 @@ export default function FoodManagement() {
             {deletingFood && (
                 <DeleteFood
                     food={deletingFood}
-                    onClose={() => setDeletingFood(null)}
+                    onClose={closeDelete}
                     onDelete={handleDeleteFood}
                     saving={saving}
                 />

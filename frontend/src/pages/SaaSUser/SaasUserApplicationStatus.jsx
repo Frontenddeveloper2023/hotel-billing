@@ -93,6 +93,29 @@ const formatStatus = (status) => {
 };
 
 
+const formatAddress = (addr) => {
+  if (!addr) {
+    return "Not Provided";
+  }
+
+  if (typeof addr === "string") {
+    return addr.trim() || "Not Provided";
+  }
+
+  const parts = [
+    addr.street,
+    addr.city,
+    addr.state,
+    addr.pincode,
+    addr.country,
+  ]
+    .map((p) => (typeof p === "string" ? p.trim() : ""))
+    .filter(Boolean);
+
+  return parts.length > 0 ? parts.join(", ") : "Not Provided";
+};
+
+
 const getStatusConfig = (status) => {
   switch (status) {
     case "approved":
@@ -313,7 +336,13 @@ const SaaSUserApplicationStatus = () => {
   // ==========================================================
 
   return (
-    <div className="min-h-screen bg-[#F7F6FC] text-[#172033]">
+    <div
+      className="
+        min-h-screen
+        bg-[linear-gradient(180deg,#10233E_0px,#183A60_300px,#EAF3FF_520px,#F5F8FC_100%)]
+        text-[#172033]
+      "
+    >
 
       {/* ======================================================
           ANIMATIONS
@@ -359,7 +388,22 @@ const SaaSUserApplicationStatus = () => {
           PROGRESS
       ======================================================= */}
 
-      <SaaSSetupProgress activeStep={5} />
+      <div
+        className="
+          sticky
+          top-0
+          z-50
+          w-full
+          border-b
+          border-[#DDE5F0]
+          bg-white
+          shadow-[0_1px_5px_rgba(16,24,40,0.06)]
+        "
+      >
+        <div className="mx-auto w-full max-w-[1180px]">
+          <SaaSSetupProgress activeStep={5} />
+        </div>
+      </div>
 
 
       {/* ======================================================
@@ -368,13 +412,16 @@ const SaaSUserApplicationStatus = () => {
 
       <main
         className="
+          relative
           mx-auto
           w-full
           max-w-[1440px]
           px-4
-          py-7
+          pb-12
+          pt-7
           sm:px-6
-          sm:py-9
+          sm:pb-16
+          sm:pt-9
           lg:px-8
           xl:px-10
         "
@@ -401,50 +448,22 @@ const SaaSUserApplicationStatus = () => {
 
           <div>
 
-            {/* BADGE */}
-
-            <div
-              className="
-                inline-flex
-                items-center
-                gap-2
-                rounded-full
-                bg-[#EAE9FF]
-                px-3
-                py-1.5
-                text-[10px]
-                font-bold
-                uppercase
-                tracking-[0.08em]
-                text-[#4338CA]
-              "
-            >
-              <span
-                className="
-                  h-1.5
-                  w-1.5
-                  rounded-full
-                  bg-[#4338CA]
-                "
-              />
-
-              <span>
-                Hospitality Enterprise Application
-              </span>
-            </div>
+          
 
 
             {/* TITLE */}
 
             <h1
               className="
-                mt-3
-                text-[28px]
-                font-bold
-                leading-[1.1]
+                mt-4
+                max-w-3xl
+                text-[30px]
+                font-extrabold
+                leading-[1.08]
                 tracking-[-0.045em]
-                text-[#111827]
-                sm:text-[38px]
+                text-white
+                sm:text-[40px]
+                lg:text-[44px]
               "
             >
               Application Status
@@ -455,13 +474,13 @@ const SaaSUserApplicationStatus = () => {
 
             <p
               className="
-                mt-2
+                mt-3
                 max-w-2xl
-                text-[13px]
+                text-[14px]
                 font-medium
                 leading-6
-                text-[#475569]
-                sm:text-[14px]
+                text-[#D5E5F8]
+                sm:text-[15px]
               "
             >
               Track your hotel registration, subscription,
@@ -476,15 +495,17 @@ const SaaSUserApplicationStatus = () => {
           <div
             className="
               flex
-              w-fit
+              w-full
               items-center
               gap-3
-              rounded-xl
+              rounded-2xl
               border
-              border-[#E1E4EB]
-              bg-white
+              border-white/15
+              bg-white/10
               px-4
-              py-3
+              py-3.5
+              backdrop-blur-md
+              sm:w-fit
             "
           >
 
@@ -493,11 +514,12 @@ const SaaSUserApplicationStatus = () => {
                 flex
                 h-10
                 w-10
+                shrink-0
                 items-center
                 justify-center
-                rounded-lg
-                bg-[#E8FAF3]
-                text-[#087A58]
+                rounded-xl
+                bg-white/15
+                text-[#BFE0FF]
               "
             >
               <ShieldCheck size={19} />
@@ -508,10 +530,10 @@ const SaaSUserApplicationStatus = () => {
 
               <p
                 className="
-                  text-[11px]
+                  text-[12px]
                   font-bold
                   leading-4
-                  text-[#1E293B]
+                  text-white
                 "
               >
                 Secure Application
@@ -523,7 +545,7 @@ const SaaSUserApplicationStatus = () => {
                   text-[11px]
                   font-medium
                   leading-4
-                  text-[#64748B]
+                  text-[#C9D9ED]
                 "
               >
                 Your application data is protected
@@ -543,11 +565,13 @@ const SaaSUserApplicationStatus = () => {
         <section
           className="
             mb-6
-            rounded-[20px]
+            overflow-hidden
+            rounded-[22px]
             border
-            border-[#E0E3EA]
+            border-[#DCE7F5]
             bg-white
             p-5
+            shadow-[0_16px_40px_rgba(14,42,81,0.08)]
             sm:p-6
           "
           style={{
@@ -578,8 +602,10 @@ const SaaSUserApplicationStatus = () => {
                     items-center
                     justify-center
                     rounded-xl
-                    bg-[#EEEEFF]
-                    text-[#4338CA]
+                    bg-[#EAF3FF]
+                    text-[#347BE9]
+                    ring-1
+                    ring-[#CFE2FF]
                   "
                 >
                   <Search size={18} />
@@ -589,10 +615,12 @@ const SaaSUserApplicationStatus = () => {
 
                   <h2
                     className="
-                      text-[16px]
+                      text-[18px]
                       font-bold
                       leading-6
-                      text-[#172033]
+                      tracking-[-0.015em]
+                      text-[#17345D]
+                      sm:text-[19px]
                     "
                   >
                     Find Your Application
@@ -600,11 +628,11 @@ const SaaSUserApplicationStatus = () => {
 
                   <p
                     className="
-                      mt-0.5
-                      text-[12px]
+                      mt-1
+                      text-[13px]
                       font-medium
                       leading-5
-                      text-[#64748B]
+                      text-[#667085]
                     "
                   >
                     Enter the application ID received after registration.
@@ -654,22 +682,22 @@ const SaaSUserApplicationStatus = () => {
                     w-full
                     rounded-xl
                     border
-                    border-[#D9DDE7]
-                    bg-[#F5F6FA]
-                    py-3
-                    pl-10
+                    border-[#CBD9EA]
+                    bg-white
+                    py-3.5
+                    pl-11
                     pr-4
-                    text-[13px]
+                    text-[14px]
                     font-semibold
-                    text-[#172033]
+                    text-[#17345D]
                     outline-none
                     transition-all
                     duration-200
-                    placeholder:text-[#94A3B8]
-                    focus:border-[#4338CA]
+                    placeholder:text-[#98A6B8]
+                    focus:border-[#347BE9]
                     focus:bg-white
-                    focus:ring-2
-                    focus:ring-[#4338CA]/10
+                    focus:ring-4
+                    focus:ring-[#347BE9]/10
                   "
                 />
 
@@ -684,22 +712,27 @@ const SaaSUserApplicationStatus = () => {
                 }
                 className="
                   inline-flex
+                  min-h-[50px]
+                  w-full
                   items-center
                   justify-center
                   gap-2
                   rounded-xl
-                  bg-[#4338CA]
+                  bg-[#347BE9]
                   px-5
-                  py-3
-                  text-[13px]
+                  py-3.5
+                  text-[14px]
                   font-bold
                   text-white
+                  shadow-[0_5px_14px_rgba(52,123,233,0.22)]
                   transition-all
                   duration-200
-                  hover:bg-[#3730A3]
+                  hover:bg-[#2467D5]
+                  hover:shadow-[0_7px_18px_rgba(52,123,233,0.28)]
                   active:scale-[0.98]
                   disabled:cursor-not-allowed
                   disabled:opacity-60
+                  sm:w-auto
                 "
               >
 
@@ -741,12 +774,13 @@ const SaaSUserApplicationStatus = () => {
               flex
               items-start
               gap-3
-              rounded-xl
+              rounded-2xl
               border
-              border-[#F1C7C7]
-              bg-[#FFF7F7]
-              px-4
-              py-4
+              border-[#F2C7C7]
+              bg-white
+              p-4
+              shadow-[0_10px_25px_rgba(127,29,29,0.06)]
+              sm:p-5
             "
             style={{
               animation: "fadeUp 0.3s ease-out both",
@@ -809,11 +843,14 @@ const SaaSUserApplicationStatus = () => {
 
           <div
             className="
-              rounded-[20px]
+              overflow-hidden
+              rounded-[22px]
               border
-              border-[#E0E3EA]
+              border-[#DCE7F5]
               bg-white
               p-8
+              shadow-[0_16px_40px_rgba(14,42,81,0.08)]
+              sm:p-10
             "
           >
 
@@ -827,8 +864,10 @@ const SaaSUserApplicationStatus = () => {
                   items-center
                   justify-center
                   rounded-2xl
-                  bg-[#EEEEFF]
-                  text-[#4338CA]
+                  bg-[#EAF3FF]
+                  text-[#347BE9]
+                  ring-8
+                  ring-[#F4F8FF]
                 "
               >
                 <RefreshCw
@@ -871,1205 +910,380 @@ const SaaSUserApplicationStatus = () => {
         ==================================================== */}
 
         {!loading && application && (
-
-          <div className="space-y-6">
-
+          <div className="mx-auto max-w-[960px] space-y-6">
 
             {/* ==================================================
-                TOP STATUS / TRACKING GRID
+                MAIN PUBLIC VERIFICATION CARD
             ================================================== */}
-
-            <div
+            <section
               className="
-                grid
-                grid-cols-1
-                gap-6
-                xl:grid-cols-[minmax(0,1fr)_390px]
+                overflow-hidden
+                rounded-[24px]
+                border
+                border-[#DCE7F5]
+                bg-white
+                shadow-[0_14px_36px_rgba(14,42,81,0.06)]
               "
+              style={{
+                animation: "fadeUp 0.5s ease-out both",
+              }}
             >
 
-
-              {/* ==================================================
-                  LEFT STATUS
-              ================================================== */}
-
-              <section
+              {/* CARD TOP HEADER: HOTEL & APPLICATION ID */}
+              <div
                 className="
-                  overflow-hidden
-                  rounded-[22px]
-                  border
-                  border-[#E0E3EA]
-                  bg-white
+                  border-b
+                  border-[#E2EAF5]
+                  bg-[linear-gradient(145deg,#F7FBFF_0%,#EDF5FF_100%)]
+                  p-5
+                  sm:p-6
                 "
-                style={{
-                  animation: "fadeUp 0.5s ease-out both",
-                }}
               >
-
-                {/* STATUS HEADER */}
-
                 <div
                   className="
-                    border-b
-                    border-[#E5E7ED]
-                    bg-[#FAFAFD]
-                    px-5
-                    py-6
-                    sm:px-7
+                    flex
+                    flex-col
+                    gap-4
+                    sm:flex-row
+                    sm:items-center
+                    sm:justify-between
                   "
                 >
 
-                  <div className="flex items-start gap-4">
-
+                  {/* HOTEL IDENTITY */}
+                  <div className="flex items-center gap-3.5 min-w-0">
                     <div
-                      className={`
+                      className="
                         flex
-                        h-14
-                        w-14
+                        h-13
+                        w-13
                         shrink-0
                         items-center
                         justify-center
                         rounded-2xl
-                        ${statusConfig.iconBg}
-                        ${statusConfig.iconColor}
-                      `}
+                        bg-[#173B63]
+                        text-white
+                        shadow-[0_6px_16px_rgba(23,59,99,0.18)]
+                        sm:h-14
+                        sm:w-14
+                      "
                     >
-                      <StatusIcon size={27} />
+                      <Building2 size={24} strokeWidth={1.8} />
                     </div>
 
-
-                    <div className="min-w-0 flex-1">
-
-                      <div
-                        className="
-                          flex
-                          flex-wrap
-                          items-center
-                          gap-2
-                        "
-                      >
-
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                       
                         <span
-                          className={`
-                            inline-flex
-                            items-center
-                            gap-1.5
+                          className="
                             rounded-full
-                            border
-                            px-3
-                            py-1
-                            text-[10px]
+                            bg-[#E2F6EC]
+                            px-2
+                            py-0.5
+                            text-[9px]
                             font-bold
-                            uppercase
-                            tracking-[0.08em]
-                            ${statusConfig.badgeBg}
-                            ${statusConfig.badgeText}
-                            ${statusConfig.badgeBorder}
-                          `}
+                            text-[#087A58]
+                          "
                         >
-
-                          <span
-                            className={`
-                              h-1.5
-                              w-1.5
-                              rounded-full
-                              ${statusConfig.accent}
-                            `}
-                          />
-
-                          {formatStatus(application.status)}
-
+                          Verified
                         </span>
-
                       </div>
-
 
                       <h2
                         className="
-                          mt-2
-                          text-[24px]
-                          font-bold
+                          mt-0.5
+                          break-words
+                          text-[20px]
+                          font-extrabold
                           leading-tight
-                          tracking-[-0.035em]
-                          text-[#111827]
-                          sm:text-[29px]
+                          tracking-tight
+                          text-[#17345D]
+                          sm:text-[22px]
                         "
                       >
-                        {statusConfig.title}
+                        {application.hotelName || "Hotel Application"}
                       </h2>
 
-
-                      <p
-                        className="
-                          mt-2
-                          max-w-2xl
-                          text-[13px]
-                          font-medium
-                          leading-6
-                          text-[#475569]
-                        "
-                      >
-                        {statusConfig.description}
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-
-                {/* STATUS MESSAGE */}
-
-                <div className="p-5 sm:p-7">
-
-                  {application.status === "pending" && (
-
-                    <div
-                      className="
-                        rounded-xl
-                        border
-                        border-[#F0DEAE]
-                        bg-[#FFFBF1]
-                        p-4
-                      "
-                    >
-
-                      <div className="flex items-start gap-3">
-
-                        <div
-                          className="
-                            flex
-                            h-9
-                            w-9
-                            shrink-0
-                            items-center
-                            justify-center
-                            rounded-lg
-                            bg-[#FFF0C8]
-                            text-[#B77900]
-                          "
-                        >
-                          <Clock3 size={17} />
-                        </div>
-
-                        <div>
-
-                          <p
-                            className="
-                              text-[13px]
-                              font-bold
-                              text-[#7C5700]
-                            "
-                          >
-                            Admin review is in progress
-                          </p>
-
-                          <p
-                            className="
-                              mt-1
-                              text-[12px]
-                              font-medium
-                              leading-5
-                              text-[#946F13]
-                            "
-                          >
-                            Your submitted hotel details are currently
-                            waiting for admin approval.
-                          </p>
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  )}
-
-
-                  {application.status === "approved" && (
-
-                    <div
-                      className="
-                        rounded-xl
-                        border
-                        border-[#CBEFDE]
-                        bg-[#F0FBF6]
-                        p-4
-                      "
-                    >
-
-                      <div className="flex items-start gap-3">
-
-                        <div
-                          className="
-                            flex
-                            h-9
-                            w-9
-                            shrink-0
-                            items-center
-                            justify-center
-                            rounded-lg
-                            bg-[#DDF7EC]
-                            text-[#087A58]
-                          "
-                        >
-                          <ShieldCheck size={17} />
-                        </div>
-
-                        <div>
-
-                          <p
-                            className="
-                              text-[13px]
-                              font-bold
-                              text-[#075E46]
-                            "
-                          >
-                            Your hotel application is approved
-                          </p>
-
-                          <p
-                            className="
-                              mt-1
-                              text-[12px]
-                              font-medium
-                              leading-5
-                              text-[#087A58]
-                            "
-                          >
-                            Your hotel account and subscription
-                            have been approved successfully.
-                          </p>
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  )}
-
-
-                  {application.status === "rejected" && (
-
-                    <div
-                      className="
-                        rounded-xl
-                        border
-                        border-[#F3CCCC]
-                        bg-[#FFF7F7]
-                        p-4
-                      "
-                    >
-
-                      <div className="flex items-start gap-3">
-
-                        <div
-                          className="
-                            flex
-                            h-9
-                            w-9
-                            shrink-0
-                            items-center
-                            justify-center
-                            rounded-lg
-                            bg-[#FDE8E8]
-                            text-[#C62828]
-                          "
-                        >
-                          <XCircle size={17} />
-                        </div>
-
-                        <div>
-
-                          <p
-                            className="
-                              text-[13px]
-                              font-bold
-                              text-[#991B1B]
-                            "
-                          >
-                            Application requires attention
-                          </p>
-
-                          <p
-                            className="
-                              mt-1
-                              text-[12px]
-                              font-medium
-                              leading-5
-                              text-[#B42318]
-                            "
-                          >
-                            {application.rejectionReason ||
-                              "No rejection reason was provided."}
-                          </p>
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  )}
-
-
-                  {/* APPLICATION ID */}
-
-                  <div className="mt-6">
-
-                    <div
-                      className="
-                        flex
-                        flex-col
-                        gap-3
-                        rounded-xl
-                        border
-                        border-[#E0E3EA]
-                        bg-[#F8F8FC]
-                        p-4
-                        sm:flex-row
-                        sm:items-center
-                        sm:justify-between
-                      "
-                    >
-
-                      <div className="min-w-0">
-
-                        <p
-                          className="
-                            text-[10px]
-                            font-bold
-                            uppercase
-                            tracking-[0.1em]
-                            text-[#64748B]
-                          "
-                        >
-                          Application ID
-                        </p>
-
-                        <p
-                          className="
-                            mt-1
-                            break-all
-                            font-mono
-                            text-[14px]
-                            font-bold
-                            text-[#172033]
-                          "
-                        >
-                          {application.registrationId ||
-                            application._id ||
-                            registrationId}
-                        </p>
-
-                      </div>
-
-
-                      <button
-                        type="button"
-                        onClick={copyApplicationId}
-                        className="
-                          inline-flex
-                          shrink-0
-                          items-center
-                          justify-center
-                          gap-2
-                          rounded-lg
-                          border
-                          border-[#D9DDE7]
-                          bg-white
-                          px-3
-                          py-2
-                          text-[11px]
-                          font-bold
-                          text-[#334155]
-                          transition-all
-                          duration-200
-                          hover:border-[#4338CA]
-                          hover:bg-[#F5F3FF]
-                          hover:text-[#4338CA]
-                        "
-                      >
-
-                        {copied ? (
-                          <>
-                            <Check size={14} />
-                            Copied
-                          </>
-                        ) : (
-                          <>
-                            <Copy size={14} />
-                            Copy ID
-                          </>
-                        )}
-
-                      </button>
-
-                    </div>
-
-                  </div>
-
-
-                  {/* TRACKING TIMELINE */}
-
-                  <div className="mt-7">
-
-                    <div
-                      className="
-                        mb-5
-                        flex
-                        items-center
-                        justify-between
-                      "
-                    >
-
-                      <div>
-
-                        <p
-                          className="
-                            text-[10px]
-                            font-bold
-                            uppercase
-                            tracking-[0.1em]
-                            text-[#64748B]
-                          "
-                        >
-                          Application Journey
-                        </p>
-
-                        <h3
-                          className="
-                            mt-1
-                            text-[17px]
-                            font-bold
-                            text-[#172033]
-                          "
-                        >
-                          Registration Progress
-                        </h3>
-
-                      </div>
-
-
-                      <span
-                        className={`
-                          rounded-full
-                          border
-                          px-3
-                          py-1
-                          text-[10px]
-                          font-bold
-                          ${statusConfig.badgeBg}
-                          ${statusConfig.badgeText}
-                          ${statusConfig.badgeBorder}
-                        `}
-                      >
-                        {formatStatus(application.status)}
-                      </span>
-
-                    </div>
-
-
-                    <ApplicationTimeline
-                      status={application.status}
-                    />
-
-                  </div>
-
-                </div>
-
-              </section>
-
-
-              {/* ==================================================
-                  RIGHT TRACKING
-              ================================================== */}
-
-              <aside
-                className="
-                  min-w-0
-                  xl:sticky
-                  xl:top-6
-                  xl:self-start
-                "
-              >
-
-                <div
-                  className="
-                    overflow-hidden
-                    rounded-[22px]
-                    border
-                    border-[#DDE1EA]
-                    bg-white
-                  "
-                  style={{
-                    animation: "fadeUp 0.5s ease-out 0.1s both",
-                  }}
-                >
-
-                  {/* SUMMARY HEADER */}
-
-                  <div
-                    className="
-                      border-b
-                      border-[#E0E2EC]
-                      bg-[#EAE9FF]
-                      px-5
-                      py-6
-                    "
-                  >
-
-                    <p
-                      className="
-                        text-[10px]
-                        font-bold
-                        uppercase
-                        tracking-[0.12em]
-                        text-[#475569]
-                      "
-                    >
-                      Application Summary
-                    </p>
-
-
-                    <h2
-                      className="
-                        mt-2
-                        text-[22px]
-                        font-bold
-                        leading-tight
-                        tracking-[-0.035em]
-                        text-[#111827]
-                      "
-                    >
-                      {application.hotelName ||
-                        "Hotel Application"}
-                    </h2>
-
-
-                    <div
-                      className="
-                        mt-3
-                        inline-flex
-                        items-center
-                        gap-1.5
-                        rounded-full
-                        bg-[#DDF7EC]
-                        px-3
-                        py-1.5
-                        text-[10px]
-                        font-bold
-                        text-[#087A58]
-                      "
-                    >
-
-                      <span
-                        className="
-                          h-1.5
-                          w-1.5
-                          rounded-full
-                          bg-[#087A58]
-                        "
-                      />
-
-                      Application Received
-
-                    </div>
-
-                  </div>
-
-
-                  <div className="p-5">
-
-                    {/* PLAN */}
-
-                    <SummaryItem
-                      icon={CreditCard}
-                      label="Selected Plan"
-                      value={
-                        application.planName ||
-                        application.planId?.planName ||
-                        "N/A"
-                      }
-                    />
-
-
-                    {/* BILLING */}
-
-                    <SummaryItem
-                      icon={CalendarDays}
-                      label="Billing Cycle"
-                      value={formatStatus(
-                        application.billingCycle
-                      )}
-                    />
-
-
-                    {/* PAYMENT */}
-
-                    <SummaryItem
-                      icon={CheckCircle2}
-                      label="Payment Status"
-                      value={formatStatus(
-                        application.paymentStatus
-                      )}
-                      success={
-                        String(
-                          application.paymentStatus || ""
-                        ).toLowerCase() === "paid" ||
-                        String(
-                          application.paymentStatus || ""
-                        ).toLowerCase() === "completed" ||
-                        String(
-                          application.paymentStatus || ""
-                        ).toLowerCase() === "success"
-                      }
-                    />
-
-
-                    {/* AMOUNT */}
-
-                    {application.amount !== undefined && (
-
-                      <SummaryItem
-                        icon={ReceiptText}
-                        label="Amount"
-                        value={formatCurrency(
-                          application.amount
-                        )}
-                      />
-
-                    )}
-
-
-                    <div
-                      className="
-                        my-5
-                        h-px
-                        bg-[#E7E9EF]
-                      "
-                    />
-
-
-                    {/* SUBMITTED */}
-
-                    <div>
-
-                      <p
-                        className="
-                          text-[10px]
-                          font-bold
-                          uppercase
-                          tracking-[0.1em]
-                          text-[#64748B]
-                        "
-                      >
-                        Submitted On
-                      </p>
-
-                      <p
+                      <div
                         className="
                           mt-1
-                          text-[13px]
-                          font-bold
-                          text-[#172033]
-                        "
-                      >
-                        {formatDateTime(
-                          application.createdAt
-                        )}
-                      </p>
-
-                    </div>
-
-
-                    {/* APPROVED */}
-
-                    {application.approvedAt && (
-
-                      <div className="mt-4">
-
-                        <p
-                          className="
-                            text-[10px]
-                            font-bold
-                            uppercase
-                            tracking-[0.1em]
-                            text-[#64748B]
-                          "
-                        >
-                          Approved On
-                        </p>
-
-                        <p
-                          className="
-                            mt-1
-                            text-[13px]
-                            font-bold
-                            text-[#087A58]
-                          "
-                        >
-                          {formatDateTime(
-                            application.approvedAt
-                          )}
-                        </p>
-
-                      </div>
-
-                    )}
-
-
-              
-
-                   
-
-
-                    {/* SECURITY */}
-
-                    <div
-                      className="
-                        mt-5
-                        flex
-                        items-start
-                        gap-2.5
-                        border-t
-                        border-[#E7E9EF]
-                        pt-4
-                      "
-                    >
-
-                      <ShieldCheck
-                        size={15}
-                        className="
-                          mt-0.5
-                          shrink-0
-                          text-[#087A58]
-                        "
-                      />
-
-                      <p
-                        className="
-                          text-[11px]
+                          flex
+                          items-center
+                          gap-1.5
+                          text-[12px]
                           font-medium
-                          leading-5
                           text-[#64748B]
                         "
                       >
-                        Your application information is securely
-                        stored and used for account provisioning.
-                      </p>
-
+                        <MapPin size={13} className="shrink-0 text-[#347BE9]" />
+                        <span className="truncate">
+                          {formatAddress(application.address)}
+                        </span>
+                      </div>
                     </div>
-
                   </div>
 
-                </div>
-
-              </aside>
-
-            </div>
-
-
-            {/* ==================================================
-                HOTEL INFORMATION
-            ================================================== */}
-
-            <InfoSection
-              icon={Building2}
-              title="Hotel Information"
-              description="Details submitted during hotel registration."
-            >
-
-              <div
-                className="
-                  grid
-                  grid-cols-1
-                  gap-4
-                  sm:grid-cols-2
-                "
-              >
-
-                <InfoBox
-                  label="Hotel Name"
-                  value={application.hotelName}
-                />
-
-                <InfoBox
-                  label="Owner Name"
-                  value={application.ownerName}
-                  icon={User}
-                />
-
-                <InfoBox
-                  label="Email Address"
-                  value={application.email}
-                  icon={Mail}
-                />
-
-                <InfoBox
-                  label="Phone Number"
-                  value={application.phone}
-                  icon={Phone}
-                />
-
-              </div>
-
-            </InfoSection>
-
-
-            {/* ==================================================
-                ADDRESS
-            ================================================== */}
-
-            <InfoSection
-              icon={MapPin}
-              title="Hotel Address"
-              description="Registered hotel location provided during application."
-            >
-
-              <div
-                className="
-                  grid
-                  grid-cols-1
-                  gap-4
-                  sm:grid-cols-2
-                  lg:grid-cols-4
-                "
-              >
-
-                <InfoBox
-                  label="Street / Address"
-                  value={application.address?.street}
-                  icon={MapPin}
-                />
-
-                <InfoBox
-                  label="City"
-                  value={application.address?.city}
-                />
-
-                <InfoBox
-                  label="State"
-                  value={application.address?.state}
-                />
-
-                <InfoBox
-                  label="Country / Pincode"
-                  value={[
-                    application.address?.country,
-                    application.address?.pincode,
-                  ]
-                    .filter(Boolean)
-                    .join(" - ")}
-                />
-
-              </div>
-
-            </InfoSection>
-
-
-            {/* ==================================================
-                TAX
-            ================================================== */}
-
-            <InfoSection
-              icon={ReceiptText}
-              title="Tax Information"
-              description="Tax registration information submitted for billing."
-            >
-
-              <div
-                className="
-                  grid
-                  grid-cols-1
-                  gap-4
-                  sm:grid-cols-2
-                "
-              >
-
-                <InfoBox
-                  label="GST Number"
-                  value={
-                    application.gstNumber ||
-                    "Not provided"
-                  }
-                  mono
-                />
-
-
-                <div
-                  className="
-                    rounded-xl
-                    border
-                    border-[#E0E3EA]
-                    bg-[#FAFAFD]
-                    p-4
-                  "
-                >
-
+                  {/* APPLICATION ID & COPY */}
                   <div
                     className="
                       flex
                       items-center
-                      justify-between
                       gap-3
+                      rounded-xl
+                      border
+                      border-[#D5E5F7]
+                      bg-white/95
+                      px-3.5
+                      py-2.5
+                      backdrop-blur-sm
+                      sm:shrink-0
                     "
                   >
-
                     <div>
-
                       <p
                         className="
-                          text-[10px]
+                          text-[9px]
                           font-bold
                           uppercase
-                          tracking-[0.08em]
+                          tracking-wider
                           text-[#64748B]
                         "
                       >
-                        Tax Calculation
+                        Application ID
                       </p>
-
                       <p
                         className="
-                          mt-1
+                          font-mono
                           text-[13px]
                           font-bold
-                          text-[#172033]
+                          text-[#347BE9]
                         "
                       >
-                        {application.taxEnabled
-                          ? "Enabled"
-                          : "Disabled"}
+                        {application.registrationId ||
+                          application._id ||
+                          registrationId}
                       </p>
-
                     </div>
 
-
-                    <div
-                      className={`
-                        flex
-                        h-9
-                        w-9
+                    <button
+                      type="button"
+                      onClick={copyApplicationId}
+                      className="
+                        inline-flex
                         items-center
-                        justify-center
-                        rounded-full
-                        ${
-                          application.taxEnabled
-                            ? "bg-[#DDF7EC] text-[#087A58]"
-                            : "bg-[#F1F2F5] text-[#64748B]"
-                        }
-                      `}
+                        gap-1.5
+                        rounded-lg
+                        border
+                        border-[#C9D8EB]
+                        bg-[#F7FAFF]
+                        px-3
+                        py-1.5
+                        text-[11px]
+                        font-bold
+                        text-[#344054]
+                        transition-all
+                        hover:border-[#347BE9]
+                        hover:bg-[#EAF3FF]
+                        hover:text-[#347BE9]
+                      "
                     >
-
-                      {application.taxEnabled ? (
-                        <CheckCircle2 size={17} />
+                      {copied ? (
+                        <>
+                          <Check size={13} className="text-[#087A58]" />
+                          <span className="text-[#087A58]">Copied</span>
+                        </>
                       ) : (
-                        <CircleDashed size={17} />
+                        <>
+                          <Copy size={13} />
+                          <span>Copy</span>
+                        </>
                       )}
-
-                    </div>
-
+                    </button>
                   </div>
 
                 </div>
-
               </div>
 
-            </InfoSection>
+              {/* PROGRESS STATUS BAR & JOURNEY */}
+              <div className="p-5 sm:p-6">
+                <ApplicationTimeline status={application.status} />
 
-
-            {/* ==================================================
-                PLAN & PAYMENT
-            ================================================== */}
-
-            <InfoSection
-              icon={CreditCard}
-              title="Plan & Payment"
-              description="Subscription and payment information associated with this application."
-            >
-
-              <div
-                className="
-                  grid
-                  grid-cols-1
-                  gap-4
-                  sm:grid-cols-2
-                  lg:grid-cols-4
-                "
-              >
-
-                <InfoBox
-                  label="Selected Plan"
-                  value={
-                    application.planName ||
-                    application.planId?.planName ||
-                    "N/A"
-                  }
-                />
-
-                <InfoBox
-                  label="Billing Cycle"
-                  value={formatStatus(
-                    application.billingCycle
-                  )}
-                />
-
-                <InfoBox
-                  label="Payment Status"
-                  value={formatStatus(
-                    application.paymentStatus
-                  )}
-                />
-
-                {application.amount !== undefined && (
-
-                  <InfoBox
-                    label="Amount"
-                    value={formatCurrency(
-                      application.amount
-                    )}
-                  />
-
+                {/* ALERT NOTICES */}
+                {application.status === "approved" && (
+                  <div className="mt-5 flex items-start gap-3 rounded-xl border border-[#CBEFDE] bg-[#F0FBF6] p-3.5">
+                    <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#087A58]" />
+                    <div>
+                      <p className="text-[12px] font-bold text-[#075E46]">
+                        Registration Approved & Confirmed
+                      </p>
+                      <p className="mt-0.5 text-[11px] font-medium leading-4 text-[#087A58]">
+                        The administration has verified and approved this hotel registration application.
+                      </p>
+                    </div>
+                  </div>
                 )}
 
-              </div>
-
-            </InfoSection>
-
-
-            {/* ==================================================
-                APPLICATION INFORMATION
-            ================================================== */}
-
-            <InfoSection
-              icon={FileCheck2}
-              title="Application Information"
-              description="Tracking and submission details."
-            >
-
-              <div
-                className="
-                  grid
-                  grid-cols-1
-                  gap-4
-                  sm:grid-cols-2
-                  lg:grid-cols-3
-                "
-              >
-
-                <InfoBox
-                  label="Application ID"
-                  value={
-                    application.registrationId ||
-                    application._id
-                  }
-                  mono
-                />
-
-                <InfoBox
-                  label="Submitted On"
-                  value={formatDateTime(
-                    application.createdAt
-                  )}
-                  icon={CalendarDays}
-                />
-
-                {application.approvedAt && (
-
-                  <InfoBox
-                    label="Approved On"
-                    value={formatDateTime(
-                      application.approvedAt
-                    )}
-                    icon={CheckCircle2}
-                  />
-
+                {application.status === "pending" && (
+                  <div className="mt-5 flex items-start gap-3 rounded-xl border border-[#F0DEAE] bg-[#FFFBF1] p-3.5">
+                    <Clock3 size={18} className="mt-0.5 shrink-0 text-[#B77900]" />
+                    <div>
+                      <p className="text-[12px] font-bold text-[#7C5700]">
+                        Admin Review Underway
+                      </p>
+                      <p className="mt-0.5 text-[11px] font-medium leading-4 text-[#946F13]">
+                        Your registration has been submitted and is actively being reviewed by platform administrators.
+                      </p>
+                    </div>
+                  </div>
                 )}
 
+                {application.status === "rejected" && (
+                  <div className="mt-5 flex items-start gap-3 rounded-xl border border-[#F3CCCC] bg-[#FFF7F7] p-3.5">
+                    <XCircle size={18} className="mt-0.5 shrink-0 text-[#C62828]" />
+                    <div>
+                      <p className="text-[12px] font-bold text-[#991B1B]">
+                        Registration Notice
+                      </p>
+                      <p className="mt-0.5 text-[11px] font-medium leading-4 text-[#B42318]">
+                        {application.rejectionReason || "Application was not approved. Please contact administrative support."}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
-            </InfoSection>
-
+            </section>
 
             {/* ==================================================
-                BOTTOM ACTION
+                IMPORTANT SHORT DETAILS (PUBLIC & MINIMAL)
             ================================================== */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
-            <div
-              className="
-                flex
-                flex-col
-                gap-4
-                rounded-[20px]
-                border
-                border-[#E0E3EA]
-                bg-white
-                p-5
-                sm:flex-row
-                sm:items-center
-                sm:justify-between
-                sm:p-6
-              "
-            >
-
-              <div className="flex items-start gap-3">
-
-                <div
-                  className="
-                    flex
-                    h-10
-                    w-10
-                    shrink-0
-                    items-center
-                    justify-center
-                    rounded-full
-                    bg-[#EAE9FF]
-                    text-[#4338CA]
-                  "
-                >
-                  <ShieldCheck size={19} />
+              {/* CARD 1: HOTEL REGISTRATION INFO */}
+              <div
+                className="
+                  rounded-2xl
+                  border
+                  border-[#DCE7F5]
+                  bg-white
+                  p-5
+                  shadow-[0_8px_20px_rgba(14,42,81,0.04)]
+                "
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EAF3FF] text-[#347BE9]">
+                    <Building2 size={16} />
+                  </div>
+                  <h3 className="text-[14px] font-bold text-[#172033]">
+                    Hotel Summary
+                  </h3>
                 </div>
 
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-[12px] pb-2 border-b border-[#EDF2F7]">
+                    <span className="text-[#64748B] font-medium">Hotel Entity</span>
+                    <span className="font-bold text-[#17345D] text-right truncate max-w-[200px]">
+                      {application.hotelName || "N/A"}
+                    </span>
+                  </div>
 
-                <div>
+                  <div className="flex justify-between items-center text-[12px] pb-2 border-b border-[#EDF2F7]">
+                    <span className="text-[#64748B] font-medium">Location</span>
+                    <span className="font-bold text-[#17345D] text-right truncate max-w-[200px]">
+                      {application.address?.city || application.address?.state
+                        ? `${application.address?.city || ""}${
+                            application.address?.city && application.address?.state
+                              ? ", "
+                              : ""
+                          }${application.address?.state || ""}`
+                        : "India"}
+                    </span>
+                  </div>
 
-                  <p
-                    className="
-                      text-[13px]
-                      font-bold
-                      text-[#172033]
-                    "
-                  >
-                    Keep your application ID
-                  </p>
-
-                  <p
-                    className="
-                      mt-1
-                      text-[11px]
-                      font-medium
-                      leading-5
-                      text-[#64748B]
-                    "
-                  >
-                    You can use it anytime to check your latest
-                    application status.
-                  </p>
-
+                  <div className="flex justify-between items-center text-[12px]">
+                    <span className="text-[#64748B] font-medium">Status</span>
+                    <span
+                      className={`
+                        font-bold
+                        ${
+                          application.status === "approved"
+                            ? "text-[#087A58]"
+                            : application.status === "rejected"
+                            ? "text-[#C62828]"
+                            : "text-[#B77900]"
+                        }
+                      `}
+                    >
+                      {application.status === "approved"
+                        ? "Approved & Active"
+                        : application.status === "rejected"
+                        ? "Rejected"
+                        : "Pending Verification"}
+                    </span>
+                  </div>
                 </div>
-
               </div>
 
+              {/* CARD 2: SUBSCRIPTION & TIMELINE */}
+              <div
+                className="
+                  rounded-2xl
+                  border
+                  border-[#DCE7F5]
+                  bg-white
+                  p-5
+                  shadow-[0_8px_20px_rgba(14,42,81,0.04)]
+                "
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EAF3FF] text-[#347BE9]">
+                    <CreditCard size={16} />
+                  </div>
+                  <h3 className="text-[14px] font-bold text-[#172033]">
+                    Plan & Timeline
+                  </h3>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-[12px] pb-2 border-b border-[#EDF2F7]">
+                    <span className="text-[#64748B] font-medium">Selected Tier</span>
+                    <span className="font-bold text-[#17345D]">
+                      {application.planName || application.planId?.planName || "Standard Plan"}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center text-[12px] pb-2 border-b border-[#EDF2F7]">
+                    <span className="text-[#64748B] font-medium">Billing Cycle</span>
+                    <span className="font-bold text-[#17345D]">
+                      {formatStatus(application.billingCycle)}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center text-[12px]">
+                    <span className="text-[#64748B] font-medium">
+                      {application.status === "approved" ? "Approved Date" : "Submission Date"}
+                    </span>
+                    <span className="font-bold text-[#17345D]">
+                      {application.approvedAt
+                        ? formatDate(application.approvedAt)
+                        : formatDate(application.createdAt)}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
             </div>
 
+            {/* TRUST BANNER */}
+            <div className="text-center text-[11px] text-[#64748B] pt-2">
+              <span className="inline-flex items-center gap-1.5 font-medium">
+                <ShieldCheck size={14} className="text-[#087A58]" />
+                Official SaaS Public Record • Protected by verified cloud credentials
+              </span>
+            </div>
+
           </div>
-
         )}
-
 
         {/* ====================================================
             EMPTY STATE
@@ -2082,11 +1296,13 @@ const SaaSUserApplicationStatus = () => {
 
             <div
               className="
-                rounded-[20px]
+                overflow-hidden
+                rounded-[22px]
                 border
-                border-[#E0E3EA]
+                border-[#DCE7F5]
                 bg-white
                 p-8
+                shadow-[0_16px_40px_rgba(14,42,81,0.07)]
                 text-center
                 sm:p-12
               "
@@ -2104,8 +1320,10 @@ const SaaSUserApplicationStatus = () => {
                   items-center
                   justify-center
                   rounded-2xl
-                  bg-[#EEEEFF]
-                  text-[#4338CA]
+                  bg-[#EAF3FF]
+                  text-[#347BE9]
+                  ring-8
+                  ring-[#F5F9FF]
                 "
               >
                 <Search size={27} />
@@ -2115,10 +1333,11 @@ const SaaSUserApplicationStatus = () => {
               <h2
                 className="
                   mt-5
-                  text-[20px]
+                  text-[21px]
                   font-bold
                   tracking-[-0.025em]
-                  text-[#172033]
+                  text-[#17345D]
+                  sm:text-[22px]
                 "
               >
                 Check Your Application
@@ -2130,10 +1349,10 @@ const SaaSUserApplicationStatus = () => {
                   mx-auto
                   mt-2
                   max-w-md
-                  text-[13px]
+                  text-[14px]
                   font-medium
                   leading-6
-                  text-[#64748B]
+                  text-[#667085]
                 "
               >
                 Enter your application ID above to view
@@ -2153,457 +1372,210 @@ const SaaSUserApplicationStatus = () => {
 
 
 // ============================================================
-// APPLICATION TIMELINE
+// APPLICATION TIMELINE (DYNAMIC COLOR CHANGING PROGRESS BAR)
 // ============================================================
 
+const getProgressTheme = (status) => {
+  switch (status) {
+    case "approved":
+      return {
+        percentage: 100,
+        label: "Admin Approved",
+        sublabel: "Hotel registration approved by administrator",
+        icon: CheckCircle2,
+        barGradient: "bg-gradient-to-r from-[#10B981] to-[#059669]",
+        barGlow: "shadow-[0_0_12px_rgba(16,185,129,0.35)]",
+        badgeBg: "bg-[#EAF8F1]",
+        badgeText: "text-[#087A58]",
+        badgeBorder: "border-[#BFE4D2]",
+        trackBg: "bg-[#E2F6EC]",
+      };
+    case "rejected":
+      return {
+        percentage: 100,
+        label: "Application Rejected",
+        sublabel: "Registration was not approved by administration",
+        icon: XCircle,
+        barGradient: "bg-gradient-to-r from-[#EF4444] to-[#DC2626]",
+        barGlow: "shadow-[0_0_12px_rgba(239,68,68,0.35)]",
+        badgeBg: "bg-[#FFF3F3]",
+        badgeText: "text-[#C62828]",
+        badgeBorder: "border-[#F3CCCC]",
+        trackBg: "bg-[#FDECEC]",
+      };
+    case "pending":
+    default:
+      return {
+        percentage: 50,
+        label: "Admin Review In Progress",
+        sublabel: "Awaiting administrator verification",
+        icon: Clock3,
+        barGradient: "bg-gradient-to-r from-[#347BE9] to-[#F59E0B]",
+        barGlow: "shadow-[0_0_12px_rgba(245,158,11,0.3)]",
+        badgeBg: "bg-[#FFF9E9]",
+        badgeText: "text-[#946F13]",
+        badgeBorder: "border-[#F0DEAE]",
+        trackBg: "bg-[#FEF3C7]",
+      };
+  }
+};
+
 const ApplicationTimeline = ({ status }) => {
+  const theme = getProgressTheme(status);
+  const StatusIcon = theme.icon;
+
   const isApproved = status === "approved";
   const isRejected = status === "rejected";
   const isPending = status === "pending";
 
-
   const steps = [
     {
       title: "Application Submitted",
-      description:
-        "Your hotel details were submitted successfully.",
-      icon: CheckCircle2,
+      desc: "Details received",
       complete: true,
+      active: false,
+      rejected: false,
+      color: "text-[#087A58] border-[#BFE4D2] bg-[#EAF8F1]",
     },
     {
       title: "Admin Review",
-      description:
-        isPending
-          ? "Your application is currently waiting for admin approval."
-          : isRejected
-            ? "The application was reviewed by the admin team."
-            : "The application review has been completed.",
-      icon:
-        isPending
-          ? Clock3
-          : isRejected
-            ? XCircle
-            : CheckCircle2,
-      active: isPending,
+      desc: isPending
+        ? "Review underway"
+        : isRejected
+        ? "Review completed"
+        : "Review completed",
       complete: isApproved || isRejected,
-      rejected: isRejected,
+      active: isPending,
+      rejected: false,
+      color: isApproved
+        ? "text-[#087A58] border-[#BFE4D2] bg-[#EAF8F1]"
+        : isRejected
+        ? "text-[#C62828] border-[#F3CCCC] bg-[#FFF3F3]"
+        : "text-[#347BE9] border-[#BFD7F5] bg-[#EAF3FF] ring-2 ring-[#DCEBFF]",
     },
     {
-      title: "Account Provisioning",
-      description:
-        isApproved
-          ? "Your hotel account can continue to the provisioning stage."
-          : "This stage will become available after application approval.",
-      icon: Building2,
-      active: isApproved,
-      complete: false,
+      title: isApproved
+        ? "Admin Approved Your Hotel"
+        : isRejected
+        ? "Application Rejected"
+        : "Admin Approval",
+      desc: isApproved
+        ? "Hotel verified"
+        : isRejected
+        ? "Not approved"
+        : "Pending decision",
+      complete: isApproved,
+      active: false,
+      rejected: isRejected,
+      color: isApproved
+        ? "text-[#087A58] border-[#BFE4D2] bg-[#EAF8F1]"
+        : isRejected
+        ? "text-[#C62828] border-[#F3CCCC] bg-[#FFF3F3]"
+        : "text-[#94A3B8] border-slate-200 bg-slate-50",
     },
   ];
 
-
   return (
-    <div className="space-y-1">
+    <div className="w-full">
 
-      {steps.map((step, index) => {
-
-        const Icon = step.icon;
-
-        const iconClass = step.rejected
-          ? "bg-[#FDE8E8] text-[#C62828]"
-          : step.complete
-            ? "bg-[#DDF7EC] text-[#087A58]"
-            : step.active
-              ? "bg-[#4338CA] text-white"
-              : "bg-[#EEF0F4] text-[#64748B]";
-
-
-        return (
-          <div
-            key={step.title}
-            className="relative flex items-start gap-3"
-          >
-
-            <div className="flex flex-col items-center">
-
-              <div
-                className={`
-                  flex
-                  h-9
-                  w-9
-                  shrink-0
-                  items-center
-                  justify-center
-                  rounded-full
-                  ${iconClass}
-                  ${
-                    step.active
-                      ? "ring-4 ring-[#EAE9FF]"
-                      : ""
-                  }
-                `}
-              >
-
-                <Icon
-                  size={16}
-                  className={
-                    step.active
-                      ? "animate-pulse"
-                      : ""
-                  }
-                />
-
-              </div>
-
-
-              {index < steps.length - 1 && (
-
-                <div
-                  className={`
-                    mt-1
-                    h-10
-                    w-0.5
-                    ${
-                      step.complete
-                        ? "bg-[#9ADCBF]"
-                        : "bg-[#E4E7ED]"
-                    }
-                  `}
-                />
-
-              )}
-
-            </div>
-
-
-            <div className="min-w-0 flex-1 pb-5">
-
-              <div
-                className="
-                  flex
-                  flex-wrap
-                  items-center
-                  justify-between
-                  gap-2
-                "
-              >
-
-                <p
-                  className={`
-                    text-[13px]
-                    font-bold
-                    ${
-                      step.active
-                        ? "text-[#4338CA]"
-                        : step.rejected
-                          ? "text-[#C62828]"
-                          : step.complete
-                            ? "text-[#172033]"
-                            : "text-[#64748B]"
-                    }
-                  `}
-                >
-                  {step.title}
-                </p>
-
-
-                {step.complete && (
-
-                  <span
-                    className="
-                      text-[10px]
-                      font-bold
-                      text-[#087A58]
-                    "
-                  >
-                    Completed
-                  </span>
-
-                )}
-
-
-                {step.active && (
-
-                  <span
-                    className="
-                      rounded-full
-                      bg-[#EAE9FF]
-                      px-2
-                      py-0.5
-                      text-[9px]
-                      font-bold
-                      text-[#4338CA]
-                    "
-                  >
-                    In Progress
-                  </span>
-
-                )}
-
-              </div>
-
-
-              <p
-                className="
-                  mt-1
-                  text-[11px]
-                  font-medium
-                  leading-5
-                  text-[#64748B]
-                "
-              >
-                {step.description}
-              </p>
-
-            </div>
-
-          </div>
-        );
-      })}
-
-    </div>
-  );
-};
-
-
-// ============================================================
-// SUMMARY ITEM
-// ============================================================
-
-const SummaryItem = ({
-  icon: Icon,
-  label,
-  value,
-  success = false,
-}) => {
-  return (
-    <div className="mb-4 flex items-start gap-3">
-
-      <div
-        className="
-          flex
-          h-9
-          w-9
-          shrink-0
-          items-center
-          justify-center
-          rounded-lg
-          bg-[#EEEEFF]
-          text-[#4338CA]
-        "
-      >
-        <Icon size={16} />
-      </div>
-
-
-      <div className="min-w-0">
-
-        <p
-          className="
-            text-[10px]
-            font-bold
-            uppercase
-            tracking-[0.08em]
-            text-[#64748B]
-          "
-        >
-          {label}
-        </p>
-
-        <p
-          className={`
-            mt-1
-            break-words
-            text-[13px]
-            font-bold
-            ${
-              success
-                ? "text-[#087A58]"
-                : "text-[#172033]"
-            }
-          `}
-        >
-          {value || "N/A"}
-        </p>
-
-      </div>
-
-    </div>
-  );
-};
-
-
-// ============================================================
-// INFO SECTION
-// ============================================================
-
-const InfoSection = ({
-  icon: Icon,
-  title,
-  description,
-  children,
-}) => {
-  return (
-    <section
-      className="
-        rounded-[20px]
-        border
-        border-[#E0E3EA]
-        bg-white
-        p-5
-        sm:p-6
-        lg:p-7
-      "
-      style={{
-        animation: "fadeUp 0.5s ease-out both",
-      }}
-    >
-
-      <div
-        className="
-          mb-6
-          flex
-          items-start
-          gap-3
-        "
-      >
-
-        <div
-          className="
-            flex
-            h-10
-            w-10
-            shrink-0
-            items-center
-            justify-center
-            rounded-xl
-            bg-[#EEEEFF]
-            text-[#4338CA]
-          "
-        >
-          <Icon size={19} />
-        </div>
-
-
-        <div>
-
-          <h2
-            className="
-              text-[17px]
+      {/* TOP STATUS HEADER WITH BADGE & DYNAMIC PERCENTAGE */}
+      <div className="mb-3.5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span
+            className={`
+              inline-flex
+              items-center
+              gap-1.5
+              rounded-full
+              border
+              px-3
+              py-1
+              text-[11px]
               font-bold
-              leading-6
-              tracking-[-0.02em]
-              text-[#172033]
-            "
+              ${theme.badgeBg}
+              ${theme.badgeText}
+              ${theme.badgeBorder}
+            `}
           >
-            {title}
-          </h2>
-
-
-          {description && (
-
-            <p
-              className="
-                mt-1
-                text-[12px]
-                font-medium
-                leading-5
-                text-[#64748B]
-                sm:text-[13px]
-              "
-            >
-              {description}
-            </p>
-
-          )}
-
+            <StatusIcon size={14} className={isPending ? "animate-pulse" : ""} />
+            {theme.label}
+          </span>
+          <span className="hidden sm:inline text-[12px] font-medium text-[#64748B]">
+            • {theme.sublabel}
+          </span>
         </div>
 
+        <span className={`text-[13px] font-extrabold ${theme.badgeText}`}>
+          {theme.percentage}% Completed
+        </span>
       </div>
 
-
-      {children}
-
-    </section>
-  );
-};
-
-
-// ============================================================
-// INFO BOX
-// ============================================================
-
-const InfoBox = ({
-  label,
-  value,
-  icon: Icon,
-  mono = false,
-}) => {
-  return (
-    <div
-      className="
-        rounded-xl
-        border
-        border-[#E2E4EC]
-        bg-[#FAFAFD]
-        p-4
-        transition-all
-        duration-200
-        hover:border-[#D4D1F4]
-        hover:bg-[#F8F7FF]
-      "
-    >
-
+      {/* DYNAMIC PROGRESS BAR (COLOR CHANGES BASED ON PROGRESS & APPROVAL) */}
       <div
-        className="
-          flex
-          items-center
-          gap-2
-        "
-      >
-
-        {Icon && (
-          <Icon
-            size={14}
-            className="text-[#64748B]"
-          />
-        )}
-
-        <p
-          className="
-            text-[10px]
-            font-bold
-            uppercase
-            tracking-[0.08em]
-            text-[#64748B]
-          "
-        >
-          {label}
-        </p>
-
-      </div>
-
-
-      <p
         className={`
-          mt-1.5
-          break-words
-          text-[13px]
-          font-bold
-          leading-5
-          text-[#172033]
-          ${
-            mono
-              ? "font-mono text-[12px]"
-              : ""
-          }
+          h-3
+          w-full
+          rounded-full
+          ${theme.trackBg}
+          p-0.5
+          overflow-hidden
         `}
       >
-        {value || "N/A"}
-      </p>
+        <div
+          className={`
+            h-full
+            rounded-full
+            transition-all
+            duration-700
+            ease-out
+            ${theme.barGradient}
+            ${theme.barGlow}
+          `}
+          style={{ width: `${theme.percentage}%` }}
+        />
+      </div>
+
+      {/* 3 CLEAN STEP CHECKPOINTS */}
+      <div className="mt-5 grid grid-cols-3 gap-2">
+        {steps.map((st, i) => (
+          <div key={st.title} className="flex flex-col items-center text-center">
+            <div
+              className={`
+                flex
+                h-8
+                w-8
+                items-center
+                justify-center
+                rounded-full
+                border
+                text-[11px]
+                font-bold
+                ${st.color}
+              `}
+            >
+              {st.complete ? (
+                <CheckCircle2 size={15} />
+              ) : st.rejected ? (
+                <XCircle size={15} />
+              ) : st.active ? (
+                <Clock3 size={15} className="animate-spin" />
+              ) : (
+                `0${i + 1}`
+              )}
+            </div>
+
+            <p className="mt-2 text-[12px] font-bold text-[#17345D] leading-tight">
+              {st.title}
+            </p>
+            <p className="mt-0.5 text-[10px] font-medium text-[#64748B]">
+              {st.desc}
+            </p>
+          </div>
+        ))}
+      </div>
 
     </div>
   );
 };
-
 
 export default SaaSUserApplicationStatus;

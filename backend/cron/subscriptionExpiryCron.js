@@ -2,6 +2,7 @@ import cron from "node-cron";
 
 import Subscription from "../models/subscription.js";
 import Hotels from "../models/hotels.js";
+import Users from "../models/users.js";
 
 import {
   sendSubscriptionExpiryReminder,
@@ -84,13 +85,23 @@ const checkSubscriptionExpiry = async () => {
     );
 
     // ========================================================
-    // GET ACTIVE / EXPIRING SUBSCRIPTIONS
+    // GET ACTIVE / EXPIRING / EXPIRED SUBSCRIPTIONS
+    // Include subscriptions already marked 'expired' if the
+    // expiry notification hasn't been sent yet.
     // ========================================================
 
     const subscriptions = await Subscription.find({
-      status: {
-        $in: ["active", "expiring_soon"],
-      },
+      $or: [
+        {
+          status: {
+            $in: ["active", "expiring_soon"],
+          },
+        },
+        {
+          status: "expired",
+          expiryNotificationSentAt: null,
+        },
+      ],
     }).populate(
       "planId",
       "planName"
@@ -111,7 +122,7 @@ const checkSubscriptionExpiry = async () => {
         }
 
         // ----------------------------------------------------
-        // GET HOTEL
+        // GET HOTEL & OWNER USER
         // ----------------------------------------------------
 
         const hotel = await Hotels.findById(
@@ -126,12 +137,27 @@ const checkSubscriptionExpiry = async () => {
           continue;
         }
 
-        if (!hotel.email) {
+        // Look up active hotel owner user for this hotel
+        const ownerUser = await Users.findOne({
+          hotelId: subscription.hotelId,
+          role: "hotelOwner",
+        });
+
+        // Determine recipient email: prioritize hotelOwner user email, fallback to hotel.email
+        const recipientEmail = ownerUser?.email || hotel.email;
+
+        if (!recipientEmail) {
           log.warn(
-            `[SUBSCRIPTION] No email found for hotel ${hotel.hotelName}`
+            `[SUBSCRIPTION] No email found for hotel ${hotel.hotelName} (hotelId: ${hotel._id})`
           );
 
           continue;
+        }
+
+        // Keep hotel.email in sync if owner email is updated
+        if (ownerUser?.email && hotel.email !== ownerUser.email) {
+          hotel.email = ownerUser.email;
+          await hotel.save();
         }
 
         // ----------------------------------------------------
@@ -145,6 +171,7 @@ const checkSubscriptionExpiry = async () => {
 
         log.info(
           `[SUBSCRIPTION] ${hotel.hotelName} | ` +
+          `Recipient: ${recipientEmail} | ` +
           `Expiry: ${getDateKey(subscription.endDate)} | ` +
           `Days Remaining: ${daysRemaining}`
         );
@@ -153,7 +180,7 @@ const checkSubscriptionExpiry = async () => {
         // EXPIRED
         // ====================================================
 
-        if (now >= new Date(subscription.endDate)) {
+        if (now >= new Date(subscription.endDate) || daysRemaining <= 0) {
           log.info(
             `[SUBSCRIPTION] ${hotel.hotelName} subscription has expired.`
           );
@@ -167,23 +194,24 @@ const checkSubscriptionExpiry = async () => {
           if (!subscription.expiryNotificationSentAt) {
             try {
               await sendSubscriptionExpiredNotification({
-                to: hotel.email,
+                to: recipientEmail,
                 hotelName: hotel.hotelName,
                 planName:
                   subscription.planId?.planName ||
                   "Current Plan",
                 endDate: subscription.endDate,
+                hotelId: hotel._id,
               });
 
               subscription.expiryNotificationSentAt =
                 new Date();
 
               log.info(
-                `[SUBSCRIPTION] Expired email sent to ${hotel.email}`
+                `[SUBSCRIPTION] Expired email sent to ${recipientEmail}`
               );
             } catch (emailError) {
               log.error(
-                `[SUBSCRIPTION] Failed to send expired email to ${hotel.email}: ${emailError.message}`
+                `[SUBSCRIPTION] Failed to send expired email to ${recipientEmail}: ${emailError.message}`
               );
             }
           }
@@ -194,39 +222,41 @@ const checkSubscriptionExpiry = async () => {
         }
 
         // ====================================================
-        // 7 DAYS BEFORE
+        // 7 DAYS BEFORE (1 WEEK)
         // ====================================================
 
         if (
-          daysRemaining === 7 &&
+          daysRemaining <= 7 &&
+          daysRemaining > 3 &&
           !subscription.expiryReminder7DaysSentAt
         ) {
           log.info(
-            `[SUBSCRIPTION] ${hotel.hotelName} has 7 days remaining.`
+            `[SUBSCRIPTION] ${hotel.hotelName} has ${daysRemaining} days remaining (7-day window).`
           );
 
           subscription.status = "expiring_soon";
 
           try {
             await sendSubscriptionExpiryReminder({
-              to: hotel.email,
+              to: recipientEmail,
               hotelName: hotel.hotelName,
               planName:
                 subscription.planId?.planName ||
                 "Current Plan",
               endDate: subscription.endDate,
-              daysRemaining: 7,
+              daysRemaining: daysRemaining,
+              hotelId: hotel._id,
             });
 
             subscription.expiryReminder7DaysSentAt =
               new Date();
 
             log.info(
-              `[SUBSCRIPTION] 7-day reminder sent to ${hotel.email}`
+              `[SUBSCRIPTION] 7-day reminder sent to ${recipientEmail}`
             );
           } catch (emailError) {
             log.error(
-              `[SUBSCRIPTION] Failed to send 7-day reminder to ${hotel.email}: ${emailError.message}`
+              `[SUBSCRIPTION] Failed to send 7-day reminder to ${recipientEmail}: ${emailError.message}`
             );
           }
 
@@ -236,11 +266,56 @@ const checkSubscriptionExpiry = async () => {
         }
 
         // ====================================================
-        // 1 DAY BEFORE
+        // 3 DAYS BEFORE
         // ====================================================
 
         if (
-          daysRemaining === 1 &&
+          daysRemaining <= 3 &&
+          daysRemaining > 1 &&
+          !subscription.expiryReminder3DaysSentAt
+        ) {
+          log.info(
+            `[SUBSCRIPTION] ${hotel.hotelName} has ${daysRemaining} days remaining (3-day window).`
+          );
+
+          subscription.status = "expiring_soon";
+
+          try {
+            await sendSubscriptionExpiryReminder({
+              to: recipientEmail,
+              hotelName: hotel.hotelName,
+              planName:
+                subscription.planId?.planName ||
+                "Current Plan",
+              endDate: subscription.endDate,
+              daysRemaining: daysRemaining,
+              hotelId: hotel._id,
+            });
+
+            subscription.expiryReminder3DaysSentAt =
+              new Date();
+
+            log.info(
+              `[SUBSCRIPTION] 3-day reminder sent to ${recipientEmail}`
+            );
+          } catch (emailError) {
+            log.error(
+              `[SUBSCRIPTION] Failed to send 3-day reminder to ${recipientEmail}: ${emailError.message}`
+            );
+          }
+
+          await subscription.save();
+
+          continue;
+        }
+
+        // ====================================================
+        // 1 DAY BEFORE (TOMORROW)
+        // ====================================================
+
+        if (
+          daysRemaining <= 1 &&
+          daysRemaining > 0 &&
           !subscription.expiryReminder1DaySentAt
         ) {
           log.info(
@@ -251,24 +326,25 @@ const checkSubscriptionExpiry = async () => {
 
           try {
             await sendSubscriptionExpiryReminder({
-              to: hotel.email,
+              to: recipientEmail,
               hotelName: hotel.hotelName,
               planName:
                 subscription.planId?.planName ||
                 "Current Plan",
               endDate: subscription.endDate,
-              daysRemaining: 1,
+              daysRemaining: Math.max(1, daysRemaining),
+              hotelId: hotel._id,
             });
 
             subscription.expiryReminder1DaySentAt =
               new Date();
 
             log.info(
-              `[SUBSCRIPTION] 1-day reminder sent to ${hotel.email}`
+              `[SUBSCRIPTION] 1-day reminder sent to ${recipientEmail}`
             );
           } catch (emailError) {
             log.error(
-              `[SUBSCRIPTION] Failed to send 1-day reminder to ${hotel.email}: ${emailError.message}`
+              `[SUBSCRIPTION] Failed to send 1-day reminder to ${recipientEmail}: ${emailError.message}`
             );
           }
 
@@ -278,11 +354,11 @@ const checkSubscriptionExpiry = async () => {
         }
 
         // ====================================================
-        // STILL ACTIVE
+        // STILL ACTIVE (> 7 DAYS)
         // ====================================================
 
         if (
-          daysRemaining > 1 &&
+          daysRemaining > 7 &&
           subscription.status !== "active"
         ) {
           subscription.status = "active";

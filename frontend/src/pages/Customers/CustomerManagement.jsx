@@ -1,4 +1,11 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, {
+  memo,
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   deleteCustomer,
   updateCustomer,
@@ -18,7 +25,762 @@ import {
   CreditCard,
   ChevronLeft,
   ChevronRight,
+  Loader2,
+  AlertCircle,
+  RefreshCw,
+  SearchX,
+  BedDouble,
+  LogIn,
+  LogOut,
 } from "lucide-react";
+
+// ============================================================
+// STATIC CONFIG + PURE HELPERS (outside component = created once)
+// ============================================================
+
+const ROWS_PER_PAGE = 8;
+
+const EMPTY_FORM = {
+  customerName: "",
+  phoneNumber: "",
+  alternativePhone: "",
+  email: "",
+  address: "",
+  idProofType: "",
+  idProofNumber: "",
+};
+
+const STATUS_TABS = ["All", "Staying", "Overstaying", "Checked Out"];
+
+const ID_PROOF_OPTIONS = [
+  "Aadhaar Card",
+  "PAN Card",
+  "Driving License",
+  "Passport",
+  "Voter ID",
+];
+
+const normalizeId = (value) => {
+  if (!value) return "";
+
+  if (typeof value === "object") {
+    return String(value?._id || value?.id || value?.$oid || "");
+  }
+
+  return String(value);
+};
+
+const parseDateTime = (dateValue, timeValue) => {
+  if (!dateValue) return null;
+
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return null;
+
+  if (!timeValue) return date;
+
+  const time = String(timeValue).trim().toUpperCase();
+
+  // 12-hour time: 11:00 AM / 06:10 PM
+  const twelveHour = time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+  if (twelveHour) {
+    let hours = Number(twelveHour[1]);
+    const minutes = Number(twelveHour[2]);
+    const period = twelveHour[3];
+
+    if (period === "PM" && hours !== 12) hours += 12;
+    if (period === "AM" && hours === 12) hours = 0;
+
+    date.setHours(hours, minutes, 0, 0);
+    return date;
+  }
+
+  // 24-hour time: 11:17 / 16:40
+  const twentyFourHour = time.match(/^(\d{1,2}):(\d{2})$/);
+  if (twentyFourHour) {
+    date.setHours(Number(twentyFourHour[1]), Number(twentyFourHour[2]), 0, 0);
+  }
+
+  return date;
+};
+
+// Current booking status (per room)
+const getRoomCurrentStatus = (room, now) => {
+  if (!room) return "Unknown";
+
+  // Once actual checkout has happened, the stay is finished.
+  if (room?.actualCheckoutDate && room?.actualCheckoutTime) {
+    return "Checked Out";
+  }
+
+  const bookedCheckOut = parseDateTime(room?.checkOut, room?.checkOutTime);
+
+  if (!bookedCheckOut) return "Unknown";
+
+  return now.getTime() > bookedCheckOut.getTime() ? "Overstaying" : "Staying";
+};
+
+const getBookingStatus = (booking, now) => {
+  const rooms = Array.isArray(booking?.rooms) ? booking.rooms : [];
+
+  if (!rooms.length) {
+    return booking?.bookingStatus === "Completed"
+      ? "Checked Out"
+      : booking?.bookingStatus === "Active"
+      ? "Staying"
+      : "Unknown";
+  }
+
+  const roomStatuses = rooms.map((room) => getRoomCurrentStatus(room, now));
+
+  if (roomStatuses.some((s) => s === "Overstaying")) return "Overstaying";
+  if (roomStatuses.some((s) => s === "Staying")) return "Staying";
+
+  if (roomStatuses.length > 0 && roomStatuses.every((s) => s === "Checked Out")) {
+    return "Checked Out";
+  }
+
+  return "Unknown";
+};
+
+const formatDate = (value) => {
+  if (!value) return "-";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const formatTime12 = (value) => {
+  if (!value) return "-";
+
+  const str = String(value).trim();
+
+  if (/am|pm/i.test(str)) return str.toUpperCase();
+
+  const parts = str.split(":");
+  if (parts.length < 2) return str;
+
+  let hours = Number(parts[0]);
+  const minutes = String(parts[1]).replace(/\D/g, "").padStart(2, "0");
+
+  if (Number.isNaN(hours)) return str;
+
+  const period = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+
+  return `${String(hours).padStart(2, "0")}:${minutes} ${period}`;
+};
+
+const bookingTime = (booking) =>
+  new Date(booking?.updatedAt || booking?.createdAt || 0).getTime();
+
+// ============================================================
+// STYLES (only transform + opacity are animated)
+// ============================================================
+
+const CSS = `
+@keyframes cm-rise {
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes cm-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes cm-modal {
+  from { opacity: 0; transform: translate3d(0, 22px, 0) scale(.96); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes cm-pop {
+  from { opacity: 0; transform: scale(.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes cm-shine {
+  from { transform: translate3d(-120%, 0, 0) skewX(-20deg); }
+  to   { transform: translate3d(240%, 0, 0) skewX(-20deg); }
+}
+
+.cm-rise  { opacity: 0; animation: cm-rise .55s cubic-bezier(.22,1,.36,1) forwards; }
+.cm-fade  { animation: cm-fade .25s ease-out both; }
+.cm-modal { animation: cm-modal .35s cubic-bezier(.22,1,.36,1) both; }
+.cm-pop   { animation: cm-pop .3s cubic-bezier(.22,1,.36,1) both; }
+.cm-d1 { animation-delay: .04s; }
+.cm-d2 { animation-delay: .12s; }
+.cm-d3 { animation-delay: .2s; }
+
+.cm-row {
+  opacity: 0;
+  animation: cm-rise .45s cubic-bezier(.22,1,.36,1) forwards;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+.cm-row td { transition: background-color .25s ease; }
+.cm-row:hover td { background-color: rgba(219, 234, 254, .5); }
+
+.cm-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 260px;
+}
+@media (hover: hover) {
+  .cm-lift { transition: transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s ease; }
+  .cm-lift:hover { transform: translate3d(0, -3px, 0); box-shadow: 0 18px 36px -20px rgba(15,42,99,.4); }
+}
+
+.cm-input {
+  transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+.cm-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
+  background-color: #fff;
+}
+
+.cm-btn {
+  position: relative;
+  overflow: hidden;
+  transition: transform .2s ease, box-shadow .25s ease, filter .2s ease, background-color .2s ease, color .2s ease, opacity .2s ease;
+}
+.cm-btn:active:not(:disabled) { transform: scale(.95); }
+@media (hover: hover) {
+  .cm-btn:hover:not(:disabled) { filter: brightness(1.06); }
+  .cm-btn.cm-shine:hover:not(:disabled)::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 40%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent);
+    animation: cm-shine .8s ease-out;
+  }
+}
+
+.cm-scroll { scrollbar-width: thin; overscroll-behavior: contain; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cm-rise, .cm-fade, .cm-modal, .cm-pop, .cm-row {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .cm-lift, .cm-input, .cm-btn, .cm-row td {
+    transition: none !important;
+  }
+  .cm-btn::after { display: none !important; }
+}
+`;
+
+// ============================================================
+// SMALL MEMOIZED PIECES
+// ============================================================
+
+const inputClass =
+  "cm-input w-full rounded-xl border border-slate-200 bg-slate-50/70 text-sm text-slate-900 placeholder:text-slate-400 outline-none";
+
+const STATUS_STYLE = {
+  Staying: {
+    chip: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    dot: "bg-emerald-500",
+  },
+  Overstaying: {
+    chip: "bg-rose-50 text-rose-700 border-rose-200",
+    dot: "bg-rose-500",
+  },
+  "Checked Out": {
+    chip: "bg-slate-100 text-slate-700 border-slate-200",
+    dot: "bg-slate-400",
+  },
+  Unknown: {
+    chip: "bg-slate-100 text-slate-700 border-slate-200",
+    dot: "bg-slate-400",
+  },
+};
+
+const StatusChip = memo(function StatusChip({ status }) {
+  const s = STATUS_STYLE[status] || STATUS_STYLE.Unknown;
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap border ${s.chip}`}
+    >
+      <span className="relative flex h-1.5 w-1.5">
+        {status === "Overstaying" && (
+          <span
+            className={`absolute inline-flex h-full w-full rounded-full ${s.dot} opacity-60 animate-ping motion-reduce:animate-none`}
+          />
+        )}
+        <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${s.dot}`} />
+      </span>
+      {status}
+    </span>
+  );
+});
+
+const Avatar = memo(function Avatar() {
+  return (
+    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-600/25">
+      <UserRound className="w-4 h-4" />
+    </div>
+  );
+});
+
+const ActualCheckout = ({ room }) =>
+  room?.actualCheckoutDate && room?.actualCheckoutTime ? (
+    <p className="text-[12px] font-bold text-emerald-700 mt-1 whitespace-nowrap">
+      Actual: {formatDate(room.actualCheckoutDate)} •{" "}
+      {formatTime12(room.actualCheckoutTime)}
+    </p>
+  ) : null;
+
+const divider = (index) =>
+  index > 0 ? "pt-2.5 border-t border-slate-100" : "";
+
+// Desktop / tablet table row
+const BookingRow = memo(function BookingRow({
+  customer,
+  booking,
+  status,
+  index,
+  now,
+  onEdit,
+  onDelete,
+}) {
+  const rooms = Array.isArray(booking?.rooms) ? booking.rooms : [];
+
+  return (
+    <tr style={{ "--i": Math.min(index, 10) }} className="cm-row">
+      {/* ROOM */}
+      <td className="px-4 lg:px-5 py-4 align-top">
+        {rooms.length > 0 ? (
+          <div className="space-y-2.5">
+            {rooms.map((room, i) => (
+              <div key={room?._id || i} className={divider(i)}>
+                <div className="text-sm font-bold text-[#0f2a63] whitespace-nowrap">
+                  Room {room?.roomNumber || "-"}
+                </div>
+                <div className="text-[11px] text-slate-500 mt-0.5 whitespace-nowrap">
+                  {room?.roomType || "-"} • {room?.bedType || "-"}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <span className="text-slate-400">-</span>
+        )}
+      </td>
+
+      {/* CUSTOMER */}
+      <td className="px-4 lg:px-5 py-4 align-top">
+        <div className="flex items-center gap-2.5">
+          <Avatar />
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-[#0f2a63] whitespace-nowrap">
+              {customer?.customerName || "-"}
+            </p>
+            <div className="mt-1">
+              <StatusChip status={status} />
+            </div>
+          </div>
+        </div>
+      </td>
+
+      {/* PHONE */}
+      <td className="px-4 lg:px-5 py-4 align-top">
+        <div className="flex items-center gap-2 text-sm text-slate-800 whitespace-nowrap">
+          <Phone className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+          {customer?.phoneNumber || "-"}
+        </div>
+      </td>
+
+      {/* CHECK IN */}
+      <td className="px-4 lg:px-5 py-4 align-top">
+        <div className="space-y-2.5">
+          {rooms.length > 0 ? (
+            rooms.map((room, i) => (
+              <div key={room?._id || i} className={divider(i)}>
+                <p className="text-sm font-semibold text-slate-900 whitespace-nowrap">
+                  {formatDate(room?.checkIn)}
+                </p>
+                <p className="text-[12px] text-slate-500 mt-0.5 whitespace-nowrap">
+                  {formatTime12(room?.checkInTime)}
+                </p>
+              </div>
+            ))
+          ) : (
+            <span className="text-slate-400">-</span>
+          )}
+        </div>
+      </td>
+
+      {/* CHECK OUT */}
+      <td className="px-4 lg:px-5 py-4 align-top">
+        <div className="space-y-2.5">
+          {rooms.length > 0 ? (
+            rooms.map((room, i) => (
+              <div key={room?._id || i} className={divider(i)}>
+                <p className="text-sm font-semibold text-slate-900 whitespace-nowrap">
+                  {formatDate(room?.checkOut)}
+                </p>
+                <p className="text-[12px] text-slate-500 mt-0.5 whitespace-nowrap">
+                  {formatTime12(room?.checkOutTime)}
+                </p>
+                <ActualCheckout room={room} />
+                <div className="mt-1.5">
+                  <StatusChip status={getRoomCurrentStatus(room, now)} />
+                </div>
+              </div>
+            ))
+          ) : (
+            <span className="text-slate-400">-</span>
+          )}
+        </div>
+      </td>
+
+      {/* ACTIONS */}
+      <td className="px-4 lg:px-5 py-4 align-top">
+        <div className="flex justify-end items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onEdit(customer)}
+            className="cm-btn cursor-pointer inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold border border-blue-200"
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+            Edit
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onDelete(customer?._id)}
+            className="cm-btn cursor-pointer inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold border border-rose-200"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Delete
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+});
+
+// Mobile card
+const BookingCard = memo(function BookingCard({
+  customer,
+  booking,
+  status,
+  index,
+  now,
+  onEdit,
+  onDelete,
+}) {
+  const rooms = Array.isArray(booking?.rooms) ? booking.rooms : [];
+
+  return (
+    <article
+      style={{ "--i": Math.min(index, 10) }}
+      className="cm-row cm-card bg-white border border-blue-100/80 rounded-2xl p-4 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)] space-y-3"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <Avatar />
+          <div className="min-w-0">
+            <p className="text-base font-bold text-[#0f2a63] truncate">
+              {customer?.customerName || "-"}
+            </p>
+            <p className="text-xs text-slate-500 inline-flex items-center gap-1.5">
+              <Phone className="w-3 h-3 text-blue-400" />
+              {customer?.phoneNumber || "-"}
+            </p>
+          </div>
+        </div>
+        <StatusChip status={status} />
+      </div>
+
+      {rooms.length > 0 ? (
+        <div className="space-y-2.5">
+          {rooms.map((room, i) => (
+            <div
+              key={room?._id || i}
+              className="bg-blue-50/60 rounded-xl p-3 space-y-2"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1.5 text-sm font-bold text-[#0f2a63]">
+                  <BedDouble className="w-4 h-4 text-blue-500" />
+                  Room {room?.roomNumber || "-"}
+                </span>
+                <span className="text-[11px] text-slate-500 truncate">
+                  {room?.roomType || "-"} • {room?.bedType || "-"}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <p className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500">
+                    <LogIn className="w-3 h-3" /> Check-in
+                  </p>
+                  <p className="font-semibold text-slate-900">
+                    {formatDate(room?.checkIn)}
+                  </p>
+                  <p className="text-slate-500">
+                    {formatTime12(room?.checkInTime)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500">
+                    <LogOut className="w-3 h-3" /> Check-out
+                  </p>
+                  <p className="font-semibold text-slate-900">
+                    {formatDate(room?.checkOut)}
+                  </p>
+                  <p className="text-slate-500">
+                    {formatTime12(room?.checkOutTime)}
+                  </p>
+                </div>
+              </div>
+
+              <ActualCheckout room={room} />
+
+              <StatusChip status={getRoomCurrentStatus(room, now)} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-slate-400">No rooms on this booking.</p>
+      )}
+
+      <div className="flex items-center gap-2 pt-1">
+        <button
+          type="button"
+          onClick={() => onEdit(customer)}
+          className="cm-btn cursor-pointer flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold border border-blue-200"
+        >
+          <Edit3 className="w-3.5 h-3.5" />
+          Edit
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onDelete(customer?._id)}
+          className="cm-btn cursor-pointer flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold border border-rose-200"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+          Delete
+        </button>
+      </div>
+    </article>
+  );
+});
+
+const Field = memo(function Field({ label, className = "", children }) {
+  return (
+    <div className={`min-w-0 ${className}`}>
+      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+});
+
+const EditModal = memo(function EditModal({
+  form,
+  error,
+  saving,
+  onChange,
+  onSubmit,
+  onClose,
+}) {
+  return (
+    <div
+      className="cm-fade fixed inset-0 z-50 bg-[#0a1a3f]/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-5"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="cm-modal cm-scroll w-full sm:max-w-2xl max-h-[94vh] overflow-y-auto bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl border border-blue-100">
+        {/* HEADER */}
+        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-slate-100 px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="shrink-0 p-2.5 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 text-white shadow-md shadow-blue-600/25">
+              <Edit3 className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg font-bold text-[#0f2a63]">
+                Edit Customer
+              </h2>
+              <p className="text-xs text-slate-500">
+                Update customer personal information
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            aria-label="Close"
+            className="cm-btn cursor-pointer w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* FORM */}
+        <form onSubmit={onSubmit} className="p-4 sm:p-6">
+          {error && (
+            <div className="cm-pop mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-700">
+              {error}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="Customer Name *" className="sm:col-span-2">
+              <div className="relative">
+                <UserRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400 pointer-events-none" />
+                <input
+                  type="text"
+                  autoFocus
+                  value={form.customerName}
+                  onChange={(e) => onChange("customerName", e.target.value)}
+                  className={`${inputClass} pl-10 pr-3.5 py-2.5`}
+                  placeholder="Enter customer name"
+                />
+              </div>
+            </Field>
+
+            <Field label="Phone Number *">
+              <div className="relative">
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={form.phoneNumber}
+                  onChange={(e) => onChange("phoneNumber", e.target.value)}
+                  className={`${inputClass} pl-10 pr-3.5 py-2.5`}
+                  placeholder="Enter phone number"
+                />
+              </div>
+            </Field>
+
+            <Field label="Alternative Phone">
+              <div className="relative">
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={form.alternativePhone}
+                  onChange={(e) => onChange("alternativePhone", e.target.value)}
+                  className={`${inputClass} pl-10 pr-3.5 py-2.5`}
+                  placeholder="Alternative phone"
+                />
+              </div>
+            </Field>
+
+            <Field label="Email" className="sm:col-span-2">
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400 pointer-events-none" />
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => onChange("email", e.target.value)}
+                  className={`${inputClass} pl-10 pr-3.5 py-2.5`}
+                  placeholder="customer@example.com"
+                />
+              </div>
+            </Field>
+
+            <Field label="Address *" className="sm:col-span-2">
+              <div className="relative">
+                <MapPin className="absolute left-3.5 top-3.5 w-4 h-4 text-blue-400 pointer-events-none" />
+                <textarea
+                  rows="3"
+                  value={form.address}
+                  onChange={(e) => onChange("address", e.target.value)}
+                  className={`${inputClass} pl-10 pr-3.5 py-2.5 resize-none`}
+                  placeholder="Enter customer address"
+                />
+              </div>
+            </Field>
+
+            <Field label="ID Proof Type *">
+              <div className="relative">
+                <CreditCard className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400 z-10 pointer-events-none" />
+                <select
+                  value={form.idProofType}
+                  onChange={(e) => onChange("idProofType", e.target.value)}
+                  className={`${inputClass} cursor-pointer pl-10 pr-9 py-2.5 appearance-none`}
+                >
+                  <option value="">Select ID Proof</option>
+                  {ID_PROOF_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+                <svg
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+                </svg>
+              </div>
+            </Field>
+
+            <Field label="ID Proof Number *">
+              <input
+                type="text"
+                value={form.idProofNumber}
+                onChange={(e) => onChange("idProofNumber", e.target.value)}
+                className={`${inputClass} px-3.5 py-2.5`}
+                placeholder="Enter ID proof number"
+              />
+            </Field>
+          </div>
+
+          {/* BUTTONS */}
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 mt-6 pt-5 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="cm-btn cursor-pointer w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              disabled={saving}
+              className="cm-btn cm-shine cursor-pointer w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 text-white text-xs font-bold shadow-lg shadow-blue-700/30 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-3.5 h-3.5" />
+                  Save Changes
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+});
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
 
 const CustomerManagement = () => {
   const [customers, setCustomers] = useState([]);
@@ -26,19 +788,17 @@ const CustomerManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // =========================================================
   // SEARCH / FILTER / PAGINATION STATE
-  // =========================================================
-
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 8;
+
+  // Typing stays smooth: filtering runs on a deferred copy
+  const deferredSearch = useDeferredValue(searchTerm);
 
   // Current date/time is refreshed every minute so an active booking
   // automatically changes from Staying -> Overstaying.
-  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+  const [currentDateTime, setCurrentDateTime] = useState(() => new Date());
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -48,30 +808,17 @@ const CustomerManagement = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // =========================================================
   // EDIT CUSTOMER
-  // =========================================================
-
   const [editingCustomer, setEditingCustomer] = useState(null);
-
-  const [editForm, setEditForm] = useState({
-    customerName: "",
-    phoneNumber: "",
-    alternativePhone: "",
-    email: "",
-    address: "",
-    idProofType: "",
-    idProofNumber: "",
-  });
-
+  const [editForm, setEditForm] = useState(EMPTY_FORM);
   const [savingEdit, setSavingEdit] = useState(false);
   const [editError, setEditError] = useState("");
 
-  // =========================================================
+  // ============================================================
   // FETCH CUSTOMERS + BOOKINGS
-  // =========================================================
+  // ============================================================
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -80,11 +827,8 @@ const CustomerManagement = () => {
       // (does NOT call /bookings, so no roomsBooking permission needed)
       const response = await getCustomerManagementData();
 
-      const customerData = response?.data?.customers || [];
-      const bookingData  = response?.data?.bookings  || [];
-
-      setCustomers(customerData);
-      setBookings(bookingData);
+      setCustomers(response?.data?.customers || []);
+      setBookings(response?.data?.bookings || []);
     } catch (err) {
       console.error("Customer/booking fetch error:", err);
 
@@ -96,367 +840,44 @@ const CustomerManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
-  // =========================================================
-  // BOOKING HELPERS
-  // =========================================================
+  // ============================================================
+  // BOOKINGS INDEXED BY CUSTOMER (one pass instead of a filter
+  // over ALL bookings for every customer, every render)
+  // ============================================================
 
-  const normalizeId = (value) => {
-    if (!value) return "";
+  const bookingsByCustomer = useMemo(() => {
+    const map = new Map();
 
-    if (typeof value === "object") {
-      return String(
-        value?._id ||
-          value?.id ||
-          value?.$oid ||
-          ""
-      );
-    }
+    bookings.forEach((booking) => {
+      const id = normalizeId(booking?.customerId);
+      if (!id) return;
 
-    return String(value);
-  };
-
-  const getCustomerBookings = (customer) => {
-    const customerId = normalizeId(customer?._id);
-
-    if (!customerId) return [];
-
-    return bookings.filter(
-      (booking) =>
-        normalizeId(booking?.customerId) === customerId
-    );
-  };
-
-  const getCustomerRooms = (customer) => {
-    return getCustomerBookings(customer).flatMap(
-      (booking) =>
-        Array.isArray(booking?.rooms)
-          ? booking.rooms.map((room) => ({
-              ...room,
-              bookingId: booking?._id,
-              bookingStatus: booking?.bookingStatus,
-            }))
-          : []
-    );
-  };
-
-  const getLatestBooking = (customer) => {
-    const customerBookings = getCustomerBookings(customer);
-
-    if (!customerBookings.length) return null;
-
-    return [...customerBookings].sort((a, b) => {
-      const aDate = new Date(
-        a?.updatedAt || a?.createdAt || 0
-      ).getTime();
-
-      const bDate = new Date(
-        b?.updatedAt || b?.createdAt || 0
-      ).getTime();
-
-      return bDate - aDate;
-    })[0];
-  };
-
-  const getCustomerStatus = (customer) => {
-    const customerBookings = getCustomerBookings(customer);
-
-    if (!customerBookings.length) {
-      return "Unknown";
-    }
-
-    const hasOverstayed = customerBookings.some((booking) =>
-      (booking?.rooms || []).some(
-        (room) => room?.checkoutStatus === "Overstaying"
-      )
-    );
-
-    if (hasOverstayed) {
-      return "Overstayed";
-    }
-
-    const hasActive = customerBookings.some((booking) => {
-      if (
-        booking?.bookingStatus === "Active" ||
-        booking?.bookingStatus === "Partially Checked Out"
-      ) {
-        return true;
-      }
-
-      return (booking?.rooms || []).some(
-        (room) =>
-          room?.checkoutStatus === "Staying" ||
-          room?.checkoutStatus === "Active"
-      );
+      const list = map.get(id);
+      if (list) list.push(booking);
+      else map.set(id, [booking]);
     });
 
-    if (hasActive) {
-      return "Staying";
-    }
+    return map;
+  }, [bookings]);
 
-    const allRoomsCheckedOut = customerBookings.every((booking) => {
-      const rooms = Array.isArray(booking?.rooms)
-        ? booking.rooms
-        : [];
+  // Lower-cased search text per customer (built once per data change,
+  // not on every keystroke)
+  const searchIndex = useMemo(() => {
+    const index = new Map();
 
-      return (
-        rooms.length > 0 &&
-        rooms.every(
-          (room) =>
-            room?.checkoutStatus === "Checked Out"
-        )
-      );
-    });
+    customers.forEach((customer) => {
+      const customerBookings =
+        bookingsByCustomer.get(normalizeId(customer?._id)) || [];
 
-    if (allRoomsCheckedOut) {
-      return "Checked Out";
-    }
-
-    if (
-      customerBookings.some(
-        (booking) => booking?.bookingStatus === "Completed"
-      )
-    ) {
-      return "Checked Out";
-    }
-
-    return "Unknown";
-  };
-
-  const getRoomNumbers = (customer) => {
-    const rooms = getCustomerRooms(customer);
-
-    return rooms
-      .map((room) => room?.roomNumber)
-      .filter(Boolean);
-  };
-
-  const getPrimaryRoom = (customer) => {
-    const rooms = getCustomerRooms(customer);
-
-    if (!rooms.length) return null;
-
-    return rooms[rooms.length - 1];
-  };
-
-  const getPrimaryStayDate = (customer, field, timeField) => {
-    const room = getPrimaryRoom(customer);
-
-    if (!room) {
-      return {
-        date: "-",
-        time: "",
-      };
-    }
-
-    const value = room?.[field];
-
-    let date = "-";
-
-    if (value) {
-      const parsed = new Date(value);
-
-      if (!Number.isNaN(parsed.getTime())) {
-        date = parsed.toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        });
-      }
-    }
-
-    return {
-      date,
-      time: room?.[timeField] || "",
-    };
-  };
-
-  // =========================================================
-  // SEARCH / FILTER
-  // IMPORTANT:
-  // A customer can have MANY bookings.
-  // Each booking must be displayed as its own row.
-  // Do NOT merge all historical rooms into one customer row.
-  // =========================================================
-
-  const parseDateTime = (dateValue, timeValue) => {
-    if (!dateValue) return null;
-
-    const date = new Date(dateValue);
-    if (Number.isNaN(date.getTime())) return null;
-
-    if (!timeValue) return date;
-
-    const time = String(timeValue).trim().toUpperCase();
-
-    // 12-hour time: 11:00 AM / 06:10 PM
-    const twelveHour = time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
-    if (twelveHour) {
-      let hours = Number(twelveHour[1]);
-      const minutes = Number(twelveHour[2]);
-      const period = twelveHour[3];
-
-      if (period === "PM" && hours !== 12) hours += 12;
-      if (period === "AM" && hours === 12) hours = 0;
-
-      date.setHours(hours, minutes, 0, 0);
-      return date;
-    }
-
-    // 24-hour time: 11:17 / 16:40
-    const twentyFourHour = time.match(/^(\d{1,2}):(\d{2})$/);
-    if (twentyFourHour) {
-      date.setHours(
-        Number(twentyFourHour[1]),
-        Number(twentyFourHour[2]),
-        0,
-        0
-      );
-    }
-
-    return date;
-  };
-
-  // =========================================================
-  // CURRENT BOOKING STATUS
-  // =========================================================
-
-  const getRoomCurrentStatus = (room) => {
-    if (!room) return "Unknown";
-
-    // Once actual checkout has happened, the stay is finished.
-    if (room?.actualCheckoutDate && room?.actualCheckoutTime) {
-      return "Checked Out";
-    }
-
-    const bookedCheckOut = parseDateTime(
-      room?.checkOut,
-      room?.checkOutTime
-    );
-
-    if (!bookedCheckOut) {
-      return "Unknown";
-    }
-
-    return currentDateTime.getTime() > bookedCheckOut.getTime()
-      ? "Overstaying"
-      : "Staying";
-  };
-
-  const getBookingStatus = (booking) => {
-    const rooms = Array.isArray(booking?.rooms)
-      ? booking.rooms
-      : [];
-
-    if (!rooms.length) {
-      return booking?.bookingStatus === "Completed"
-        ? "Checked Out"
-        : booking?.bookingStatus === "Active"
-        ? "Staying"
-        : "Unknown";
-    }
-
-    const roomStatuses = rooms.map((room) =>
-      getRoomCurrentStatus(room)
-    );
-
-    // Any room still has no actual checkout and has crossed
-    // its booked checkout time.
-    if (roomStatuses.some((status) => status === "Overstaying")) {
-      return "Overstaying";
-    }
-
-    // Any room without actual checkout is still staying.
-    if (roomStatuses.some((status) => status === "Staying")) {
-      return "Staying";
-    }
-
-    // All rooms have actual checkout.
-    if (
-      roomStatuses.length > 0 &&
-      roomStatuses.every((status) => status === "Checked Out")
-    ) {
-      return "Checked Out";
-    }
-
-    return "Unknown";
-  };
-
-    const formatTime12 = (value) => {
-    if (!value) return "-";
-
-    const str = String(value).trim();
-
-    if (/am|pm/i.test(str)) {
-      return str.toUpperCase();
-    }
-
-    const parts = str.split(":");
-    if (parts.length < 2) return str;
-
-    let hours = Number(parts[0]);
-    const minutes = String(parts[1]).replace(/\D/g, "").padStart(2, "0");
-
-    if (Number.isNaN(hours)) return str;
-
-    const period = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12;
-
-    return `${String(hours).padStart(2, "0")}:${minutes} ${period}`;
-  };
-
-  const formatStayDateTime = (date, time) => {
-    const dateText = formatDate(date);
-    const timeText = formatTime12(time);
-
-    if (dateText === "-" && timeText === "-") return "-";
-
-    return `${dateText}${timeText !== "-" ? ` • ${timeText}` : ""}`;
-  };
-
-  const filteredCustomers = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase();
-
-    return customers.filter((customer) => {
-      const customerBookings = getCustomerBookings(customer);
-
-      const roomNumbers = customerBookings
-        .flatMap((booking) =>
-          Array.isArray(booking?.rooms) ? booking.rooms : []
-        )
-        .map((room) => room?.roomNumber)
-        .filter(Boolean);
-
-      const customerName = String(
-        customer?.customerName || ""
-      ).toLowerCase();
-
-      const phoneNumber = String(
-        customer?.phoneNumber || ""
-      ).toLowerCase();
-
-      const alternativePhone = String(
-        customer?.alternativePhone || ""
-      ).toLowerCase();
-
-      const email = String(
-        customer?.email || ""
-      ).toLowerCase();
-
-      const idProofNumber = String(
-        customer?.idProofNumber || ""
-      ).toLowerCase();
-
-      const bookingSearchText = customerBookings
+      const bookingText = customerBookings
         .flatMap((booking) => {
-          const rooms = Array.isArray(booking?.rooms)
-            ? booking.rooms
-            : [];
+          const rooms = Array.isArray(booking?.rooms) ? booking.rooms : [];
 
           return [
             normalizeId(booking?._id),
@@ -476,99 +897,106 @@ const CustomerManagement = () => {
           ];
         })
         .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+        .join(" ");
 
-      const matchesSearch =
-        !query ||
-        customerName.includes(query) ||
-        phoneNumber.includes(query) ||
-        alternativePhone.includes(query) ||
-        email.includes(query) ||
-        idProofNumber.includes(query) ||
-        roomNumbers.join(" ").toLowerCase().includes(query) ||
-        bookingSearchText.includes(query);
-
-      // Status filter is checked against ANY booking belonging
-      // to this customer. Individual rows below still show
-      // the correct status for each booking.
-      const matchesStatus =
-        statusFilter === "All" ||
-        customerBookings.some(
-          (booking) => getBookingStatus(booking) === statusFilter
-        );
-
-      return matchesSearch && matchesStatus;
+      index.set(
+        customer?._id,
+        [
+          customer?.customerName,
+          customer?.phoneNumber,
+          customer?.alternativePhone,
+          customer?.email,
+          customer?.idProofNumber,
+          bookingText,
+        ]
+          .map((v) => String(v || ""))
+          .join(" ")
+          .toLowerCase()
+      );
     });
-  }, [customers, bookings, searchTerm, statusFilter]);
 
-  // =========================================================
+    return index;
+  }, [customers, bookingsByCustomer]);
+
+  // ============================================================
   // INDIVIDUAL BOOKING ROWS
-  // =========================================================
+  // A customer can have MANY bookings. Each booking is its own row.
+  // ============================================================
 
-  const bookingRows = useMemo(() => {
+  const allRows = useMemo(() => {
+    const query = deferredSearch.trim().toLowerCase();
     const rows = [];
 
-    filteredCustomers.forEach((customer) => {
-      const customerBookings = getCustomerBookings(customer);
+    customers.forEach((customer) => {
+      if (query && !(searchIndex.get(customer?._id) || "").includes(query)) {
+        return;
+      }
+
+      const customerBookings =
+        bookingsByCustomer.get(normalizeId(customer?._id)) || [];
 
       customerBookings.forEach((booking) => {
-        const status = getBookingStatus(booking);
-
-        // When a status filter is selected, show only
-        // bookings having that exact status.
-        if (
-          statusFilter !== "All" &&
-          status !== statusFilter
-        ) {
-          return;
-        }
-
         rows.push({
           customer,
           booking,
-          status,
+          status: getBookingStatus(booking, currentDateTime),
         });
       });
     });
 
     // Newest booking first.
-    return rows.sort((a, b) => {
-      const aDate = new Date(
-        a.booking?.updatedAt ||
-          a.booking?.createdAt ||
-          0
-      ).getTime();
+    return rows.sort((a, b) => bookingTime(b.booking) - bookingTime(a.booking));
+  }, [customers, bookingsByCustomer, searchIndex, deferredSearch, currentDateTime]);
 
-      const bDate = new Date(
-        b.booking?.updatedAt ||
-          b.booking?.createdAt ||
-          0
-      ).getTime();
+  const bookingRows = useMemo(
+    () =>
+      statusFilter === "All"
+        ? allRows
+        : allRows.filter((row) => row.status === statusFilter),
+    [allRows, statusFilter]
+  );
 
-      return bDate - aDate;
+  const statusCounts = useMemo(() => {
+    const counts = { All: allRows.length, Staying: 0, Overstaying: 0, "Checked Out": 0 };
+    allRows.forEach((row) => {
+      if (counts[row.status] !== undefined) counts[row.status] += 1;
     });
-  }, [filteredCustomers, bookings, statusFilter]);
+    return counts;
+  }, [allRows]);
 
-  // =========================================================
+  // ============================================================
+  // PAGINATION
+  // ============================================================
+
+  const totalPages = Math.ceil(bookingRows.length / ROWS_PER_PAGE) || 1;
+
+  const paginatedBookingRows = useMemo(() => {
+    const start = (currentPage - 1) * ROWS_PER_PAGE;
+    return bookingRows.slice(start, start + ROWS_PER_PAGE);
+  }, [bookingRows, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [deferredSearch, statusFilter]);
+
+  // Keep the page valid if a delete shrinks the list
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+
+  // ============================================================
   // DELETE CUSTOMER
-  // =========================================================
+  // ============================================================
 
-  const handleDelete = async (id) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this customer record?"
-      )
-    ) {
+  const handleDelete = useCallback(async (id) => {
+    if (!window.confirm("Are you sure you want to delete this customer record?")) {
       return;
     }
 
     try {
       await deleteCustomer(id);
 
-      setCustomers((prev) =>
-        prev.filter((customer) => customer._id !== id)
-      );
+      setCustomers((prev) => prev.filter((customer) => customer._id !== id));
     } catch (err) {
       alert(
         err?.response?.data?.message ||
@@ -576,13 +1004,13 @@ const CustomerManagement = () => {
           "Failed to delete customer."
       );
     }
-  };
+  }, []);
 
-  // =========================================================
-  // OPEN EDIT MODAL
-  // =========================================================
+  // ============================================================
+  // EDIT MODAL
+  // ============================================================
 
-  const openEditModal = (customer) => {
+  const openEditModal = useCallback((customer) => {
     setEditingCustomer(customer);
 
     setEditForm({
@@ -596,44 +1024,41 @@ const CustomerManagement = () => {
     });
 
     setEditError("");
-  };
+  }, []);
 
-  // =========================================================
-  // CLOSE EDIT MODAL
-  // =========================================================
-
-  const closeEditModal = () => {
+  const closeEditModal = useCallback(() => {
     if (savingEdit) return;
 
     setEditingCustomer(null);
-
-    setEditForm({
-      customerName: "",
-      phoneNumber: "",
-      alternativePhone: "",
-      email: "",
-      address: "",
-      idProofType: "",
-      idProofNumber: "",
-    });
-
+    setEditForm(EMPTY_FORM);
     setEditError("");
-  };
+  }, [savingEdit]);
 
-  // =========================================================
-  // EDIT INPUT CHANGE
-  // =========================================================
+  const handleEditChange = useCallback((field, value) => {
+    setEditForm((prev) => ({ ...prev, [field]: value }));
+  }, []);
 
-  const handleEditChange = (field, value) => {
-    setEditForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+  // Lock background scroll + close on Escape while the modal is open
+  useEffect(() => {
+    if (!editingCustomer) return;
 
-  // =========================================================
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKey = (e) => {
+      if (e.key === "Escape") closeEditModal();
+    };
+
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [editingCustomer, closeEditModal]);
+
+  // ============================================================
   // UPDATE CUSTOMER
-  // =========================================================
+  // ============================================================
 
   const handleUpdateCustomer = async (e) => {
     e.preventDefault();
@@ -673,21 +1098,17 @@ const CustomerManagement = () => {
       setSavingEdit(true);
       setEditError("");
 
-      const response = await updateCustomer(
-        editingCustomer._id,
-        {
-          customerName: editForm.customerName.trim(),
-          phoneNumber: editForm.phoneNumber.trim(),
-          alternativePhone: editForm.alternativePhone.trim(),
-          email: editForm.email.trim(),
-          address: editForm.address.trim(),
-          idProofType: editForm.idProofType.trim(),
-          idProofNumber: editForm.idProofNumber.trim(),
-        }
-      );
+      const response = await updateCustomer(editingCustomer._id, {
+        customerName: editForm.customerName.trim(),
+        phoneNumber: editForm.phoneNumber.trim(),
+        alternativePhone: editForm.alternativePhone.trim(),
+        email: editForm.email.trim(),
+        address: editForm.address.trim(),
+        idProofType: editForm.idProofType.trim(),
+        idProofNumber: editForm.idProofNumber.trim(),
+      });
 
-      const updatedCustomer =
-        response?.data || response;
+      const updatedCustomer = response?.data || response;
 
       if (!updatedCustomer) {
         throw new Error("Updated customer data was not returned.");
@@ -697,15 +1118,16 @@ const CustomerManagement = () => {
       setCustomers((prev) =>
         prev.map((customer) =>
           customer._id === editingCustomer._id
-            ? {
-                ...customer,
-                ...updatedCustomer,
-              }
+            ? { ...customer, ...updatedCustomer }
             : customer
         )
       );
 
-      closeEditModal();
+      // saving flag must be off before closing (closeEditModal checks it)
+      setSavingEdit(false);
+      setEditingCustomer(null);
+      setEditForm(EMPTY_FORM);
+      setEditError("");
 
       alert("Customer details updated successfully.");
     } catch (err) {
@@ -721,837 +1143,246 @@ const CustomerManagement = () => {
     }
   };
 
-  // =========================================================
-  // PAGINATION
-  // =========================================================
-
-  const totalPages =
-    Math.ceil(bookingRows.length / rowsPerPage) || 1;
-
-  const paginatedBookingRows = useMemo(() => {
-    const start = (currentPage - 1) * rowsPerPage;
-
-    return bookingRows.slice(
-      start,
-      start + rowsPerPage
-    );
-  }, [bookingRows, currentPage]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, statusFilter]);
-
-  // =========================================================
-  // DATE FORMAT
-  // =========================================================
-
-  const formatDate = (value) => {
-    if (!value) return "-";
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-      return "-";
-    }
-
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  // =========================================================
-  // STATUS STYLE
-  // =========================================================
-
-  const getStatusClass = (status) => {
-    if (status === "Staying") {
-      return "bg-emerald-50 text-emerald-700 border border-emerald-300";
-    }
-
-    if (status === "Overstaying") {
-      return "bg-rose-50 text-rose-700 border border-rose-300";
-    }
-
-    if (status === "Checked Out") {
-      return "bg-gray-100 text-black border border-gray-300";
-    }
-
-    return "bg-gray-100 text-black border border-gray-300";
-  };
-
-  // =========================================================
+  // ============================================================
   // UI
-  // =========================================================
+  // ============================================================
+
+  const pageKey = `${currentPage}-${statusFilter}`;
+
+  const thClass =
+    "px-4 lg:px-5 py-3.5 text-[11px] font-bold tracking-wide whitespace-nowrap";
 
   return (
-    <div className="min-h-screen bg-white font-['Inter']">
-      <div className="max-w-7xl mx-auto">
+    <div className="font-['Inter']">
+      <style>{CSS}</style>
 
-        {/* ================================================= */}
+      <div className="max-w-7xl w-full mx-auto space-y-5 sm:space-y-6 pb-8">
         {/* HEADER */}
-        {/* ================================================= */}
-
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5 sm:mb-6">
-
-          <div>
-          
-
-            <h1 className=" text-2xl font-bold text-black mt-1 ">
-              Customer Management
-            </h1>
-
-            <p className="text-xs sm:text-sm text-black mt-1">
-              Manage customer information and records
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 self-start md:self-auto">
-            <div className="inline-flex items-center gap-2 bg-teal-700 text-white px-3.5 sm:px-4 py-2.5 rounded-xl shadow-sm">
-              <UserRound className="w-4 h-4" />
-
-              <span className="text-xs font-bold whitespace-nowrap">
-                {bookingRows.length} Bookings
-              </span>
+        <header className="cm-rise cm-d1 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white border border-blue-100/80 rounded-2xl p-4 sm:p-6 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)]">
+          <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+            <div className="shrink-0 p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-800 text-white shadow-lg shadow-blue-900/25">
+              <UserRound className="w-6 h-6" />
             </div>
 
-           
-          </div>
-        </div>
+            <div className="min-w-0">
+            
 
-        {/* ================================================= */}
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#0f2a63] tracking-tight mt-1.5">
+                Customer Management
+              </h1>
+            
+            </div>
+          </div>
+
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#0f2a63] to-blue-700 text-white px-4 py-2.5 rounded-xl shadow-lg shadow-blue-900/20 self-start md:self-auto">
+            <UserRound className="w-4 h-4" />
+            <span className="text-xs font-bold whitespace-nowrap tabular-nums">
+              {bookingRows.length} Bookings
+            </span>
+          </div>
+        </header>
+
         {/* SEARCH / FILTER */}
-        {/* ================================================= */}
-
-        <div className="bg-white border border-gray-300 rounded-2xl p-3 sm:p-4 mb-5 shadow-sm">
-
-          <div className="flex flex-col lg:flex-row gap-3">
-
-            {/* SEARCH */}
-
-            <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-
-              <input
-                type="text"
-                placeholder="Search name, phone, email, room or ID proof..."
-                value={searchTerm}
-                onChange={(e) =>
-                  setSearchTerm(e.target.value)
-                }
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 bg-white text-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/10"
-              />
-            </div>
-
-            {/* STATUS */}
-
-            <div className="flex items-center gap-2">
-              <label className="text-xs font-bold text-black whitespace-nowrap">
-                Status
-              </label>
-
-              <select
-                value={statusFilter}
-                onChange={(e) =>
-                  setStatusFilter(e.target.value)
-                }
-                className="w-full sm:w-auto min-w-[150px] px-3.5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm text-black focus:outline-none focus:border-teal-600 cursor-pointer"
-              >
-                <option value="All">
-                  All Statuses
-                </option>
-
-                <option value="Staying">
-                  Staying
-                </option>
-
-                <option value="Overstaying">
-                  Overstaying
-                </option>
-
-                <option value="Checked Out">
-                  Checked Out
-                </option>
-              </select>
-            </div>
+        <section className="cm-rise cm-d2 bg-white border border-blue-100/80 rounded-2xl p-3 sm:p-4 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)] flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+          <div className="relative w-full lg:max-w-md">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search name, phone, email, room or ID proof..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`${inputClass} pl-10 pr-4 py-2.5`}
+            />
           </div>
-        </div>
 
-        {/* ================================================= */}
+          <div className="flex items-center gap-1 bg-blue-50 p-1 rounded-xl overflow-x-auto cm-scroll">
+            {STATUS_TABS.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setStatusFilter(tab)}
+                className={`cm-btn cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 text-xs font-semibold rounded-lg ${
+                  statusFilter === tab
+                    ? "bg-white text-blue-700 shadow-sm"
+                    : "text-slate-600 hover:text-blue-700"
+                }`}
+              >
+                {tab === "All" ? "All Statuses" : tab}
+                <span
+                  className={`px-1.5 py-0.5 rounded-md text-[10px] tabular-nums ${
+                    statusFilter === tab
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-white/70 text-slate-500"
+                  }`}
+                >
+                  {statusCounts[tab]}
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+
         {/* ERROR */}
-        {/* ================================================= */}
-
         {error && (
-          <div className="mb-5 rounded-xl border border-rose-300 bg-rose-50 px-4 py-3 text-xs sm:text-sm text-rose-700 font-medium">
-            {error}
+          <div className="cm-pop rounded-2xl border border-rose-200 bg-white px-4 py-4 shadow-lg shadow-blue-900/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 text-xs sm:text-sm text-rose-700 font-medium">
+              <AlertCircle className="w-5 h-5 shrink-0" />
+              {error}
+            </div>
+            <button
+              type="button"
+              onClick={fetchData}
+              className="cm-btn cm-shine cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-blue-700 to-blue-600 shadow-md shadow-blue-700/25"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Try again
+            </button>
           </div>
         )}
 
-        {/* ================================================= */}
         {/* LOADING */}
-        {/* ================================================= */}
-
         {loading && (
-          <div className="bg-white border border-gray-300 rounded-2xl p-10 sm:p-12 text-center shadow-sm">
-            <div className="w-8 h-8 border-2 border-teal-600/20 border-t-teal-600 rounded-full animate-spin mx-auto mb-4" />
-
-            <p className="text-xs sm:text-sm font-semibold text-black">
+          <div className="cm-pop bg-white border border-blue-100/80 rounded-2xl p-10 sm:p-14 text-center shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)]">
+            <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
+            <p className="text-xs sm:text-sm font-semibold text-slate-600">
               Loading customer and booking records...
             </p>
           </div>
         )}
 
-        {/* ================================================= */}
-        {/* TABLE */}
-        {/* ================================================= */}
-
+        {/* LIST */}
         {!loading && !error && (
-          <div className="bg-white border border-gray-300 rounded-2xl shadow-sm overflow-hidden">
+          <section className="cm-rise cm-d3">
+            {paginatedBookingRows.length === 0 ? (
+              <div className="cm-pop bg-white border border-blue-100/80 rounded-2xl py-14 sm:py-16 text-center shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)]">
+                <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto mb-3 text-blue-500">
+                  <SearchX className="w-7 h-7" />
+                </div>
+                <p className="text-sm font-bold text-[#0f2a63]">
+                  No booking records found
+                </p>
+                
+              </div>
+            ) : (
+              <>
+                {/* Mobile: cards */}
+                <div key={`m-${pageKey}`} className="md:hidden space-y-4">
+                  {paginatedBookingRows.map(({ customer, booking, status }, index) => (
+                    <BookingCard
+                      key={`${booking?._id}-${customer?._id}`}
+                      customer={customer}
+                      booking={booking}
+                      status={status}
+                      index={index}
+                      now={currentDateTime}
+                      onEdit={openEditModal}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </div>
 
-            <div className="overflow-x-auto">
-              <table className="min-w-[1050px] w-full text-left">
+                {/* Tablet / desktop: table */}
+                <div className="hidden md:block bg-white border border-blue-100/80 rounded-2xl shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)] overflow-hidden">
+                  <div className="cm-scroll overflow-x-auto">
+                    <table className="min-w-[980px] w-full text-left">
+                      <thead>
+                        <tr className="bg-gradient-to-r from-[#0f2a63] to-blue-800 text-white">
+                          <th className={thClass}>Room</th>
+                          <th className={thClass}>Customer</th>
+                          <th className={thClass}>Phone</th>
+                          <th className={thClass}>Check-In</th>
+                          <th className={thClass}>Check-Out</th>
+                          <th className={`${thClass} text-right`}>Actions</th>
+                        </tr>
+                      </thead>
 
-                <thead className="bg-gray-100 border-b border-gray-300">
-                  <tr>
-
-                    <th className="px-4 sm:px-5 py-3.5 text-[10px] font-extrabold uppercase tracking-wider text-black whitespace-nowrap">
-                      Room
-                    </th>
-
-                    <th className="px-4 sm:px-5 py-3.5 text-[10px] font-extrabold uppercase tracking-wider text-black whitespace-nowrap">
-                      Customer
-                    </th>
-
-                    <th className="px-4 sm:px-5 py-3.5 text-[10px] font-extrabold uppercase tracking-wider text-black whitespace-nowrap">
-                      Phone
-                    </th>
-
-                    <th className="px-4 sm:px-5 py-3.5 text-[10px] font-extrabold uppercase tracking-wider text-black whitespace-nowrap">
-                      Check-In
-                    </th>
-
-                    <th className="px-4 sm:px-5 py-3.5 text-[10px] font-extrabold uppercase tracking-wider text-black whitespace-nowrap">
-                      Check-Out
-                    </th>
-
-                    <th className="px-4 sm:px-5 py-3.5 text-[10px] font-extrabold uppercase tracking-wider text-black text-right whitespace-nowrap">
-                      Actions
-                    </th>
-
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-gray-200">
-
-                  {paginatedBookingRows.length > 0 ? (
-                    paginatedBookingRows.map(
-                      ({ customer, booking, status }) => {
-                        const rooms = Array.isArray(booking?.rooms)
-                          ? booking.rooms
-                          : [];
-
-                        return (
-                          <tr
-                            key={`${booking?._id}-${customer?._id}`}
-                            className="hover:bg-gray-50 transition-colors"
-                          >
-                            {/* ROOM */}
-                            <td className="px-4 sm:px-5 py-4 align-top">
-                              {rooms.length > 0 ? (
-                                <div className="space-y-2.5">
-                                  {rooms.map((room, index) => (
-                                    <div
-                                      key={room?._id || index}
-                                      className={
-                                        index > 0
-                                          ? "pt-2.5 border-t border-gray-200"
-                                          : ""
-                                      }
-                                    >
-                                      <div className="text-sm font-bold text-black whitespace-nowrap">
-                                        Room {room?.roomNumber || "-"}
-                                      </div>
-
-                                      <div className="text-[10px] text-black mt-0.5 whitespace-nowrap">
-                                        {room?.roomType || "-"} •{" "}
-                                        {room?.bedType || "-"}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <span className="text-black">-</span>
-                              )}
-                            </td>
-
-                            {/* CUSTOMER */}
-                            <td className="px-4 sm:px-5 py-4 align-top">
-                              <div className="flex items-center gap-2.5">
-                                <div className="w-9 h-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-200">
-                                  <UserRound className="w-4 h-4" />
-                                </div>
-
-                                <div>
-                                  <p className="text-sm font-bold text-black whitespace-nowrap">
-                                    {customer?.customerName || "-"}
-                                  </p>
-                                </div>
-                              </div>
-                            </td>
-
-                            {/* PHONE */}
-                            <td className="px-4 sm:px-5 py-4 align-top">
-                              <div className="flex items-center gap-2 text-sm text-black whitespace-nowrap">
-                                <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                                {customer?.phoneNumber || "-"}
-                              </div>
-                            </td>
-
-                            {/* CHECK IN */}
-                            <td className="px-4 sm:px-5 py-4 align-top">
-                              <div className="space-y-2">
-                                {rooms.length > 0 ? (
-                                  rooms.map((room, index) => (
-                                    <div
-                                      key={room?._id || index}
-                                      className={
-                                        index > 0
-                                          ? "pt-2 border-t border-gray-200"
-                                          : ""
-                                      }
-                                    >
-                                      <p className="text-sm font-semibold text-black whitespace-nowrap">
-                                        {formatDate(room?.checkIn)}
-                                      </p>
-
-                                      <p className="text-[12px] text-black mt-0.5 whitespace-nowrap">
-                                        {formatTime12(room?.checkInTime)}
-                                      </p>
-                                    </div>
-                                  ))
-                                ) : (
-                                  <span className="text-black">-</span>
-                                )}
-                              </div>
-                            </td>
-
-                            {/* CHECK OUT */}
-                            <td className="px-4 sm:px-5 py-4 align-top">
-                              <div className="space-y-2.5">
-                                {rooms.length > 0 ? (
-                                  rooms.map((room, index) => {
-                                    const roomStatus =
-                                      getRoomCurrentStatus(room);
-
-                                    return (
-                                      <div
-                                        key={room?._id || index}
-                                        className={
-                                          index > 0
-                                            ? "pt-2.5 border-t border-gray-200"
-                                            : ""
-                                        }
-                                      >
-                                        {/* Booked checkout date + time */}
-                                        <p className="text-sm font-semibold text-black whitespace-nowrap">
-                                          {formatDate(room?.checkOut)}
-                                        </p>
-
-                                        <p className="text-[12px] text-black mt-0.5 whitespace-nowrap">
-                                          {formatTime12(room?.checkOutTime)}
-                                        </p>
-
-                                        {/* Actual checkout, only after checkout */}
-                                        {room?.actualCheckoutDate &&
-                                        room?.actualCheckoutTime ? (
-                                          <p className="text-[12px] font-bold text-emerald-700 mt-1 whitespace-nowrap">
-                                            Actual:{" "}
-                                            {formatDate(
-                                              room?.actualCheckoutDate
-                                            )}{" "}
-                                            •{" "}
-                                            {formatTime12(
-                                              room?.actualCheckoutTime
-                                            )}
-                                          </p>
-                                        ) : null}
-
-                                        {/* Live status is shown inside Check-Out column */}
-                                        <p
-                                          className={`inline-flex items-center px-2.5 py-1 mt-1.5 rounded-full text-[11px] font-bold whitespace-nowrap ${getStatusClass(
-                                            roomStatus
-                                          )}`}
-                                        >
-                                          {roomStatus}
-                                        </p>
-                                      </div>
-                                    );
-                                  })
-                                ) : (
-                                  <span className="text-black">-</span>
-                                )}
-                              </div>
-                            </td>
-
-                            {/* ACTIONS */}
-                            <td className="px-4 sm:px-5 py-4 align-top">
-                              <div className="flex justify-end items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    openEditModal(customer)
-                                  }
-                                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 text-xs font-bold transition-colors border border-teal-200"
-                                >
-                                  <Edit3 className="w-3.5 h-3.5" />
-                                  Edit
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleDelete(customer?._id)
-                                  }
-                                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold transition-colors border border-rose-200"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                  Delete
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      }
-                    )
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan="7"
-                        className="py-14 sm:py-16 text-center"
+                      <tbody
+                        key={`t-${pageKey}`}
+                        className="divide-y divide-slate-100"
                       >
-                        <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                          <UserRound className="w-5 h-5 text-gray-400" />
-                        </div>
-
-                        <p className="text-sm font-bold text-black">
-                          No booking records found
-                        </p>
-
-                        <p className="text-xs text-black mt-1">
-                          Try changing your search or filter.
-                        </p>
-                      </td>
-                    </tr>
-                  )}
-
-                </tbody>
-
-              </table>
-            </div>
-
-          </div>
+                        {paginatedBookingRows.map(
+                          ({ customer, booking, status }, index) => (
+                            <BookingRow
+                              key={`${booking?._id}-${customer?._id}`}
+                              customer={customer}
+                              booking={booking}
+                              status={status}
+                              index={index}
+                              now={currentDateTime}
+                              onEdit={openEditModal}
+                              onDelete={handleDelete}
+                            />
+                          )
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            )}
+          </section>
         )}
 
-        {/* ================================================= */}
         {/* PAGINATION */}
-        {/* ================================================= */}
-
         {!loading && !error && totalPages > 1 && (
-
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-5">
-
-            <p className="text-xs sm:text-sm text-black text-center sm:text-left">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 bg-white border border-blue-100/80 rounded-2xl p-3 sm:p-4 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)]">
+            <p className="text-xs sm:text-sm text-slate-600 text-center sm:text-left">
               Showing{" "}
-              <span className="font-bold">
-                {(currentPage - 1) * rowsPerPage + 1}
+              <span className="font-bold text-[#0f2a63]">
+                {(currentPage - 1) * ROWS_PER_PAGE + 1}
               </span>{" "}
               -{" "}
-              <span className="font-bold">
-                {Math.min(
-                  currentPage * rowsPerPage,
-                  bookingRows.length
-                )}
+              <span className="font-bold text-[#0f2a63]">
+                {Math.min(currentPage * ROWS_PER_PAGE, bookingRows.length)}
               </span>{" "}
               of{" "}
-              <span className="font-bold">
+              <span className="font-bold text-[#0f2a63]">
                 {bookingRows.length}
               </span>
             </p>
 
             <div className="flex items-center gap-2">
-
               <button
                 type="button"
-                onClick={() =>
-                  setCurrentPage((prev) =>
-                    Math.max(prev - 1, 1)
-                  )
-                }
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-300 bg-white text-xs font-bold text-black hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="cm-btn cursor-pointer inline-flex items-center gap-1 px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#0f2a63] hover:bg-blue-50 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
                 Previous
               </button>
 
-              <span className="px-3 py-2 rounded-lg bg-teal-700 text-white text-xs font-bold whitespace-nowrap">
+              <span className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#0f2a63] to-blue-700 text-white text-xs font-bold whitespace-nowrap tabular-nums">
                 {currentPage} / {totalPages}
               </span>
 
               <button
                 type="button"
                 onClick={() =>
-                  setCurrentPage((prev) =>
-                    Math.min(prev + 1, totalPages)
-                  )
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
-                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-300 bg-white text-xs font-bold text-black hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="cm-btn cursor-pointer inline-flex items-center gap-1 px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-[#0f2a63] hover:bg-blue-50 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Next
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
-
             </div>
-
           </div>
         )}
-
       </div>
 
-      {/* =================================================== */}
-      {/* EDIT CUSTOMER MODAL */}
-      {/* =================================================== */}
-
+      {/* EDIT CUSTOMER MODAL (mounted only when open) */}
       {editingCustomer && (
-
-        <div
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) {
-              closeEditModal();
-            }
-          }}
-        >
-
-          <div className="w-full max-w-2xl max-h-[94vh] overflow-y-auto bg-white rounded-2xl shadow-2xl border border-gray-300">
-
-            {/* MODAL HEADER */}
-
-            <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-5 sm:px-6 py-4 flex items-center justify-between">
-
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-teal-700">
-                  Customer Management
-                </p>
-
-                <h2 className="text-base sm:text-lg font-extrabold text-black mt-0.5">
-                  Edit Customer
-                </h2>
-
-                <p className="text-[10px] text-black mt-0.5">
-                  Update customer personal information
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={closeEditModal}
-                disabled={savingEdit}
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-black hover:bg-gray-100 disabled:opacity-40 transition-colors shrink-0"
-              >
-                <X className="w-4 h-4" />
-              </button>
-
-            </div>
-
-            {/* FORM */}
-
-            <form
-              onSubmit={handleUpdateCustomer}
-              className="p-4 sm:p-6"
-            >
-
-              {/* ERROR */}
-
-              {editError && (
-                <div className="mb-5 rounded-xl border border-rose-300 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-700">
-                  {editError}
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                {/* CUSTOMER NAME */}
-
-                <div className="sm:col-span-2">
-
-                  <label className="block text-[11px] font-bold text-black mb-1.5">
-                    Customer Name *
-                  </label>
-
-                  <div className="relative">
-
-                    <UserRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-
-                    <input
-                      type="text"
-                      value={editForm.customerName}
-                      onChange={(e) =>
-                        handleEditChange(
-                          "customerName",
-                          e.target.value
-                        )
-                      }
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-gray-300 text-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/10"
-                      placeholder="Enter customer name"
-                    />
-
-                  </div>
-                </div>
-
-                {/* PHONE */}
-
-                <div>
-
-                  <label className="block text-[11px] font-bold text-black mb-1.5">
-                    Phone Number *
-                  </label>
-
-                  <div className="relative">
-
-                    <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-
-                    <input
-                      type="text"
-                      value={editForm.phoneNumber}
-                      onChange={(e) =>
-                        handleEditChange(
-                          "phoneNumber",
-                          e.target.value
-                        )
-                      }
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-gray-300 text-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/10"
-                      placeholder="Enter phone number"
-                    />
-
-                  </div>
-                </div>
-
-                {/* ALTERNATIVE PHONE */}
-
-                <div>
-
-                  <label className="block text-[11px] font-bold text-black mb-1.5">
-                    Alternative Phone
-                  </label>
-
-                  <div className="relative">
-
-                    <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-
-                    <input
-                      type="text"
-                      value={editForm.alternativePhone}
-                      onChange={(e) =>
-                        handleEditChange(
-                          "alternativePhone",
-                          e.target.value
-                        )
-                      }
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-gray-300 text-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/10"
-                      placeholder="Alternative phone"
-                    />
-
-                  </div>
-                </div>
-
-                {/* EMAIL */}
-
-                <div className="sm:col-span-2">
-
-                  <label className="block text-[11px] font-bold text-black mb-1.5">
-                    Email
-                  </label>
-
-                  <div className="relative">
-
-                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-
-                    <input
-                      type="email"
-                      value={editForm.email}
-                      onChange={(e) =>
-                        handleEditChange(
-                          "email",
-                          e.target.value
-                        )
-                      }
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-gray-300 text-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/10"
-                      placeholder="customer@example.com"
-                    />
-
-                  </div>
-                </div>
-
-                {/* ADDRESS */}
-
-                <div className="sm:col-span-2">
-
-                  <label className="block text-[11px] font-bold text-black mb-1.5">
-                    Address *
-                  </label>
-
-                  <div className="relative">
-
-                    <MapPin className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" />
-
-                    <textarea
-                      rows="3"
-                      value={editForm.address}
-                      onChange={(e) =>
-                        handleEditChange(
-                          "address",
-                          e.target.value
-                        )
-                      }
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-gray-300 text-sm text-black placeholder:text-gray-400 resize-none focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/10"
-                      placeholder="Enter customer address"
-                    />
-
-                  </div>
-                </div>
-
-                {/* ID PROOF TYPE */}
-
-                <div>
-                  <label className="block text-[11px] font-bold text-black mb-1.5">
-                    ID Proof Type *
-                  </label>
-
-                  <div className="relative">
-                    <CreditCard className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10 pointer-events-none" />
-
-                    <select
-                      value={editForm.idProofType}
-                      onChange={(e) =>
-                        handleEditChange(
-                          "idProofType",
-                          e.target.value
-                        )
-                      }
-                      className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-gray-300 bg-white text-sm text-black appearance-none cursor-pointer focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/10"
-                    >
-                      <option value="">
-                        Select ID Proof
-                      </option>
-
-                      <option value="Aadhaar Card">
-                        Aadhaar Card
-                      </option>
-
-                      <option value="PAN Card">
-                        PAN Card
-                      </option>
-
-                      <option value="Driving License">
-                        Driving License
-                      </option>
-
-                      <option value="Passport">
-                        Passport
-                      </option>
-
-                      <option value="Voter ID">
-                        Voter ID
-                      </option>
-                    </select>
-
-                    {/* Custom dropdown arrow */}
-                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <svg
-                        className="w-4 h-4 text-black"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="m6 9 6 6 6-6"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ID PROOF NUMBER */}
-
-                <div>
-
-                  <label className="block text-[11px] font-bold text-black mb-1.5">
-                    ID Proof Number *
-                  </label>
-
-                  <input
-                    type="text"
-                    value={editForm.idProofNumber}
-                    onChange={(e) =>
-                      handleEditChange(
-                        "idProofNumber",
-                        e.target.value
-                      )
-                    }
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/10"
-                    placeholder="Enter ID proof number"
-                  />
-
-                </div>
-
-              </div>
-
-              {/* BUTTONS */}
-
-              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 mt-6 pt-5 border-t border-gray-200">
-
-                <button
-                  type="button"
-                  onClick={closeEditModal}
-                  disabled={savingEdit}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-gray-300 bg-white text-black text-xs font-bold hover:bg-gray-50 disabled:opacity-50 transition-colors"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={savingEdit}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold disabled:opacity-60 transition-colors"
-                >
-                  {savingEdit ? (
-                    <>
-                      <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-3.5 h-3.5" />
-                      Save Changes
-                    </>
-                  )}
-                </button>
-
-              </div>
-
-            </form>
-
-          </div>
-
-        </div>
+        <EditModal
+          form={editForm}
+          error={editError}
+          saving={savingEdit}
+          onChange={handleEditChange}
+          onSubmit={handleUpdateCustomer}
+          onClose={closeEditModal}
+        />
       )}
-
     </div>
   );
 };

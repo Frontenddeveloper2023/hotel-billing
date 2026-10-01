@@ -1140,9 +1140,9 @@ success(
   if (subscriptionLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[280px] text-center">
-        <Loader2 className="w-7 h-7 text-teal-600 animate-spin mb-3" />
-        <p className="text-sm font-semibold text-slate-700">Checking Food Service access...</p>
-        <p className="text-xs text-slate-400 mt-1">Verifying your subscription and plan.</p>
+        <Loader2 className="w-7 h-7 text-[#2568e0] animate-spin mb-3" />
+        <p className="text-sm font-semibold text-[#3d5473]">Checking Food Service access...</p>
+        <p className="text-xs text-[#9aabc0] mt-1">Verifying your subscription and plan.</p>
       </div>
     );
   }
@@ -1153,8 +1153,8 @@ success(
         <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mb-4">
           <UtensilsCrossed className="w-7 h-7 text-amber-600" />
         </div>
-        <h3 className="text-base font-bold text-slate-900">Food Service Not Available</h3>
-        <p className="text-xs text-slate-500 max-w-md mt-2">
+        <h3 className="text-base font-bold text-[#0e2a4a]">Food Service Not Available</h3>
+        <p className="text-xs text-[#6b7f99] max-w-md mt-2">
           {featureMessage || "Food Service is not included in your current subscription plan."}
         </p>
       </div>
@@ -1174,24 +1174,24 @@ success(
             FOOD CATALOG
         ================================================= */}
 
-        <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-200">
+        <div className="bg-[#f4f8fd]/50 p-4 rounded-2xl border border-[#dbe6f5]">
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-4">
 
             <div>
 
-              <h3 className="font-bold text-slate-900 text-sm">
+              <h3 className="font-bold text-[#0e2a4a] text-sm">
                 Food Menu
               </h3>
 
               <div className="flex items-center gap-2 mt-0.5">
 
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-[#9aabc0]">
                   Select food items and add them to the bill.
                 </p>
 
                 {roomNumber && (
-                  <span className="px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-100 text-[10px] font-bold">
+                  <span className="px-2 py-0.5 rounded-full bg-[#eaf3ff] text-[#2568e0] border border-[#dbe6f5] text-[10px] font-bold">
                     Room {roomNumber}
                   </span>
                 )}
@@ -1205,7 +1205,7 @@ success(
 
             <div className="relative w-full sm:w-60">
 
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9aabc0]" />
 
               <input
                 type="text"
@@ -1216,7 +1216,7 @@ success(
                     e.target.value
                   )
                 }
-                className="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-teal-600"
+                className="w-full pl-9 pr-3 py-1.5 bg-white border border-[#dbe6f5] rounded-xl text-xs focus:outline-none focus:border-[#2568e0]"
               />
 
             </div>
@@ -1248,8 +1248,8 @@ success(
                   className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition ${
                     selectedFilter ===
                     filter
-                      ? "bg-teal-600 text-white"
-                      : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                      ? "bg-[#2568e0] text-white"
+                      : "bg-white text-[#6b7f99] border border-[#dbe6f5] hover:bg-[#eaf3ff]"
                   }`}
                 >
                   {filter}
@@ -1283,9 +1283,9 @@ success(
 
               <div className="flex flex-col items-center justify-center py-12">
 
-                <Loader2 className="w-6 h-6 text-teal-600 animate-spin mb-2" />
+                <Loader2 className="w-6 h-6 text-[#2568e0] animate-spin mb-2" />
 
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-[#9aabc0]">
                   Loading menu catalog...
                 </p>
 
@@ -1293,7 +1293,7 @@ success(
 
             ) : filteredFoods.length === 0 ? (
 
-              <div className="text-center py-12 text-slate-400 text-xs">
+              <div className="text-center py-12 text-[#9aabc0] text-xs">
                 No food items found.
               </div>
 
@@ -1345,29 +1345,29 @@ success(
 
                     <div
                       key={foodId}
-                      className="bg-white p-3 rounded-xl border border-slate-200 flex items-center justify-between gap-4 shadow-xs"
+                      className="bg-white p-3 rounded-xl border border-[#dbe6f5] flex items-center justify-between gap-4 shadow-[0_1px_4px_rgba(6,20,52,0.06)]"
                     >
 
                       <img
                         src={imageSrc}
                         alt={foodName}
-                        className="w-14 h-14 rounded-lg object-cover bg-slate-100 flex-shrink-0"
+                        className="w-14 h-14 rounded-lg object-cover bg-[#eaf3ff] flex-shrink-0"
                       />
 
 
                       <div className="flex-1 min-w-0">
 
-                        <h4 className="font-bold text-slate-900 text-xs truncate">
+                        <h4 className="font-bold text-[#0e2a4a] text-xs truncate">
                           {foodName}
                         </h4>
 
 
-                        <p className="text-[11px] text-slate-500 line-clamp-1">
+                        <p className="text-[11px] text-[#6b7f99] line-clamp-1">
                           {foodDesc}
                         </p>
 
 
-                        <p className="text-xs font-bold text-teal-700 mt-1">
+                        <p className="text-xs font-bold text-[#2568e0] mt-1">
                           ₹{foodPrice}
                         </p>
 
@@ -1378,7 +1378,7 @@ success(
 
                         {qty > 0 ? (
 
-                          <div className="flex items-center gap-2 bg-slate-100 px-2 py-1 rounded-lg">
+                          <div className="flex items-center gap-2 bg-[#eaf3ff] px-2 py-1 rounded-lg">
 
                             <button
                               type="button"
@@ -1388,7 +1388,7 @@ success(
                                   -1
                                 )
                               }
-                              className="w-6 h-6 bg-white rounded shadow-xs font-bold text-slate-700"
+                              className="w-6 h-6 bg-white rounded shadow-[0_1px_4px_rgba(6,20,52,0.06)] font-bold text-[#3d5473]"
                             >
                               -
                             </button>
@@ -1407,7 +1407,7 @@ success(
                                   1
                                 )
                               }
-                              className="w-6 h-6 bg-white rounded shadow-xs font-bold text-slate-700"
+                              className="w-6 h-6 bg-white rounded shadow-[0_1px_4px_rgba(6,20,52,0.06)] font-bold text-[#3d5473]"
                             >
                               +
                             </button>
@@ -1424,7 +1424,7 @@ success(
                                 1
                               )
                             }
-                            className="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 rounded-xl text-xs font-semibold flex items-center gap-1"
+                            className="px-3 py-1.5 bg-[#eaf3ff] hover:bg-[#dbe6f5] text-[#0e2a4a] rounded-xl text-xs font-semibold flex items-center gap-1"
                           >
 
                             <Plus className="w-3.5 h-3.5" />
@@ -1454,7 +1454,7 @@ success(
             PENDING + HISTORY
         ================================================= */}
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4">
+        <div className="bg-white p-5 rounded-2xl border border-[#dbe6f5] space-y-4">
 
           {/* =================================================
               PENDING
@@ -1462,7 +1462,7 @@ success(
 
           <div>
 
-            <h4 className="font-bold text-slate-800 text-xs uppercase mb-2 flex items-center justify-between">
+            <h4 className="font-bold text-[#0e2a4a] text-xs uppercase mb-2 flex items-center justify-between">
 
               <span>
                 Food Queue (Pending Payment)
@@ -1479,7 +1479,7 @@ success(
 
               {activeFoodList.length === 0 ? (
 
-                <p className="text-xs text-slate-400 py-4 text-center">
+                <p className="text-xs text-[#9aabc0] py-4 text-center">
                   No pending food orders for this room.
                 </p>
 
@@ -1505,12 +1505,12 @@ success(
 
                       <div
                         key={recordId}
-                        className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between"
+                        className="bg-[#f4f8fd] p-3 rounded-xl border border-[#dbe6f5] flex items-center justify-between"
                       >
 
                         <div className="flex items-center gap-2.5 min-w-0">
 
-                          <div className="w-7 h-7 rounded-lg bg-teal-50 flex items-center justify-center text-teal-700 flex-shrink-0">
+                          <div className="w-7 h-7 rounded-lg bg-[#eaf3ff] flex items-center justify-center text-[#2568e0] flex-shrink-0">
 
                             <UtensilsCrossed className="w-3.5 h-3.5" />
 
@@ -1519,7 +1519,7 @@ success(
 
                           <div className="min-w-0">
 
-                            <p className="text-xs font-bold text-slate-900 truncate">
+                            <p className="text-xs font-bold text-[#0e2a4a] truncate">
                               {item.foodName} ×
                               {item.quantity}
                             </p>
@@ -1527,7 +1527,7 @@ success(
 
                             <div className="flex items-center gap-2 flex-wrap">
 
-                              <p className="text-[10px] text-slate-500 font-semibold">
+                              <p className="text-[10px] text-[#6b7f99] font-semibold">
                                 Room{" "}
                                 {item.roomNumber ||
                                   roomNumber ||
@@ -1549,7 +1549,7 @@ success(
 
                         <div className="flex items-center gap-3 flex-shrink-0">
 
-                          <span className="text-xs font-bold text-slate-900">
+                          <span className="text-xs font-bold text-[#0e2a4a]">
                             ₹{itemTotal}
                           </span>
 
@@ -1565,7 +1565,7 @@ success(
                                 recordId
                               )
                             }
-                            className="text-slate-400 hover:text-rose-600 disabled:opacity-50"
+                            className="text-[#9aabc0] hover:text-rose-600 disabled:opacity-50"
                           >
 
                             {removingId ===
@@ -1613,11 +1613,11 @@ success(
               PAID HISTORY
           ================================================= */}
 
-          <div className="border-t border-slate-100 pt-3">
+          <div className="border-t border-[#e7eff8] pt-3">
 
-            <h4 className="font-bold text-slate-800 text-xs uppercase mb-2 flex items-center gap-1.5">
+            <h4 className="font-bold text-[#0e2a4a] text-xs uppercase mb-2 flex items-center gap-1.5">
 
-              <History className="w-3.5 h-3.5 text-slate-600" />
+              <History className="w-3.5 h-3.5 text-[#6b7f99]" />
 
               Paid Food History (
               {historyFoodList.length}
@@ -1631,7 +1631,7 @@ success(
               {historyFoodList.length ===
               0 ? (
 
-                <p className="text-xs text-slate-400 py-2 text-center">
+                <p className="text-xs text-[#9aabc0] py-2 text-center">
                   No paid food history.
                 </p>
 
@@ -1657,20 +1657,20 @@ success(
 
                       <div
                         key={itemId}
-                        className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center justify-between text-xs"
+                        className="bg-[#f4f8fd] p-2.5 rounded-xl border border-[#e7eff8] flex items-center justify-between text-xs"
                       >
 
                         <div className="min-w-0">
 
-                          <p className="font-bold text-slate-800">
+                          <p className="font-bold text-[#0e2a4a]">
                             {item.foodName} ×
                             {item.quantity}
                           </p>
 
 
-                          <div className="flex items-center gap-2 text-[8px] text-slate-400">
+                          <div className="flex items-center gap-2 text-[8px] text-[#9aabc0]">
 
-                            <span className="font-semibold text-slate-500">
+                            <span className="font-semibold text-[#6b7f99]">
                               Room{" "}
                               {item.roomNumber ||
                                 roomNumber ||
@@ -1735,7 +1735,7 @@ success(
           RIGHT SIDEBAR
       ====================================================== */}
 
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between h-[350px] sticky top-0 shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#dbe6f5] rounded-2xl p-4 flex flex-col justify-between h-[350px] sticky top-0 shadow-[0_2px_8px_rgba(6,20,52,0.08)] overflow-hidden">
 
         <div className="flex flex-col h-full">
 
@@ -1743,11 +1743,11 @@ success(
               HEADER
           ================================================= */}
 
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 flex-shrink-0">
+          <div className="flex items-center gap-2 pb-3 border-b border-[#e7eff8] flex-shrink-0">
 
-            <ShoppingBag className="w-4 h-4 text-teal-600" />
+            <ShoppingBag className="w-4 h-4 text-[#2568e0]" />
 
-            <h3 className="font-bold text-slate-900 text-sm">
+            <h3 className="font-bold text-[#0e2a4a] text-sm">
               New Food Order Cart
             </h3>
 
@@ -1758,12 +1758,12 @@ success(
               CART
           ================================================= */}
 
-          <div className="flex-1 overflow-y-auto divide-y divide-slate-100 my-2 pr-1 min-h-0">
+          <div className="flex-1 overflow-y-auto divide-y divide-[#e7eff8] my-2 pr-1 min-h-0">
 
             {cartItems.length ===
             0 ? (
 
-              <div className="text-center py-16 text-slate-400 text-xs">
+              <div className="text-center py-16 text-[#9aabc0] text-xs">
                 No items added to cart yet. Click 'Add' on any food card.
               </div>
 
@@ -1805,18 +1805,18 @@ success(
                         <img
                           src={imageSrc}
                           alt={item.name}
-                          className="w-9 h-9 rounded-lg object-cover bg-slate-100 flex-shrink-0"
+                          className="w-9 h-9 rounded-lg object-cover bg-[#eaf3ff] flex-shrink-0"
                         />
 
 
                         <div className="min-w-0">
 
-                          <p className="text-xs font-bold text-slate-800 truncate">
+                          <p className="text-xs font-bold text-[#0e2a4a] truncate">
                             {item.name}
                           </p>
 
 
-                          <p className="text-[11px] text-slate-400">
+                          <p className="text-[11px] text-[#9aabc0]">
                             ₹{item.price} ×{" "}
                             {item.quantity}
                           </p>
@@ -1828,7 +1828,7 @@ success(
 
                       <div className="flex items-center gap-2.5 flex-shrink-0">
 
-                        <span className="text-xs font-bold text-slate-900">
+                        <span className="text-xs font-bold text-[#0e2a4a]">
                           ₹{itemTotal}
                         </span>
 
@@ -1856,7 +1856,7 @@ success(
                               }
                             )
                           }
-                          className="text-slate-400 hover:text-rose-600"
+                          className="text-[#9aabc0] hover:text-rose-600"
                         >
 
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1880,15 +1880,15 @@ success(
               CART FOOTER
           ================================================= */}
 
-          <div className="border-t border-slate-100 pt-3 space-y-3 flex-shrink-0 bg-white">
+          <div className="border-t border-[#e7eff8] pt-3 space-y-3 flex-shrink-0 bg-white">
 
-            <div className="flex items-center justify-between text-sm font-bold text-slate-900">
+            <div className="flex items-center justify-between text-sm font-bold text-[#0e2a4a]">
 
               <span>
                 Cart Total:
               </span>
 
-              <span className="text-teal-700">
+              <span className="text-[#2568e0]">
                 ₹{cartTotalAmount}
               </span>
 
@@ -1907,7 +1907,7 @@ success(
                 !bookingId ||
                 !roomId
               }
-              className="w-full py-2.5 bg-teal-600 hover:bg-teal-700 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-[#2568e0] hover:bg-[#1d56c4] disabled:bg-[#dbe6f5] disabled:text-[#9aabc0] text-white rounded-xl text-xs font-semibold shadow-[0_2px_8px_rgba(6,20,52,0.08)] transition flex items-center justify-center gap-2"
             >
 
               {submitting && (

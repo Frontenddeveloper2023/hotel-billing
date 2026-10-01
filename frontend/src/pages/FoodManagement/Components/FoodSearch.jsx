@@ -1,345 +1,138 @@
+import React, { memo, useMemo, useState } from "react";
+import { Search, X, ChevronRight } from "lucide-react";
+import { getFoodImageUrl } from "./Foodimage.js";
 
-import React, { useState } from "react";
-import { Search, X } from "lucide-react";
-
-export default function FoodSearch({
-    search,
-    setSearch,
-    foods = [],
-    onFoodSelect,
-}) {
+function FoodSearch({ search, setSearch, foods = [], onFoodSelect }) {
     const [isFocused, setIsFocused] = useState(false);
-
-    // ----------------------------------
-    // IMAGE URL
-    // ----------------------------------
-    const getFoodImageUrl = (imagePath) => {
-        if (!imagePath) return "";
-
-        if (
-            imagePath.startsWith("http://") ||
-            imagePath.startsWith("https://")
-        ) {
-            return imagePath;
-        }
-
-        let baseUrl =
-            import.meta.env.VITE_BACKEND_URL ||
-            "https://webscape.co.in/hotel-billing-system-backend";
-
-        baseUrl = baseUrl.replace(/\/+$/, "");
-        baseUrl = baseUrl.replace(/\/api$/, "");
-        baseUrl = baseUrl.replace(
-            /\/hotel-billing-system-backend$/,
-            ""
-        );
-
-        const cleanPath = imagePath.replace(/^\/+/, "");
-
-        const formattedPath = cleanPath.startsWith("uploads/")
-            ? cleanPath
-            : `uploads/${cleanPath}`;
-
-        return `${baseUrl}/hotel-billing-system-backend/${formattedPath}`;
-    };
 
     // ----------------------------------
     // SEARCH RESULTS
     // ----------------------------------
-    const searchResults =
-        search.trim().length > 0
-            ? foods
-                  .filter((food) =>
-                      food?.foodName
-                          ?.toLowerCase()
-                          .includes(search.trim().toLowerCase())
-                  )
-                  .slice(0, 6)
-            : [];
+    const searchResults = useMemo(() => {
+        const q = search.trim().toLowerCase();
+        if (!q) return [];
+        return foods
+            .filter((food) => food?.foodName?.toLowerCase().includes(q))
+            .slice(0, 6);
+    }, [foods, search]);
 
     // ----------------------------------
     // SELECT FOOD
     // ----------------------------------
     const handleFoodSelect = (food) => {
         setSearch(food.foodName);
-
         setIsFocused(false);
-
-        if (onFoodSelect) {
-            onFoodSelect(food);
-        }
+        if (onFoodSelect) onFoodSelect(food);
     };
 
     // ----------------------------------
     // CLEAR
     // ----------------------------------
     const handleClear = () => {
-    setSearch("");
-    setIsFocused(false);
-
-    if (onFoodSelect) {
-        onFoodSelect(null);
-    }
-};
+        setSearch("");
+        setIsFocused(false);
+        if (onFoodSelect) onFoodSelect(null);
+    };
 
     return (
-        <div className="w-full flex justify-center">
+        <div className="relative z-30 flex w-full justify-center">
             <div className="relative w-full max-w-xl">
-                {/* =========================================
-                    SEARCH BAR
-                ========================================= */}
-                <div
-                    className="
-                        flex
-                        w-full
-                        h-11
-                        sm:h-12
-                        rounded-xl
-                        overflow-hidden
-                        border
-                        border-slate-300
-                        focus-within:border-[var(--teal,#08838d)]
-                        focus-within:ring-2
-                        focus-within:ring-teal-100
-                        transition-all
-                        bg-white
-                        shadow-sm
-                    "
-                >
-                    {/* SEARCH ICON */}
-                    <div className="flex items-center justify-center pl-3 sm:pl-4 shrink-0">
-                        <Search
-                            className="
-                                w-4
-                                h-4
-                                sm:w-5
-                                sm:h-5
-                                text-slate-400
-                            "
-                        />
+                {/* SEARCH BAR (blue glass) */}
+                <div className="flex h-11 w-full overflow-hidden rounded-xl border border-white/25 bg-white/10 shadow-lg shadow-[#0a1a3f]/20 backdrop-blur-md transition-all duration-300 focus-within:border-sky-300 focus-within:bg-white/15 focus-within:ring-2 focus-within:ring-sky-300/40 sm:h-12">
+                    <div className="flex shrink-0 items-center justify-center pl-3 sm:pl-4">
+                        <Search className="h-4 w-4 text-white/70 sm:h-5 sm:w-5" />
                     </div>
 
-                    {/* INPUT */}
-                   <input
-    type="text"
-    value={search}
-    onChange={(e) => {
-        setSearch(e.target.value);
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => {
+                            setSearch(e.target.value);
+                            // User started a new search
+                            if (onFoodSelect) onFoodSelect(null);
+                            setIsFocused(true);
+                        }}
+                        onFocus={() => setIsFocused(true)}
+                        onBlur={() => setTimeout(() => setIsFocused(false), 120)}
+                        placeholder="Search food, dishes..."
+                        className="min-w-0 flex-1 bg-transparent px-3 text-xs font-medium text-white outline-none placeholder:text-white/60 sm:text-sm"
+                    />
 
-        // User started a new search
-        if (onFoodSelect) {
-            onFoodSelect(null);
-        }
-
-        setIsFocused(true);
-    }}
-    onFocus={() => setIsFocused(true)}
-    placeholder="Search food, dishes..."
-    className="
-        flex-1
-        min-w-0
-        px-3
-        text-xs
-        sm:text-sm
-        text-slate-900
-        font-medium
-        outline-none
-        bg-transparent
-        placeholder:text-slate-400
-    "
-/>
-
-                    {/* CLEAR */}
                     {search && (
                         <button
                             type="button"
                             onClick={handleClear}
-                            className="
-                                w-9
-                                flex
-                                items-center
-                                justify-center
-                                text-slate-400
-                                hover:text-slate-700
-                                hover:bg-slate-50
-                                cursor-pointer
-                                shrink-0
-                            "
                             title="Clear search"
+                            aria-label="Clear search"
+                            className="flex w-9 shrink-0 cursor-pointer items-center justify-center text-white/70 transition-colors hover:bg-white/10 hover:text-white"
                         >
-                            <X className="w-4 h-4" />
+                            <X className="h-4 w-4" />
                         </button>
                     )}
 
-                    {/* SEARCH BUTTON */}
                     <button
                         type="button"
-                        className="
-                            w-11
-                            sm:w-12
-                            bg-[var(--teal,#08838d)]
-                            hover:bg-[var(--teal-dark,#066b73)]
-                            text-white
-                            flex
-                            items-center
-                            justify-center
-                            cursor-pointer
-                            shrink-0
-                        "
                         title="Search"
+                        aria-label="Search"
+                        className="fm-btn flex w-11 shrink-0 cursor-pointer items-center justify-center bg-gradient-to-br from-blue-500 to-sky-400 text-white hover:brightness-110 sm:w-12"
                     >
-                        <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <Search className="h-4 w-4 sm:h-5 sm:w-5" />
                     </button>
                 </div>
 
-                {/* =========================================
-                    AMAZON STYLE SEARCH RESULTS
-                ========================================= */}
+                {/* RESULTS */}
                 {isFocused && search.trim() && (
-                    <div
-                        className="
-                            absolute
-                            top-full
-                            left-0
-                            right-0
-                            mt-2
-                            bg-white
-                            border
-                            border-slate-200
-                            rounded-xl
-                            shadow-xl
-                            overflow-hidden
-                            z-50
-                        "
-                    >
+                    <div className="fm-drop absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-[var(--line)] bg-white shadow-2xl shadow-[#0a1a3f]/25">
                         {searchResults.length > 0 ? (
                             <div className="py-1.5">
                                 {searchResults.map((food) => {
-                                    const imageUrl = getFoodImageUrl(
-                                        food.foodImage
-                                    );
+                                    const imageUrl = getFoodImageUrl(food.foodImage);
 
                                     return (
                                         <button
                                             key={food._id}
                                             type="button"
-                                            onClick={() =>
-                                                handleFoodSelect(food)
-                                            }
-                                            className="
-                                                w-full
-                                                flex
-                                                items-center
-                                                gap-3
-                                                px-3
-                                                sm:px-4
-                                                py-2.5
-                                                sm:py-3
-                                                text-left
-                                                hover:bg-slate-50
-                                                active:bg-slate-100
-                                                transition-colors
-                                                cursor-pointer
-                                            "
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            onClick={() => handleFoodSelect(food)}
+                                            className="group flex w-full cursor-pointer items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-[var(--tint)] active:bg-blue-100 sm:px-4 sm:py-3"
                                         >
-                                            {/* FOOD IMAGE */}
-                                            <div
-                                                className="
-                                                    w-11
-                                                    h-11
-                                                    sm:w-12
-                                                    sm:h-12
-                                                    rounded-lg
-                                                    overflow-hidden
-                                                    bg-slate-100
-                                                    border
-                                                    border-slate-200
-                                                    shrink-0
-                                                "
-                                            >
+                                            <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--tint)] sm:h-12 sm:w-12">
                                                 {imageUrl ? (
                                                     <img
                                                         src={imageUrl}
-                                                        alt={
-                                                            food.foodName ||
-                                                            "Food"
-                                                        }
-                                                        className="
-                                                            w-full
-                                                            h-full
-                                                            object-cover
-                                                        "
+                                                        alt={food.foodName || "Food"}
+                                                        loading="lazy"
+                                                        decoding="async"
+                                                        className="h-full w-full object-cover"
                                                     />
                                                 ) : (
-                                                    <div
-                                                        className="
-                                                            w-full
-                                                            h-full
-                                                            flex
-                                                            items-center
-                                                            justify-center
-                                                            text-slate-400
-                                                        "
-                                                    >
-                                                        <Search className="w-4 h-4" />
+                                                    <div className="flex h-full w-full items-center justify-center text-blue-300">
+                                                        <Search className="h-4 w-4" />
                                                     </div>
                                                 )}
                                             </div>
 
-                                            {/* FOOD DETAILS */}
                                             <div className="min-w-0 flex-1">
-                                                <p
-                                                    className="
-                                                        text-xs
-                                                        sm:text-sm
-                                                        font-semibold
-                                                        text-slate-900
-                                                        truncate
-                                                    "
-                                                >
+                                                <p className="truncate text-xs font-semibold text-[#0a1a3f] sm:text-sm">
                                                     {food.foodName}
                                                 </p>
-
-                                                <p
-                                                    className="
-                                                        text-[10px]
-                                                        sm:text-xs
-                                                        text-slate-500
-                                                        mt-0.5
-                                                    "
-                                                >
-                                                    ₹
-                                                    {Number(
-                                                        food.foodPrice || 0
-                                                    ).toLocaleString(
-                                                        "en-IN"
-                                                    )}
+                                                <p className="mt-0.5 text-[10px] font-medium text-blue-600 sm:text-xs">
+                                                    ₹{Number(food.foodPrice || 0).toLocaleString("en-IN")}
                                                 </p>
                                             </div>
 
-                                            {/* ARROW */}
-                                            <span
-                                                className="
-                                                    text-slate-300
-                                                    text-lg
-                                                    shrink-0
-                                                "
-                                            >
-                                                ›
-                                            </span>
+                                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-blue-500" />
                                         </button>
                                     );
                                 })}
                             </div>
                         ) : (
                             <div className="px-4 py-6 text-center">
-                                <Search className="w-6 h-6 mx-auto text-slate-300" />
-
-                                <p className="mt-2 text-xs sm:text-sm font-semibold text-slate-600">
+                                <Search className="mx-auto h-6 w-6 text-blue-200" />
+                                <p className="mt-2 text-xs font-semibold text-slate-600 sm:text-sm">
                                     No food found
                                 </p>
-
-                                <p className="mt-1 text-[10px] sm:text-xs text-slate-400">
+                                <p className="mt-1 text-[10px] text-slate-400 sm:text-xs">
                                     Try searching with another food name.
                                 </p>
                             </div>
@@ -350,3 +143,5 @@ export default function FoodSearch({
         </div>
     );
 }
+
+export default memo(FoodSearch);

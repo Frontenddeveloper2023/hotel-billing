@@ -106,3 +106,24 @@ export const deleteHotel = async (id) => {
     );
   }
 };
+
+
+// ==========================================
+// GET PUBLIC HOTEL INFO
+// ==========================================
+export const getPublicHotelInfo = async (id) => {
+  try {
+    const response = await api.get(
+      `/hotels/public/${id}`
+    );
+
+    return response.data;
+  } catch (error) {
+    throw (
+      error.response?.data || {
+        success: false,
+        message: error.message,
+      }
+    );
+  }
+};

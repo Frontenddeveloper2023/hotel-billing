@@ -56,11 +56,9 @@ router.post(
   createPlan
 );
 
-// Get plan by ID
 router.get(
   "/:id",
   authVerify,
-  permissionVerify("plans"),
   getPlanById
 );
 
