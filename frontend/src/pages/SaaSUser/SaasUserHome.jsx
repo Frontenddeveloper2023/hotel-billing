@@ -94,28 +94,68 @@ const SaaSHome = () => {
               StayPilot
             </span>
           </div>
+          
 
           {/* REGISTER BUTTON */}
-          <button
-            type="button"
-            onClick={handleRegisterHotel}
-            className="
-              cursor-pointer
-              rounded-lg
-              bg-[#0B2447]
-              px-4
-              py-2.5
-              text-[12px]
-              font-bold
-              text-white
-              transition
-              hover:bg-[#12345F]
-              sm:px-5
-              sm:text-sm
-            "
-          >
-            Register Your Hotel
-          </button>
+         <div className="flex items-center gap-3">
+ <button
+  type="button"
+  onClick={() => navigate("/saas-user/application-status")}
+  className="
+    inline-flex
+    items-center
+    justify-center
+    rounded-lg
+    bg-[#EAF3FF]
+    px-5
+    py-2.5
+    text-sm
+    font-bold
+    text-[#1877F2]
+    cursor-pointer
+    border
+    border-[#CFE2FF]
+    transition-all
+    duration-200
+    hover:-translate-y-0.5
+    hover:bg-[#DCEBFF]
+    hover:border-[#B9D5FF]
+    hover:shadow-[0_6px_16px_rgba(24,119,242,0.12)]
+  "
+>
+  View Application Status
+</button>
+
+  <button
+    type="button"
+    onClick={handleRegisterHotel}
+    className="
+      inline-flex
+      items-center
+      justify-center
+      rounded-lg
+      bg-[#0B2447]
+      px-5
+      py-2.5
+      cursor-pointer
+      text-sm
+      font-bold
+      text-white
+      transition-all
+      duration-200
+      hover:-translate-y-0.5
+      hover:bg-[#12345F]
+      hover:shadow-md
+    "
+  >
+    Register Your Hotel
+  </button>
+</div>
+
+
+       
+             
+           
         </div>
       </header>
 
@@ -147,13 +187,7 @@ const SaaSHome = () => {
           ===================================================== */}
           <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1240px] flex-col items-center px-5 pb-12 pt-[105px] sm:px-8 sm:pt-[115px] lg:px-10 lg:pt-[125px]">
             {/* SMALL LABEL */}
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm">
-              <span className="h-2 w-2 rounded-full bg-[#0B2447]" />
-
-              <span className="text-[10px] font-bold uppercase tracking-[0.13em] text-white">
-                Hospitality Management Platform
-              </span>
-            </div>
+           
 
             {/* MAIN TITLE */}
            <h1
@@ -193,7 +227,7 @@ const SaaSHome = () => {
                 sm:text-[15px]
               "
             >
-              Set up your hotel on HospitalityOS and manage rooms,
+              Set up your hotel quickly and manage rooms,
               properties, reception, billing and guest services from one
               platform.
             </p>
@@ -438,6 +472,7 @@ const SaaSHome = () => {
                 Application tracking
               </div>
             </div>
+          
           </div>
         </section>
       </main>

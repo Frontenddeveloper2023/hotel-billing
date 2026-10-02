@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../Context/AuthContext";
 import { useToast } from "../../Context/ToastContext";
 import { getPublicActivePlans } from "../../service/planApi";
 import { getMySubscription, upgradeHotelSubscription } from "../../service/subscriptionApi";
 import {
   CreditCard,
-  CheckCircle,
+  CheckCircle2,
   ArrowUpCircle,
   Loader2,
   BedDouble,
@@ -15,6 +15,8 @@ import {
   Wrench,
   Crown,
   Sparkles,
+  CalendarDays,
+  X,
 } from "lucide-react";
 
 const BILLING_CYCLES = [
@@ -23,6 +25,103 @@ const BILLING_CYCLES = [
   { key: "halfYearly", label: "Half-Yearly" },
   { key: "yearly", label: "Yearly" },
 ];
+
+// ======================================================
+// STYLE + SHARED UI
+// ======================================================
+
+const styles = `
+@keyframes pu-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes pu-pop{from{opacity:0;transform:translateY(22px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes pu-fade{from{opacity:0}to{opacity:1}}
+.pu-in{opacity:0;animation:pu-up .5s cubic-bezier(.2,.7,.2,1) forwards}
+.pu-pop{animation:pu-pop .3s cubic-bezier(.2,.8,.2,1)}
+.pu-fade{animation:pu-fade .2s ease-out}
+@media (prefers-reduced-motion:reduce){.pu-in{animation:none;opacity:1}.pu-pop,.pu-fade{animation:none}}
+`;
+
+const delay = (i, step = 70) => ({ animationDelay: `${Math.min(i, 10) * step}ms` });
+const card = "rounded-3xl bg-white shadow-[0_18px_45px_rgba(6,20,52,0.16)]";
+
+const InfoChip = ({ label, value, cls }) => (
+  <div className={`rounded-2xl border px-4 py-3 flex items-center gap-2.5 ${cls}`}>
+    <span className="text-xs text-white">{label}:</span>
+    <strong className="text-sm">{value}</strong>
+  </div>
+);
+
+const tiers = ["from-[#5b9bf5] to-[#2568e0]", "from-[#3b82f0] to-[#1d4fc4]", "from-[#4aa3ff] to-[#1f6fd8]", "from-[#6aa8f7] to-[#2f5fd0]"];
+
+const PlanCard = memo(({ plan, index, isCurrent, price, billingCycle, onSelect }) => {
+  const grad = tiers[index % tiers.length];
+
+  return (
+    <div
+      style={delay(index + 2)}
+      onClick={() => onSelect(plan)}
+      className={`pu-in ${card} overflow-hidden flex flex-col transition-all duration-300 ${
+        isCurrent ? "ring-2 ring-emerald-400" : "cursor-pointer hover:-translate-y-1.5 hover:shadow-[0_26px_60px_rgba(6,20,52,0.3)]"
+      }`}
+    >
+      <div className={`relative overflow-hidden bg-gradient-to-br ${grad} p-5 text-white`}>
+        <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-white/10 blur-xl" />
+        <div className="relative flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-11 h-11 rounded-2xl bg-white/20 border border-white/25 backdrop-blur flex items-center justify-center shrink-0">
+              <Crown size={20} />
+            </div>
+            <h2 className="font-bold text-lg truncate">{plan.planName}</h2>
+          </div>
+
+          {isCurrent && (
+            <span className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-400/25 border border-emerald-200/40 text-emerald-50">
+              <CheckCircle2 size={12} /> Current
+            </span>
+          )}
+        </div>
+
+        {plan.description && <p className="relative mt-3 text-xs text-blue-100 line-clamp-2">{plan.description}</p>}
+
+        <div className="relative mt-4 flex items-end gap-1.5">
+          <span className="text-3xl font-extrabold tracking-tight">₹{price.toLocaleString("en-IN")}</span>
+          <span className="pb-1 text-xs text-blue-100">/ {billingCycle}</span>
+        </div>
+      </div>
+
+      <div className="p-5 flex-1 flex flex-col">
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          {[[BedDouble, plan.limits?.rooms, "Rooms"], [Building2, plan.limits?.branches, "Branches"], [Users, plan.limits?.receptionists, "Staff"]].map(([Icon, v, l]) => (
+            <div key={l} className="text-center p-3 rounded-xl border border-[#e7eff8]">
+              <Icon size={17} className="mx-auto text-[#2568e0]" />
+              <p className="text-lg font-extrabold text-[#0e2a4a] mt-1">{v || 0}</p>
+              <p className="text-[10px] text-[#6b7f99] truncate">{l}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap gap-2 mb-4">
+          {plan.features?.foodService && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-orange-50 text-orange-700 text-xs font-semibold"><UtensilsCrossed size={13} /> Food</span>
+          )}
+          {plan.features?.roomService && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#eaf3ff] text-[#2568e0] text-xs font-semibold"><Wrench size={13} /> Room Service</span>
+          )}
+          {!plan.features?.foodService && !plan.features?.roomService && <span className="text-xs text-[#9aabc0]">No additional features</span>}
+        </div>
+
+        {!isCurrent && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onSelect(plan); }}
+            className="mt-auto w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] hover:brightness-110 text-white text-sm font-bold shadow-md shadow-blue-500/25 transition"
+          >
+            <Sparkles size={16} /> Select This Plan
+          </button>
+        )}
+      </div>
+    </div>
+  );
+});
 
 export default function PlanUpgrade() {
   const { userData } = useAuth();
@@ -77,14 +176,10 @@ export default function PlanUpgrade() {
     return () => { cancelled = true; };
   }, []);
 
-  const getPrice = (plan, cycle) => {
-    return plan?.pricing?.[cycle] ?? 0;
-  };
+  const getPrice = (plan, cycle) => plan?.pricing?.[cycle] ?? 0;
 
   const currentPlanId =
-    typeof currentSub?.planId === "object"
-      ? currentSub?.planId?._id
-      : currentSub?.planId;
+    typeof currentSub?.planId === "object" ? currentSub?.planId?._id : currentSub?.planId;
 
   const handleSelectPlan = (plan) => {
     if (String(plan._id) === String(currentPlanId)) {
@@ -124,339 +219,192 @@ export default function PlanUpgrade() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-        <span className="ml-3 text-gray-400 text-lg">Loading plans...</span>
+      <div className="flex items-center justify-center min-h-[60vh] gap-3">
+        <Loader2 className="w-8 h-8 animate-spin text-white" />
+        <span className="text-blue-100 text-lg">Loading plans...</span>
       </div>
     );
   }
 
-  const currentPlanObj =
-    typeof currentSub?.planId === "object" ? currentSub?.planId : null;
+  const currentPlanObj = typeof currentSub?.planId === "object" ? currentSub?.planId : null;
 
-  // Hotel name from populated subscription or userData
   const hotelName =
     (typeof currentSub?.hotelId === "object" ? currentSub?.hotelId?.hotelName : null) ||
     userData?.hotelName ||
     userData?.name ||
     "Your Hotel";
 
+  const daysLeft = currentSub?.endDate
+    ? Math.max(0, Math.ceil((new Date(currentSub.endDate) - new Date()) / (1000 * 60 * 60 * 24)))
+    : null;
+
+  const fmtDate = (d) => new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+
+  // Preview dates for the confirm modal
+  const cycleDays = { monthly: 30, quarterly: 90, halfYearly: 180, yearly: 365 };
+  const previewDays = cycleDays[billingCycle] || selectedPlan?.validityDays || 30;
+  const previewStart = new Date();
+  const previewEnd = new Date(previewStart);
+  previewEnd.setDate(previewEnd.getDate() + previewDays);
+
   return (
-    <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
-      {/* Header */}
-      <div style={{ marginBottom: "32px" }}>
-        <h1 style={{ fontSize: "28px", fontWeight: 700, color: "#e2e8f0", display: "flex", alignItems: "center", gap: "12px", margin: 0 }}>
-          <ArrowUpCircle style={{ width: 32, height: 32, color: "#60a5fa" }} />
+    <div className="max-w-[1200px] mx-auto font-['Inter']">
+      <style>{styles}</style>
+
+      {/* HEADER */}
+      <div className="pu-in mb-6">
+        <h1 className="flex items-center gap-3 text-[clamp(1.5rem,1.2rem+1.2vw,2rem)] font-extrabold tracking-[-0.02em] text-white">
+          <span className="w-10 h-10 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center">
+            <ArrowUpCircle className="w-6 h-6" />
+          </span>
           Upgrade Your Plan
         </h1>
-        <p style={{ color: "#94a3b8", marginTop: "8px", fontSize: "15px" }}>
-          Hotel: <strong style={{ color: "#cbd5e1" }}>{hotelName}</strong>
+
+        <p className="text-sm text-blue-100/80 mt-2">
+          Hotel: <strong className="text-white">{hotelName}</strong>
           {currentPlanObj && (
-            <span>
-              {" "}&bull; Current Plan: <strong style={{ color: "#22c55e" }}>{currentPlanObj.planName}</strong>
-              {" "}&bull; Billing: <strong style={{ color: "#facc15" }}>{currentSub?.billingCycle}</strong>
-              {" "}&bull; Status: <strong style={{ color: currentSub?.status === "active" ? "#22c55e" : "#ef4444" }}>{currentSub?.status}</strong>
-            </span>
+            <>
+              {" "}&bull; Current Plan: <strong className="text-emerald-300">{currentPlanObj.planName}</strong>
+              {" "}&bull; Billing: <strong className="text-amber-300">{currentSub?.billingCycle}</strong>
+              {" "}&bull; Status: <strong className={currentSub?.status === "active" ? "text-emerald-300" : "text-red-300"}>{currentSub?.status}</strong>
+            </>
           )}
         </p>
 
-        {/* Validity Dates */}
+        {/* VALIDITY DATES */}
         {currentSub?.startDate && currentSub?.endDate && (
-          <div style={{
-            marginTop: "16px", display: "flex", gap: "16px", flexWrap: "wrap",
-          }}>
-            <div style={{
-              background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)",
-              borderRadius: "12px", padding: "12px 20px", display: "flex", alignItems: "center", gap: "10px",
-            }}>
-              <span style={{ color: "#94a3b8", fontSize: "13px" }}>Valid From:</span>
-              <strong style={{ color: "#22c55e", fontSize: "14px" }}>
-                {new Date(currentSub.startDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-              </strong>
-            </div>
-            <div style={{
-              background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
-              borderRadius: "12px", padding: "12px 20px", display: "flex", alignItems: "center", gap: "10px",
-            }}>
-              <span style={{ color: "#94a3b8", fontSize: "13px" }}>Expires On:</span>
-              <strong style={{ color: "#ef4444", fontSize: "14px" }}>
-                {new Date(currentSub.endDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-              </strong>
-            </div>
-            <div style={{
-              background: "rgba(96,165,250,0.08)", border: "1px solid rgba(96,165,250,0.2)",
-              borderRadius: "12px", padding: "12px 20px", display: "flex", alignItems: "center", gap: "10px",
-            }}>
-              <span style={{ color: "#94a3b8", fontSize: "13px" }}>Days Left:</span>
-              <strong style={{ color: "#60a5fa", fontSize: "14px" }}>
-                {Math.max(0, Math.ceil((new Date(currentSub.endDate) - new Date()) / (1000 * 60 * 60 * 24)))} days
-              </strong>
-            </div>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <InfoChip label="Valid From" value={fmtDate(currentSub.startDate)} cls="bg-emerald-500/10 border-emerald-300/25 text-white" />
+            <InfoChip label="Expires On" value={fmtDate(currentSub.endDate)} cls="bg-red-500/10 border-red-300/25 text-white" />
+            <InfoChip label="Days Left" value={`${daysLeft} days`} cls="bg-white/10 border-white/20 text-white" />
           </div>
         )}
       </div>
 
-      {/* Billing Cycle Selector */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "24px", flexWrap: "wrap" }}>
+      {/* BILLING CYCLE SELECTOR */}
+      <div style={delay(1)} className="pu-in flex flex-wrap gap-2 mb-6">
         {BILLING_CYCLES.map((c) => (
           <button
             key={c.key}
+            type="button"
             onClick={() => setBillingCycle(c.key)}
-            style={{
-              padding: "8px 20px",
-              borderRadius: "10px",
-              border: billingCycle === c.key ? "2px solid #3b82f6" : "1px solid rgba(255,255,255,0.12)",
-              background: billingCycle === c.key ? "rgba(59,130,246,0.15)" : "rgba(255,255,255,0.05)",
-              color: billingCycle === c.key ? "#60a5fa" : "#94a3b8",
-              fontWeight: 600,
-              fontSize: "14px",
-              cursor: "pointer",
-              transition: "all 0.2s",
-            }}
+            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
+              billingCycle === c.key
+                ? "bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] text-white shadow-md shadow-blue-500/25"
+                : "bg-white/10 border border-white/20 text-blue-100 hover:bg-white/15"
+            }`}
           >
             {c.label}
           </button>
         ))}
       </div>
 
-      {/* Plans Grid */}
+      {/* PLANS GRID */}
       {plans.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "60px 0", color: "#64748b" }}>
-          <CreditCard style={{ width: 48, height: 48, margin: "0 auto 16px", opacity: 0.5 }} />
-          <p style={{ fontSize: "18px" }}>No plans available at the moment.</p>
+        <div className={`pu-pop ${card} py-16 text-center`}>
+          <CreditCard className="w-12 h-12 mx-auto text-[#c7d6ea]" />
+          <p className="mt-4 text-lg font-semibold text-[#6b7f99]">No plans available at the moment.</p>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "20px" }}>
-          {plans.map((plan) => {
-            const isCurrent = String(plan._id) === String(currentPlanId);
-            const price = getPrice(plan, billingCycle);
-
-            return (
-              <div
-                key={plan._id}
-                onClick={() => handleSelectPlan(plan)}
-                style={{
-                  position: "relative",
-                  borderRadius: "16px",
-                  padding: "28px 24px",
-                  cursor: isCurrent ? "default" : "pointer",
-                  border: isCurrent
-                    ? "2px solid #22c55e"
-                    : "1px solid rgba(255,255,255,0.1)",
-                  background: isCurrent
-                    ? "linear-gradient(135deg, rgba(34,197,94,0.08), rgba(34,197,94,0.02))"
-                    : "rgba(255,255,255,0.04)",
-                  transition: "all 0.25s ease",
-                  boxShadow: isCurrent ? "0 0 20px rgba(34,197,94,0.1)" : "none",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isCurrent) {
-                    e.currentTarget.style.border = "1px solid rgba(59,130,246,0.5)";
-                    e.currentTarget.style.background = "rgba(59,130,246,0.06)";
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "0 8px 24px rgba(59,130,246,0.1)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isCurrent) {
-                    e.currentTarget.style.border = "1px solid rgba(255,255,255,0.1)";
-                    e.currentTarget.style.background = "rgba(255,255,255,0.04)";
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "none";
-                  }
-                }}
-              >
-                {/* Current badge */}
-                {isCurrent && (
-                  <div style={{
-                    position: "absolute", top: 12, right: 12, display: "flex", alignItems: "center", gap: 4,
-                    background: "rgba(34,197,94,0.15)", color: "#22c55e", padding: "4px 12px", borderRadius: "20px",
-                    fontSize: "12px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px",
-                  }}>
-                    <CheckCircle style={{ width: 14, height: 14 }} /> Current
-                  </div>
-                )}
-
-                {/* Plan Name */}
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-                  <Crown style={{ width: 22, height: 22, color: "#facc15" }} />
-                  <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#e2e8f0", margin: 0 }}>
-                    {plan.planName}
-                  </h2>
-                </div>
-
-                {/* Description */}
-                {plan.description && (
-                  <p style={{ color: "#94a3b8", fontSize: "13px", marginBottom: "16px", lineHeight: 1.5 }}>
-                    {plan.description}
-                  </p>
-                )}
-
-                {/* Price */}
-                <div style={{ marginBottom: "20px" }}>
-                  <span style={{ fontSize: "32px", fontWeight: 800, color: "#60a5fa" }}>
-                    {"\u20B9"}{price.toLocaleString("en-IN")}
-                  </span>
-                  <span style={{ color: "#64748b", fontSize: "14px", marginLeft: "4px" }}>
-                    / {billingCycle}
-                  </span>
-                </div>
-
-                {/* Limits */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#cbd5e1", fontSize: "13px" }}>
-                    <BedDouble style={{ width: 16, height: 16, color: "#818cf8" }} />
-                    <span>{plan.limits?.rooms || 0} Rooms</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#cbd5e1", fontSize: "13px" }}>
-                    <Building2 style={{ width: 16, height: 16, color: "#818cf8" }} />
-                    <span>{plan.limits?.branches || 0} Branches</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#cbd5e1", fontSize: "13px" }}>
-                    <Users style={{ width: 16, height: 16, color: "#818cf8" }} />
-                    <span>{plan.limits?.receptionists || 0} Receptionists</span>
-                  </div>
-                </div>
-
-                {/* Features */}
-                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                  {plan.features?.foodService && (
-                    <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "12px", color: "#22c55e", background: "rgba(34,197,94,0.1)", padding: "3px 10px", borderRadius: "8px" }}>
-                      <UtensilsCrossed style={{ width: 13, height: 13 }} /> Food
-                    </span>
-                  )}
-                  {plan.features?.roomService && (
-                    <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "12px", color: "#60a5fa", background: "rgba(96,165,250,0.1)", padding: "3px 10px", borderRadius: "8px" }}>
-                      <Wrench style={{ width: 13, height: 13 }} /> Room Service
-                    </span>
-                  )}
-                </div>
-
-                {/* Upgrade Button */}
-                {!isCurrent && (
-                  <button
-                    style={{
-                      marginTop: "20px", width: "100%", padding: "10px", borderRadius: "10px", border: "none",
-                      background: "linear-gradient(135deg, #3b82f6, #2563eb)", color: "#fff",
-                      fontWeight: 600, fontSize: "14px", cursor: "pointer", display: "flex",
-                      alignItems: "center", justifyContent: "center", gap: "6px", transition: "opacity 0.2s",
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.9"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
-                  >
-                    <Sparkles style={{ width: 16, height: 16 }} /> Select This Plan
-                  </button>
-                )}
-              </div>
-            );
-          })}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 pb-4">
+          {plans.map((plan, i) => (
+            <PlanCard
+              key={plan._id}
+              plan={plan}
+              index={i}
+              isCurrent={String(plan._id) === String(currentPlanId)}
+              price={getPrice(plan, billingCycle)}
+              billingCycle={billingCycle}
+              onSelect={handleSelectPlan}
+            />
+          ))}
         </div>
       )}
 
-      {/* Payment Confirmation Modal */}
+      {/* PAYMENT CONFIRMATION MODAL */}
       {showPaymentModal && selectedPlan && (
         <div
-          style={{
-            position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center",
-            background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)",
-          }}
+          className="pu-fade fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#0b1d3d]/65 backdrop-blur-sm p-0 sm:p-4"
           onClick={() => { if (!processing) { setShowPaymentModal(false); setSelectedPlan(null); } }}
         >
           <div
-            style={{
-              background: "#1e293b", borderRadius: "16px", padding: "32px", maxWidth: "460px", width: "90%",
-              border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
-            }}
+            className="pu-pop w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-[0_24px_70px_rgba(6,20,52,0.45)] overflow-hidden max-h-[94vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ fontSize: "20px", fontWeight: 700, color: "#e2e8f0", margin: "0 0 8px" }}>
-              Confirm Plan Upgrade
-            </h3>
-            <p style={{ color: "#94a3b8", fontSize: "14px", marginBottom: "20px" }}>
-              You are upgrading to <strong style={{ color: "#60a5fa" }}>{selectedPlan.planName}</strong> with{" "}
-              <strong style={{ color: "#facc15" }}>{billingCycle}</strong> billing.
-            </p>
-
-            <div style={{
-              background: "rgba(255,255,255,0.05)", borderRadius: "12px", padding: "16px", marginBottom: "20px",
-              border: "1px solid rgba(255,255,255,0.08)",
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ color: "#94a3b8", fontSize: "14px" }}>Plan</span>
-                <span style={{ color: "#e2e8f0", fontWeight: 600, fontSize: "14px" }}>{selectedPlan.planName}</span>
+            <div className="shrink-0 flex items-center justify-between gap-3 px-5 sm:px-6 py-4 bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] text-white">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0"><CreditCard size={20} /></div>
+                <div className="min-w-0">
+                  <h3 className="text-lg font-bold">Confirm Plan Upgrade</h3>
+                  <p className="text-xs text-blue-100 mt-0.5">Review the details before you confirm.</p>
+                </div>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ color: "#94a3b8", fontSize: "14px" }}>Billing Cycle</span>
-                <span style={{ color: "#e2e8f0", fontWeight: 600, fontSize: "14px" }}>{billingCycle}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <span style={{ color: "#94a3b8", fontSize: "14px" }}>Hotel</span>
-                <span style={{ color: "#e2e8f0", fontWeight: 600, fontSize: "14px" }}>{hotelName}</span>
-              </div>
-              {(() => {
-                const today = new Date();
-                const cycleDays = { monthly: 30, quarterly: 90, halfYearly: 180, yearly: 365 };
-                const days = cycleDays[billingCycle] || (selectedPlan?.validityDays || 30);
-                const endDate = new Date(today);
-                endDate.setDate(endDate.getDate() + days);
-                const fmt = (d) => d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-                return (
-                  <>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                      <span style={{ color: "#94a3b8", fontSize: "14px" }}>New Plan Starts</span>
-                      <span style={{ color: "#22c55e", fontWeight: 600, fontSize: "14px" }}>{fmt(today)}</span>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                      <span style={{ color: "#94a3b8", fontSize: "14px" }}>New Plan Expires</span>
-                      <span style={{ color: "#ef4444", fontWeight: 600, fontSize: "14px" }}>{fmt(endDate)}</span>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                      <span style={{ color: "#94a3b8", fontSize: "14px" }}>Validity</span>
-                      <span style={{ color: "#60a5fa", fontWeight: 600, fontSize: "14px" }}>{days} days</span>
-                    </div>
-                  </>
-                );
-              })()}
-              <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.08)", margin: "12px 0" }} />
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "#e2e8f0", fontWeight: 700, fontSize: "16px" }}>Total</span>
-                <span style={{ color: "#22c55e", fontWeight: 800, fontSize: "20px" }}>
-                  {"\u20B9"}{getPrice(selectedPlan, billingCycle).toLocaleString("en-IN")}
-                </span>
-              </div>
+              <button type="button" onClick={() => { if (!processing) { setShowPaymentModal(false); setSelectedPlan(null); } }} disabled={processing} aria-label="Close"
+                className="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center disabled:opacity-50 shrink-0 transition">
+                <X size={18} />
+              </button>
             </div>
 
-            <p style={{ color: "#64748b", fontSize: "12px", marginBottom: "20px", textAlign: "center" }}>
-              This is a dummy payment. Your subscription will be upgraded immediately.
-            </p>
+            <div className="p-5 sm:p-6 overflow-y-auto">
+              <p className="text-sm text-[#6b7f99] mb-4">
+                You are upgrading to <strong className="text-[#2568e0]">{selectedPlan.planName}</strong> with{" "}
+                <strong className="text-amber-600">{billingCycle}</strong> billing.
+              </p>
 
-            <div style={{ display: "flex", gap: "12px" }}>
-              <button
-                onClick={() => { setShowPaymentModal(false); setSelectedPlan(null); }}
-                disabled={processing}
-                style={{
-                  flex: 1, padding: "10px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.12)",
-                  background: "transparent", color: "#94a3b8", fontWeight: 600, fontSize: "14px", cursor: "pointer",
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleUpgrade}
-                disabled={processing}
-                style={{
-                  flex: 1, padding: "10px", borderRadius: "10px", border: "none",
-                  background: processing ? "#475569" : "linear-gradient(135deg, #22c55e, #16a34a)",
-                  color: "#fff", fontWeight: 600, fontSize: "14px", cursor: processing ? "not-allowed" : "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-                }}
-              >
-                {processing ? (
-                  <><Loader2 style={{ width: 16, height: 16, animation: "spin 1s linear infinite" }} /> Processing...</>
-                ) : (
-                  <><CreditCard style={{ width: 16, height: 16 }} /> Pay & Upgrade</>
-                )}
-              </button>
+              <div className="rounded-2xl bg-[#f4f8fd] border border-[#e7eff8] p-4 space-y-2.5">
+                {[["Plan", selectedPlan.planName], ["Billing Cycle", billingCycle], ["Hotel", hotelName]].map(([l, v]) => (
+                  <div key={l} className="flex justify-between gap-3 text-sm">
+                    <span className="text-[#6b7f99]">{l}</span>
+                    <span className="font-semibold text-[#0e2a4a]">{v}</span>
+                  </div>
+                ))}
+
+                <div className="flex justify-between gap-3 text-sm">
+                  <span className="text-[#6b7f99] flex items-center gap-1.5"><CalendarDays size={13} /> New Plan Starts</span>
+                  <span className="font-semibold text-emerald-600">{fmtDate(previewStart)}</span>
+                </div>
+                <div className="flex justify-between gap-3 text-sm">
+                  <span className="text-[#6b7f99]">New Plan Expires</span>
+                  <span className="font-semibold text-red-600">{fmtDate(previewEnd)}</span>
+                </div>
+                <div className="flex justify-between gap-3 text-sm">
+                  <span className="text-[#6b7f99]">Validity</span>
+                  <span className="font-semibold text-[#2568e0]">{previewDays} days</span>
+                </div>
+
+                <div className="pt-3 mt-1 border-t border-[#e2ebf7] flex justify-between items-center">
+                  <span className="font-bold text-[#0e2a4a]">Total</span>
+                  <span className="text-xl font-extrabold text-[#2568e0]">₹{getPrice(selectedPlan, billingCycle).toLocaleString("en-IN")}</span>
+                </div>
+              </div>
+
+              <p className="text-xs text-[#9aabc0] text-center mt-4">
+                This is a dummy payment. Your subscription will be upgraded immediately.
+              </p>
+
+              <div className="flex gap-3 mt-5">
+                <button
+                  type="button"
+                  onClick={() => { setShowPaymentModal(false); setSelectedPlan(null); }}
+                  disabled={processing}
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold disabled:opacity-50 transition"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleUpgrade}
+                  disabled={processing}
+                  className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:brightness-110 text-white text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed shadow-md shadow-emerald-500/25 transition"
+                >
+                  {processing ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
+                  ) : (
+                    <><CreditCard className="w-4 h-4" /> Pay &amp; Upgrade</>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

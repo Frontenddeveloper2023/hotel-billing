@@ -5,6 +5,7 @@ import { useToast } from "../Context/ToastContext";
 import {
   LayoutDashboard, LogOut, Menu, X, ShieldCheck as UserShield, BedDouble, FileText,
   UtensilsCrossed, Wrench, Receipt, Users, SlidersHorizontal, Building2, CreditCard, Bell,
+  BarChart3,
 } from "lucide-react";
 
 
@@ -26,6 +27,7 @@ export default function Layout() {
   const adminNavigation = [
     { name: "Dashboard", href: "/saas-admin/dashboard", permissionKey: "saasAdmin", icon: <LayoutDashboard className={ic} /> },
     { name: "Hotels", href: "/saas-admin/hotels", permissionKey: "hotels", icon: <Building2 className={ic} /> },
+    { name: "Hotel Bills", href: "/saas-admin/hotel-bills", permissionKey: "hotels", icon: <BarChart3 className={ic} /> },
     { name: "Plans", href: "/saas-admin/plans", permissionKey: "plans", icon: <CreditCard className={ic} /> },
     { name: "Subscriptions", href: "/saas-admin/subscriptions", permissionKey: "subscriptions", icon: <Receipt className={ic} /> },
     { name: "Notifications", href: "/saas-admin/notifications", permissionKey: "hotelRegistrations", icon: <Bell className={ic} /> },

@@ -192,7 +192,7 @@ export default function Dashboard() {
         <div className="hd-in flex flex-col md:flex-row md:items-end md:justify-between gap-3 sm:gap-4">
           <div>
            
-            <h1 className="mt-2 text-[clamp(1.6rem,1.2rem+1.6vw,2.4rem)] font-bold tracking-[-0.03em] text-white">
+              <h1 className="text-[18px] sm:text-[24px] lg:text-[30px] leading-tight font-extrabold tracking-[-0.035em] text-white">
               Dashboard
             </h1>
           </div>

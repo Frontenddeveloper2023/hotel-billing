@@ -637,46 +637,47 @@ const InvoiceTemplate = ({
                       <>
                         {Number(f.roomRent || 0) > 0 && (
                           <p className="flex justify-between">
-                            <span className="text-gray-500">Room Rent:</span>
+                            <span className="text-gray-500">Room base rent:</span>
                             <span>₹{Number(f.roomRent || 0).toFixed(2)}</span>
-                          </p>
-                        )}
-                        {Number(f.foodServices || 0) > 0 && (
-                          <p className="flex justify-between">
-                            <span className="text-gray-500">Food Services:</span>
-                            <span>₹{Number(f.foodServices || 0).toFixed(2)}</span>
-                          </p>
-                        )}
-                        {Number(f.roomServices || 0) > 0 && (
-                          <p className="flex justify-between">
-                            <span className="text-gray-500">Room Services:</span>
-                            <span>₹{Number(f.roomServices || 0).toFixed(2)}</span>
-                          </p>
-                        )}
-                        {checkoutPolicyCharge > 0 && (
-                          <p className="flex justify-between text-orange-700">
-                            <span>Checkout Time Policy:</span>
-                            <span>₹{checkoutPolicyCharge.toFixed(2)}</span>
                           </p>
                         )}
                         {extraNightCharge > 0 && (
                           <p className="flex justify-between text-orange-700">
-                            <span>Extra Full Day Stay:</span>
+                            <span>Extra full day:</span>
                             <span>₹{extraNightCharge.toFixed(2)}</span>
+                          </p>
+                        )}
+                        {checkoutPolicyCharge > 0 && (
+                          <p className="flex justify-between text-orange-700">
+                            <span>Checkout policy charge:</span>
+                            <span>₹{checkoutPolicyCharge.toFixed(2)}</span>
                           </p>
                         )}
                         {extraTimeCharge > 0 && checkoutPolicyCharge === 0 && (
                           <p className="flex justify-between text-orange-700">
-                            <span>Extra Time Stay:</span>
+                            <span>Extra time stay:</span>
                             <span>₹{extraTimeCharge.toFixed(2)}</span>
                           </p>
                         )}
                       </>
                     )}
 
-                    <p className="flex justify-between font-semibold border-t border-gray-200 pt-1">
+                    {Number(f.foodServices || 0) > 0 && (
+                      <p className="flex justify-between">
+                        <span className="text-gray-500">Food:</span>
+                        <span>₹{Number(f.foodServices || 0).toFixed(2)}</span>
+                      </p>
+                    )}
+                    {Number(f.roomServices || 0) > 0 && (
+                      <p className="flex justify-between">
+                        <span className="text-gray-500">Room service:</span>
+                        <span>₹{Number(f.roomServices || 0).toFixed(2)}</span>
+                      </p>
+                    )}
+
+                    <p className="flex justify-between font-semibold border-t border-dashed border-gray-400 pt-2 mt-2">
                       <span className="text-gray-500">
-                        Sub-Total:
+                        Taxable subtotal:
                       </span>
 
                       <span>
@@ -711,7 +712,7 @@ const InvoiceTemplate = ({
                       </span>
                     </p>
 
-                    <h3 className="flex justify-between text-base font-bold text-teal-700 pt-2 border-t">
+                    <h3 className="flex justify-between text-base font-bold text-teal-700 pt-2 border-t border-dashed border-gray-400">
                       <span>
                         Grand Total:
                       </span>
@@ -724,9 +725,9 @@ const InvoiceTemplate = ({
                       </span>
                     </h3>
 
-                    <p className="flex justify-between">
+                    <p className="flex justify-between mt-4">
                       <span className="text-gray-500">
-                        Advance Paid{" "}
+                        Advance already paid{" "}
                         {f.advancePaidVia
                           ? `(${f.advancePaidVia})`
                           : ""}
@@ -767,7 +768,7 @@ const InvoiceTemplate = ({
                       </span>
                     </p>
 
-                    <p className="flex justify-between font-extrabold border-t pt-1">
+                    <p className="flex justify-between font-extrabold border-t border-dashed border-gray-400 pt-2 mt-2">
                       <span>
                         Balance Due:
                       </span>
@@ -1727,41 +1728,42 @@ const InvoiceTemplate = ({
                     <>
                       {Number(f.roomRent || 0) > 0 && (
                         <div style={row}>
-                          <span>Room Rent:</span>
+                          <span>Room base rent:</span>
                           <span>₹{Number(f.roomRent || 0).toFixed(2)}</span>
-                        </div>
-                      )}
-                      {Number(f.foodServices || 0) > 0 && (
-                        <div style={row}>
-                          <span>Food Services:</span>
-                          <span>₹{Number(f.foodServices || 0).toFixed(2)}</span>
-                        </div>
-                      )}
-                      {Number(f.roomServices || 0) > 0 && (
-                        <div style={row}>
-                          <span>Room Services:</span>
-                          <span>₹{Number(f.roomServices || 0).toFixed(2)}</span>
-                        </div>
-                      )}
-                      {checkoutPolicyCharge > 0 && (
-                        <div style={row}>
-                          <span>Checkout Time Policy:</span>
-                          <span>₹{checkoutPolicyCharge.toFixed(2)}</span>
                         </div>
                       )}
                       {extraNightCharge > 0 && (
                         <div style={row}>
-                          <span>Extra Full Day Stay:</span>
+                          <span>Extra full day:</span>
                           <span>₹{extraNightCharge.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {checkoutPolicyCharge > 0 && (
+                        <div style={row}>
+                          <span>Checkout policy charge:</span>
+                          <span>₹{checkoutPolicyCharge.toFixed(2)}</span>
                         </div>
                       )}
                       {extraTimeCharge > 0 && checkoutPolicyCharge === 0 && (
                         <div style={row}>
-                          <span>Extra Time Stay:</span>
+                          <span>Extra time stay:</span>
                           <span>₹{extraTimeCharge.toFixed(2)}</span>
                         </div>
                       )}
                     </>
+                  )}
+
+                  {Number(f.foodServices || 0) > 0 && (
+                    <div style={row}>
+                      <span>Food:</span>
+                      <span>₹{Number(f.foodServices || 0).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {Number(f.roomServices || 0) > 0 && (
+                    <div style={row}>
+                      <span>Room service:</span>
+                      <span>₹{Number(f.roomServices || 0).toFixed(2)}</span>
+                    </div>
                   )}
 
                   <div
@@ -1769,13 +1771,15 @@ const InvoiceTemplate = ({
                       ...row,
                       fontWeight: 700,
                       borderTop:
-                        "1px solid #e5e7eb",
+                        "1px dashed #d1d5db",
                       paddingTop:
-                        "4px",
+                        "6px",
+                      marginTop:
+                        "6px"
                     }}
                   >
                     <span>
-                      Sub-Total:
+                      Taxable subtotal:
                     </span>
 
                     <span>
@@ -1841,6 +1845,12 @@ const InvoiceTemplate = ({
                       fontWeight: 800,
                       fontSize:
                         "13px",
+                      borderBottom:
+                        "1px dashed #d1d5db",
+                      paddingBottom:
+                        "8px",
+                      marginBottom:
+                        "8px"
                     }}
                   >
                     <span>
@@ -1862,7 +1872,7 @@ const InvoiceTemplate = ({
 
                   <div style={row}>
                     <span>
-                      Advance Paid
+                      Advance already paid
                       {f.advancePaidVia
                         ? ` (${f.advancePaidVia})`
                         : ""}

@@ -745,8 +745,7 @@ export default function Reports() {
           
 
           <div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-white">
-              Billing & Revenue Reports
+<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">              Billing & Revenue Reports
             </h1>
          
           </div>
@@ -945,11 +944,9 @@ export default function Reports() {
                 <SearchX className="w-7 h-7" />
               </div>
               <span className="font-bold text-sm text-[#0f2a63] mt-4">
-                No report records found for the selected filter.
+                No report records found 
               </span>
-              <p className="text-xs text-slate-500 mt-1">
-                Try a different period or clear your search.
-              </p>
+             
             </div>
           ) : (
             <>

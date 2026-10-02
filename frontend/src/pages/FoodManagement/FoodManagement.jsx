@@ -5,7 +5,9 @@ import React, {
     useMemo,
     useState,
 } from "react";
-import { Plus } from "lucide-react";
+import { Plus, ShieldAlert, Loader2 } from "lucide-react";
+import { useAuth } from "../../Context/AuthContext";
+import { checkFoodServiceAccess } from "../../service/subscriptionFeatureApi";
 
 import "./Components/FoodTheme.css";
 
@@ -32,6 +34,10 @@ export default function FoodManagement() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
     const [selectedFood, setSelectedFood] = useState(null);
+
+    const { userData } = useAuth();
+    const [hasAccess, setHasAccess] = useState(false);
+    const [accessLoading, setAccessLoading] = useState(true);
 
     // Keeps typing responsive while a big list re-filters
     const deferredSearch = useDeferredValue(search);
@@ -63,11 +69,41 @@ export default function FoodManagement() {
     }, []);
 
     // ----------------------------------
-    // LOAD FOODS ON PAGE LOAD
+    // LOAD FOODS AND ACCESS ON PAGE LOAD
     // ----------------------------------
     useEffect(() => {
-        fetchFoods();
-    }, [fetchFoods]);
+        let mounted = true;
+        const verifyAccess = async () => {
+            if (userData?.role === "admin") {
+                if (mounted) {
+                    setHasAccess(true);
+                    setAccessLoading(false);
+                    fetchFoods();
+                }
+                return;
+            }
+
+            try {
+                const result = await checkFoodServiceAccess();
+                if (mounted) {
+                    setHasAccess(result.featureAllowed);
+                    if (result.featureAllowed) {
+                        fetchFoods();
+                    }
+                }
+            } catch (err) {
+                if (mounted) setHasAccess(false);
+            } finally {
+                if (mounted) setAccessLoading(false);
+            }
+        };
+
+        verifyAccess();
+
+        return () => {
+            mounted = false;
+        };
+    }, [fetchFoods, userData?.role]);
 
     // ----------------------------------
     // SEARCH
@@ -182,40 +218,61 @@ export default function FoodManagement() {
     const closeEdit = useCallback(() => setEditingFood(null), []);
     const closeDelete = useCallback(() => setDeletingFood(null), []);
 
+    if (accessLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+            </div>
+        );
+    }
+
+    if (!hasAccess) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
+                <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mb-6">
+                    <ShieldAlert className="w-10 h-10 text-rose-500" />
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-3">
+                    Feature Not Available
+                </h2>
+                <p className="text-white max-w-md mx-auto mb-8 leading-relaxed">
+                    The Food Management feature is not included in your current subscription plan. Please upgrade your plan to unlock this feature
+                </p>
+            </div>
+        );
+    }
+
     return (
         <div className="fm-root mx-auto w-full max-w-7xl space-y-5 sm:space-y-6">
             {/* HEADER */}
-            <div className="fm-rise flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div className="min-w-0">
-                  
+            <div className="fm-rise flex items-center justify-between">
+    {/* TITLE */}
+    <div className="shrink-0">
+<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">    
+            Food Management
+        </h1>
+    </div>
 
-                    {/* Text is white for the navy gradient from Layout.
-                        If your Layout background is light, use text-[#0a1a3f] / text-slate-500 */}
-                    <h1 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                        Food Management
-                    </h1>
-                    
-                </div>
+    {/* CENTER SEARCH */}
+    <div className="absolute left-1/2 -translate-x-1/2 w-[350px]">
+        <FoodSearch
+            search={search}
+            setSearch={setSearch}
+            foods={foods}
+            onFoodSelect={setSelectedFood}
+        />
+    </div>
 
-                <button
-                    type="button"
-                    onClick={() => setShowAdd(true)}
-                    className="fm-btn inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-[#12306b] shadow-lg shadow-[#0a1a3f]/20 hover:-translate-y-0.5 hover:shadow-xl sm:w-auto"
-                >
-                    <Plus className="h-4 w-4" />
-                    Add Food
-                </button>
-            </div>
-
-            {/* SEARCH */}
-            <div className="fm-rise relative z-40" style={{ "--i": 1 }}>
-                <FoodSearch
-                    search={search}
-                    setSearch={setSearch}
-                    foods={foods}
-                    onFoodSelect={setSelectedFood}
-                />
-            </div>
+    {/* ADD FOOD */}
+    <button
+        type="button"
+        onClick={() => setShowAdd(true)}
+        className="fm-btn ml-auto inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-[#12306b] shadow-lg shadow-[#0a1a3f]/20 hover:-translate-y-0.5 hover:shadow-xl"
+    >
+        <Plus className="h-4 w-4" />
+        Add Food
+    </button>
+</div>
 
             {/* ERROR */}
             {error && (

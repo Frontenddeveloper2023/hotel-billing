@@ -9,11 +9,10 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "../../Context/AuthContext";
 import { getPublicActivePlans } from "../../service/planApi";
-import { getMySubscription } from "../../service/subscriptionApi";
-import { getPublicHotelInfo } from "../../service/hotelApi";
+
+import { useNavigate } from "react-router-dom";
+
 import SaaSSetupProgress from "./SaaSSetupProgress";
 
 
@@ -57,9 +56,8 @@ const getPlanPrice = (plan, cycle) => {
 // ============================================================
 
 const SaaSUserChoosePlan = () => {
-  const navigate = useNavigate();
-  const { isAuthenticated, userData } = useAuth();
 
+const navigate = useNavigate();
   // ==========================================================
   // STATE
   // ==========================================================
@@ -69,8 +67,7 @@ const SaaSUserChoosePlan = () => {
   const [error, setError] = useState("");
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [billingCycle, setBillingCycle] = useState("monthly");
-  const [currentSubscription, setCurrentSubscription] = useState(null);
-  const [isExistingHotel, setIsExistingHotel] = useState(false);
+
 
   // ==========================================================
   // FETCH PLANS
@@ -79,7 +76,6 @@ const SaaSUserChoosePlan = () => {
   const fetchPlans = async () => {
     try {
       setLoading(true);
-      setError("");
 
       const response = await getPublicActivePlans();
 
@@ -117,104 +113,29 @@ const SaaSUserChoosePlan = () => {
     fetchPlans();
   }, []);
 
-  const [searchParams] = useSearchParams();
-  const urlHotelId = searchParams.get("hotelId");
 
-  // Check if current user is an existing hotel owner upgrading plan (or arrived from email with hotelId)
-  useEffect(() => {
-    const checkExistingSubscription = async () => {
-      try {
-        const response = await getMySubscription();
-        if (response?.success && response?.data) {
-          setCurrentSubscription(response.data);
-          setIsExistingHotel(true);
-          return;
-        }
-      } catch (err) {
-        // Not logged in or no subscription yet
-      }
-
-      if (isAuthenticated && userData?.hotelId) {
-        setIsExistingHotel(true);
-        return;
-      }
-
-      // If user came via email button with ?hotelId=...
-      if (urlHotelId) {
-        try {
-          const hotelRes = await getPublicHotelInfo(urlHotelId);
-          if (hotelRes?.success && hotelRes?.data) {
-            setIsExistingHotel(true);
-            setCurrentSubscription({
-              hotelId: hotelRes.data,
-            });
-            sessionStorage.setItem("saasIsUpgrade", "true");
-            sessionStorage.setItem("saasHotelDetails", JSON.stringify(hotelRes.data));
-          }
-        } catch (hErr) {
-          console.error("Could not fetch hotel info for ID:", urlHotelId, hErr);
-        }
-      }
-    };
-
-    checkExistingSubscription();
-  }, [isAuthenticated, userData, urlHotelId]);
 
   // ==========================================================
   // CONTINUE
   // ==========================================================
 
-  const handleContinue = () => {
-    if (!selectedPlan?._id) {
+  const handleContinue = (planObj) => {
+    const planToUse = planObj || selectedPlan;
+
+    if (!planToUse?._id) {
       setError("Please select a plan to continue.");
       return;
     }
 
-    sessionStorage.setItem("saasSelectedPlan", JSON.stringify(selectedPlan));
+    sessionStorage.setItem("saasSelectedPlan", JSON.stringify(planToUse));
     sessionStorage.setItem("saasBillingCycle", billingCycle);
 
-    // If existing hotel owner upgrading: BYPASS REGISTRATION DIRECTLY TO CHECKOUT!
-    if (isExistingHotel || (isAuthenticated && userData?.hotelId)) {
-      sessionStorage.setItem("saasIsUpgrade", "true");
-
-      let hotelInfo = currentSubscription?.hotelId;
-      if (!hotelInfo || !hotelInfo.hotelName) {
-        try {
-          const cached = sessionStorage.getItem("saasHotelDetails");
-          if (cached) hotelInfo = JSON.parse(cached);
-        } catch (_) {}
-      }
-
-      if (!hotelInfo || !hotelInfo.hotelName) {
-        hotelInfo = {
-          hotelName: userData?.hotelName || "Your Hotel",
-          ownerName: userData?.name || "Hotel Owner",
-          email: userData?.email || "",
-          phone: userData?.phone || "",
-        };
-      }
-
-      sessionStorage.setItem("saasHotelDetails", JSON.stringify(hotelInfo));
-
-      navigate("/saas-user/checkout", {
-        state: {
-          selectedPlan: selectedPlan,
-          billingCycle: billingCycle,
-          isUpgrade: true,
-          hotelDetails: hotelInfo,
-          currentSubscription: currentSubscription,
-        },
-      });
-      return;
-    }
-
-    // New customer registration flow
+    // New customer registration flow (no auto‑upgrade)
     sessionStorage.removeItem("saasIsUpgrade");
     sessionStorage.removeItem("saasHotelDetails");
-
     navigate("/saas-user/registration", {
       state: {
-        selectedPlan: selectedPlan,
+        selectedPlan: planToUse,
         billingCycle: billingCycle,
       },
     });
@@ -278,13 +199,11 @@ const SaaSUserChoosePlan = () => {
         {/* HEADER */}
         <section className="text-center">
           <h1 className="text-[26px] font-bold leading-tight tracking-[-0.02em] text-white sm:text-[32px] lg:text-[34px]">
-            {isExistingHotel ? "Upgrade Your Subscription Plan" : "Select your Plan"}
-          </h1>
+Select Your Plan          </h1>
 
           <p className="mx-auto mt-2 max-w-2xl text-[13px] font-normal leading-5 text-white/85 sm:text-[14px]">
-            {isExistingHotel
-              ? "Select a higher plan to immediately expand your hotel room capacity and staff."
-              : "Select the subscription plan that best fits your hotel's needs."}
+            
+           Select the subscription plan that best fits your hotel's needs.
           </p>
 
           {/* BILLING SWITCH */}
@@ -366,13 +285,7 @@ const SaaSUserChoosePlan = () => {
         .map((plan, planIndex) => {
           const price = getPlanPrice(plan, billingCycle);
 
-          const currentSubPlanId =
-            currentSubscription?.planId?._id ||
-            currentSubscription?.planId;
-
-          const isCurrentPlan =
-            currentSubPlanId &&
-            String(currentSubPlanId) === String(plan._id);
+       
 
           const limitValue = (value) =>
             Number(value || 0) === 0 ? "Unlimited" : value;
@@ -494,29 +407,7 @@ const SaaSUserChoosePlan = () => {
                       {plan.planName}
                     </h2>
 
-                    {isCurrentPlan && (
-                      <span
-                        className="
-                          inline-flex
-                          shrink-0
-                          items-center
-                          gap-1.5
-                          rounded-full
-                          border
-                          border-[#D9E8FF]
-                          bg-[#EEF6FF]
-                          px-2.5
-                          py-1
-                          text-[9px]
-                          font-bold
-                          whitespace-nowrap
-                          text-[#1769D2]
-                        "
-                      >
-                        <CheckCircle2 size={10} />
-                        Current Plan
-                      </span>
-                    )}
+                 
                   </div>
 
                   {/* DESCRIPTION */}
@@ -705,22 +596,11 @@ const SaaSUserChoosePlan = () => {
                       sm:text-[12px]
                     "
                   >
-                    {isCurrentPlan
-                      ? "Current Plan"
-                      : price === 0
-                      ? "Get Started for Free"
-                      : "Select Plan"}
+                    {price === 0
+  ? "Get Started for Free"
+  : "Select Plan"}
 
-                    {!isCurrentPlan && (
-                      <ArrowRight
-                        size={14}
-                        className="
-                          transition-transform
-                          duration-200
-                          group-hover:translate-x-0.5
-                        "
-                      />
-                    )}
+
                   </button>
                 </div>
               </div>

@@ -1205,17 +1205,14 @@ export default function BranchManagement() {
       {/* ============================================================
           TOP HEADER
       ============================================================ */}
-      <header className="bm-rise bm-d1 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white border border-blue-100/80 rounded-2xl p-4 sm:p-6 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)]">
+      <header className="bm-rise bm-d1 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)]">
         <div className="flex items-start gap-3 sm:gap-4 min-w-0">
-          <div className="shrink-0 p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-800 text-white shadow-lg shadow-blue-900/25">
-            <Building2 className="w-6 h-6" />
-          </div>
+         
 
           <div className="min-w-0">
             
 
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#0f2a63] tracking-tight mt-1.5">
-              Branch Management
+<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">              Branch Management
             </h1>
           
           </div>

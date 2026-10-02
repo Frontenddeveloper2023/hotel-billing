@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
   Building2,
@@ -192,6 +193,7 @@ const getStatusData = (response) => {
 // ============================================================
 
 const SaaSUserApplicationStatus = () => {
+  const navigate = useNavigate();
   const [registrationId, setRegistrationId] = useState("");
 
   const [application, setApplication] = useState(null);
@@ -263,6 +265,11 @@ const SaaSUserApplicationStatus = () => {
       setLoading(false);
     }
   };
+
+
+
+
+
 
 
   // ==========================================================
@@ -635,7 +642,7 @@ const SaaSUserApplicationStatus = () => {
                       text-[#667085]
                     "
                   >
-                    Enter the application ID received after registration.
+                    Enter the application ID to check your application status.
                   </p>
 
                 </div>
@@ -1274,16 +1281,48 @@ const SaaSUserApplicationStatus = () => {
 
             </div>
 
-            {/* TRUST BANNER */}
-            <div className="text-center text-[11px] text-[#64748B] pt-2">
-              <span className="inline-flex items-center gap-1.5 font-medium">
-                <ShieldCheck size={14} className="text-[#087A58]" />
-                Official SaaS Public Record • Protected by verified cloud credentials
-              </span>
-            </div>
+
 
           </div>
         )}
+
+
+
+
+        <div className="mt-6 flex justify-center">
+  <button
+    type="button"
+    disabled={application?.status !== "approved"}
+    onClick={() => {
+      if (application?.status === "approved") {
+        navigate("/hotel-login");
+      }
+    }}
+    className={`
+      inline-flex items-center justify-center gap-2
+      rounded-xl px-6 py-3
+      text-sm font-bold
+      transition-all duration-200
+      ${
+        application?.status === "approved"
+          ? "bg-[#17345D] text-white shadow-[0_8px_20px_rgba(23,52,93,0.20)] hover:bg-[#0F2A4A] hover:-translate-y-0.5"
+          : "cursor-not-allowed bg-[#E5E7EB] text-[#9CA3AF]"
+      }
+    `}
+  >
+    <Building2 size={17} />
+
+    {application?.status === "approved"
+      ? "Login to Hotel"
+      : application?.status === "rejected"
+      ? "Login Unavailable"
+      : "Login After Approval"}
+
+    {application?.status === "approved" && (
+      <ArrowRight size={16} />
+    )}
+  </button>
+</div>
 
         {/* ====================================================
             EMPTY STATE

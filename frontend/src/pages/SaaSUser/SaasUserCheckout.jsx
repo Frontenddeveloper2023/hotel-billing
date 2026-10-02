@@ -30,9 +30,7 @@ import {
 
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { useAuth } from "../../Context/AuthContext";
 import { confirmDummyPayment } from "../../service/hotelRegistrationApi";
-import { upgradeHotelSubscription } from "../../service/subscriptionApi";
 
 // ============================================================
 // DESIGN: dark hotel-inspired hero, blue featured plan, white cards
@@ -70,7 +68,6 @@ const SaaSUserCheckout = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { isAuthenticated, userData } = useAuth();
 
   // ==========================================================
   // PAYMENT STATE
@@ -125,17 +122,7 @@ const SaaSUserCheckout = () => {
     }
   }, []);
 
-  // ==========================================================
-  // IS UPGRADE (EXISTING HOTEL)
-  // ==========================================================
 
-  const isUpgrade = useMemo(() => {
-    return Boolean(
-      location.state?.isUpgrade ||
-      sessionStorage.getItem("saasIsUpgrade") === "true" ||
-      (isAuthenticated && userData?.hotelId)
-    );
-  }, [location.state?.isUpgrade, isAuthenticated, userData]);
 
   // ==========================================================
   // FINAL DATA
@@ -182,109 +169,99 @@ const SaaSUserCheckout = () => {
   // HOTEL DATA
   // ==========================================================
 
-  const hotelName =
-    hotelDetails?.hotelName || userData?.hotelName || registration?.hotelName || "Hotel Account";
+const hotelName =
+  hotelDetails?.hotelName ||
+  registration?.hotelName ||
+  "Hotel Account";
 
-  const ownerName =
-    hotelDetails?.ownerName || userData?.name || registration?.ownerName || "Hotel Owner";
+const ownerName =
+  hotelDetails?.ownerName ||
+  registration?.ownerName ||
+  "Hotel Owner";
 
-  const ownerEmail =
-    hotelDetails?.email || userData?.email || registration?.email || "";
+const ownerEmail =
+  hotelDetails?.email ||
+  registration?.email ||
+  "";
 
-  const ownerPhone =
-    hotelDetails?.phone || userData?.phone || registration?.phone || "";
-
+const ownerPhone =
+  hotelDetails?.phone ||
+  registration?.phone ||
+  "";
   const address = hotelDetails?.address || registration?.address || {};
 
-  const addressText =
-    [address.street, address.city, address.state, address.country, address.pincode]
-      .filter(Boolean)
-      .join(", ") || (isUpgrade ? "Registered Hotel Branch" : "");
+const addressText =
+  [address.street, address.city, address.state, address.country, address.pincode]
+    .filter(Boolean)
+    .join(", ") || "";
 
-  const gstNumber = hotelDetails?.gstNumber || registration?.gstNumber || "";
 
   // ==========================================================
   // PAYMENT HANDLERS
   // ==========================================================
 
-  const handlePayNow = () => {
+const handlePayNow = () => {
+  setError("");
+
+  if (!registrationId) {
+    setError(
+      "Registration details are missing. Please go back and complete registration again."
+    );
+    return;
+  }
+
+  if (!selectedPlan) {
+    setError("Plan details are missing. Please select a plan again.");
+    return;
+  }
+
+  setIsPaymentModalOpen(true);
+};
+
+ const handleConfirmPayment = async () => {
+  try {
+    setIsPaying(true);
     setError("");
 
-    if (!isUpgrade && !registrationId) {
-      setError("Registration details are missing. Please go back and complete registration again.");
+    if (!registrationId) {
+      setError("Registration ID is missing. Please try again.");
       return;
     }
 
-    if (!selectedPlan) {
-      setError("Plan details are missing. Please select a plan again.");
-      return;
+    const response = await confirmDummyPayment(registrationId);
+
+    if (!response?.success) {
+      throw new Error(
+        response?.message || "Payment could not be completed."
+      );
     }
 
-    setIsPaymentModalOpen(true);
-  };
+    const paymentTransactionId =
+      response?.data?.paymentTransactionId || "";
 
-  const handleConfirmPayment = async () => {
-    try {
-      setIsPaying(true);
-      setError("");
+    setTransactionId(paymentTransactionId);
+    setPaymentSuccess(true);
+    setIsPaymentModalOpen(false);
 
-      if (isUpgrade) {
-        // ----------------------------------------------------
-        // EXISTING HOTEL UPGRADE FLOW (IMMEDIATE ACTIVATION)
-        // ----------------------------------------------------
-        const response = await upgradeHotelSubscription({
-          planId: selectedPlan._id,
-          billingCycle: billingCycle || "monthly",
-        });
+    sessionStorage.setItem(
+      "saasRegistrationId",
+      registrationId
+    );
 
-        if (!response?.success) {
-          throw new Error(response?.message || "Plan upgrade could not be completed.");
-        }
-
-        const paymentTransactionId =
-          response?.data?.paymentTransactionId || `UPG-${Date.now()}`;
-
-        setTransactionId(paymentTransactionId);
-        setPaymentSuccess(true);
-        setIsPaymentModalOpen(false);
-
-        sessionStorage.removeItem("saasIsUpgrade");
-        sessionStorage.removeItem("saasHotelDetails");
-
-        window.dispatchEvent(
-          new CustomEvent("subscriptionUpdated", { detail: response.data })
-        );
-        return;
-      }
-
-      // ----------------------------------------------------
-      // NEW CUSTOMER REGISTRATION FLOW (REQUIRES ADMIN APPROVAL)
-      // ----------------------------------------------------
-      if (!registrationId) {
-        setError("Registration ID is missing. Please try again.");
-        return;
-      }
-
-      const response = await confirmDummyPayment(registrationId);
-
-      if (!response?.success) {
-        throw new Error(response?.message || "Payment could not be completed.");
-      }
-
-      const paymentTransactionId = response?.data?.paymentTransactionId || "";
-
-      setTransactionId(paymentTransactionId);
-      setPaymentSuccess(true);
-      setIsPaymentModalOpen(false);
-
-      sessionStorage.setItem("saasRegistrationId", registrationId);
-      sessionStorage.setItem("saasPaymentStatus", "paid");
-    } catch (error) {
-      setError(error?.message || error?.data?.message || "Unable to complete payment.");
-    } finally {
-      setIsPaying(false);
-    }
-  };
+    sessionStorage.setItem(
+      "saasPaymentStatus",
+      "paid"
+    );
+  } catch (error) {
+    setError(
+      error?.message ||
+        error?.data?.message ||
+        "Unable to complete payment."
+    );
+  } finally {
+    setIsPaying(false);
+  }
+};
 
   // ==========================================================
   // NAVIGATION
@@ -358,10 +335,7 @@ if (paymentSuccess) {
       ==================================================== */}
       <div className="sticky top-0 z-50 border-b border-[#DDE5F0] bg-white shadow-[0_1px_4px_rgba(16,24,40,0.05)]">
         <div className="mx-auto w-full max-w-[1180px]">
-          <SaaSSetupProgress
-            activeStep={4}
-            isUpgrade={isUpgrade}
-          />
+          <SaaSSetupProgress activeStep={4} />
         </div>
       </div>
 
@@ -523,9 +497,7 @@ if (paymentSuccess) {
               text-[#17345D]
               sm:text-[31px]
             ">
-              {isUpgrade
-                ? "Plan Upgraded Successfully"
-                : "Payment Successful"}
+            Payment Successful
             </h1>
 
 
@@ -538,9 +510,9 @@ if (paymentSuccess) {
               leading-6
               text-[#5B6472]
             ">
-              {isUpgrade
-                ? `Your hotel subscription is now upgraded to the ${selectedPlan.planName} plan. Upgraded limits and features are active immediately.`
-                : "Your payment has been completed successfully. Your hotel application is now awaiting administrative approval."}
+              {
+  "Your payment has been completed successfully. Your hotel application is now awaiting administrative approval."
+}
             </p>
 
           </div>
@@ -567,7 +539,7 @@ if (paymentSuccess) {
               />
 
               <SummaryRow
-                label={isUpgrade ? "Upgraded Plan" : "Selected Plan"}
+                label="Selected Plan"
                 value={selectedPlan.planName}
                 icon={Sparkles}
               />
@@ -617,283 +589,80 @@ if (paymentSuccess) {
                 EXISTING SUCCESS ACTIONS
             ================================================== */}
 
-            {isUpgrade ? (
-              <>
-                <div className="
-                  mt-5
-                  flex
-                  items-start
-                  gap-3
-                  rounded-xl
-                  border
-                  border-[#BFE4D2]
-                  bg-[#E7F6EF]
-                  p-4
-                ">
+       <div className="
+  mt-5
+  flex
+  items-start
+  gap-3
+  rounded-xl
+  border
+  border-[#F1D999]
+  bg-[#FDF3DF]
+  p-4
+">
+  <div className="
+    flex
+    h-8
+    w-8
+    shrink-0
+    items-center
+    justify-center
+    rounded-full
+    bg-white
+    text-[#92620B]
+  ">
+    <Clock3 size={17} />
+  </div>
 
-                  <div className="
-                    flex
-                    h-8
-                    w-8
-                    shrink-0
-                    items-center
-                    justify-center
-                    rounded-full
-                    bg-white
-                    text-[#0F7A5E]
-                  ">
-                    <ShieldCheck size={18} />
-                  </div>
+  <div className="min-w-0">
+    <p className="
+      text-[13px]
+      font-bold
+      text-[#7A4E08]
+    ">
+      Application Pending
+    </p>
 
-                  <div className="min-w-0">
+    <p className="
+      mt-1
+      text-[12px]
+      font-medium
+      leading-5
+      text-[#92620B]
+    ">
+      Payment is complete, but your hotel account will only
+      be activated after SaaS admin approval.
+    </p>
+  </div>
+</div>
 
-                    <p className="
-                      text-[13px]
-                      font-bold
-                      text-[#0F7A5E]
-                    ">
-                      Instant Plan Activation
-                    </p>
-
-                    <p className="
-                      mt-1
-                      text-[12px]
-                      font-medium
-                      leading-5
-                      text-[#136245]
-                    ">
-                      No admin approval is required for plan upgrades.
-                      Your hotel management system and branch room limits
-                      have been upgraded immediately.
-                    </p>
-
-                  </div>
-
-                </div>
-
-
-                <div className="
-                  mt-4
-                  grid
-                  grid-cols-1
-                  gap-3
-                  sm:grid-cols-3
-                ">
-
-                  <div className="
-                    rounded-xl
-                    border
-                    border-[#E2EAF5]
-                    bg-white
-                    p-4
-                    text-center
-                  ">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#5B6472]">
-                      Rooms / Branch
-                    </p>
-
-                    <p className="mt-1 text-[18px] font-bold text-[#17345D]">
-                      {Number(selectedPlan?.limits?.rooms || 0) === 0
-                        ? "Unlimited"
-                        : selectedPlan?.limits?.rooms}
-                    </p>
-                  </div>
-
-
-                  <div className="
-                    rounded-xl
-                    border
-                    border-[#E2EAF5]
-                    bg-white
-                    p-4
-                    text-center
-                  ">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#5B6472]">
-                      Max Branches
-                    </p>
-
-                    <p className="mt-1 text-[18px] font-bold text-[#17345D]">
-                      {Number(selectedPlan?.limits?.branches || 0) === 0
-                        ? "Unlimited"
-                        : selectedPlan?.limits?.branches}
-                    </p>
-                  </div>
-
-
-                  <div className="
-                    rounded-xl
-                    border
-                    border-[#E2EAF5]
-                    bg-white
-                    p-4
-                    text-center
-                  ">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#5B6472]">
-                      Staff / Receptionists
-                    </p>
-
-                    <p className="mt-1 text-[18px] font-bold text-[#17345D]">
-                      {Number(selectedPlan?.limits?.receptionists || 0) === 0
-                        ? "Unlimited"
-                        : selectedPlan?.limits?.receptionists}
-                    </p>
-                  </div>
-
-                </div>
-
-
-                <div className="
-                  mt-6
-                  flex
-                  flex-col
-                  gap-3
-                  sm:flex-row
-                ">
-
-                  <button
-                    type="button"
-                    onClick={handleGoToHotelManagement}
-                    className="
-                      flex
-                      min-h-[50px]
-                      flex-1
-                      items-center
-                      justify-center
-                      gap-2
-                      rounded-xl
-                      bg-[#347BE9]
-                      px-5
-                      py-3.5
-                      text-[14px]
-                      font-bold
-                      text-white
-                      shadow-[0_4px_12px_rgba(52,123,233,0.22)]
-                      transition
-                      hover:bg-[#2467D5]
-                      active:scale-[0.99]
-                    "
-                  >
-                    <Hotel size={17} />
-                    Go to Hotel Management
-                  </button>
-
-
-                  <button
-                    type="button"
-                    onClick={handleGoToRoomAvailability}
-                    className="
-                      flex
-                      min-h-[50px]
-                      flex-1
-                      items-center
-                      justify-center
-                      gap-2
-                      rounded-xl
-                      border
-                      border-[#C9D8EB]
-                      bg-white
-                      px-5
-                      py-3.5
-                      text-[14px]
-                      font-semibold
-                      text-[#344054]
-                      transition
-                      hover:bg-[#F4F7FC]
-                      active:scale-[0.99]
-                    "
-                  >
-                    View Rooms & Availability
-                    <ArrowRight size={17} />
-                  </button>
-
-                </div>
-
-              </>
-            ) : (
-              <>
-
-                <div className="
-                  mt-5
-                  flex
-                  items-start
-                  gap-3
-                  rounded-xl
-                  border
-                  border-[#F1D999]
-                  bg-[#FDF3DF]
-                  p-4
-                ">
-
-                  <div className="
-                    flex
-                    h-8
-                    w-8
-                    shrink-0
-                    items-center
-                    justify-center
-                    rounded-full
-                    bg-white
-                    text-[#92620B]
-                  ">
-                    <Clock3 size={17} />
-                  </div>
-
-                  <div className="min-w-0">
-
-                    <p className="
-                      text-[13px]
-                      font-bold
-                      text-[#7A4E08]
-                    ">
-                      Application Pending
-                    </p>
-
-                    <p className="
-                      mt-1
-                      text-[12px]
-                      font-medium
-                      leading-5
-                      text-[#92620B]
-                    ">
-                      Payment is complete, but your hotel account will only
-                      be activated after SaaS admin approval.
-                    </p>
-
-                  </div>
-
-                </div>
-
-
-                <button
-                  type="button"
-                  onClick={handleViewApplicationStatus}
-                  className="
-                    mt-6
-                    flex
-                    min-h-[50px]
-                    w-full
-                    items-center
-                    justify-center
-                    gap-2
-                    rounded-xl
-                    bg-[#347BE9]
-                    px-5
-                    py-3.5
-                    text-[14px]
-                    font-bold
-                    text-white
-                    shadow-[0_4px_12px_rgba(52,123,233,0.22)]
-                    transition
-                    hover:bg-[#2467D5]
-                    active:scale-[0.99]
-                  "
-                >
-                  View Application Status
-                  <ArrowRight size={17} />
-                </button>
-
-              </>
-            )}
+<button
+  type="button"
+  onClick={handleViewApplicationStatus}
+  className="
+    mt-6
+    flex
+    min-h-[50px]
+    w-full
+    items-center
+    justify-center
+    gap-2
+    rounded-xl
+    bg-[#347BE9]
+    px-5
+    py-3.5
+    text-[14px]
+    font-bold
+    text-white
+    shadow-[0_4px_12px_rgba(52,123,233,0.22)]
+    transition
+    hover:bg-[#2467D5]
+    active:scale-[0.99]
+  "
+>
+  View Application Status
+  <ArrowRight size={17} />
+</button>
 
           </div>
 
@@ -916,8 +685,8 @@ if (paymentSuccess) {
       ====================================================== */}
       <div className="border-b border-[#E2EAF5] bg-white">
         <div className="mx-auto w-full max-w-[1180px]">
-          <SaaSSetupProgress activeStep={3} isUpgrade={isUpgrade} />
-        </div>
+<SaaSSetupProgress activeStep={3} />    
+    </div>
       </div>
 
       {/* ======================================================
@@ -930,8 +699,7 @@ if (paymentSuccess) {
          
 
           <h1 className="mt-4 text-[24px] font-bold tracking-[-0.035em] text-white sm:text-[28px]">
-            {isUpgrade ? "Upgrade Subscription & Checkout" : "Review Subscription & Checkout"}
-          </h1>
+Review Subscription & Checkout          </h1>
 
         
 
@@ -992,8 +760,7 @@ if (paymentSuccess) {
 
       {/* PLAN BADGE */}
       <span className="w-fit shrink-0 rounded-full bg-white/20 px-3.5 py-2 text-[12px] font-bold text-white ring-1 ring-white/30 sm:self-center">
-        {isUpgrade ? "Selected Plan" : "Most Popular"}
-      </span>
+Most Popular      </span>
 
     </div>
 
@@ -1431,9 +1198,7 @@ if (paymentSuccess) {
         </p>
 
         <p className="mt-1 break-words text-[12px] font-medium leading-5 text-[#136245]">
-          {isUpgrade
-            ? "Your existing hotel details are ready for your plan upgrade."
-            : "Hotel information will be submitted for admin review after payment."}
+          Hotel information will be submitted for admin review after payment.
         </p>
 
       </div>
@@ -1576,9 +1341,7 @@ if (paymentSuccess) {
       </p>
 
       <p className="mt-1.5 break-words text-[14px] font-medium leading-6 text-[#2A4A73]">
-        {isUpgrade
-          ? "Confirming activates your upgraded subscription immediately."
-          : "Payment marks your registration as paid. Your hotel is then submitted to the admin for review and activation."}
+        Payment marks your registration as paid. Your hotel is then submitted to the admin for review and activation.
       </p>
 
     </div>
@@ -1768,8 +1531,6 @@ if (paymentSuccess) {
                       <ModalRow label="Plan" value={selectedPlan.planName} />
                       <ModalRow label="Billing Cycle" value={getBillingLabel(billingCycle)} />
                       <ModalRow label="Subscription" value={formatCurrency(price)} />
-                      <ModalRow label="Setup Fee" value={setupFee > 0 ? formatCurrency(setupFee) : "Free"} />
-                      <ModalRow label="Tax" value={formatCurrency(tax)} last />
                     </div>
                   </div>
 
@@ -1820,19 +1581,8 @@ if (paymentSuccess) {
 
                       <div className="my-4 border-t border-dashed border-[#D6DBE3]" />
 
-                      {/* SETUP */}
-                      <div className="flex items-center justify-between gap-4">
-                        <span className="text-[12px] font-medium text-[#5B6472]">Platform Setup Fee</span>
-                        <span className="text-[12px] font-bold text-[#17345D]">
-                          {setupFee > 0 ? formatCurrency(setupFee) : "Free"}
-                        </span>
-                      </div>
+                     
 
-                      {/* TAX */}
-                      <div className="mt-3 flex items-center justify-between gap-4">
-                        <span className="text-[12px] font-medium text-[#5B6472]">Tax</span>
-                        <span className="text-[12px] font-bold text-[#17345D]">{formatCurrency(tax)}</span>
-                      </div>
 
                       {/* TOTAL */}
                       <div className="mt-5 rounded-lg bg-[#17345D] p-4">

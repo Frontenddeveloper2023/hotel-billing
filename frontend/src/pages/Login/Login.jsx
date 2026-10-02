@@ -1618,231 +1618,381 @@ const Login = () => {
                                 </div>
                             ) : !otpSent ? (
                                 /* EMAIL STEP */
-                                <div>
-                                    <div className="mb-8">
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1877F2]">
-                                            Hotel Management
-                                        </p>
+                              <div>
+    <div className="mb-9">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#1877F2]">
+            Hotel Management
+        </p>
 
-                                        <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px]">
-                                            Get Started Now
-                                        </h2>
+        <h2 className="mt-2.5 text-[28px] font-bold tracking-tight text-slate-900 sm:text-[30px]">
+            Get Started Now
+        </h2>
 
-                                        <p className="mt-2 max-w-[360px] text-xs leading-5 text-slate-500 sm:text-sm">
-                                            Sign in to your administrator
-                                            account to manage your hotel
-                                            operations securely.
-                                        </p>
-                                    </div>
+        <p className="mt-3 max-w-[390px] text-sm leading-6 text-slate-500 sm:text-[15px]">
+            Sign in to your administrator account to manage your hotel
+            operations securely.
+        </p>
+    </div>
 
-                                    <form className="space-y-6" onSubmit={sendOtp}>
-                                        <div>
-                                            <label
-                                                htmlFor="email"
-                                                className="mb-1.5 block text-[11px] font-semibold text-slate-700"
-                                            >
-                                                Email address
-                                            </label>
+    <form className="space-y-7" onSubmit={sendOtp}>
+        <div>
+            <label
+                htmlFor="email"
+                className="mb-2 block text-xs font-semibold text-slate-700 sm:text-sm"
+            >
+                Email address
+            </label>
 
-                                            <input
-                                                id="email"
-                                                type="email"
-                                                value={email}
-                                                onChange={(e) => {
-                                                    setError("");
-                                                    setEmail(e.target.value);
-                                                }}
-                                                placeholder="admin@yourhotel.com"
-                                                autoComplete="email"
-                                                required
-                                                disabled={loadingSend}
-                                                className="h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-xs text-slate-800 outline-none transition duration-200 placeholder:text-slate-400 hover:border-slate-400 focus:border-[#1877F2] focus:ring-2 focus:ring-[#1877F2]/10 disabled:cursor-not-allowed disabled:bg-slate-50"
-                                            />
-                                        </div>
+            <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                    setError("");
+                    setEmail(e.target.value);
+                }}
+                placeholder="admin@yourhotel.com"
+                autoComplete="email"
+                required
+                disabled={loadingSend}
+                className="
+                    h-12
+                    w-full
+                    rounded-lg
+                    border
+                    border-slate-300
+                    bg-white
+                    px-4
+                    text-sm
+                    font-medium
+                    text-slate-800
+                    outline-none
+                    transition-all
+                    duration-200
+                    placeholder:text-slate-400
+                    hover:border-slate-400
+                    focus:border-[#1877F2]
+                    focus:ring-4
+                    focus:ring-[#1877F2]/10
+                    disabled:cursor-not-allowed
+                    disabled:bg-slate-50
+                "
+            />
+        </div>
 
-                                        {error && (
-                                            <div
-                                                className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2.5"
-                                                role="alert"
-                                            >
-                                                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-red-100 text-[10px] font-bold text-red-600">
-                                                    !
-                                                </span>
+        {error && (
+            <div
+                className="
+                    flex
+                    items-start
+                    gap-2.5
+                    rounded-lg
+                    border
+                    border-red-200
+                    bg-red-50
+                    px-4
+                    py-3
+                "
+                role="alert"
+            >
+                <span
+                    className="
+                        mt-0.5
+                        flex
+                        h-5
+                        w-5
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-full
+                        bg-red-100
+                        text-xs
+                        font-bold
+                        text-red-600
+                    "
+                >
+                    !
+                </span>
 
-                                                <p className="text-xs leading-5 text-red-700">
-                                                    {error}
-                                                </p>
-                                            </div>
-                                        )}
+                <p className="text-sm leading-5 text-red-700">
+                    {error}
+                </p>
+            </div>
+        )}
 
-                                        <button
-                                            type="submit"
-                                            disabled={loadingSend}
-                                            className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-gradient-to-r from-[#2638D8] to-[#4A27D8] text-xs font-bold text-white shadow-[0_7px_18px_rgba(55,48,220,0.22)] transition-all duration-200 hover:from-[#1F31C8] hover:to-[#3F21C8] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
-                                        >
-                                            {loadingSend ? (
-                                                <>
-                                                    <Spinner />
-                                                    <span>Sending code...</span>
-                                                </>
-                                            ) : (
-                                                <span>Continue</span>
-                                            )}
-                                        </button>
-                                    </form>
+        <button
+            type="submit"
+            disabled={loadingSend}
+            className="
+                flex
+                h-12
+                w-full
+                items-center
+                justify-center
+                gap-2
+                rounded-lg
+                bg-gradient-to-r
+                from-[#2638D8]
+                to-[#4A27D8]
+                text-sm
+                font-bold
+                text-white
+                shadow-[0_8px_22px_rgba(55,48,220,0.22)]
+                transition-all
+                duration-200
+                hover:from-[#1F31C8]
+                hover:to-[#3F21C8]
+                hover:-translate-y-[1px]
+                hover:shadow-[0_12px_26px_rgba(55,48,220,0.28)]
+                active:translate-y-0
+                active:scale-[0.99]
+                disabled:cursor-not-allowed
+                disabled:opacity-70
+            "
+        >
+            {loadingSend ? (
+                <>
+                    <Spinner />
+                    <span>Sending code...</span>
+                </>
+            ) : (
+                <span>Continue</span>
+            )}
+        </button>
+    </form>
 
-                                    <div className="mt-7 border-t border-slate-100 pt-5 text-center">
-                                        <p className="text-[10px] leading-4 text-slate-400">
-                                            Secure administrator login powered by
-                                            StayLio.
-                                        </p>
-                                    </div>
-                                </div>
+    <div className="mt-9 border-t border-slate-100 pt-6 text-center">
+        <p className="text-xs leading-5 text-slate-400 sm:text-sm">
+            Secure administrator login powered by StayLio.
+        </p>
+    </div>
+</div>
                             ) : (
                                 /* OTP STEP */
                                 <div>
-                                    <div className="mb-7">
-                                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1877F2]">
-                                            Security Verification
-                                        </p>
+    <div className="mb-9">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#1877F2]">
+            Security Verification
+        </p>
 
-                                        <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-[28px]">
-                                            Verify your access
-                                        </h2>
+        <h2 className="mt-2.5 text-[28px] font-bold tracking-tight text-slate-900 sm:text-[30px]">
+            Verify your access
+        </h2>
 
-                                        <p className="mt-2 text-xs leading-5 text-slate-500 sm:text-sm">
-                                            Enter the 6-digit code sent to your
-                                            registered administrator email.
-                                        </p>
-                                    </div>
+        <p className="mt-3 max-w-[390px] text-sm leading-6 text-slate-500 sm:text-[15px]">
+            Enter the 6-digit code sent to your registered administrator
+            email.
+        </p>
+    </div>
 
-                                    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5">
-                                        <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-400">
-                                            Verification code sent to
-                                        </p>
+    <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3.5">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Verification code sent to
+        </p>
 
-                                        <p className="mt-1 truncate text-xs font-semibold text-slate-700">
-                                            {email}
-                                        </p>
-                                    </div>
+        <p className="mt-1.5 truncate text-sm font-semibold text-slate-700">
+            {email}
+        </p>
+    </div>
 
-                                    <button
-                                        type="button"
-                                        onClick={changeEmail}
-                                        disabled={loadingVerify}
-                                        className="mt-2 text-[10px] font-semibold text-[#1877F2] hover:underline disabled:opacity-50"
-                                    >
-                                        Change email
-                                    </button>
+    <button
+        type="button"
+        onClick={changeEmail}
+        disabled={loadingVerify}
+        className="
+            mt-2.5
+            text-xs
+            font-semibold
+            text-[#1877F2]
+            transition-colors
+            hover:text-[#125FCC]
+            hover:underline
+            disabled:cursor-not-allowed
+            disabled:opacity-50
+        "
+    >
+        Change email
+    </button>
 
-                                    <form
-                                        className="mt-6 space-y-5"
-                                        onSubmit={verifyOtp}
-                                    >
-                                        <div>
-                                            <label className="mb-2 block text-[11px] font-semibold text-slate-700">
-                                                Verification code
-                                            </label>
+    <form
+        className="mt-7 space-y-6"
+        onSubmit={verifyOtp}
+    >
+        <div>
+            <label className="mb-2.5 block text-xs font-semibold text-slate-700 sm:text-sm">
+                Verification code
+            </label>
 
-                                            <div
-                                                className="grid grid-cols-6 gap-2"
-                                                onPaste={handleDigitPaste}
-                                            >
-                                                {digits.map((d, i) => (
-                                                    <input
-                                                        key={i}
-                                                        ref={(el) => {
-                                                            digitRefs.current[i] = el;
-                                                        }}
-                                                        id={`otp - ${ i } `}
-                                                        type="text"
-                                                        inputMode="numeric"
-                                                        maxLength={1}
-                                                        value={d}
-                                                        onChange={(e) =>
-                                                            handleDigit(
-                                                                i,
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        onKeyDown={(e) =>
-                                                            handleDigitKeyDown(
-                                                                i,
-                                                                e
-                                                            )
-                                                        }
-                                                        disabled={loadingVerify}
-                                                        aria-label={`Verification digit ${ i + 1 } `}
-                                                        className="h-11 w-full rounded-md border border-slate-300 bg-white text-center text-lg font-bold text-slate-800 outline-none transition duration-150 focus:border-[#1877F2] focus:ring-2 focus:ring-[#1877F2]/10 disabled:opacity-60"
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
+            <div
+                className="grid grid-cols-6 gap-2.5 sm:gap-3"
+                onPaste={handleDigitPaste}
+            >
+                {digits.map((d, i) => (
+                    <input
+                        key={i}
+                        ref={(el) => {
+                            digitRefs.current[i] = el;
+                        }}
+                        id={`otp-${i}`}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={d}
+                        onChange={(e) =>
+                            handleDigit(
+                                i,
+                                e.target.value
+                            )
+                        }
+                        onKeyDown={(e) =>
+                            handleDigitKeyDown(
+                                i,
+                                e
+                            )
+                        }
+                        disabled={loadingVerify}
+                        aria-label={`Verification digit ${i + 1}`}
+                        className="
+                            h-12
+                            w-full
+                            rounded-lg
+                            border
+                            border-slate-300
+                            bg-white
+                            text-center
+                            text-xl
+                            font-bold
+                            text-slate-800
+                            outline-none
+                            transition-all
+                            duration-200
+                            hover:border-slate-400
+                            focus:border-[#1877F2]
+                            focus:ring-4
+                            focus:ring-[#1877F2]/10
+                            disabled:cursor-not-allowed
+                            disabled:opacity-60
+                            sm:h-13
+                        "
+                    />
+                ))}
+            </div>
+        </div>
 
-                                        {error && (
-                                            <div
-                                                className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2.5"
-                                                role="alert"
-                                            >
-                                                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-red-100 text-[10px] font-bold text-red-600">
-                                                    !
-                                                </span>
+        {error && (
+            <div
+                className="
+                    flex
+                    items-start
+                    gap-2.5
+                    rounded-lg
+                    border
+                    border-red-200
+                    bg-red-50
+                    px-4
+                    py-3
+                "
+                role="alert"
+            >
+                <span
+                    className="
+                        mt-0.5
+                        flex
+                        h-5
+                        w-5
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-full
+                        bg-red-100
+                        text-xs
+                        font-bold
+                        text-red-600
+                    "
+                >
+                    !
+                </span>
 
-                                                <p className="text-xs leading-5 text-red-700">
-                                                    {error}
-                                                </p>
-                                            </div>
-                                        )}
+                <p className="text-sm leading-5 text-red-700">
+                    {error}
+                </p>
+            </div>
+        )}
 
-                                        <button
-                                            type="submit"
-                                            disabled={loadingVerify}
-                                            className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-gradient-to-r from-[#2638D8] to-[#4A27D8] text-xs font-bold text-white shadow-[0_7px_18px_rgba(55,48,220,0.22)] transition-all duration-200 hover:from-[#1F31C8] hover:to-[#3F21C8] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
-                                        >
-                                            {loadingVerify ? (
-                                                <>
-                                                    <Spinner />
-                                                    <span>Verifying...</span>
-                                                </>
-                                            ) : (
-                                                <span>Verify and Login</span>
-                                            )}
-                                        </button>
+        <button
+            type="submit"
+            disabled={loadingVerify}
+            className="
+                flex
+                h-12
+                w-full
+                items-center
+                justify-center
+                gap-2
+                rounded-lg
+                bg-gradient-to-r
+                from-[#2638D8]
+                to-[#4A27D8]
+                text-sm
+                font-bold
+                text-white
+                shadow-[0_8px_22px_rgba(55,48,220,0.22)]
+                transition-all
+                duration-200
+                hover:-translate-y-[1px]
+                hover:from-[#1F31C8]
+                hover:to-[#3F21C8]
+                hover:shadow-[0_12px_26px_rgba(55,48,220,0.28)]
+                active:translate-y-0
+                active:scale-[0.99]
+                disabled:cursor-not-allowed
+                disabled:opacity-70
+            "
+        >
+            {loadingVerify ? (
+                <>
+                    <Spinner />
+                    <span>Verifying...</span>
+                </>
+            ) : (
+                <span>Verify and Login</span>
+            )}
+        </button>
 
-                                        <div className="text-center text-[10px] text-slate-500">
-                                            {secondsLeft > 0 ? (
-                                                <>
-                                                    Resend available in{" "}
-                                                    <span className="font-semibold text-slate-700">
-                                                        {formatTime(secondsLeft)}
-                                                    </span>
-                                                </>
-                                            ) : loadingResend ? (
-                                                <span className="font-semibold text-[#1877F2]">
-                                                    Sending a new code...
-                                                </span>
-                                            ) : (
-                                                <>
-                                                    Did not receive the code?{" "}
-                                                    <button
-                                                        type="button"
-                                                        onClick={resendOtp}
-                                                        className="font-semibold text-[#1877F2] hover:underline"
-                                                    >
-                                                        Resend code
-                                                    </button>
-                                                </>
-                                            )}
-                                        </div>
-                                    </form>
+        <div className="text-center text-xs text-slate-500 sm:text-sm">
+            {secondsLeft > 0 ? (
+                <>
+                    Resend available in{" "}
+                    <span className="font-semibold text-slate-700">
+                        {formatTime(secondsLeft)}
+                    </span>
+                </>
+            ) : loadingResend ? (
+                <span className="font-semibold text-[#1877F2]">
+                    Sending a new code...
+                </span>
+            ) : (
+                <>
+                    Did not receive the code?{" "}
+                    <button
+                        type="button"
+                        onClick={resendOtp}
+                        className="font-semibold text-[#1877F2] transition-colors hover:text-[#125FCC] hover:underline"
+                    >
+                        Resend code
+                    </button>
+                </>
+            )}
+        </div>
+    </form>
 
-                                    <div className="mt-7 border-t border-slate-100 pt-5 text-center">
-                                        <p className="text-[10px] text-slate-400">
-                                            Your administrator account is
-                                            protected with OTP verification.
-                                        </p>
-                                    </div>
-                                </div>
+    <div className="mt-9 border-t border-slate-100 pt-6 text-center">
+        <p className="text-xs leading-5 text-slate-400 sm:text-sm">
+            Your administrator account is protected with secure
+            OTP verification.
+        </p>
+    </div>
+</div>
                             )}
 
                             <p className="mt-6 text-center text-[9px] text-slate-400">

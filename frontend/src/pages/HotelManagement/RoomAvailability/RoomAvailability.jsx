@@ -261,8 +261,7 @@ export default function RoomAvailability({ onNewBooking }) {
             {/* HEADER */}
             <div className="ra-in flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
                 <div>
-                    <h1 className="text-[clamp(1.5rem,1.2rem+1.2vw,2rem)] font-extrabold tracking-[-0.02em] text-white">
-                        Room Availability
+<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">                         Room Availability
                     </h1>
                 </div>
 

@@ -44,6 +44,8 @@ const permissionLabels = {
    FEATURE ICONS
 ========================================================= */
 
+
+
 const featureInfo = {
     foodManagement: { icon: Utensils },
     serviceManagement: { icon: BedDouble },
