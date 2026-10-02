@@ -769,17 +769,14 @@ const InvoicesManagement = () => {
       <style>{CSS}</style>
 
       {/* HEADER */}
-      <header className="iv-rise iv-d1 flex flex-col md:flex-row md:justify-between md:items-center gap-3 sm:gap-4 bg-white border border-blue-100/80 rounded-2xl p-4 sm:p-6 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)]">
+      <header className="iv-rise iv-d1 flex flex-col md:flex-row md:justify-between md:items-center gap-3 sm:gap-4  shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)]">
         <div className="flex items-start gap-3 sm:gap-4 min-w-0">
-          <div className="shrink-0 p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-800 text-white shadow-lg shadow-blue-900/25">
-            <Receipt className="w-6 h-6" />
-          </div>
+         
 
           <div className="min-w-0">
            
 
-            <h1 className="font-bold text-xl sm:text-2xl lg:text-3xl tracking-tight text-[#0f2a63] mt-1.5">
-              Hotel Invoice Management
+<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">    Hotel Invoice Management
             </h1>
            
           </div>
@@ -965,37 +962,36 @@ const InvoicesManagement = () => {
         )}
 
         {/* PAGINATION */}
-        <div className="mt-4 p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between bg-white rounded-2xl border border-blue-100/80 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)] gap-3">
-         
+       <div className="mt-3 p-2 sm:p-3 flex items-center justify-end shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)]">
+  <div className="flex items-center gap-1.5">
+    <button
+      type="button"
+      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+      disabled={currentPage === 1}
+      className="iv-btn cursor-pointer inline-flex items-center gap-0.5 px-2 py-1.5 border border-slate-200 rounded-lg text-[11px] sm:text-xs font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed"
+    >
+      <ChevronLeft className="w-3.5 h-3.5" />
+      Previous
+    </button>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="iv-btn cursor-pointer inline-flex items-center gap-1 px-3.5 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-[#0f2a63] hover:bg-blue-50 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Previous
-            </button>
+    <span className="px-2 py-1 text-[11px] sm:text-xs font-bold text-white whitespace-nowrap tabular-nums">
+      {currentPage} / {totalPages}
+    </span>
 
-            <span className="px-3 py-1 text-xs sm:text-sm font-bold text-[#0f2a63] whitespace-nowrap tabular-nums">
-              Page {currentPage} of {totalPages}
-            </span>
+    <button
+      type="button"
+      onClick={() =>
+        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+      }
+      disabled={currentPage === totalPages}
+      className="iv-btn cursor-pointer inline-flex items-center gap-0.5 px-2 py-1.5 border border-white rounded-lg text-[11px] sm:text-xs font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed"
+    >
+      Next
+      <ChevronRight className="w-3.5 h-3.5" />
+    </button>
+  </div>
+</div>
 
-            <button
-              type="button"
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-              disabled={currentPage === totalPages}
-              className="iv-btn cursor-pointer inline-flex items-center gap-1 px-3.5 py-2 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-[#0f2a63] hover:bg-blue-50 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Next
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
       </section>
 
       <InvoiceTemplate

@@ -580,10 +580,10 @@ export default function AddBooking({ onComplete, onCancel }) {
     const handleExistingCustomerSelect = (customer) => {
         setForm((prev) => ({
             ...prev,
-            phoneNumber: customer?.phoneNumber || "",
+            phoneNumber: String(customer?.phoneNumber || "").replace(/\D/g, "").slice(0, 10),
             email: customer?.email || "",
             customerName: customer?.customerName || "",
-            alternativePhone: customer?.alternativePhone || "",
+            alternativePhone: String(customer?.alternativePhone || "").replace(/\D/g, "").slice(0, 10),
             address: customer?.address || "",
             idProofType: customer?.idProofType || "",
             idProofNumber: customer?.idProofNumber || "",
@@ -593,6 +593,7 @@ export default function AddBooking({ onComplete, onCancel }) {
         setShowCustomerSuggestions(false);
         setCustomerSuggestions([]);
         setError("");
+        setFieldErrors({});
     };
 
     // ============================================================
@@ -1380,26 +1381,18 @@ export default function AddBooking({ onComplete, onCancel }) {
                 <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0a1a3f] via-[#12306b] to-blue-600 p-5 sm:p-6 text-white shadow-xl shadow-[#0a1a3f]/25">
                     <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-sky-300/20 blur-2xl" />
 
-                    <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div className="flex items-start gap-3 min-w-0">
-                            <div className="hidden sm:flex shrink-0 w-12 h-12 items-center justify-center rounded-2xl bg-white/15 border border-white/20">
-                                <BedDouble className="w-6 h-6" />
-                            </div>
+                  <div className="relative flex items-center justify-center">
+    <div className="flex items-center justify-center gap-3 min-w-0">
+        <div className="hidden sm:flex shrink-0 w-12 h-12 items-center justify-center rounded-2xl bg-white/15 border border-white/20">
+            <BedDouble className="w-6 h-6" />
+        </div>
 
-                            <div className="min-w-0">
-                                <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-                                    New Room Booking
-                                </h1>
-
-                                <p className="text-xs sm:text-sm text-blue-100/85 mt-1">
-                                    Enter guest details and select one or
-                                    multiple available rooms.
-                                </p>
-                            </div>
-                        </div>
-
-                     
-                    </div>
+        <div className="min-w-0">
+<h1 className="text-[12px] sm:text-[15px] lg:text-[20px]  leading-tight font-extrabold tracking-[-0.035em] text-white">                New Room Booking
+            </h1>
+        </div>
+    </div>
+</div>
                 </div>
             </Reveal>
 
@@ -1438,7 +1431,6 @@ export default function AddBooking({ onComplete, onCancel }) {
             <SectionCard
                 icon={User}
                 title="Customer Details"
-                subtitle="Search an existing guest or enter a new customer."
                 delay={60}
                 className="relative z-20"
             >

@@ -39,3 +39,13 @@ export const deleteInvoice = async (id) => {
     throw error.response?.data || { success: false, message: error.message };
   }
 };
+
+// 5. Get all invoices – Admin (across all hotels, no hotel scope)
+export const getAllInvoicesAdmin = async () => {
+  try {
+    const response = await api.get("/invoice-management/admin/all");
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { success: false, message: error.message };
+  }
+};

@@ -7,10 +7,21 @@ import Hotels from "../models/hotels.js";
 import BranchHotels from "../models/branchHotels.js";
 import CheckoutBill from "../models/checkoutBill.js";
 import Booking from "../models/booking.js";
-
+import nodemailer from "nodemailer";
 
 
 import { log } from "../util/logger.js";
+
+
+const invoiceEmailTransporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: process.env.SMTP_SECURE === "true",
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+    },
+});
 
 // ============================================================
 // HELPERS
@@ -2474,5 +2485,459 @@ export const deleteInvoice = async (
                     "unknown",
             }
         );
+    }
+};
+
+// ============================================================
+// ADMIN – GET ALL INVOICES (across all hotels)
+// ============================================================
+// Used by SaaS Admin "Hotel Bills & Revenue" page.
+// No hotel/branch scoping – returns all invoices.
+// Protected by permissionVerify("hotels") in the route.
+// ============================================================
+
+export const getAllInvoicesAdmin = async (req, res) => {
+    try {
+        const invoices = await Invoice.find({})
+            .sort({ createdAt: -1 })
+            .select(
+                "invoiceNo hotelId branchId financials paymentInfo " +
+                "invoiceDate invoiceYear createdAt customer"
+            )
+            .lean();
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                invoices,
+                total: invoices.length,
+            },
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch invoices.",
+        });
+    }
+};
+
+
+
+// ============================================================
+// SEND ALREADY-GENERATED INVOICE PDF TO CUSTOMER
+// ============================================================
+
+export const sendInvoiceEmail = async (req, res) => {
+    try {
+        const {
+            email,
+            customerName,
+            invoiceNo,
+            amount,
+            paymentMethod,
+        } = req.body;
+
+        // ------------------------------------------
+        // VALIDATE EMAIL
+        // ------------------------------------------
+
+        if (!email || !String(email).trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "Customer email address is required.",
+            });
+        }
+
+        // ------------------------------------------
+        // VALIDATE PDF
+        // ------------------------------------------
+
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "Invoice PDF is required.",
+            });
+        }
+
+        // ------------------------------------------
+        // VALIDATE PDF TYPE
+        // ------------------------------------------
+
+        if (req.file.mimetype !== "application/pdf") {
+            return res.status(400).json({
+                success: false,
+                message: "Only PDF invoice files are allowed.",
+            });
+        }
+
+        const safeEmail = String(email).trim();
+
+        const safeCustomerName =
+            String(customerName || "Guest").trim();
+
+        const safeInvoiceNo =
+            String(invoiceNo || "Invoice").trim();
+
+        const safeAmount =
+            String(amount || "0.00").trim();
+
+        const safePaymentMethod =
+            String(paymentMethod || "CASH")
+                .trim()
+                .toUpperCase();
+
+        // ------------------------------------------
+        // EMAIL SUBJECT
+        // ------------------------------------------
+
+        const subject =
+            `Invoice ${safeInvoiceNo} - Checkout Complete`;
+
+        // ------------------------------------------
+        // EMAIL
+        // ------------------------------------------
+
+        const mailOptions = {
+            from: `"SS Residency" <${process.env.SMTP_USER}>`,
+
+            to: safeEmail,
+
+            subject,
+
+            text: `
+Dear ${safeCustomerName},
+
+Your checkout has been completed successfully.
+
+Invoice No: ${safeInvoiceNo}
+Total Invoice Amount: ₹${safeAmount}
+Payment Method: ${safePaymentMethod}
+
+Please find your invoice PDF attached to this email.
+
+Thank you for choosing us.
+We hope to welcome you back soon!
+
+Warm regards,
+Hotel Management Team
+            `.trim(),
+
+            html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
+    <title>Invoice ${safeInvoiceNo}</title>
+</head>
+
+<body
+    style="
+        margin:0;
+        padding:0;
+        background:#f4f8fc;
+        font-family:Arial,Helvetica,sans-serif;
+        color:#1f2937;
+    "
+>
+
+<table
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    style="padding:40px 15px;background:#f4f8fc;"
+>
+    <tr>
+        <td align="center">
+
+            <table
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+                style="
+                    max-width:600px;
+                    background:#ffffff;
+                    border:1px solid #dce8f6;
+                    border-radius:14px;
+                    overflow:hidden;
+                "
+            >
+
+                <!-- HEADER -->
+
+                <tr>
+                    <td
+                        style="
+                            background:#0e2a4a;
+                            padding:25px 30px;
+                        "
+                    >
+                        <div
+                            style="
+                                font-size:22px;
+                                font-weight:700;
+                                color:#ffffff;
+                            "
+                        >
+                            SS Residency
+                        </div>
+
+                        <div
+                            style="
+                                margin-top:5px;
+                                font-size:13px;
+                                color:#cbd5e1;
+                            "
+                        >
+                            Hotel Management
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- BODY -->
+
+                <tr>
+                    <td style="padding:30px;">
+
+                        <div
+                            style="
+                                font-size:22px;
+                                font-weight:700;
+                                color:#0e2a4a;
+                                margin-bottom:10px;
+                            "
+                        >
+                            Checkout Completed
+                        </div>
+
+                        <p
+                            style="
+                                margin:0 0 20px;
+                                font-size:14px;
+                                line-height:22px;
+                                color:#64748b;
+                            "
+                        >
+                            Dear ${safeCustomerName},
+                        </p>
+
+                        <p
+                            style="
+                                margin:0 0 20px;
+                                font-size:14px;
+                                line-height:22px;
+                                color:#475569;
+                            "
+                        >
+                            Your checkout has been completed
+                            successfully. Please find your invoice
+                            PDF attached to this email.
+                        </p>
+
+                        <!-- INVOICE DETAILS -->
+
+                        <table
+                            width="100%"
+                            cellpadding="0"
+                            cellspacing="0"
+                            style="
+                                border:1px solid #dce8f6;
+                                border-radius:10px;
+                                overflow:hidden;
+                                margin-bottom:24px;
+                            "
+                        >
+
+                            <tr>
+                                <td
+                                    style="
+                                        padding:12px 15px;
+                                        background:#f4f8fc;
+                                        font-size:13px;
+                                        font-weight:600;
+                                        color:#64748b;
+                                    "
+                                >
+                                    Invoice No
+                                </td>
+
+                                <td
+                                    align="right"
+                                    style="
+                                        padding:12px 15px;
+                                        background:#f4f8fc;
+                                        font-size:13px;
+                                        font-weight:700;
+                                        color:#0e2a4a;
+                                    "
+                                >
+                                    ${safeInvoiceNo}
+                                </td>
+                            </tr>
+
+                           <tr>
+    <td
+        style="
+            padding:12px 15px;
+            font-size:13px;
+            color:#64748b;
+        "
+    >
+        Total Invoice Amount
+    </td>
+
+    <td
+        align="right"
+        style="
+            padding:12px 15px;
+            font-size:13px;
+            font-weight:700;
+            color:#0e2a4a;
+        "
+    >
+        ₹${safeAmount}
+    </td>
+</tr>
+
+                            <tr>
+                                <td
+                                    style="
+                                        padding:12px 15px;
+                                        font-size:13px;
+                                        color:#64748b;
+                                    "
+                                >
+                                    Payment Method
+                                </td>
+
+                                <td
+                                    align="right"
+                                    style="
+                                        padding:12px 15px;
+                                        font-size:13px;
+                                        font-weight:700;
+                                        color:#0e2a4a;
+                                    "
+                                >
+                                    ${safePaymentMethod}
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <p
+                            style="
+                                margin:0;
+                                font-size:14px;
+                                line-height:22px;
+                                color:#475569;
+                            "
+                        >
+                            Thank you for choosing us.
+                            We hope to welcome you back soon!
+                        </p>
+
+                        <p
+                            style="
+                                margin:20px 0 0;
+                                font-size:14px;
+                                line-height:22px;
+                                color:#475569;
+                            "
+                        >
+                            Warm regards,<br />
+                            <strong>
+                                Hotel Management Team
+                            </strong>
+                        </p>
+
+                    </td>
+                </tr>
+
+                <!-- FOOTER -->
+
+                <tr>
+                    <td
+                        align="center"
+                        style="
+                            padding:18px 30px;
+                            border-top:1px solid #e5edf6;
+                            background:#f8fbff;
+                            font-size:11px;
+                            color:#94a3b8;
+                        "
+                    >
+                        This is an automated email.
+                        Please do not reply.
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>
+            `,
+
+            // ======================================
+            // THIS IS THE IMPORTANT PART
+            // Attach the PDF received from frontend
+            // ======================================
+
+            attachments: [
+                {
+                    filename:
+                        `Invoice_${safeInvoiceNo}.pdf`,
+
+                    content: req.file.buffer,
+
+                    contentType:
+                        "application/pdf",
+                },
+            ],
+        };
+
+        // ------------------------------------------
+        // SEND EMAIL
+        // ------------------------------------------
+
+        const info =
+            await invoiceEmailTransporter.sendMail(
+                mailOptions
+            );
+
+        console.log(
+            `[Invoice Email] Invoice ${safeInvoiceNo} sent to ${safeEmail}. Message ID: ${info.messageId}`
+        );
+
+        return res.status(200).json({
+            success: true,
+            message:
+                "Invoice PDF sent successfully to customer email.",
+            data: {
+                invoiceNo: safeInvoiceNo,
+                email: safeEmail,
+                messageId: info.messageId,
+            },
+        });
+
+    } catch (error) {
+        console.error(
+            "[Invoice Email] Failed:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message:
+                error?.message ||
+                "Failed to send invoice email.",
+        });
     }
 };

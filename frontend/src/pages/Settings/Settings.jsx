@@ -584,9 +584,9 @@ export default function Settings() {
     }
 
     // GST NUMBER
-    if (!String(formData.gstNumber || "").trim()) {
-      formErrors.gstNumber = "GST number is required.";
-    }
+    // if (!String(formData.gstNumber || "").trim()) {
+    //   formErrors.gstNumber = "GST number is required.";
+    // }
 
     // GST PERCENTAGE
     if (formData.enableGst) {
@@ -846,13 +846,10 @@ export default function Settings() {
         
 
           <div className="flex items-start gap-3">
-            <div className="hidden sm:flex shrink-0 p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-800 text-white shadow-lg shadow-blue-900/30">
-              <Settings2 className="w-6 h-6" />
-            </div>
+          
 
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-white">
-                System Settings
+<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">                System Settings
               </h1>
 
              
@@ -902,8 +899,6 @@ export default function Settings() {
 
               <Field
                 label="GST Number"
-                required
-                error={errors.gstNumber}
                 htmlFor="gstNumber"
               >
                 <input

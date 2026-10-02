@@ -1341,14 +1341,11 @@ export default function User() {
                 <Reveal>
                   
 
-                    <div className="mt-3 flex items-start gap-3">
-                        <div className="hidden sm:flex shrink-0 w-12 h-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-[#12306b] text-white shadow-lg shadow-[#0a1a3f]/30">
-                            <Users className="w-6 h-6" />
-                        </div>
+                    <div className=" flex items-start gap-3">
+                      
 
                         <div className="min-w-0">
-                            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-                                Users Management
+<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">                                Users Management
                             </h1>
 
                           

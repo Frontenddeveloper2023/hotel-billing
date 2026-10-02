@@ -148,6 +148,12 @@ const SaaSAdminSubscriptions = lazy(() =>
   )
 );
 
+const SaaSAdminHotelBills = lazy(() =>
+  import(
+    "./pages/SaaSAdmin/SaasAdminHotelBills"
+  )
+);
+
 
 // =====================================================
 // PERMISSION ROUTE
@@ -483,6 +489,22 @@ const defaultAuthenticatedRoute =
               permission="subscriptions"
             >
               <SaaSAdminSubscriptions />
+            </PermissionRoute>
+          }
+        />
+
+
+        {/* -----------------------------------------------
+            SaaS ADMIN HOTEL BILLS
+        ------------------------------------------------ */}
+
+        <Route
+          path="saas-admin/hotel-bills"
+          element={
+            <PermissionRoute
+              permission="hotels"
+            >
+              <SaaSAdminHotelBills />
             </PermissionRoute>
           }
         />

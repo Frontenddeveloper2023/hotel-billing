@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 import SaaSSetupProgress from "./SaaSSetupProgress";
 
@@ -30,7 +30,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-import { useAuth } from "../../Context/AuthContext";
+import { useToast } from "../../Context/ToastContext";
 
 import {
   createRegistration,
@@ -139,92 +139,29 @@ const cities = [
 const SaaSUserRegistration = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, userData } = useAuth();
 
-  // ==========================================================
-  // GET PLAN FROM ROUTER STATE
-  // ==========================================================
+  const toast = useToast();
 
-  const routerPlan =
-    location.state?.selectedPlan || null;
-
-  const routerBillingCycle =
-    location.state?.billingCycle || null;
-
-
-  // ==========================================================
-  // GET PLAN FROM SESSION STORAGE
-  // ==========================================================
+  // ============================================================
+  // GET PLAN SELECTED FROM CHOOSE PLAN
+  // ============================================================
+  const routerPlan = location.state?.selectedPlan || null;
+  const routerBillingCycle = location.state?.billingCycle || null;
 
   let savedPlan = null;
-
   try {
-    const storedPlan =
-      sessionStorage.getItem(
-        "saasSelectedPlan"
-      );
-
+    const storedPlan = sessionStorage.getItem("saasSelectedPlan");
     if (storedPlan) {
       savedPlan = JSON.parse(storedPlan);
     }
   } catch (error) {
-    console.error(
-      "Unable to read selected plan:",
-      error
-    );
+    console.error("Unable to read selected plan:", error);
   }
 
+  const savedBillingCycle = sessionStorage.getItem("saasBillingCycle");
 
-  const savedBillingCycle =
-    sessionStorage.getItem(
-      "saasBillingCycle"
-    );
-
-
-  // ==========================================================
-  // FINAL PLAN
-  // ==========================================================
-
-  const selectedPlan =
-    routerPlan ||
-    savedPlan ||
-    null;
-
-
-  // ==========================================================
-  // FINAL BILLING CYCLE
-  // ==========================================================
-
-  const selectedBillingCycle =
-    routerBillingCycle ||
-    savedBillingCycle ||
-    "monthly";
-
-  // If already registered hotel owner, skip registration directly to checkout
-  useEffect(() => {
-    const isUpgrade =
-      location.state?.isUpgrade ||
-      sessionStorage.getItem("saasIsUpgrade") === "true" ||
-      Boolean(isAuthenticated && userData?.hotelId);
-
-    if (isUpgrade && selectedPlan) {
-      sessionStorage.setItem("saasIsUpgrade", "true");
-      navigate("/saas-user/checkout", {
-        replace: true,
-        state: {
-          selectedPlan,
-          billingCycle: selectedBillingCycle,
-          isUpgrade: true,
-          hotelDetails: location.state?.hotelDetails || {
-            hotelName: userData?.hotelName || "Your Hotel",
-            ownerName: userData?.name || "Hotel Owner",
-            email: userData?.email || "",
-            phone: userData?.phone || "",
-          },
-        },
-      });
-    }
-  }, [isAuthenticated, userData, selectedPlan, selectedBillingCycle, location.state, navigate]);
+  const selectedPlan = routerPlan || savedPlan || null;
+  const selectedBillingCycle = routerBillingCycle || savedBillingCycle || "monthly";
 
   // ==========================================================
   // FORM
@@ -256,8 +193,6 @@ const [form, setForm] = useState({
   const [loading, setLoading] =
     useState(false);
 
-  const [error, setError] =
-    useState("");
 
 
   // ==========================================================
@@ -281,9 +216,7 @@ const [form, setForm] = useState({
           : value,
     }));
 
-    if (error) {
-      setError("");
-    }
+  
   };
 
 
@@ -369,13 +302,9 @@ const [form, setForm] = useState({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setError("");
-
-    const validationError =
-      validateForm();
-
+    const validationError = validateForm();
     if (validationError) {
-      setError(validationError);
+      toast.error(validationError);
       return;
     }
 
@@ -503,17 +432,6 @@ const [form, setForm] = useState({
       // KEEP PLAN AVAILABLE
       // ------------------------------------------------------
 
-      sessionStorage.setItem(
-        "saasSelectedPlan",
-        JSON.stringify(selectedPlan)
-      );
-
-
-      sessionStorage.setItem(
-        "saasBillingCycle",
-        form.billingCycle
-      );
-
 
       // ------------------------------------------------------
       // GO TO CHECKOUT
@@ -558,12 +476,22 @@ const [form, setForm] = useState({
         err
       );
 
-      setError(
-        err?.message ||
-          err?.data?.message ||
-          err?.response?.data?.message ||
-          "Unable to submit your registration. Please try again."
-      );
+      const errMsg = err?.message ||
+        err?.data?.message ||
+        err?.response?.data?.message ||
+        "Unable to submit your registration. Please try again.";
+
+      // Show toast for duplicate email
+      if (
+          errMsg.toLowerCase().includes("email") &&
+          errMsg.toLowerCase().includes("exists")
+      ) {
+    toast.error(
+        "Email already registered. Please upgrade your plan from your hotel portal."
+    );
+} else {
+    toast.error(errMsg);
+}
 
     } finally {
       setLoading(false);
@@ -571,6 +499,7 @@ const [form, setForm] = useState({
   };
 
 
+  // ==========================================================
   // ==========================================================
   // NO PLAN
   // ==========================================================
@@ -907,70 +836,8 @@ const [form, setForm] = useState({
        
       </header>
 
-        {/* ====================================================
-            ERROR
-        ==================================================== */}
-
-        {error && (
-          <div
-            className="
-              mb-6
-              flex
-              items-start
-              gap-3
-              rounded-xl
-              border
-              border-red-200
-              bg-[#FFF7F7]
-              px-4
-              py-4
-            "
-            style={{
-              animation:
-                "fadeUp 0.3s ease-out both",
-            }}
-          >
-
-            <div className="
-              flex
-              h-8
-              w-8
-              shrink-0
-              items-center
-              justify-center
-              rounded-lg
-              bg-red-100
-              text-red-600
-            ">
-              <AlertCircle size={17} />
-            </div>
-
-
-            <div>
-
-              <p className="
-                text-[13px]
-                font-extrabold
-                text-red-800
-              ">
-                Registration Error
-              </p>
-
-              <p className="
-                mt-1
-                text-[12px]
-                font-medium
-                leading-5
-                text-red-700
-              ">
-                {error}
-              </p>
-
-            </div>
-
-          </div>
-        )}
-
+   
+    
 
         {/* ====================================================
             FORM
@@ -1264,7 +1131,7 @@ const [form, setForm] = useState({
                   </div>
                   <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border border-white/30 bg-white/20 px-3 py-1.5 text-[11px] font-bold text-white">
                     <span className="h-1.5 w-1.5 rounded-full bg-white" style={{ animation: "softPulse 1.8s ease-in-out infinite" }} />
-                    Active Tier
+                    Active 
                   </span>
                 </div>
                 <div className="relative mt-6 flex flex-wrap items-end gap-x-2 gap-y-1">
@@ -2018,3 +1885,4 @@ const SubmitButton = ({ loading }) => {
 };
 
 export default SaaSUserRegistration;
+

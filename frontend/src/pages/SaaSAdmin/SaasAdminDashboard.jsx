@@ -334,6 +334,64 @@ const SaaSAdminDashboard = () => {
     [subscriptions]
   );
 
+  const revenueChart = useMemo(() => {
+  const paid = subscriptions
+    .filter((s) => {
+      const status = String(s.paymentStatus || "").toLowerCase();
+      return status === "paid" || status === "partially_paid";
+    })
+    .filter((s) => s.createdAt)
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+  if (!paid.length) {
+    return {
+      linePath: "M 0 100 L 600 100",
+      areaPath: "M 0 100 L 600 100 L 600 120 L 0 120 Z",
+      points: [],
+    };
+  }
+
+  let cumulative = 0;
+
+  const values = paid.map((s) => {
+    cumulative += Number(s.finalAmount ?? s.amount ?? 0);
+    return cumulative;
+  });
+
+  const maxValue = Math.max(...values, 1);
+
+  const points = values.map((value, index) => {
+    const x =
+      values.length === 1
+        ? 300
+        : (index / (values.length - 1)) * 600;
+
+    const y = 100 - (value / maxValue) * 75;
+
+    return {
+      x,
+      y,
+      value,
+    };
+  });
+
+  const linePath = points
+    .map((point, index) =>
+      index === 0
+        ? `M ${point.x} ${point.y}`
+        : `L ${point.x} ${point.y}`
+    )
+    .join(" ");
+
+  const areaPath = `${linePath} L 600 120 L 0 120 Z`;
+
+  return {
+    linePath,
+    areaPath,
+    points,
+  };
+}, [subscriptions]);
+
   const paidSubscriptions = subscriptions.filter((s) => {
     const pStatus = String(s.paymentStatus || "").toLowerCase();
     return pStatus === "paid" || pStatus === "partially_paid";
@@ -440,20 +498,7 @@ const SaaSAdminDashboard = () => {
           {/* Revenue hero (blue gradient with live status sync) */}
           <section style={delay(5)} className="sa-in lg:col-span-3 rounded-3xl bg-gradient-to-br from-[#5b9bf5] via-[#3b82f0] to-[#2260da] p-5 sm:p-6 text-white shadow-[0_18px_45px_rgba(6,20,52,0.35)] overflow-hidden relative">
             <div className="absolute -top-16 -right-16 h-56 w-56 rounded-full bg-white/10 blur-2xl pointer-events-none" />
-            <div className="relative flex items-start justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.14em] font-bold text-blue-100">Subscription Billing</p>
-                  <span className="flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-semibold text-blue-50 border border-white/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Live Sync
-                  </span>
-                </div>
-                <h2 className="mt-1 text-lg sm:text-xl font-bold">Collected Revenue</h2>
-              </div>
-
-              
-            </div>
+            
 
             <div className="relative mt-4 flex items-end gap-2 flex-wrap">
               {loading ? (
@@ -467,18 +512,60 @@ const SaaSAdminDashboard = () => {
             </div>
 
             <div className="relative mt-5 h-[105px] w-full overflow-hidden">
-              <svg viewBox="0 0 600 120" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
-                <defs>
-                  <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#ffffff" stopOpacity="0.35" />
-                    <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <path d="M 0 100 C 50 88, 80 90, 120 91 C 165 92, 190 78, 230 65 C 270 52, 305 55, 335 66 C 370 78, 405 62, 440 48 C 475 34, 500 30, 530 40 C 555 49, 575 44, 600 27 L 600 120 L 0 120 Z" fill="url(#revenueGradient)" />
-                <path className="sa-line" d="M 0 100 C 50 88, 80 90, 120 91 C 165 92, 190 78, 230 65 C 270 52, 305 55, 335 66 C 370 78, 405 62, 440 48 C 475 34, 500 30, 530 40 C 555 49, 575 44, 600 27" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" />
-                <circle cx="335" cy="66" r="5" fill="#fff" />
-                <circle className="sa-dot" cx="596" cy="28" r="6" fill="#7dffc4" />
-              </svg>
+             <svg
+  viewBox="0 0 600 120"
+  preserveAspectRatio="none"
+  className="absolute inset-0 h-full w-full"
+>
+  <defs>
+    <linearGradient
+      id="revenueGradient"
+      x1="0"
+      y1="0"
+      x2="0"
+      y2="1"
+    >
+      <stop
+        offset="0%"
+        stopColor="#ffffff"
+        stopOpacity="0.35"
+      />
+      <stop
+        offset="100%"
+        stopColor="#ffffff"
+        stopOpacity="0"
+      />
+    </linearGradient>
+  </defs>
+
+  {/* Dynamic area */}
+  <path
+    d={revenueChart.areaPath}
+    fill="url(#revenueGradient)"
+  />
+
+  {/* Dynamic revenue line */}
+  <path
+    className="sa-line"
+    d={revenueChart.linePath}
+    fill="none"
+    stroke="#fff"
+    strokeWidth="3"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  />
+
+  {/* Dynamic points */}
+  {revenueChart.points.map((point, index) => (
+    <circle
+      key={index}
+      cx={point.x}
+      cy={point.y}
+      r={index === revenueChart.points.length - 1 ? 6 : 4}
+      fill={index === revenueChart.points.length - 1 ? "#7dffc4" : "#fff"}
+    />
+  ))}
+</svg>
             </div>
 
             <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4">

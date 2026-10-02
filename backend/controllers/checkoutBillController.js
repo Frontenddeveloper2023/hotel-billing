@@ -1082,7 +1082,8 @@ export const createCheckoutBill =
           `Fetching billing settings.`
       );
 
-      const settings =
+      // Try exact match first, then try legacy (no branchId)
+      let settings =
         await Settings.findOne({
           hotelId,
           branchId,
@@ -1099,17 +1100,42 @@ export const createCheckoutBill =
           )
           .lean();
 
+      // Try legacy settings without branchId
+      if (!settings) {
+        settings = await Settings.findOne({
+          hotelId,
+          $or: [
+            { branchId: { $exists: false } },
+            { branchId: null },
+          ],
+        })
+          .select(
+            [
+              "gstCalculationEnabled",
+              "gstRate",
+              "beforeCheckoutPolicyType",
+              "beforeCheckoutValue",
+              "afterCheckoutPolicyType",
+              "afterCheckoutValue",
+            ].join(" ")
+          )
+          .lean();
+      }
+
+      // If still not found, use safe defaults so checkout is not blocked
       if (!settings) {
         log(
-          `[Checkout Bill][${requestId}][ERROR] ` +
-            `Billing settings not found.`
+          `[Checkout Bill][${requestId}][WARN] ` +
+            `Billing settings not found — using safe defaults (GST off, no late policy).`
         );
-
-        return res.status(404).json({
-          success: false,
-          message:
-            "Hotel checkout settings were not found.",
-        });
+        settings = {
+          gstCalculationEnabled: false,
+          gstRate: 0,
+          beforeCheckoutPolicyType: "fixed",
+          beforeCheckoutValue: 0,
+          afterCheckoutPolicyType: "fixed",
+          afterCheckoutValue: 0,
+        };
       }
 
       log(

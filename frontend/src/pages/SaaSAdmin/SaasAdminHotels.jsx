@@ -8,6 +8,7 @@ import {
 
 import { getAllHotels } from "../../service/hotelApi";
 import { getAllRegistrations, approveRegistration, rejectRegistration } from "../../service/hotelRegistrationApi";
+import { useToast } from "../../Context/ToastContext";
 
 
 import {
@@ -279,7 +280,7 @@ const SaaSAdminHotels = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
-  const [actionError, setActionError] = useState("");
+  const toast = useToast();
   const [successMessage, setSuccessMessage] = useState("");
 
 
@@ -402,14 +403,14 @@ const [emailForm, setEmailForm] = useState({
     setSelectedRegistration(registration);
     setSelectedHotel(null);
     setShowDetailsModal(true);
-    setActionError("");
+    
   };
 
   const handleViewHotel = (hotel) => {
     setSelectedHotel(hotel);
     setSelectedRegistration(null);
     setShowDetailsModal(true);
-    setActionError("");
+    
   };
 
   const openedRegistrationId = useRef(null);
@@ -439,43 +440,49 @@ const [emailForm, setEmailForm] = useState({
   /* APPROVE */
   const handleApprove = async (registration) => {
     if (!registration?._id) {
-      setActionError("Application ID is missing.");
+      toast.error("Application ID is missing.");
       return;
     }
 
-    const confirmed = window.confirm(`Are you sure you want to approve "${registration.hotelName}"?`);
-    if (!confirmed) return;
+    toast.confirm(
+      `Are you sure you want to approve "${registration.hotelName}"?`,
+      async () => {
+        try {
+          setActionLoading(true);
+          setSuccessMessage("");
 
-    try {
-      setActionLoading(true);
-      setActionError("");
-      setSuccessMessage("");
+          const response = await approveRegistration(registration._id);
+          if (!response?.success) {
+            throw new Error(response?.message || "Application approval failed.");
+          }
 
-      const response = await approveRegistration(registration._id);
-      if (!response?.success) {
-        throw new Error(response?.message || "Application approval failed.");
+          setRegistrations((prev) =>
+            prev.map((item) =>
+              String(item._id) === String(registration._id)
+                ? { ...item, status: "approved", paymentStatus: "paid" }
+                : item
+            )
+          );
+
+          // Refresh data in background to get new active hotel
+          fetchData(true);
+
+          setSuccessMessage(`${registration.hotelName} has been approved successfully.`);
+          setShowDetailsModal(false);
+          setSelectedRegistration(null);
+        } catch (err) {
+          console.error("Approve application error:", err);
+          toast.error(err?.message || err?.data?.message || "Unable to approve this application.");
+        } finally {
+          setActionLoading(false);
+        }
+      },
+      {
+        title: "Approve Hotel Application",
+        confirmText: "Approve",
+        cancelText: "Cancel",
       }
-
-      setRegistrations((prev) =>
-        prev.map((item) =>
-          String(item._id) === String(registration._id)
-            ? { ...item, status: "approved", paymentStatus: "paid" }
-            : item
-        )
-      );
-
-      // Refresh data in background to get new active hotel
-      fetchData(true);
-
-      setSuccessMessage(`${registration.hotelName} has been approved successfully.`);
-      setShowDetailsModal(false);
-      setSelectedRegistration(null);
-    } catch (err) {
-      console.error("Approve application error:", err);
-      setActionError(err?.message || err?.data?.message || "Unable to approve this application.");
-    } finally {
-      setActionLoading(false);
-    }
+    );
   };
 
   /* REJECT */
@@ -488,18 +495,18 @@ const [emailForm, setEmailForm] = useState({
   const handleReject = async () => {
     const reason = rejectionReason.trim();
     if (reason.length < 5) {
-      setActionError("Please provide a rejection reason with at least 5 characters.");
+      toast.error("Please provide a rejection reason with at least 5 characters.");
       return;
     }
 
     if (!selectedRegistration?._id) {
-      setActionError("Application information is missing.");
+      toast.error("Application information is missing.");
       return;
     }
 
     try {
       setActionLoading(true);
-      setActionError("");
+      
       setSuccessMessage("");
 
       await rejectRegistration(selectedRegistration._id, reason);
@@ -519,7 +526,7 @@ const [emailForm, setEmailForm] = useState({
       setRejectionReason("");
     } catch (err) {
       console.error("Reject application error:", err);
-      setActionError(err?.message || err?.data?.message || "Unable to reject this application.");
+      toast.error(err?.message || err?.data?.message || "Unable to reject this application.");
     } finally {
       setActionLoading(false);
     }
@@ -534,7 +541,7 @@ const [emailForm, setEmailForm] = useState({
     setShowDetailsModal(false);
     setSelectedRegistration(null);
     setSelectedHotel(null);
-    setActionError("");
+    
 
     if (registrationIdFromUrl) {
       const newParams = new URLSearchParams(searchParams);
@@ -546,7 +553,7 @@ const [emailForm, setEmailForm] = useState({
 
   const openEmailModal = (user) => {
   if (!user?.email) {
-    setActionError("This user does not have an email address.");
+    toast.error("This user does not have an email address.");
     return;
   }
 
@@ -561,7 +568,7 @@ const [emailForm, setEmailForm] = useState({
   });
 
   setShowEmailModal(true);
-  setActionError("");
+  
 };
 
 const handleSendEmail = async () => {
@@ -571,23 +578,23 @@ const handleSendEmail = async () => {
     selectedRegistration || selectedHotel;
 
   if (!emailForm.recipientEmail.trim()) {
-    setActionError("Recipient email is required.");
+    toast.error("Recipient email is required.");
     return;
   }
 
   if (!emailForm.subject.trim()) {
-    setActionError("Email subject is required.");
+    toast.error("Email subject is required.");
     return;
   }
 
   if (!emailForm.message.trim()) {
-    setActionError("Email message is required.");
+    toast.error("Email message is required.");
     return;
   }
 
   try {
     setEmailLoading(true);
-    setActionError("");
+    
 
     const response = await sendAdminEmail({
       hotelId:
@@ -643,7 +650,7 @@ const handleSendEmail = async () => {
       error
     );
 
-    setActionError(
+    toast.error(
       error?.message ||
         "Unable to send email."
     );
@@ -660,7 +667,7 @@ const handleViewEmailHistory = async () => {
 
   try {
     setEmailHistoryLoading(true);
-    setActionError("");
+    
 
     const hotelId =
       selectedUser.hotelId?._id ||
@@ -696,7 +703,7 @@ const handleViewEmailHistory = async () => {
       error
     );
 
-    setActionError(
+    toast.error(
       error?.message ||
         "Unable to load email history."
     );
@@ -706,13 +713,7 @@ const handleViewEmailHistory = async () => {
 };
 
 
-  const ActionError = () =>
-    actionError ? (
-      <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex gap-2">
-        <AlertCircle size={17} className="text-red-600 shrink-0" />
-        <p className="text-sm text-red-700">{actionError}</p>
-      </div>
-    ) : null;
+  
 
   const switchTab = (tab) => {
     setActiveTab(tab);
@@ -1254,7 +1255,7 @@ const handleViewEmailHistory = async () => {
                     </div>
                   )}
 
-                  {ActionError()}
+                  
 
                   {selectedRegistration.status === "pending" && (
                     <div className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -1344,7 +1345,7 @@ const handleViewEmailHistory = async () => {
     onClick={() => {
       if (!emailLoading) {
         setShowEmailModal(false);
-        setActionError("");
+        
       }
     }}
   >
@@ -1375,7 +1376,7 @@ const handleViewEmailHistory = async () => {
           onClick={() => {
             if (!emailLoading) {
               setShowEmailModal(false);
-              setActionError("");
+              
             }
           }}
           disabled={emailLoading}
@@ -1497,9 +1498,7 @@ const handleViewEmailHistory = async () => {
           </div>
         </div>
 
-        {actionError && (
-          <ActionError />
-        )}
+        
 
         {/* Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 pt-1">
@@ -1507,7 +1506,7 @@ const handleViewEmailHistory = async () => {
             type="button"
             onClick={() => {
               setShowEmailModal(false);
-              setActionError("");
+              
             }}
             disabled={emailLoading}
             className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition disabled:opacity-50"
@@ -1688,65 +1687,142 @@ const handleViewEmailHistory = async () => {
               </div>
               <button
                 type="button"
-                onClick={() => { setShowRejectModal(false); setActionError(""); }}
+                onClick={() => { setShowRejectModal(false);  }}
                 className="w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-500 shrink-0 cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="p-5">
-              <div className="mb-4 p-3.5 bg-[#f4f8fd] rounded-2xl">
-                <p className="text-xs text-[#6b7f99]">Hotel Application</p>
-                <p className="mt-0.5 text-sm font-semibold text-[#0e2a4a]">{selectedRegistration?.hotelName || "Selected Hotel"}</p>
-                {selectedRegistration?.ownerName && (
-                  <p className="mt-0.5 text-xs text-[#6b7f99]">Owner: {selectedRegistration.ownerName}</p>
-                )}
-              </div>
+          <div className="p-5">
 
-              <label className="block text-xs font-bold text-[#5b7089] uppercase tracking-wide mb-2">Reason for Rejection</label>
-              <select value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} className={`${inputCls} px-3 py-2.5`}>
-                {rejectionReasons.map((reason) => (
-                  <option key={reason.value} value={reason.value}>{reason.label}</option>
-                ))}
-              </select>
+  {/* HOTEL APPLICATION */}
+  <div className="mb-4 rounded-2xl bg-[#f4f8fd] p-3.5">
+    <p className="text-xs text-[#6b7f99]">
+      Hotel Application
+    </p>
 
-              <label className="block text-xs font-bold text-[#5b7089] uppercase tracking-wide mt-4 mb-2">Additional Details</label>
-              <textarea
-                value={
-                  rejectionReasons.some((item) => item.value === rejectionReason) && rejectionReason !== "other"
-                    ? rejectionReasons.find((item) => item.value === rejectionReason)?.label || ""
-                    : rejectionReason
-                }
-                onChange={(e) => setRejectionReason(e.target.value)}
-                rows={3}
-                placeholder="Explain why this application cannot be approved..."
-                className={`${inputCls} px-3 py-2.5 resize-none`}
-              />
-              <p className="mt-1 text-xs text-[#8fa2ba]">Please provide at least 5 characters.</p>
+    <p className="mt-0.5 text-sm font-semibold text-[#0e2a4a]">
+      {selectedRegistration?.hotelName || "Selected Hotel"}
+    </p>
 
-              {actionError && <div className="mt-3">{ActionError()}</div>}
+    {selectedRegistration?.ownerName && (
+      <p className="mt-0.5 text-xs text-[#6b7f99]">
+        Owner: {selectedRegistration.ownerName}
+      </p>
+    )}
+  </div>
 
-              <div className="flex gap-3 mt-5">
-                <button
-                  type="button"
-                  onClick={() => { setShowRejectModal(false); setActionError(""); }}
-                  disabled={actionLoading}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold disabled:opacity-50 transition cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleReject}
-                  disabled={actionLoading || rejectionReason.trim().length < 5}
-                  className={`flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 transition cursor-pointer ${btnRed}`}
-                >
-                  <Ban size={15} />
-                  {actionLoading ? "Rejecting..." : "Confirm Rejection"}
-                </button>
-              </div>
-            </div>
+
+  {/* REJECTION REASON */}
+  <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-[#5b7089]">
+    Reason for Rejection
+  </label>
+
+  <select
+    value={rejectionReason}
+    onChange={(e) => {
+      setRejectionReason(e.target.value);
+
+      // Keep additional details empty
+      setRejectionDetails("");
+    }}
+    className={`${inputCls} cursor-pointer px-3 py-2.5`}
+  >
+    {rejectionReasons.map((reason) => (
+      <option
+        key={reason.value}
+        value={reason.value}
+      >
+        {reason.label}
+      </option>
+    ))}
+  </select>
+
+
+  {/* ADDITIONAL DETAILS */}
+  <label className="mt-4 mb-2 block text-xs font-bold uppercase tracking-wide text-[#5b7089]">
+    Additional Details
+  </label>
+
+  <textarea
+    value={rejectionDetails}
+    onChange={(e) => setRejectionDetails(e.target.value)}
+    rows={3}
+    placeholder="Explain why this application cannot be approved..."
+    className={`${inputCls} resize-none px-3 py-2.5`}
+  />
+
+  <p className="mt-1 text-xs text-[#8fa2ba]">
+    Please provide at least 5 characters.
+  </p>
+
+
+  {/* ACTION BUTTONS */}
+  <div className="mt-5 flex gap-3">
+
+    {/* CANCEL */}
+    <button
+      type="button"
+      onClick={() => {
+        setShowRejectModal(false);
+        setRejectionDetails("");
+      }}
+      disabled={actionLoading}
+      className="
+        flex-1
+        cursor-pointer
+        rounded-xl
+        bg-slate-100
+        py-2.5
+        text-sm
+        font-semibold
+        text-slate-700
+        transition
+        hover:bg-slate-200
+        disabled:cursor-not-allowed
+        disabled:opacity-50
+      "
+    >
+      Cancel
+    </button>
+
+
+    {/* CONFIRM REJECTION */}
+    <button
+      type="button"
+      onClick={handleReject}
+      disabled={
+        actionLoading ||
+        rejectionDetails.trim().length < 5
+      }
+      className={`
+        flex-1
+        inline-flex
+        cursor-pointer
+        items-center
+        justify-center
+        gap-2
+        rounded-xl
+        py-2.5
+        text-sm
+        font-semibold
+        transition
+        disabled:cursor-not-allowed
+        disabled:opacity-50
+        ${btnRed}
+      `}
+    >
+      <Ban size={15} />
+
+      {actionLoading
+        ? "Rejecting..."
+        : "Confirm Rejection"}
+    </button>
+
+  </div>
+
+</div>
           </div>
         </div>
       )}

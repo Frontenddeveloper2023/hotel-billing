@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Check,
   Building2,
@@ -137,6 +138,7 @@ const SaaSSetupProgress = ({ activeStep = 1, isUpgrade = false }) => {
             })}
           </div>
         </div>
+
       </div>
     </div>
   );

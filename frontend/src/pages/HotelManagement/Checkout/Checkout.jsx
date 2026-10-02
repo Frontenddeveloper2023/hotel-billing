@@ -832,8 +832,11 @@ const grandTotal =
 
   const handlePaymentSuccess = (data) => {
     console.log("Checkout/payment completed:", data);
-    setShowPaymentPage(false);
-    handleClose();
+    // Pass the full data to parent (HotelManagement) so it can show the success popup
+    // after this Checkout component unmounts.
+    if (typeof onClose === "function") {
+      onClose(data);
+    }
   };
 
   if (showPaymentPage) {

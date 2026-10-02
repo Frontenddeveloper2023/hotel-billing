@@ -18,8 +18,11 @@ import {
   X,
   IndianRupee,
   ConciergeBell,
+  ShieldAlert,
 } from "lucide-react";
 import { useToast } from "../../Context/ToastContext";
+import { useAuth } from "../../Context/AuthContext";
+import { checkRoomServiceAccess } from "../../service/subscriptionFeatureApi";
 import {
   getAllServicesApi,
   createServiceApi,
@@ -323,9 +326,7 @@ const ServiceModal = memo(function ServiceModal({
               <h3 className="text-base sm:text-lg font-bold text-[#0f2a63]">
                 {isEditMode ? "Edit Service" : "Add New Service"}
               </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Enter the service details below.
-              </p>
+            
             </div>
           </div>
 
@@ -469,6 +470,10 @@ const ServiceModal = memo(function ServiceModal({
 // ============================================================
 
 export default function ServiceManagement() {
+  const { userData } = useAuth();
+  const [hasAccess, setHasAccess] = useState(false);
+  const [accessLoading, setAccessLoading] = useState(true);
+
   const toast = useToast();
   const toastRef = useRef(toast);
   toastRef.current = toast;
@@ -505,8 +510,38 @@ export default function ServiceManagement() {
   }, []);
 
   useEffect(() => {
-    fetchServices();
-  }, [fetchServices]);
+    let mounted = true;
+    const verifyAccess = async () => {
+      if (userData?.role === "admin") {
+        if (mounted) {
+          setHasAccess(true);
+          setAccessLoading(false);
+          fetchServices();
+        }
+        return;
+      }
+
+      try {
+        const result = await checkRoomServiceAccess();
+        if (mounted) {
+          setHasAccess(result.featureAllowed);
+          if (result.featureAllowed) {
+            fetchServices();
+          }
+        }
+      } catch (err) {
+        if (mounted) setHasAccess(false);
+      } finally {
+        if (mounted) setAccessLoading(false);
+      }
+    };
+
+    verifyAccess();
+
+    return () => {
+      mounted = false;
+    };
+  }, [fetchServices, userData?.role]);
 
   const activeCount = useMemo(
     () => services.filter((s) => s.isEnabled).length,
@@ -699,6 +734,30 @@ export default function ServiceManagement() {
   const thClass =
     "px-4 lg:px-6 py-3.5 text-[11px] font-bold tracking-wide whitespace-nowrap";
 
+  if (accessLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!hasAccess) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
+        <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mb-6">
+          <ShieldAlert className="w-10 h-10 text-rose-500" />
+        </div>
+        <h2 className="text-2xl font-bold text-white mb-3">
+          Feature Not Available
+        </h2>
+        <p className="text-white max-w-md mx-auto mb-8 leading-relaxed">
+          The Service Management feature is not included in your current subscription plan. Please upgrade your plan to unlock this feature.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <>
       <style>{CSS}</style>
@@ -714,22 +773,16 @@ export default function ServiceManagement() {
 
       <main className="w-full max-w-6xl mx-auto min-w-0 space-y-5 sm:space-y-6 pb-8">
         {/* HEADER */}
-        <header className="sv-rise sv-d1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 bg-white border border-blue-100/80 rounded-2xl p-4 sm:p-6 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)] min-w-0">
+        <header className="sv-rise sv-d1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4  shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)] min-w-0">
           <div className="flex items-start gap-3 sm:gap-4 min-w-0">
-            <div className="shrink-0 p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-800 text-white shadow-lg shadow-blue-900/25">
-              <Wrench className="w-6 h-6" />
-            </div>
+          
 
             <div className="min-w-0">
               
 
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-[#0f2a63] mt-1.5">
-                Service Management
+<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">   Service Management
               </h1>
 
-              <p className="mt-0.5 text-xs sm:text-sm text-slate-500">
-                Manage hotel services and additional service charges.
-              </p>
             </div>
           </div>
 
@@ -757,9 +810,7 @@ export default function ServiceManagement() {
                   <h2 className="text-sm sm:text-base font-bold text-[#0f2a63]">
                     Available Hotel Services
                   </h2>
-                  <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
-                    List of active amenities and extra service charges.
-                  </p>
+                 
                 </div>
               </div>
 

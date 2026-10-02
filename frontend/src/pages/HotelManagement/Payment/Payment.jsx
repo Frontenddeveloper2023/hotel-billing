@@ -1,4 +1,8 @@
-import React, { useRef, useState } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -44,7 +48,15 @@ export default function Payment({
   const [savedInvoice, setSavedInvoice] = useState(null);
   const [serverBilling, setServerBilling] = useState(null);
 
+  const [pdfBlob, setPdfBlob] = useState(null);
+
   const receiptRef = useRef(null);
+
+
+  const successCallbackSentRef = useRef(false);
+
+  const pdfGenerationStartedRef = useRef(false);
+
 
   const money = (value) => {
     const number = Number(value);
@@ -2083,31 +2095,21 @@ setSavedInvoice(savedInvoiceData);
         }
       );
 
-      if (
-        typeof onSuccess ===
-        "function"
-      ) {
-        onSuccess({
-          success: true,
+       
 
-          bookingIds:
-            uniqueBookingIds,
-
-          invoice:
-            savedInvoiceData,
-
-          calculation,
-
-          grandTotal:
-            serverGrandTotal,
-
-          advancePaid:
-            serverAdvancePaid,
-
-          balanceDue:
-            serverBalanceDue,
-        });
-      }
+        // Call onSuccess immediately with full data — parent (HotelManagement) shows the popup
+        if (typeof onSuccess === "function") {
+          onSuccess({
+            success: true,
+            invoice: savedInvoiceData,
+            customer: customer,
+            paymentMethod,
+            grandTotal: serverGrandTotal,
+            advancePaid: serverAdvancePaid,
+            balanceDue: serverBalanceDue,
+            bookingIds: uniqueBookingIds,
+          });
+        }
     } catch (error) {
       console.error(
         "[Payment][ERROR] Checkout/payment failed:",
@@ -2131,6 +2133,180 @@ setSavedInvoice(savedInvoiceData);
       );
     }
   };
+
+
+  // =========================================================
+// GENERATE PDF AFTER INVOICE TEMPLATE HAS BEEN RENDERED
+// =========================================================
+
+useEffect(() => {
+  if (
+    !paymentSuccess ||
+    !savedInvoice ||
+    pdfBlob ||
+    successCallbackSentRef.current ||
+    pdfGenerationStartedRef.current
+  ) {
+    return;
+  }
+
+  // InvoiceTemplate must already be mounted.
+  if (!receiptRef.current) {
+    return;
+  }
+
+  pdfGenerationStartedRef.current = true;
+
+  let cancelled = false;
+
+  const generateInvoicePdf = async () => {
+    try {
+      console.info(
+        "[Payment] Generating invoice PDF..."
+      );
+
+      const canvas = await html2canvas(
+        receiptRef.current,
+        {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+        }
+      );
+
+      if (cancelled) {
+        return;
+      }
+
+      const imgData =
+        canvas.toDataURL("image/png");
+
+      const pdfWidth = 80;
+
+      const pdfHeight =
+        (canvas.height * pdfWidth) /
+        canvas.width;
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: [
+          pdfWidth,
+          pdfHeight,
+        ],
+      });
+
+      pdf.addImage(
+        imgData,
+        "PNG",
+        0,
+        0,
+        pdfWidth,
+        pdfHeight
+      );
+
+      const generatedBlob =
+        pdf.output("blob");
+
+      if (cancelled) {
+        return;
+      }
+
+      if (
+        !generatedBlob ||
+        generatedBlob.size === 0
+      ) {
+        throw new Error(
+          "Generated invoice PDF is empty."
+        );
+      }
+
+      console.info(
+        "[Payment] Invoice PDF generated successfully.",
+        {
+          invoiceNo:
+            savedInvoice?.invoiceNo,
+          size:
+            generatedBlob.size,
+        }
+      );
+
+      // Store the exact generated PDF.
+      setPdfBlob(generatedBlob);
+
+      // Send success data ONLY after PDF is ready.
+      if (
+        !successCallbackSentRef.current &&
+        typeof onSuccess === "function"
+      ) {
+        successCallbackSentRef.current = true;
+
+        onSuccess({
+          success: true,
+
+          invoice:
+            savedInvoice,
+
+          customer,
+
+          paymentMethod,
+
+          grandTotal:
+            serverGrandTotal,
+
+          advancePaid:
+            serverAdvancePaid,
+
+          balanceDue:
+            serverBalanceDue,
+
+          bookingIds:
+            selectedRooms
+              .map((room) =>
+                typeof room?.bookingId === "object"
+                  ? String(
+                      room.bookingId?._id ??
+                      room.bookingId?.id ??
+                      ""
+                    )
+                  : String(
+                      room?.bookingId || ""
+                    )
+              )
+              .filter(Boolean),
+
+          // SAME PDF
+          pdfBlob:
+            generatedBlob,
+        });
+      }
+
+    } catch (error) {
+      console.error(
+        "[Payment] Invoice PDF generation failed:",
+        error
+      );
+
+      pdfGenerationStartedRef.current = false;
+
+      setErrorMessage(
+        "Invoice was created, but PDF generation failed."
+      );
+    }
+  };
+
+  generateInvoicePdf();
+
+  return () => {
+    cancelled = true;
+  };
+
+}, [
+  paymentSuccess,
+  savedInvoice,
+  pdfBlob,
+]);
+
 
   // =========================================================
   // DOWNLOAD PDF
@@ -2224,23 +2400,12 @@ setSavedInvoice(savedInvoiceData);
   // COMPLETE
   // =========================================================
 
-  const handleComplete = () => {
-    onSuccess?.({
-      amount:
-        currentPayment,
+ const handleComplete = () => {
+  setPaymentSuccess(false);
+  onBack?.();
+};
 
-      paymentMethod,
 
-      status: "paid",
-
-      invoiceNo:
-        savedInvoice
-          ?.invoiceNo || "",
-
-      invoice:
-        savedInvoice,
-    });
-  };
 
   // =========================================================
   // INVOICE TEMPLATE DATA
@@ -2693,221 +2858,7 @@ setSavedInvoice(savedInvoiceData);
 
       </div>
 
-      {/* =====================================================
-          SUCCESS POPUP
-      ===================================================== */}
-
-      {paymentSuccess && (
-        <>
-
-          {/* Hidden invoice used for PDF rendering */}
-
-          {savedInvoice && (
-            <div className="pointer-events-none fixed -left-[10000px] top-0 z-[-1]">
-
-              <InvoiceTemplate
-                activeInvoice={null}
-                pdfInvoice={
-                  savedInvoice
-                }
-                receiptRef={
-                  receiptRef
-                }
-                handleDownloadPDF={
-                  handleDownloadPDF
-                }
-                setActiveInvoice={() => {}}
-                formatDate={
-                  formatDate
-                }
-                formatTime={
-                  formatTime
-                }
-              />
-
-            </div>
-          )}
-
-          {/* SUCCESS MODAL */}
-
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#040e24]/45 p-4 backdrop-blur-[6px]">
-
-            <div className="w-full max-w-[448px] overflow-hidden rounded-[18px] bg-white shadow-[0_30px_80px_rgba(0,0,0,0.28)] animate-[paymentSuccessIn_.32s_ease-out]">
-
-              <div className="px-5 pb-6 pt-7 text-center sm:px-10 sm:pt-8">
-
-                {/* SUCCESS ICON */}
-
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#83E8DD] animate-[successPop_.42s_cubic-bezier(.2,.8,.2,1)]">
-
-                  <CheckCircle2
-                    className="h-8 w-8 text-[#00796B]"
-                    strokeWidth={2.7}
-                  />
-
-                </div>
-
-                {/* TITLE */}
-
-                <h2 className="mt-5 text-[22px] font-bold tracking-tight text-[#0e2a4a]">
-                  Checkout Successful!
-                </h2>
-
-                <p className="mt-1.5 text-[12px] text-[#6b7f99]">
-                  Invoice{" "}
-                  <span className="font-semibold text-[#0e2a4a]">
-                    {savedInvoice
-                      ?.invoiceNo ||
-                      "—"}
-                  </span>{" "}
-                  generated successfully.
-                </p>
-
-                {/* STATUS */}
-
-                <div className="mt-5 rounded-[14px] bg-[#F1F3F5] px-4 py-3.5 text-left">
-
-                  <div className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 text-[12px]">
-
-                    <span className="text-[#6b7f99]">
-                      Room Status:
-                    </span>
-
-                    <span className="text-right font-semibold text-[#00796B]">
-                      Marked Available &amp; Cleaning
-                    </span>
-
-                    <span className="text-[#6b7f99]">
-                      Customer State:
-                    </span>
-
-                    <span className="text-right font-semibold text-[#0e2a4a]">
-                      Checked Out
-                    </span>
-
-                    <span className="text-[#6b7f99]">
-                      Balance Settled:
-                    </span>
-
-                    <span className="text-right font-semibold tabular-nums text-[#0e2a4a]">
-                      ₹
-                      {currentPayment.toFixed(
-                        2
-                      )}
-                    </span>
-
-                  </div>
-
-                </div>
-
-                {/* ACTIONS */}
-
-                <div className="mt-6 grid grid-cols-2 gap-3">
-
-                  {/* CLOSE */}
-
-                  <button
-                    type="button"
-                    onClick={
-                      handleComplete
-                    }
-                    className="flex h-12 items-center justify-center rounded-xl bg-[#E5E7EB] px-4 text-[13px] font-semibold text-[#0e2a4a] transition hover:bg-[#DDE0E4]"
-                  >
-                    Close
-                  </button>
-
-                  {/* PRINT */}
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (
-                        isDownloading
-                      ) {
-                        return;
-                      }
-
-                      handleDownloadPDF();
-                    }}
-                    disabled={
-                      isDownloading
-                    }
-                    className="flex h-12 items-center justify-center gap-2 rounded-xl bg-[#2568e0] px-4 text-[13px] font-semibold text-white transition hover:bg-[#061434] disabled:cursor-not-allowed disabled:bg-slate-400"
-                  >
-
-                    {isDownloading ? (
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    ) : (
-                      <Printer className="h-4 w-4" />
-                    )}
-
-                    {isDownloading
-                      ? "Preparing..."
-                      : "Print Receipt"}
-
-                  </button>
-
-                </div>
-
-                {/* VIEW INVOICE */}
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowInvoice(
-                      true
-                    )
-                  }
-                  className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#dbe6f5] bg-white text-[12px] font-semibold text-[#0e2a4a] transition hover:bg-[#f4f8fd]"
-                >
-                  <Receipt className="h-4 w-4" />
-
-                  View Invoice
-                </button>
-
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* =================================================
-              ANIMATIONS
-          ================================================= */}
-
-          <style>{`
-            @keyframes paymentSuccessIn {
-              0% {
-                opacity: 0;
-                transform: translateY(12px) scale(0.96);
-              }
-
-              100% {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-              }
-            }
-
-            @keyframes successPop {
-              0% {
-                opacity: 0;
-                transform: scale(0.45);
-              }
-
-              65% {
-                opacity: 1;
-                transform: scale(1.08);
-              }
-
-              100% {
-                opacity: 1;
-                transform: scale(1);
-              }
-            }
-          `}</style>
-
-        </>
-      )}
+     
     </div>
   );
 }

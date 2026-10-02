@@ -462,10 +462,10 @@ export default function CurrentStays({ onCheckout }) {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
        
-          <h1 className="mt-2 text-[clamp(1.4rem,1rem+1.4vw,2rem)] font-extrabold tracking-[-0.03em] text-white">
-            Current Stays
+<h1 className="text-[12px] sm:text-[15px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">            Current Stays
           </h1>
         
+
         </div>
 
         <div className="relative w-full md:w-72">
