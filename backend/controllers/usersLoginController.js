@@ -40,7 +40,7 @@ const sendOTPForLogin = async (req, res) => {
         // -------------------------------------------------
         if (!email) {
             return res.status(400).json({
-                message: "Email is required",
+                message: "Please enter your registered email address.",
             });
         }
 
@@ -52,6 +52,19 @@ const sendOTPForLogin = async (req, res) => {
         let user = await User.findOne({
             email: normalizedEmail,
         });
+
+
+        if (!user) {
+    return res.status(404).json({
+        message: "No admin account found with this email address.",
+    });
+}
+
+if (user.role !== "admin") {
+    return res.status(403).json({
+        message: "This email is not registered as a admin email.",
+    });
+}
 
         // -------------------------------------------------
         // 2. IF NOT IN USER DB, CHECK BRANCHHOTELS DB
@@ -67,14 +80,14 @@ const sendOTPForLogin = async (req, res) => {
 
             if (!branch) {
                 return res.status(404).json({
-                    message: "User or branch account not found with this email.",
+                    message: "No account found with this email address.",
                 });
             }
 
             // Check branch status
             if (branch.status !== "active") {
                 return res.status(401).json({
-                    message: "This branch account is inactive. Please contact the administrator.",
+                    message: "This branch account is currently inactive. Please contact the administrator.",
                 });
             }
 
@@ -82,7 +95,7 @@ const sendOTPForLogin = async (req, res) => {
             const hotel = await Hotels.findById(branch.hotelId);
             if (!hotel || hotel.status !== "active") {
                 return res.status(403).json({
-                    message: "The hotel account associated with this branch is inactive.",
+                    message: "The hotel account associated with this branch is currently inactive or pending approval.",
                 });
             }
 
@@ -128,7 +141,7 @@ const sendOTPForLogin = async (req, res) => {
         // -------------------------------------------------
         if (user.status !== "active") {
             return res.status(401).json({
-                message: "User account is inactive.",
+                message: "Your account is currently inactive. Please contact the administrator for assistance.",
             });
         }
 
@@ -138,14 +151,14 @@ const sendOTPForLogin = async (req, res) => {
         if (user.role === "hotelOwner") {
             if (!user.hotelId) {
                 return res.status(403).json({
-                    message: "Your account is not connected to a hotel.",
+                    message: "Your account is not connected to a registered hotel.",
                 });
             }
 
             const hotel = await Hotels.findById(user.hotelId);
             if (!hotel) {
                 return res.status(404).json({
-                    message: "Hotel account was not found.",
+                    message: "Hotel account could not be found.",
                 });
             }
 
@@ -266,6 +279,18 @@ const verifyOTP = async (req, res) => {
         let user = await User.findOne({
             email: normalizedEmail,
         });
+
+        if (!user) {
+    return res.status(404).json({
+        message: "No admin account found with this email address.",
+    });
+}
+
+if (user.role !== "admin") {
+    return res.status(403).json({
+        message: "This email is not registered as a admin email.",
+    });
+}
 
         if (!user) {
             // Check in BranchHotels
@@ -390,15 +415,18 @@ const verifyOTP = async (req, res) => {
         );
 
         // -------------------------------------------------
-        // 8. HTTP-ONLY COOKIE
+        // 8. HTTP-ONLY COOKIE (both role fallback and user-specific)
         // -------------------------------------------------
-        res.cookie("hotelbilling", token, {
+        const specificCookieName = `hotelbilling_admin_${user._id}`;
+        const cookieOptions = {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
             maxAge: 24 * 60 * 60 * 1000,
             path: "/",
-        });
+        };
+
+        res.cookie(specificCookieName, token, cookieOptions);
 
         // -------------------------------------------------
         // 9. CLEAR OTP
@@ -435,6 +463,8 @@ const verifyOTP = async (req, res) => {
         // -------------------------------------------------
         return res.status(200).json({
             message: "OTP verified successfully",
+            token,
+            cookieName: specificCookieName,
             user: {
                 _id: user._id,
                 name: user.name,
@@ -466,12 +496,29 @@ const verifyOTP = async (req, res) => {
 
 const logout = async (req, res) => {
     try {
-        res.clearCookie("hotelbilling", {
+        const reqCookieName = req.headers["x-cookie-name"];
+        const portal = req.headers["x-portal"];
+
+        const cookieOptions = {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
             path: "/",
-        });
+        };
+
+        if (reqCookieName) {
+            res.clearCookie(reqCookieName, cookieOptions);
+        }
+
+        const cookieMap = {
+            admin: "hotelbilling_admin",
+            owner: "hotelbilling_owner",
+            staff: "hotelbilling_staff",
+            hotel: "hotelbilling",  // legacy fallback
+        };
+        const cookieName = cookieMap[portal] || "hotelbilling";
+
+        res.clearCookie(cookieName, cookieOptions);
 
         log.info(
             `User logged out: ${req.user?.name || "Unknown"}`
@@ -553,7 +600,7 @@ const sendHotelOTP = async (req, res) => {
 
         if (!email) {
             return res.status(400).json({
-                message: "Email is required",
+                message: "Please enter your registered hotel email address.",
             });
         }
 
@@ -573,7 +620,7 @@ const sendHotelOTP = async (req, res) => {
 
         if (!user) {
             return res.status(404).json({
-                message: "Hotel user account not found.",
+                message: "No hotel owner or receptionist account found with this email. Please check your email or ensure your hotel registration is approved.",
             });
         }
 
@@ -583,7 +630,7 @@ const sendHotelOTP = async (req, res) => {
 
         if (!["hotelOwner", "receptionist"].includes(user.role)) {
             return res.status(403).json({
-                message: "This account is not allowed to access hotel login.",
+                message: "This login portal is exclusively for Hotel Owners and Staff. Please use the Admin Login portal.",
             });
         }
 
@@ -594,7 +641,7 @@ const sendHotelOTP = async (req, res) => {
         if (user.status !== "active") {
             return res.status(401).json({
                 message:
-                    "Your account is inactive. Please contact the administrator.",
+                    "Your account is currently inactive. Please contact the administrator.",
             });
         }
 
@@ -604,7 +651,7 @@ const sendHotelOTP = async (req, res) => {
 
         if (!user.hotelId) {
             return res.status(403).json({
-                message: "Your account is not connected to a hotel.",
+                message: "Your account is not linked to any hotel profile.",
             });
         }
 
@@ -612,14 +659,14 @@ const sendHotelOTP = async (req, res) => {
 
         if (!hotel) {
             return res.status(404).json({
-                message: "Hotel account was not found.",
+                message: "Hotel account could not be found.",
             });
         }
 
         if (hotel.status !== "active") {
             return res.status(403).json({
                 message:
-                    "Your hotel account is not active. Please contact the administrator.",
+                    "Your hotel account is not active or is pending approval. Please contact the administrator.",
             });
         }
 
@@ -697,7 +744,7 @@ const verifyHotelOTP = async (req, res) => {
 
         if (!user) {
             return res.status(404).json({
-                message: "Hotel user account not found.",
+                message: "No hotel owner or receptionist account found with this email.",
             });
         }
 
@@ -705,7 +752,7 @@ const verifyHotelOTP = async (req, res) => {
         if (!["hotelOwner", "receptionist"].includes(user.role)) {
             return res.status(403).json({
                 message:
-                    "This account is not allowed to access hotel login.",
+                    "This login portal is exclusively for Hotel Owners and Staff. Please use the Admin Login portal.",
             });
         }
 
@@ -713,14 +760,14 @@ const verifyHotelOTP = async (req, res) => {
         if (user.status !== "active") {
             return res.status(401).json({
                 message:
-                    "Your account is inactive. Please contact the administrator.",
+                    "Your account is currently inactive. Please contact the administrator.",
             });
         }
 
         // 4. HOTEL CHECK
         if (!user.hotelId) {
             return res.status(403).json({
-                message: "Your account is not connected to a hotel.",
+                message: "Your account is not linked to any hotel profile.",
             });
         }
 
@@ -728,14 +775,14 @@ const verifyHotelOTP = async (req, res) => {
 
         if (!hotel) {
             return res.status(404).json({
-                message: "Hotel account was not found.",
+                message: "Hotel account could not be found.",
             });
         }
 
         if (hotel.status !== "active") {
             return res.status(403).json({
                 message:
-                    "Your hotel account is not active. Please contact the administrator.",
+                    "Your hotel account is not active or is pending approval. Please contact the administrator.",
             });
         }
 
@@ -771,17 +818,21 @@ const verifyHotelOTP = async (req, res) => {
             }
         );
 
-        // 8. SET COOKIE
-        res.cookie("hotelbilling", token, {
+
+
+
+        // 8. SET COOKIE (both role fallback and user-specific)
+        const baseCookieName = user.role === "hotelOwner" ? "hotelbilling_owner" : "hotelbilling_staff";
+        const specificCookieName = `${baseCookieName}_${user._id}`;
+        const cookieOptions = {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite:
-                process.env.NODE_ENV === "production"
-                    ? "none"
-                    : "lax",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
             maxAge: 24 * 60 * 60 * 1000,
             path: "/",
-        });
+        };
+
+        res.cookie(specificCookieName, token, cookieOptions);
 
         // 9. CLEAR OTP
         user.otp = null;
@@ -807,6 +858,8 @@ const verifyHotelOTP = async (req, res) => {
         // 11. RESPONSE
         return res.status(200).json({
             message: "Hotel login successful",
+            token,
+            cookieName: specificCookieName,
             user: {
                 _id: user._id,
                 name: user.name,

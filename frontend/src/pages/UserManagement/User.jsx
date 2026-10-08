@@ -404,7 +404,7 @@ export default function User() {
        CURRENT LOGGED-IN USER / ACCESS CONTROL
     ======================================================= */
 
-    const { userData } = useAuth();
+    const { hotelUser: userData } = useAuth();
 
     const currentUserId = userData?.id || userData?._id;
 
@@ -433,9 +433,9 @@ export default function User() {
 
             const targetRole = String(user?.role || "").toLowerCase();
 
-            // Hotel Owner can edit receptionist accounts only.
+            // Hotel Owner can edit receptionist accounts and their own account.
             if (isHotelOwner) {
-                return targetRole === "receptionist";
+                return targetRole === "receptionist" || isOwnUser(user);
             }
 
             // Receptionist can edit only their own receptionist account.
@@ -995,12 +995,19 @@ export default function User() {
                         email: formData.email.trim().toLowerCase(),
                     });
                 } else if (isHotelOwner) {
-                    // Hotel Owner can manage receptionist details,
-                    // status and permissions.
-                    await updateUser(userId, {
-                        ...formData,
-                        role: "receptionist",
-                    });
+                    if (isOwnUser(editingUser)) {
+                        await updateUser(userId, {
+                            name: formData.name.trim(),
+                            email: formData.email.trim().toLowerCase(),
+                        });
+                    } else {
+                        // Hotel Owner can manage receptionist details,
+                        // status and permissions.
+                        await updateUser(userId, {
+                            ...formData,
+                            role: "receptionist",
+                        });
+                    }
                 }
                 toast.success("User profile updated successfully!");
             } else {
@@ -1229,32 +1236,33 @@ export default function User() {
                 return;
             }
 
-            if (
-                !window.confirm("Are you sure you want to delete this user?")
-            ) {
-                return;
-            }
-
-            try {
-                setDeletingId(id);
-
-                await deleteUser(id);
-
-                const latestUsers = await fetchUsers();
-
-                setSelectedIds((prev) => prev.filter((sid) => sid !== id));
-
-                await fetchSubscription(latestUsers);
-            } catch (error) {
-                window.alert(
-                    error?.response?.data?.message ||
-                        "Failed to delete user. Please try again."
-                );
-            } finally {
-                setDeletingId(null);
-            }
+            toast.confirm(
+                "Are you sure you want to delete this user?",
+                async () => {
+                    try {
+                        setDeletingId(id);
+                        await deleteUser(id);
+                        const latestUsers = await fetchUsers();
+                        setSelectedIds((prev) => prev.filter((sid) => sid !== id));
+                        await fetchSubscription(latestUsers);
+                        toast.success("User deleted successfully.");
+                    } catch (error) {
+                        toast.error(
+                            error?.response?.data?.message ||
+                                "Failed to delete user. Please try again."
+                        );
+                    } finally {
+                        setDeletingId(null);
+                    }
+                },
+                {
+                    title: "Delete User",
+                    confirmText: "Delete",
+                    cancelText: "Cancel",
+                }
+            );
         },
-        [canDeleteUsers, isHotelOwner, fetchUsers, fetchSubscription]
+        [canDeleteUsers, isHotelOwner, fetchUsers, fetchSubscription, toast]
     );
 
     /* =======================================================
@@ -1270,32 +1278,31 @@ export default function User() {
             return;
         }
 
-        const confirmed = window.confirm(
+        toast.confirm(
             `Are you sure you want to delete ${selectedIds.length} selected user${
                 selectedIds.length > 1 ? "s" : ""
-            }?`
+            }?`,
+            async () => {
+                try {
+                    await Promise.all(selectedIds.map((id) => deleteUser(id)));
+                    const latestUsers = await fetchUsers();
+                    setSelectedIds([]);
+                    await fetchSubscription(latestUsers);
+                    toast.success("Selected users deleted successfully.");
+                } catch (error) {
+                    toast.error(
+                        error?.response?.data?.message ||
+                            "Some users could not be deleted."
+                    );
+                    await fetchUsers();
+                }
+            },
+            {
+                title: "Delete Users",
+                confirmText: "Delete All",
+                cancelText: "Cancel",
+            }
         );
-
-        if (!confirmed) {
-            return;
-        }
-
-        try {
-            await Promise.all(selectedIds.map((id) => deleteUser(id)));
-
-            const latestUsers = await fetchUsers();
-
-            setSelectedIds([]);
-
-            await fetchSubscription(latestUsers);
-        } catch (error) {
-            window.alert(
-                error?.response?.data?.message ||
-                    "Some users could not be deleted."
-            );
-
-            await fetchUsers();
-        }
     };
 
     const selectableVisible = filteredUsers.filter(
@@ -1848,6 +1855,7 @@ export default function User() {
                                     isReceptionist &&
                                     isOwnUser(editingUser)
                             )}
+                            isHotelOwner={isHotelOwner}
                             subscription={subscription}
                             plan={plan}
                             receptionistCount={receptionistCount}

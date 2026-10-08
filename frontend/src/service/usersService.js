@@ -24,12 +24,39 @@ export const verifyHotelOTP = async (email, otp) => {
     return response.data;
 };
 
-export const logout = async () => {
-    const response = await api.post('/users/logout');
+
+
+export const logout = async (portal) => {
+    const response = await api.post(
+        "/users/logout",
+        {},
+        {
+            headers: {
+                "x-portal": portal,
+            },
+        }
+    );
+
     return response.data;
 };
 
-export const getUser = async () => {
-    const response = await api.get('/users/get-user');
+export const getUser = async (portal) => {
+    const activePortal = (portal === "hotel" || !portal)
+        ? (sessionStorage.getItem("hotelPortal") || "owner")
+        : portal;
+    const cookieName = sessionStorage.getItem("hotelCookieName");
+
+    const headers = {
+        "x-portal": activePortal,
+    };
+    if (cookieName) {
+        headers["x-cookie-name"] = cookieName;
+    }
+
+    const response = await api.get(
+        "/users/get-user",
+        { headers }
+    );
+
     return response.data;
 };

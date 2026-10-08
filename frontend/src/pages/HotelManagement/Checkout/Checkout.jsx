@@ -90,6 +90,9 @@ export default function Checkout({ stay, onClose }) {
     Number(billingSettings.afterCheckoutValue ?? 0)
   );
 
+
+
+
   const beforeCheckoutPolicyType = String(
     billingSettings.beforeCheckoutPolicyType || "percentage"
   ).toLowerCase();
@@ -164,12 +167,10 @@ export default function Checkout({ stay, onClose }) {
       0
     );
 
-  // Preview nights follow the backend billing rule:
-  // check-in date -> actual checkout date, minimum 1 night.
+  // Booked nights strictly from check-in to scheduled checkout (minimum 1 night)
   const getNights = (room) => {
-    const actual = getActualCheckout(room);
     const fromKey = getDateKey(room?.checkIn);
-    const toKey = getDateKey(actual.date || room?.checkOut);
+    const toKey = getDateKey(room?.checkOut);
 
     if (fromKey && toKey) {
       const [fy, fm, fd] = fromKey.split("-").map(Number);
@@ -490,6 +491,8 @@ export default function Checkout({ stay, onClose }) {
     rule = "12 PM checkout";
   }
 
+  const dayCharge = Number(extraDays || 0) * Number(getRate(room) || 0);
+
   return {
     rule,
 
@@ -499,14 +502,13 @@ export default function Checkout({ stay, onClose }) {
     extraMinutesTotal,
 
     // Keep these for UI/details.
-    // Do NOT add full-day charge here.
-    fullDayUnits: 0,
+    fullDayUnits: extraDays,
     timeUnits: timeCharge > 0 ? 1 : 0,
 
-    dayCharge: 0,
+    dayCharge,
     timeCharge,
 
-    extraCharge: Number(timeCharge || 0),
+    extraCharge: Number(dayCharge + timeCharge),
 
     timePolicyType,
     timePolicyValue,
@@ -523,19 +525,26 @@ export default function Checkout({ stay, onClose }) {
       const nights = getNights(room);
       const stayDetails = getExtraStayDetails(room);
 
+      const extraNightCharge = Number(stayDetails.extraDays || 0) * Number(rate || 0);
+      const extraTimeCharge = Number(stayDetails.timeCharge || 0);
+      const totalExtraCharge = extraNightCharge + extraTimeCharge;
       return {
         ...room,
         rate,
         nights,
         roomSubtotal: Number(rate * nights),
-        extraCharge: Number(stayDetails.extraCharge || 0),
-        extraStay: stayDetails,
+        extraCharge: totalExtraCharge,
+        extraStay: {
+          ...stayDetails,
+          dayCharge: extraNightCharge,
+          extraCharge: totalExtraCharge,
+        },
         extraNightsStayed: stayDetails.extraDays,
         extraHoursStayed: stayDetails.extraHours,
         extraMinutesStayed: stayDetails.extraMinutes,
-        extraDayCharge: Number(stayDetails.dayCharge || 0),
-        extraTimeCharge: Number(stayDetails.timeCharge || 0),
-        totalExtraCharge: Number(stayDetails.extraCharge || 0),
+        extraDayCharge: extraNightCharge,
+        extraTimeCharge: extraTimeCharge,
+        totalExtraCharge: totalExtraCharge,
         foodTotal: getFoodTotal(room),
         roomServiceTotal: getRoomServiceTotal(room),
       };
@@ -577,11 +586,13 @@ const extraChargeTotal = roomBreakdown.reduce(
   0
 );
 
+
+
 const subtotal =
-  roomTotal +
-  foodTotal +
-  roomServiceTotal +
-  extraChargeTotal;
+  Number(roomTotal || 0) +
+  Number(foodTotal || 0) +
+  Number(roomServiceTotal || 0) +
+  Number(extraChargeTotal || 0);
 
 const gstAmount = gstEnabled
   ? (subtotal * gstPercentage) / 100
@@ -636,24 +647,24 @@ const grandTotal =
   const totalExtraRemainderMinutes = totalExtraStayMinutes % 1440;
   const totalExtraHours = Math.floor(totalExtraRemainderMinutes / 60);
   const totalExtraMinutes = totalExtraRemainderMinutes % 60;
-  const totalExtraNights = totalExtraDaysFromTime;
-  const totalExtraDayUnits = roomBreakdown.reduce(
-    (sum, room) => sum + Number(room.extraStay?.fullDayUnits || 0),
+  const totalExtraNights = roomBreakdown.reduce(
+    (sum, room) => sum + Number(room.extraStay?.extraDays || room.extraNightsStayed || 0),
     0
   );
+  const totalExtraDayUnits = totalExtraNights;
 
   const totalExtraTimeUnits = roomBreakdown.reduce(
-    (sum, room) => sum + Number(room.extraStay?.timeUnits || 0),
+    (sum, room) => sum + Number((room.extraTimeCharge || room.extraStay?.timeCharge || 0) > 0 ? 1 : 0),
     0
   );
 
   const totalExtraDayCharge = roomBreakdown.reduce(
-    (sum, room) => sum + Number(room.extraStay?.dayCharge || 0),
+    (sum, room) => sum + Number(room.extraDayCharge ?? (Number(room.extraStay?.extraDays || 0) * Number(room.rate || 0))),
     0
   );
 
   const totalExtraTimeCharge = roomBreakdown.reduce(
-    (sum, room) => sum + Number(room.extraStay?.timeCharge || 0),
+    (sum, room) => sum + Number(room.extraTimeCharge ?? room.extraStay?.timeCharge ?? 0),
     0
   );
 
@@ -906,37 +917,32 @@ const grandTotal =
     Number(totalExtraStayMinutes || 0) > 0;
 
 
-    //extra stay calculate
+    // Extra stay calculation
+    const extraStayNightCount = totalExtraNights;
 
-const extraStayNightCount = roomBreakdown.reduce(
-  (sum, room) =>
-    sum + Number(room?.extraStay?.fullDayUnits || 0),
-  0
-);
+    const expectedCheckoutDisplay = firstRoom.checkOut
+      ? `${formatDate(firstRoom.checkOut)} at ${formatTime(
+          firstRoom.checkOutTime || "12:00 PM"
+        )}`
+      : "—";
 
-const expectedCheckoutDisplay = firstRoom.checkOut
-  ? `${formatDate(firstRoom.checkOut)} at ${formatTime(
-      firstRoom.checkOutTime || "12:00 PM"
-    )}`
-  : "—";
+    const actualCheckoutDisplay = actualCheckoutDate
+      ? `${formatDate(actualCheckoutDate)} at ${formatTime(
+          actualCheckoutTime
+        )}`
+      : "—";
 
-const actualCheckoutDisplay = actualCheckoutDate
-  ? `${formatDate(actualCheckoutDate)} at ${formatTime(
-      actualCheckoutTime
-    )}`
-  : "—";
-
-const lateCheckoutDescription = hasLateCheckout
-  ? `${
-      extraStayNightCount > 0
-        ? `Extra stay: ${extraStayNightCount} night${
-            extraStayNightCount !== 1 ? "s" : ""
-          }`
-        : "Checkout policy charge"
-    } · Expected: ${expectedCheckoutDisplay} · Actual: ${actualCheckoutDisplay} · ${
-      beforePolicyLabel || afterPolicyLabel
-    } applied`
-  : `Expected: ${expectedCheckoutDisplay} · Actual: ${actualCheckoutDisplay} · No extra charge`;
+    const lateCheckoutDescription = hasLateCheckout
+      ? `${
+          extraStayNightCount > 0
+            ? `Extra stay: ${extraStayNightCount} night${
+                extraStayNightCount !== 1 ? "s" : ""
+              }`
+            : "Checkout policy charge"
+        } · Expected: ${expectedCheckoutDisplay} · Actual: ${actualCheckoutDisplay} · ${
+          beforePolicyLabel || afterPolicyLabel
+        } applied`
+      : `Expected: ${expectedCheckoutDisplay} · Actual: ${actualCheckoutDisplay} · No extra charge`;
 
 //..............
 
@@ -952,7 +958,7 @@ const lateCheckoutDescription = hasLateCheckout
     : `Room ${firstRoom.roomNumber || "—"}`;
 
   const roomCategoryText = roomBreakdown.length > 1
-    ? `${roomBreakdown.length} room categories`
+    ? `${roomBreakdown.length} Total Rooms`
     : firstRoom.roomType || "—";
 
   const expectedCheckoutText = firstRoom.checkOut
@@ -967,20 +973,20 @@ const lateCheckoutDescription = hasLateCheckout
     ? `${formatDate(actualCheckoutDate)}, ${formatTime(actualCheckoutTime)}`
     : "—";
 
-  const totalNightsDisplay = totalBookedNights;
+  const totalNightsDisplay = roomBreakdown.reduce((max, room) => Math.max(max, Number(room.nights || 0)), 0);
   const tariffDisplay = roomBreakdown.length === 1
     ? money(firstRoom.rate || 0)
     : money(roomTotal / Math.max(1, totalBookedNights));
 
   return (
-    <main className="min-h-[calc(100vh-64px)] w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-7">
+    <main className="min-h-[calc(100vh-64px)] w-full px-4 sm:px-6 lg:px-8 ">
         {/* Breadcrumb + title */}
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
           <div className="min-w-0">
            
 
             <div className=" flex items-center gap-3">
-              <h1 className="text-[28px] sm:text-[31px] leading-tight font-bold tracking-[-0.8px] text-white">
+              <h1 className="text-[12px] sm:text-[15px] lg:text-[25px] leading-tight font-bold tracking-[-0.8px] text-white">
                 Guest Checkout
                 {stay?.checkoutNumber || stay?.invoiceNumber || stay?.bookingNumber
                   ? ` #${stay.checkoutNumber || stay.invoiceNumber || stay.bookingNumber}`
@@ -1071,14 +1077,14 @@ const lateCheckoutDescription = hasLateCheckout
                     <p className="text-[10px] uppercase font-medium tracking-wide text-[#6b7f99]">
                       ASSIGNED ROOM
                     </p>
-                    <p className="mt-0.5 text-[20px] leading-6 font-bold text-[#0e2a4a] break-words">
+                    <p className="mt-0.5 text-[14px] leading-6 font-bold text-[#0e2a4a] break-words">
                       {assignedRoomText}
                     </p>
                   </div>
 
                   <div className="sm:text-right flex-shrink-0">
                     <p className="text-[10px] uppercase font-medium tracking-wide text-[#6b7f99]">
-                      ROOM CATEGORY
+                      Total Rooms
                     </p>
                     <p className="mt-0.5 text-[14px] font-semibold text-[#0e2a4a] break-words">
                       {roomCategoryText}
@@ -1086,26 +1092,7 @@ const lateCheckoutDescription = hasLateCheckout
                   </div>
                 </div>
 
-                {/* Date/time details */}
-                <div className="mt-3 border-b border-[#E4E7E9] pb-3.5 grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4">
-                  <div>
-                    <p className="text-[10px] uppercase font-medium tracking-wide text-[#686D72]">
-                      CHECK-IN DATE/TIME
-                    </p>
-                    <p className="mt-0.5 text-[13px] font-medium text-[#272A2D]">
-                      {checkInText}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-[10px] uppercase font-medium tracking-wide text-[#686D72]">
-                      EXPECTED CHECKOUT
-                    </p>
-                    <p className="mt-0.5 text-[13px] font-medium text-[#272A2D]">
-                      {expectedCheckoutText}
-                    </p>
-                  </div>
-                </div>
+    
 
                 <div className="border-b border-[#E4E7E9] py-3.5 flex items-center justify-between gap-3">
                   <div>
@@ -1123,7 +1110,7 @@ const lateCheckoutDescription = hasLateCheckout
                   </span>
                 </div>
 
-                <div className="pt-3.5 grid grid-cols-2 gap-4">
+                {/* <div className="pt-3.5 grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-[10px] uppercase font-medium tracking-wide text-[#686D72]">
                       NIGHTS STAYED
@@ -1135,33 +1122,206 @@ const lateCheckoutDescription = hasLateCheckout
 
                   <div className="text-right">
                     <p className="text-[10px] uppercase font-medium tracking-wide text-[#686D72]">
-                      TARIFF RATE / NIGHT
+                       Per Night Price
                     </p>
                     <p className="mt-0.5 text-[16px] font-bold text-[#0e2a4a]">
                       {tariffDisplay}
                     </p>
                   </div>
-                </div>
+                </div> */}
 
-                {roomBreakdown.length > 1 && (
-                  <div className="mt-4 space-y-2">
-                    {roomBreakdown.map((room, index) => (
-                      <div
-                        key={room._id || `${room.roomNumber}-${index}`}
-                        className="flex items-center justify-between rounded-lg bg-[#f4f8fd] px-3 py-2.5 text-[12px]"
-                      >
-                        <span className="font-semibold text-[#0e2a4a]">
-                          Room {room.roomNumber || "—"}
-                        </span>
-                        <span className="text-[#6b7f99]">
-                          {room.nights} night{Number(room.nights) !== 1 ? "s" : ""} × {money(room.rate)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                {roomBreakdown.length > 0 && (
+                <div className="mt-4 space-y-3">
+  {roomBreakdown.map((room, index) => {
+    const roomActualCheckoutDate =
+      room.actualCheckoutDate || actualCheckoutDate;
+
+    const roomActualCheckoutTime =
+      room.actualCheckoutTime || actualCheckoutTime;
+
+    const roomSubtotal = Number(room.roomSubtotal || 0);
+
+    const extraNights = Number(room.extraNightsStayed || room.extraStay?.extraDays || 0);
+    const bookedNights = Number(room.nights || 1);
+
+    const bookedStayAmount =
+      bookedNights * Number(room.rate || 0);
+
+    const extraNightAmount =
+      Number(room.extraDayCharge ?? (extraNights * Number(room.rate || 0)));
+
+    const extraTimeCharge =
+      Number(room.extraTimeCharge ?? room.extraStay?.timeCharge ?? 0);
+
+    const roomExtraCharge =
+      Number(room.extraCharge ?? (extraNightAmount + extraTimeCharge));
+
+    const roomStayTotal =
+      bookedStayAmount + roomExtraCharge;
+
+    return (
+      <div
+        key={
+          room._id ||
+          room.roomId ||
+          `${room.roomNumber}-${index}`
+        }
+        className="rounded-xl border border-[#dbe6f5] bg-[#f8fbff] overflow-hidden"
+      >
+        {/* ROOM HEADER */}
+        <div className="flex items-center justify-between gap-3 px-4 py-3 bg-[#f1f6fc] border-b border-[#dbe6f5]">
+          <div>
+            <p className="text-[10px] uppercase font-medium tracking-wide text-[#6b7f99]">
+              ROOM
+            </p>
+
+            <p className="mt-0.5 text-[14px] font-bold text-[#0e2a4a]">
+              Room {room.roomNumber || "—"}
+            </p>
+          </div>
+
+          <div className="text-right">
+            <p className="text-[10px] uppercase font-medium tracking-wide text-[#6b7f99]">
+              PRICE / NIGHT
+            </p>
+
+            <p className="mt-0.5 text-[14px] font-bold text-[#0e2a4a]">
+              {money(room.rate || 0)}
+            </p>
+          </div>
+        </div>
+
+        {/* DATES */}
+        <div className="px-4 py-3 grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-3">
+          <div>
+            <p className="text-[10px] uppercase font-medium tracking-wide text-[#686D72]">
+              CHECK-IN
+            </p>
+
+            <p className="mt-0.5 text-[12.5px] font-medium text-[#272A2D]">
+              {room.checkIn
+                ? `${formatDate(room.checkIn)}, ${formatTime(
+                    room.checkInTime
+                  )}`
+                : "—"}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-[10px] uppercase font-medium tracking-wide text-[#686D72]">
+              EXPECTED CHECKOUT
+            </p>
+
+            <p className="mt-0.5 text-[12.5px] font-medium text-[#272A2D]">
+              {room.checkOut
+                ? `${formatDate(room.checkOut)}, ${formatTime(
+                    room.checkOutTime || "12:00 PM"
+                  )}`
+                : "—"}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-[10px] uppercase font-medium tracking-wide text-[#686D72]">
+              ACTUAL CHECKOUT
+            </p>
+
+            <p className="mt-0.5 text-[12.5px] font-medium text-[#272A2D]">
+              {roomActualCheckoutDate
+                ? `${formatDate(
+                    roomActualCheckoutDate
+                  )}, ${formatTime(roomActualCheckoutTime)}`
+                : "—"}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-[10px] uppercase font-medium tracking-wide text-[#686D72]">
+              NIGHTS STAYED
+            </p>
+
+            <p className="mt-0.5 text-[12.5px] font-bold text-[#0e2a4a]">
+              {bookedNights} Booked {extraNights > 0 ? `+ ${extraNights} Extra` : ""} Night
+              {(bookedNights + extraNights) !== 1 ? "s" : ""}
+            </p>
+          </div>
+        </div>
+
+        {/* ROOM CALCULATION */}
+        <div className="border-t border-[#dbe6f5] px-4 py-3 space-y-2">
+
+          {/* BOOKED NIGHTS */}
+          {bookedNights > 0 && (
+            <div className="flex items-center justify-between text-[12px]">
+              <span className="text-[#6b7f99]">
+                Booked stay: {bookedNights} night
+                {bookedNights !== 1 ? "s" : ""} ×{" "}
+                {money(room.rate)}
+              </span>
+
+              <span className="font-semibold text-[#0e2a4a]">
+                {money(bookedStayAmount)}
+              </span>
+            </div>
+          )}
+
+          {/* EXTRA NIGHT */}
+          {extraNights > 0 && (
+            <div className="flex items-center justify-between text-[12px]">
+              <span className="text-[#2568e0] font-medium">
+                Extra night: {extraNights} night
+                {extraNights !== 1 ? "s" : ""} ×{" "}
+                {money(room.rate)}
+              </span>
+
+              <span className="font-semibold text-[#2568e0]">
+                {money(extraNightAmount)}
+              </span>
+            </div>
+          )}
+
+          {/* CHECKOUT TIME POLICY CHARGE */}
+          {extraTimeCharge > 0 && (
+            <div className="flex items-center justify-between text-[12px]">
+              <span className="text-[#6b7f99]">
+                Checkout policy charge ({room.extraStay?.timePolicyType === "percentage" ? `${room.extraStay?.timePolicyValue}% of ${money(room.rate)}` : getPolicyLabel(room.extraStay?.timePolicyType, room.extraStay?.timePolicyValue)})
+              </span>
+
+              <span className="font-semibold text-[#0e2a4a]">
+                {money(extraTimeCharge)}
+              </span>
+            </div>
+          )}
+
+          {/* ROOM TOTAL */}
+          <div className="pt-2 border-t border-[#dbe6f5] flex items-center justify-between">
+            <span className="text-[12px] font-semibold text-[#0e2a4a]">
+              Room Total
+            </span>
+
+            <span className="text-[14px] font-bold text-[#0e2a4a]">
+              {money(roomStayTotal)}
+            </span>
+          </div>
+
+          {/* POLICY */}
+          {room.extraStay?.rule &&
+            room.extraStay.rule !== "No extra stay" && (
+              <p className="pt-1 text-[10.5px] font-medium text-[#2568e0]">
+                {room.extraStay.rule}
+              </p>
+            )}
+        </div>
+      </div>
+    );
+  })}
+</div>
                 )}
               </div>
             </section>
+
+
+
           </div>
 
           {/* RIGHT COLUMN */}
@@ -1181,7 +1341,7 @@ const lateCheckoutDescription = hasLateCheckout
               </div>
 
               <div className="px-6 pb-1">
-                {/* Room rent */}
+                {/* Booked Room rent */}
                 <div className="py-3.5 border-b border-[#dbe6f5] flex items-start justify-between gap-5">
                   <div className="min-w-0">
                     <p className="text-[14px] font-medium text-[#0e2a4a]">
@@ -1195,6 +1355,79 @@ const lateCheckoutDescription = hasLateCheckout
                     {money(roomTotal)}
                   </p>
                 </div>
+
+                {/* Extra Stay Days Charge (if > 0) */}
+                {totalExtraDayCharge > 0 && (
+                  <div className="py-3.5 border-b border-[#dbe6f5] bg-amber-50/40 -mx-6 px-6">
+                    <div className="flex items-start justify-between gap-5">
+                      <div className="min-w-0">
+                        <p className="text-[14px] font-semibold text-amber-900">
+                          Extra Stay Days ({extraStayNightCount} Night{extraStayNightCount !== 1 ? "s" : ""})
+                        </p>
+                        <p className="mt-0.5 text-[12.5px] leading-4 text-amber-700 break-words">
+                          {roomBreakdown
+                            .filter((r) => Number(r.extraNightsStayed || r.extraStay?.extraDays || 0) > 0)
+                            .map((r) => `Room ${r.roomNumber || "—"}: ${r.extraNightsStayed || r.extraStay?.extraDays}N × ${money(r.rate || 0)}`)
+                            .join(" • ") || `${extraStayNightCount} extra night${extraStayNightCount !== 1 ? "s" : ""} × ${money(roomBreakdown[0]?.rate || 0)}`}
+                        </p>
+                      </div>
+                      <p className="shrink-0 text-[13.5px] font-bold text-amber-900">
+                        {money(totalExtraDayCharge)}
+                      </p>
+                    </div>
+                    {roomBreakdown.filter((r) => Number(r.extraNightsStayed || r.extraStay?.extraDays || 0) > 0).length > 1 && (
+                      <div className="mt-2.5 space-y-1 pl-3 border-l-2 border-amber-300">
+                        {roomBreakdown
+                          .filter((r) => Number(r.extraNightsStayed || r.extraStay?.extraDays || 0) > 0)
+                          .map((r, idx) => (
+                            <div key={idx} className="flex justify-between items-center text-[12px]">
+                              <span className="text-amber-800">
+                                Room {r.roomNumber || "—"} ({r.extraNightsStayed || r.extraStay?.extraDays}N × {money(r.rate || 0)})
+                              </span>
+                              <span className="font-semibold text-amber-900">
+                                {money(r.extraDayCharge || (Number(r.extraStay?.extraDays || 0) * Number(r.rate || 0)))}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Checkout Time Policy Charge (if > 0) */}
+                {totalExtraTimeCharge > 0 && (
+                  <div className="py-3.5 border-b border-[#dbe6f5] bg-orange-50/40 -mx-6 px-6">
+                    <div className="flex items-start justify-between gap-5">
+                      <div className="min-w-0">
+                        <p className="text-[14px] font-semibold text-orange-900">
+                          Checkout Policy Charge ({beforePolicyLabel || afterPolicyLabel || "Time Policy"})
+                        </p>
+                        <p className="mt-0.5 text-[12.5px] leading-4 text-orange-700 break-words">
+                          Expected: {expectedCheckoutDisplay} · Actual: {actualCheckoutDisplay}
+                        </p>
+                      </div>
+                      <p className="shrink-0 text-[13.5px] font-bold text-orange-900">
+                        {money(totalExtraTimeCharge)}
+                      </p>
+                    </div>
+                    {roomBreakdown.filter((r) => Number(r.extraTimeCharge || r.extraStay?.timeCharge || 0) > 0).length > 1 && (
+                      <div className="mt-2.5 space-y-1 pl-3 border-l-2 border-orange-300">
+                        {roomBreakdown
+                          .filter((r) => Number(r.extraTimeCharge || r.extraStay?.timeCharge || 0) > 0)
+                          .map((r, idx) => (
+                            <div key={idx} className="flex justify-between items-center text-[12px]">
+                              <span className="text-orange-800">
+                                Room {r.roomNumber || "—"} ({r.extraStay?.timePolicyType === "percentage" ? `${r.extraStay?.timePolicyValue}% of ${money(r.rate)}` : getPolicyLabel(r.extraStay?.timePolicyType, r.extraStay?.timePolicyValue)})
+                              </span>
+                              <span className="font-semibold text-orange-900">
+                                {money(r.extraTimeCharge || r.extraStay?.timeCharge || 0)}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Food */}
                 <div className="py-3.5 border-b border-[#dbe6f5]">
@@ -1256,44 +1489,6 @@ const lateCheckoutDescription = hasLateCheckout
                       })}
                     </div>
                   )}
-                </div>
-
-                {/* Late checkout */}
-                <div className="py-3.5 border-b border-[#dbe6f5]">
-                  <div className="flex items-start justify-between gap-5">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-[14px] font-medium text-[#0e2a4a]">
-                          Late Checkout Charge
-                        </p>
-                        <span className="inline-flex items-center gap-1 rounded-md bg-[#eaf3ff] px-2 py-0.5 text-[10px] font-semibold text-[#2568e0]">
-                          <RefreshCw className="w-3 h-3" />
-                          Auto-applied
-                        </span>
-                      </div>
-                      <p className="mt-0.5 text-[12.5px] leading-4 text-[#6b7f99]">
-                        {lateCheckoutDescription}
-                      </p>
-                    </div>
-                    <p className="shrink-0 text-[13.5px] font-bold text-[#0e2a4a]">
-                      {money(extraChargeTotal)}
-                    </p>
-                  </div>
-
-                  <div className="mt-2 rounded-md bg-[#eaf3ff] px-3 py-1.5 flex items-center gap-2 text-[10.5px] text-[#6b7f99]">
-                    <Info className="w-3.5 h-3.5 shrink-0" />
-                    <span>
-                      {hasLateCheckout
-  ? `Auto-applied via Hotel Policy Settings${
-      extraStayNightCount > 0
-        ? ` · ${extraStayNightCount} extra night${
-            extraStayNightCount !== 1 ? "s" : ""
-          }`
-        : ""
-    }`
-  : "No late checkout charge applied"}
-                    </span>
-                  </div>
                 </div>
 
                 {/* Totals */}

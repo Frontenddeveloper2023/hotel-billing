@@ -14,7 +14,7 @@ import {
 
 
 
-import adminLoginDummy from "../../../public/image/staylio_brand_hero.jpg"
+// Removed invalid public import
 
 
 
@@ -23,6 +23,8 @@ import adminLoginDummy from "../../../public/image/staylio_brand_hero.jpg"
 
 
 import logo from "../../../public/logo.png"
+import leftImg from "../../../public/image/staylio_brand_hero.jpg"
+
 
 
 
@@ -131,265 +133,16 @@ const formatTime = (s) =>
 
 
 const getFriendlyErrorMessage = (err, fallbackMessage) => {
-
-
-
     const rawMessage =
-
-
-
         err?.response?.data?.message ||
-
-
-
         err?.message ||
-
-
-
         "";
 
-
-
-
-
-
-
-    const lowerMsg = rawMessage.toLowerCase();
-
-
-
-
-
-
-
-    // User not found
-
-
-
-    if (
-
-
-
-        lowerMsg.includes("user not found") ||
-
-
-
-        lowerMsg.includes("no approved hotel owner account") ||
-
-
-
-        lowerMsg.includes("account with this email")
-
-
-
-    ) {
-
-
-
-        return "We couldn't find an account with this email address.";
-
-
-
+    if (rawMessage && typeof rawMessage === "string") {
+        return rawMessage;
     }
 
-
-
-
-
-
-
-    // Inactive user
-
-
-
-    if (
-
-
-
-        lowerMsg.includes("user is inactive") ||
-
-
-
-        lowerMsg.includes("account is inactive")
-
-
-
-    ) {
-
-
-
-        return "This account is currently inactive. Please contact the administrator.";
-
-
-
-    }
-
-
-
-
-
-
-
-    // Hotel not found
-
-
-
-    if (
-
-
-
-        lowerMsg.includes("hotel account was not found") ||
-
-
-
-        lowerMsg.includes("not connected to a hotel")
-
-
-
-    ) {
-
-
-
-        return "Your hotel account could not be found. Please contact the administrator.";
-
-
-
-    }
-
-
-
-
-
-
-
-    // Hotel inactive
-
-
-
-    if (
-
-
-
-        lowerMsg.includes("hotel account is not active") ||
-
-
-
-        lowerMsg.includes("hotel is inactive")
-
-
-
-    ) {
-
-
-
-        return "Your hotel account is not active. Please contact the administrator.";
-
-
-
-    }
-
-
-
-
-
-
-
-    // Subscription
-
-
-
-    if (
-
-
-
-        lowerMsg.includes("subscription is inactive") ||
-
-
-
-        lowerMsg.includes("subscription is expired")
-
-
-
-    ) {
-
-
-
-        return "Your subscription is inactive or expired. Please contact the administrator.";
-
-
-
-    }
-
-
-
-
-
-
-
-    // OTP expired
-
-
-
-    if (lowerMsg.includes("otp has expired")) {
-
-
-
-        return "Your security code has expired. Please request a new one.";
-
-
-
-    }
-
-
-
-
-
-
-
-    // Invalid OTP
-
-
-
-    if (lowerMsg.includes("invalid otp")) {
-
-
-
-        return "The OTP code you entered is incorrect. Please check and try again.";
-
-
-
-    }
-
-
-
-
-
-
-
-    // Generic expired
-
-
-
-    if (lowerMsg.includes("expired")) {
-
-
-
-        return "Your security code has expired. Please request a new one.";
-
-
-
-    }
-
-
-
-
-
-
-
-    return rawMessage || fallbackMessage;
-
-
-
+    return fallbackMessage || "An unexpected error occurred. Please try again.";
 };
 
 
@@ -915,6 +668,12 @@ const Login = () => {
 
 
             const loggedInUser = data.user;
+            if (data?.token) {
+                sessionStorage.setItem("hotelToken", data.token);
+            }
+            if (data?.cookieName) {
+                sessionStorage.setItem("hotelCookieName", data.cookieName);
+            }
 
 
 
@@ -1523,7 +1282,7 @@ const Login = () => {
                     {/* LEFT IMAGE PANEL */}
                     <div className="relative hidden w-[46%] overflow-hidden bg-[#0B39C8] lg:block">
                         <img
-                            src={adminLoginDummy}
+                            src={leftImg}
                             alt="StayLio hotel management"
                             className="absolute inset-0 h-full w-full object-cover"
                             loading="eager"

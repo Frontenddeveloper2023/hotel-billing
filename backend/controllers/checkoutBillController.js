@@ -406,28 +406,11 @@ const calculateRoomBilling = ({
     );
   }
 
-  const actualCalendarDifference =
-    getCalendarDayDifference(
-      checkInDate,
-      actualCheckoutDate
-    );
-
   const bookedNights =
     getCalendarDayDifference(
       checkInDate,
       expectedCheckoutDate
     );
-
-  if (
-    actualCalendarDifference === null ||
-    actualCalendarDifference < 0
-  ) {
-    throw new Error(
-      `Actual checkout date cannot be before check-in date for room ${
-        room?.roomNumber || "Unknown"
-      }.`
-    );
-  }
 
   if (
     bookedNights === null ||
@@ -440,183 +423,118 @@ const calculateRoomBilling = ({
     );
   }
 
-  // ----------------------------------------------------------
-  // FULL DAYS UNTIL ACTUAL CHECKOUT
-  // ----------------------------------------------------------
+  const normalizedBookedNights = Math.max(
+    1,
+    bookedNights || 1
+  );
 
-  const completedFullDays =
-    Math.max(
-      0,
-      actualCalendarDifference
-    );
-
-  // ----------------------------------------------------------
-  // BOOKED NIGHTS
-  // ----------------------------------------------------------
-
-  const normalizedBookedNights =
-    Math.max(
-      0,
-      bookedNights
-    );
+  const baseBookedRoomCharge = roundMoney(
+    rate * normalizedBookedNights
+  );
 
   // ----------------------------------------------------------
-  // EXTRA FULL DAYS
-  //
-  // Example:
-  //
-  // booked nights = 2
-  // actual calendar difference = 3
-  //
-  // extra full days = 1
+  // EXACT EXTRA MINUTES CALCULATION (Matching Checkout.jsx)
   // ----------------------------------------------------------
 
-  const extraFullDays =
-    Math.max(
-      0,
-      completedFullDays -
-        normalizedBookedNights
-    );
+  const expectedTimeMinutes = parseTimeToMinutes(room?.checkOutTime || "12:00 PM") ?? 720;
+  
+  const expYear = expectedCheckoutDate.getFullYear();
+  const expMonth = expectedCheckoutDate.getMonth();
+  const expDay = expectedCheckoutDate.getDate();
 
-  const extraFullDayCharge =
-    roundMoney(
-      rate * extraFullDays
-    );
+  const actYear = actualCheckoutDate.getFullYear();
+  const actMonth = actualCheckoutDate.getMonth();
+  const actDay = actualCheckoutDate.getDate();
+
+  const expUtcMs = Date.UTC(expYear, expMonth, expDay) + expectedTimeMinutes * 60000;
+  const actUtcMs = Date.UTC(actYear, actMonth, actDay) + (actualCheckoutMinutes ?? 720) * 60000;
+
+  let exactExtraMinutes = 0;
+  if (actUtcMs > expUtcMs) {
+    exactExtraMinutes = Math.floor((actUtcMs - expUtcMs) / 60000);
+  }
+
+  // 24-hr threshold rule:
+  // If stay is below 24hr: extraFullDays = 0
+  // If stay is 24hr and above: extraFullDays = floor(minutes / 1440)
+  const extraFullDays = Math.floor(exactExtraMinutes / 1440);
+  const remainingExtraMinutes = exactExtraMinutes % 1440;
+  const extraHours = Math.floor(remainingExtraMinutes / 60);
+  const extraMinutes = remainingExtraMinutes % 60;
+
+  const extraFullDayCharge = roundMoney(
+    rate * extraFullDays
+  );
 
   // ----------------------------------------------------------
-  // ACTUAL CHECKOUT DAY POLICY
+  // ACTUAL CHECKOUT DAY POLICY CHARGE
   // ----------------------------------------------------------
 
-  let checkoutDayCharge = rate;
+  let checkoutDayCharge = 0;
+  let checkoutPolicyType = "none";
+  let checkoutPolicyValue = 0;
+  let checkoutPolicyName = "none";
 
-  let checkoutPolicyType = "full";
+  if (actualCheckoutMinutes < CHECKOUT_CUTOFF_MINUTES) {
+    checkoutPolicyName = "before12PM";
+    checkoutPolicyType = settings?.beforeCheckoutPolicyType || "percentage";
+    checkoutPolicyValue = Number(settings?.beforeCheckoutValue) || 0;
 
-  let checkoutPolicyValue = 100;
+    checkoutDayCharge = calculatePolicyAmount({
+      roomRate: rate,
+      policyType: checkoutPolicyType,
+      policyValue: checkoutPolicyValue,
+    });
+  } else if (actualCheckoutMinutes > CHECKOUT_CUTOFF_MINUTES) {
+    checkoutPolicyName = "after12PM";
+    checkoutPolicyType = settings?.afterCheckoutPolicyType || "full";
+    checkoutPolicyValue = Number(settings?.afterCheckoutValue) || 0;
 
-  let checkoutPolicyName = "after12PM";
+    checkoutDayCharge = calculatePolicyAmount({
+      roomRate: rate,
+      policyType: checkoutPolicyType,
+      policyValue: checkoutPolicyValue,
+    });
 
-  if (
-    actualCheckoutMinutes <
-    CHECKOUT_CUTOFF_MINUTES
-  ) {
-    checkoutPolicyName =
-      "before12PM";
-
-    checkoutPolicyType =
-      settings?.beforeCheckoutPolicyType ||
-      "percentage";
-
-    checkoutPolicyValue =
-      Number(
-        settings?.beforeCheckoutValue
-      ) || 0;
-
-    checkoutDayCharge =
-      calculatePolicyAmount({
-        roomRate: rate,
-        policyType:
-          checkoutPolicyType,
-        policyValue:
-          checkoutPolicyValue,
-      });
-  } else {
-    checkoutPolicyName =
-      actualCheckoutMinutes ===
-      CHECKOUT_CUTOFF_MINUTES
-        ? "12PM"
-        : "after12PM";
-
-    checkoutPolicyType =
-      settings?.afterCheckoutPolicyType ||
-      "full";
-
-    checkoutPolicyValue =
-      Number(
-        settings?.afterCheckoutValue
-      ) || 0;
-
-    checkoutDayCharge =
-      calculatePolicyAmount({
-        roomRate: rate,
-        policyType:
-          checkoutPolicyType,
-        policyValue:
-          checkoutPolicyValue,
-      });
-
-    if (
-      checkoutPolicyType === "full"
-    ) {
+    if (checkoutPolicyType === "full") {
       checkoutDayCharge = rate;
     }
+  } else {
+    checkoutPolicyName = "12PM";
+    checkoutPolicyType = "none";
+    checkoutPolicyValue = 0;
+    checkoutDayCharge = 0;
   }
 
   // ----------------------------------------------------------
-  // FULL DAY CHARGES BEFORE ACTUAL CHECKOUT DAY
-  // ----------------------------------------------------------
-
-  const fullDayCharge =
-    roundMoney(
-      rate * completedFullDays
-    );
-
-  // ----------------------------------------------------------
   // FINAL ROOM TOTAL
-  //
-  // completedFullDays already includes:
-  //
-  // 20
-  // 21
-  // 22
-  //
-  // checkoutDayCharge represents:
-  //
-  // 23
-  //
-  // Therefore we DO NOT add extraFullDayCharge again.
   // ----------------------------------------------------------
 
-  const roomSubtotal =
-    roundMoney(
-      fullDayCharge +
-        checkoutDayCharge
-    );
+  const roomSubtotal = roundMoney(
+    baseBookedRoomCharge +
+      extraFullDayCharge +
+      checkoutDayCharge
+  );
 
   return {
     rate,
-
-    bookedNights:
-      normalizedBookedNights,
-
-    completedFullDays,
-
+    bookedNights: normalizedBookedNights,
+    completedFullDays: normalizedBookedNights + extraFullDays,
     extraFullDays,
-
+    extraHours,
+    extraMinutes,
+    exactExtraMinutes,
     extraFullDayCharge,
-
-    checkoutDayUnits: 1,
-
-    totalChargeableDays:
-      completedFullDays + 1,
-
-    fullDayCharge,
-
+    checkoutDayUnits: checkoutDayCharge > 0 ? 1 : 0,
+    totalChargeableDays: normalizedBookedNights + extraFullDays,
+    fullDayCharge: baseBookedRoomCharge,
     checkoutDayCharge,
-
     roomSubtotal,
-
     checkoutPolicy: {
-      type:
-        checkoutPolicyName,
-
-      policyType:
-        checkoutPolicyType,
-
-      policyValue:
-        checkoutPolicyValue,
-
-      amount:
-        checkoutDayCharge,
+      type: checkoutPolicyName,
+      policyType: checkoutPolicyType,
+      policyValue: checkoutPolicyValue,
+      amount: checkoutDayCharge,
     },
   };
 };

@@ -83,6 +83,7 @@ export default function AddUser({
     isSaving,
     userToEdit,
     isSelfEdit = false,
+    isHotelOwner = false,
     subscription,
     plan,
     receptionistCount = 0,
@@ -156,8 +157,9 @@ export default function AddUser({
             ? "Hotel Owner"
             : "Administrator";
 
-    const canSubmitForm =
-        subscriptionActive || editingPrivilegedUser;
+
+
+
 
     /* CAN CREATE RECEPTIONIST */
 
@@ -177,6 +179,18 @@ export default function AddUser({
         return true;
     };
 
+    const hasAtLeastOnePermission = Object.entries(
+    formData?.permission || {}
+).some(
+    ([key, value]) =>
+        isPermissionAvailable(key) && Boolean(value)
+);
+
+const canSubmitForm =
+    (subscriptionActive && hasAtLeastOnePermission) ||
+    editingPrivilegedUser;
+
+    
     /* HANDLE SUBMIT
        Receptionist-only component; no role selector. */
 
@@ -526,7 +540,7 @@ export default function AddUser({
                                             type="email"
                                             name="email"
                                             value={formData?.email || ""}
-                                            disabled={isSaving}
+                                            disabled={isSaving || (userToEdit && !isHotelOwner)}
                                             onChange={onInputChange}
                                             onBlur={onInputBlur}
                                             placeholder="name@example.com"
@@ -687,22 +701,9 @@ export default function AddUser({
                                     })}
                                 </div>
 
-                                {/* FEATURE INFORMATION */}
+                              
 
-                                <div className="mt-3 rounded-xl border border-[#dbe6f8] bg-[#eff6ff]/60 px-3 py-2.5">
-                                    <div className="flex items-start gap-2">
-                                        <Lock className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
-
-                                        <p className="text-[11px] text-slate-500 leading-relaxed">
-                                            Food Management and Service
-                                            Management are available only
-                                            when they are included in the
-                                            hotel's current subscription.
-                                            Subscription restrictions are
-                                            also enforced by the backend.
-                                        </p>
-                                    </div>
-                                </div>
+                             
                             </section>
                         )}
 

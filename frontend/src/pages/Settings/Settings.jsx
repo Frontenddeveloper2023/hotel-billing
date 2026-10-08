@@ -22,6 +22,9 @@ import Spinner from "../../components/Spinner";
 import { useToast } from "../../Context/ToastContext";
 import { useAuth } from "../../Context/AuthContext";
 
+import Select from "react-select";
+import { Country, State, City } from "country-state-city";
+
 import {
   getSettings,
   updateSettings,
@@ -48,7 +51,11 @@ const INITIAL_FORM = {
   logo: "",
   logoFile: null,
   removeLogo: false,
-  address: "",
+  street: "",
+  city: "",
+  state: "",
+  country: "",
+  pincode: "",
   enableGst: false,
   gstPercentage: "",
   before12PmRateType: "percentage",
@@ -188,15 +195,59 @@ const CSS = `
 `;
 
 // ============================================================
+// DROPDOWN STYLES & OPTIONS
+// ============================================================
+
+const customSelectStyles = {
+  control: (provided, state) => ({
+    ...provided,
+    backgroundColor: 'rgb(248 250 252 / 0.7)',
+    borderColor: state.isFocused ? '#3b82f6' : '#e2e8f0',
+    borderRadius: '0.75rem',
+    minHeight: '44px',
+    boxShadow: 'none',
+    '&:hover': {
+      borderColor: state.isFocused ? '#3b82f6' : '#cbd5e1'
+    }
+  }),
+  option: (provided, state) => ({
+    ...provided,
+    backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#eff6ff' : 'white',
+    color: state.isSelected ? 'white' : '#0f172a',
+    fontSize: '0.875rem'
+  }),
+  singleValue: (provided) => ({
+    ...provided,
+    color: '#0f172a',
+    fontSize: '0.875rem'
+  }),
+  input: (provided) => ({
+    ...provided,
+    color: '#0f172a',
+    fontSize: '0.875rem',
+  }),
+  placeholder: (provided) => ({
+    ...provided,
+    color: '#94a3b8',
+    fontSize: '0.875rem',
+  })
+};
+
+const countryOptions = Country.getAllCountries().map(c => ({
+  label: c.name,
+  value: c.isoCode,
+  name: c.name
+}));
+
+// ============================================================
 // SMALL REUSABLE PIECES (memoized, defined outside so they
 // never remount and only re-render when their props change)
 // ============================================================
 
 const inputClass = (hasError, extra = "") =>
-  `st-input w-full text-sm rounded-xl border outline-none text-slate-900 placeholder:text-slate-400 disabled:opacity-60 disabled:cursor-not-allowed ${
-    hasError
-      ? "border-red-400 bg-red-50/40"
-      : "border-slate-200 bg-slate-50/70"
+  `st-input w-full text-sm rounded-xl border outline-none text-slate-900 placeholder:text-slate-400 disabled:opacity-60 disabled:cursor-not-allowed ${hasError
+    ? "border-red-400 bg-red-50/40"
+    : "border-slate-200 bg-slate-50/70"
   } ${extra}`;
 
 const Field = memo(function Field({
@@ -304,7 +355,7 @@ const PolicyCard = memo(function PolicyCard({
 
 export default function Settings() {
   const toast = useToast();
-  const { userData } = useAuth();
+  const { hotelUser: userData } = useAuth();
 
   // Keep latest toast in a ref so callbacks stay stable
   const toastRef = useRef(toast);
@@ -327,6 +378,12 @@ export default function Settings() {
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // ============================================================
+  // DROPDOWN DYNAMIC OPTIONS
+  // ============================================================
+  const [stateOptions, setStateOptions] = useState([]);
+  const [cityOptions, setCityOptions] = useState([]);
 
   // ============================================================
   // FETCH SETTINGS
@@ -373,13 +430,19 @@ export default function Settings() {
               item.email ||
               "",
 
-            address: [
-              branch.address?.street,
-              branch.address?.city,
-              branch.address?.state,
-              branch.address?.country,
-              branch.address?.pincode,
-            ]
+            address: Array.from(
+              new Set(
+                [
+                  branch.address?.street,
+                  branch.address?.city,
+                  branch.address?.state,
+                  branch.address?.country,
+                  branch.address?.pincode,
+                ]
+                  .filter(Boolean)
+                  .flatMap((part) => String(part).split(",").map((s) => s.trim()))
+              )
+            )
               .filter(Boolean)
               .join(", "),
           };
@@ -403,6 +466,20 @@ export default function Settings() {
             formattedPhone = item.phone || item.phoneNumber || "";
           }
 
+          let addrObj = {};
+          if (typeof item.address === "object" && item.address !== null) {
+            addrObj = item.address;
+          } else {
+            const parts = (item.address || item.hotelAddress || "").split(",").map(s => s.trim());
+            addrObj = {
+              street: parts[0] || "",
+              city: parts[1] || "",
+              state: parts[2] || "",
+              country: parts[3] || "",
+              pincode: parts[4] || "",
+            };
+          }
+
           setFormData({
             companyName: item.companyName || "",
             phone: formattedPhone,
@@ -411,7 +488,11 @@ export default function Settings() {
             logo: getLogoUrl(rawLogo),
             logoFile: null,
             removeLogo: false,
-            address: item.address || item.hotelAddress || "",
+            street: addrObj.street || "",
+            city: addrObj.city || "",
+            state: addrObj.state || "",
+            country: addrObj.country || "",
+            pincode: addrObj.pincode || "",
 
             enableGst:
               item.gstCalculationEnabled ??
@@ -452,7 +533,7 @@ export default function Settings() {
         } else {
           toastRef.current.error(
             settingsRes?.message ||
-              "Unable to load hotel settings."
+            "Unable to load hotel settings."
           );
         }
       } catch (error) {
@@ -463,8 +544,8 @@ export default function Settings() {
 
         toastRef.current.error(
           error?.response?.data?.message ||
-            error?.message ||
-            "Unable to load hotel settings. Please try again."
+          error?.message ||
+          "Unable to load hotel settings. Please try again."
         );
       } finally {
         setIsLoading(false);
@@ -498,6 +579,53 @@ export default function Settings() {
       prev[name] ? { ...prev, [name]: "" } : prev
     );
   }, []);
+
+  const handleSelectChange = useCallback((selectedOption, { name }) => {
+    const value = selectedOption ? selectedOption.name : "";
+
+    setFormData((prev) => {
+      const nextData = { ...prev, [name]: value };
+
+      if (name === "country") {
+        nextData.state = "";
+        nextData.city = "";
+      } else if (name === "state") {
+        nextData.city = "";
+      }
+
+      return nextData;
+    });
+
+    setErrors((prev) => (prev[name] ? { ...prev, [name]: "" } : prev));
+  }, []);
+
+  // Update dynamic dropdown options based on selected country/state
+  useEffect(() => {
+    const selectedCountryObj = Country.getAllCountries().find(c => c.name === formData.country);
+    if (selectedCountryObj) {
+      const states = State.getStatesOfCountry(selectedCountryObj.isoCode).map(s => ({
+        label: s.name,
+        value: s.isoCode,
+        name: s.name
+      }));
+      setStateOptions(states);
+
+      const selectedStateObj = states.find(s => s.name === formData.state);
+      if (selectedStateObj) {
+        const cities = City.getCitiesOfState(selectedCountryObj.isoCode, selectedStateObj.value).map(c => ({
+          label: c.name,
+          value: c.name,
+          name: c.name
+        }));
+        setCityOptions(cities);
+      } else {
+        setCityOptions([]);
+      }
+    } else {
+      setStateOptions([]);
+      setCityOptions([]);
+    }
+  }, [formData.country, formData.state]);
 
   // ============================================================
   // LOGO UPLOAD
@@ -633,8 +761,11 @@ export default function Settings() {
     }
 
     // ADDRESS
-    if (!String(formData.address || "").trim()) {
-      formErrors.address = "Address is required.";
+    if (!String(formData.street || "").trim()) {
+      formErrors.street = "Street address is required.";
+    }
+    if (!String(formData.city || "").trim()) {
+      formErrors.city = "City is required.";
     }
 
     // BEFORE CHECKOUT
@@ -692,19 +823,31 @@ export default function Settings() {
       // SUB-BRANCH PROFILE UPDATE
       // ========================================================
 
+      const combinedAddress = [
+        formData.street.trim(),
+        formData.city.trim(),
+        formData.state.trim(),
+        formData.country.trim(),
+        formData.pincode.trim(),
+      ].filter(Boolean).join(", ");
+
       if (isSubBranchOwner && userData?.branchId) {
         const branchRes = await updateBranch(userData.branchId, {
           branchName: formData.companyName.trim(),
           phone: formData.phone.trim(),
           address: {
-            street: formData.address.trim(),
+            street: formData.street.trim(),
+            city: formData.city.trim(),
+            state: formData.state.trim(),
+            country: formData.country.trim(),
+            pincode: formData.pincode.trim(),
           },
         });
 
         if (!branchRes?.success) {
           throw new Error(
             branchRes?.message ||
-              "Unable to update branch details."
+            "Unable to update branch details."
           );
         }
       }
@@ -726,7 +869,14 @@ export default function Settings() {
       }
 
       data.append("gstNumber", String(formData.gstNumber).trim());
-      data.append("address", String(formData.address).trim());
+      data.append("address", combinedAddress);
+      
+      data.append("street", String(formData.street || "").trim());
+      data.append("city", String(formData.city || "").trim());
+      data.append("state", String(formData.state || "").trim());
+      data.append("country", String(formData.country || "").trim());
+      data.append("pincode", String(formData.pincode || "").trim());
+
       data.append("enableGst", String(Boolean(formData.enableGst)));
 
       data.append(
@@ -831,11 +981,11 @@ export default function Settings() {
       <style>{CSS}</style>
 
       <Helmet>
-        <title>Settings — SS Residency Hotel Management</title>
+        <title>Settings — SatylioHotel Management</title>
 
         <meta
           name="description"
-          content="Manage hotel configuration settings at SS Residency."
+          content="Manage hotel configuration settings at StayLio."
         />
       </Helmet>
 
@@ -843,16 +993,16 @@ export default function Settings() {
         {/* HEADER */}
 
         <header className="st-rise st-d1 flex flex-col gap-3 pb-4 sm:pb-5 border-b border-white/20">
-        
+
 
           <div className="flex items-start gap-3">
-          
+
 
             <div className="min-w-0">
-<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">                System Settings
+              <h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">                System Settings
               </h1>
 
-             
+
             </div>
           </div>
         </header>
@@ -868,13 +1018,13 @@ export default function Settings() {
 
           <SectionCard
             icon={Building2}
-            title="Hotel details & Tax Settings"
+            title="Tax Settings"
             delay="st-d2"
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {/* COMPANY NAME */}
 
-              <Field
+              {/* <Field
                 label="Company Name"
                 required
                 error={errors.companyName}
@@ -887,18 +1037,18 @@ export default function Settings() {
                   disabled={isSaving}
                   value={formData.companyName}
                   onChange={handleInputChange}
-                  placeholder="e.g. SS Residency"
+                  placeholder="e.g. StayLio"
                   className={inputClass(
                     errors.companyName,
                     "px-3.5 py-2.5"
                   )}
                 />
-              </Field>
+              </Field> */}
 
               {/* GST NUMBER */}
 
               <Field
-                label="GST Number"
+                label="GST Number (Optional)"
                 htmlFor="gstNumber"
               >
                 <input
@@ -908,7 +1058,7 @@ export default function Settings() {
                   disabled={isSaving}
                   value={formData.gstNumber}
                   onChange={handleInputChange}
-                  placeholder="e.g. 29GGGGG1314R9Z6"
+                  placeholder="e.g. 29GGGGG1314R9Z6 (Optional)"
                   className={inputClass(
                     errors.gstNumber,
                     "px-3.5 py-2.5 uppercase"
@@ -918,7 +1068,7 @@ export default function Settings() {
 
               {/* PHONE */}
 
-              <Field
+              {/* <Field
                 label="Phone Number(s)"
                 required
                 error={errors.phone}
@@ -942,11 +1092,11 @@ export default function Settings() {
                     )}
                   />
                 </div>
-              </Field>
+              </Field> */}
 
               {/* EMAIL */}
 
-              <Field
+              {/* <Field
                 label="Email Address"
                 required
                 error={errors.email}
@@ -971,13 +1121,12 @@ export default function Settings() {
                     placeholder="contact@example.com"
                     className={inputClass(
                       errors.email,
-                      `pl-10 pr-4 py-2.5 ${
-                        isSubBranchOwner ? "!bg-slate-100" : ""
+                      `pl-10 pr-4 py-2.5 ${isSubBranchOwner ? "!bg-slate-100" : ""
                       }`
                     )}
                   />
                 </div>
-              </Field>
+              </Field> */}
 
               {/* GST TOGGLE */}
 
@@ -1047,28 +1196,99 @@ export default function Settings() {
                 </div>
               </div>
 
-              {/* ADDRESS */}
+              {/* ADDRESS FIELDS */}
 
-              <Field
-                label="Hotel Address"
-                required
-                error={errors.address}
-                htmlFor="address"
-              >
-                <textarea
-                  id="address"
-                  name="address"
-                  rows="3"
-                  disabled={isSaving}
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  placeholder="Enter complete physical address..."
-                  className={inputClass(
-                    errors.address,
-                    "px-3.5 py-2.5 resize-none"
-                  )}
-                />
-              </Field>
+              {/* <div className="flex flex-col gap-3 md:col-span-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <Field
+                    label="Street Address"
+                    required
+                    error={errors.street}
+                    htmlFor="street"
+                    className="md:col-span-2"
+                  >
+                    <input
+                      type="text"
+                      id="street"
+                      name="street"
+                      disabled={isSaving}
+                      value={formData.street}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 123 Main Street"
+                      className={inputClass(errors.street, "px-3.5 py-2.5")}
+                    />
+                  </Field>
+
+                  <Field
+                    label="Country"
+                    error={errors.country}
+                    htmlFor="country"
+                  >
+                    <Select
+                      id="country"
+                      name="country"
+                      isDisabled={isSaving}
+                      options={countryOptions}
+                      styles={customSelectStyles}
+                      placeholder="Search Country..."
+                      value={countryOptions.find(o => o.name === formData.country) || null}
+                      onChange={handleSelectChange}
+                    />
+                  </Field>
+
+                  <Field
+                    label="State"
+                    error={errors.state}
+                    htmlFor="state"
+                  >
+                    <Select
+                      id="state"
+                      name="state"
+                      isDisabled={isSaving || !formData.country}
+                      options={stateOptions}
+                      styles={customSelectStyles}
+                      placeholder="Search State..."
+                      value={stateOptions.find(o => o.name === formData.state) || null}
+                      onChange={handleSelectChange}
+                    />
+                  </Field>
+
+                  <Field
+                    label="City"
+                    required
+                    error={errors.city}
+                    htmlFor="city"
+                  >
+                    <Select
+                      id="city"
+                      name="city"
+                      isDisabled={isSaving || !formData.state}
+                      options={cityOptions}
+                      styles={customSelectStyles}
+                      placeholder="Search City/District..."
+                      value={cityOptions.find(o => o.name === formData.city) || null}
+                      onChange={handleSelectChange}
+                    />
+                  </Field>
+
+                  <Field
+                    label="Pincode"
+                    error={errors.pincode}
+                    htmlFor="pincode"
+                  >
+                    <input
+                      type="text"
+                      id="pincode"
+                      name="pincode"
+                      disabled={isSaving}
+                      value={formData.pincode}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 600001"
+                      className={inputClass(errors.pincode, "px-3.5 py-2.5")}
+                    />
+                  </Field>
+                </div>
+              </div> */}
 
               {/* LOGO */}
 
@@ -1144,7 +1364,7 @@ export default function Settings() {
 
           <SectionCard
             icon={Clock}
-            title="Extra Time & Checkout Rules"
+            title="Extra Night / Time Stay Charge"
             delay="st-d3"
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">

@@ -8,6 +8,7 @@ import RoomAvailability from "./RoomAvailability/RoomAvailability";
 import AddBooking from "./Booking/AddBooking";
 import CurrentStays from "./CurrentStays/CurrentStays";
 import Checkout from "../HotelManagement/Checkout/Checkout";
+import { sendInvoiceEmail } from "../../service/invoiceApi";
 
 const styles = `
 @keyframes hm-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
@@ -179,17 +180,9 @@ export default function HotelManagement() {
             formData.append("paymentMethod", method);
             formData.append("pdf", pdfBlob, `Invoice_${invoiceNo}.pdf`);
 
-            const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+            const data = await sendInvoiceEmail(formData);
 
-            const response = await fetch(`${baseUrl}/api/invoice-management/send-email`, {
-                method: "POST",
-                credentials: "include",
-                body: formData,
-            });
-
-            const data = await response.json();
-
-            if (!response.ok || !data?.success) {
+            if (!data?.success) {
                 throw new Error(data?.message || "Failed to send invoice email.");
             }
 

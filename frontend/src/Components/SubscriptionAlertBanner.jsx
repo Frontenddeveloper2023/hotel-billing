@@ -184,7 +184,7 @@ export default function SubscriptionAlertBanner() {
 
             if (computed.isExpired) {
 
-              toast.error(
+              toast.warn(
 
                 "Your plan subscription has expired! Please upgrade to continue your work.",
 
@@ -200,7 +200,7 @@ export default function SubscriptionAlertBanner() {
 
                 : "";
 
-              toast.error(
+              toast.warn(
 
                 `Your plan subscription was cancelled by admin${reasonText}. Please upgrade or reactivate.`,
 
@@ -359,7 +359,7 @@ export default function SubscriptionAlertBanner() {
               <p className="mt-1 text-xs leading-5 text-[#64748B] sm:text-sm">Renew your plan to restore room management, bookings, and receptionist features.</p>
             </div>
           </div>
-          <button type="button" onClick={handleUpgradeClick} className="inline-flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#347BE9] px-4 text-sm font-bold text-white shadow-[0_8px_18px_rgba(52,123,233,0.20)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#2868DA] hover:shadow-[0_12px_24px_rgba(52,123,233,0.25)] active:translate-y-0 sm:w-auto">
+          <button type="button cursor-pointer" onClick={handleUpgradeClick} className="inline-flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#347BE9] px-4 text-sm font-bold text-white shadow-[0_8px_18px_rgba(52,123,233,0.20)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#2868DA] hover:shadow-[0_12px_24px_rgba(52,123,233,0.25)] active:translate-y-0 sm:w-auto">
             <Sparkles size={15} /><span>Renew Plan</span><ArrowRight size={15} />
           </button>
         </div>

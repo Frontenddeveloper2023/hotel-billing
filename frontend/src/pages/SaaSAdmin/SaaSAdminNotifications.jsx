@@ -91,8 +91,6 @@ const AVATAR_PALETTES = [
 const TABS = [
   { id: "all", label: "All Messages", countKey: "all" },
   { id: "unread", label: "New", countKey: "unread" },
-  { id: "review", label: "Needs Approval", countKey: "review" },
-  { id: "payments", label: "Payments", countKey: "payments" },
 ];
 
 const MONTHS = [
@@ -996,12 +994,30 @@ const NotificationDetailsModal = ({
     metadata.validFrom ||
     notification?.createdAt;
 
-  const planEndDate =
-    metadata.endDate ||
-    metadata.subscriptionEndDate ||
-    metadata.validUntil ||
-    metadata.expiryDate ||
-    metadata.expiresAt;
+  const planEndDate = (() => {
+    // Try stored end date first
+    const stored =
+      metadata.endDate ||
+      metadata.subscriptionEndDate ||
+      metadata.validUntil ||
+      metadata.expiryDate ||
+      metadata.expiresAt;
+    if (stored) return stored;
+
+    // Calculate from start date + billing cycle
+    const start = planStartDate ? new Date(planStartDate) : null;
+    if (!start || Number.isNaN(start.getTime())) return null;
+
+    const cycle = (billingCycle || "").toLowerCase();
+    const end = new Date(start);
+    if (cycle.includes("year") || cycle === "yearly" || cycle === "annual") {
+      end.setFullYear(end.getFullYear() + 1);
+    } else {
+      // Default to monthly (30 days)
+      end.setDate(end.getDate() + 30);
+    }
+    return end;
+  })();
 
   const upgradeDate =
     metadata.upgradeDate ||
@@ -1031,7 +1047,10 @@ const NotificationDetailsModal = ({
   const isUpgrade =
     notification?.type === "subscription_upgraded" ||
     notification?.type === "plan_upgraded" ||
-    notification?.type === "subscription_upgrade";
+    notification?.type === "subscription_upgrade" ||
+    (notification?.type === "payment_verified" &&
+      (notification?.title?.toLowerCase()?.includes("upgraded") ||
+       notification?.title?.toLowerCase()?.includes("upgrade")));
 
   const isSubscription =
     notification?.type === "subscription_activated" ||
@@ -1459,6 +1478,7 @@ const NotificationDetailsModal = ({
           Close
         </button>
 
+        {!isUpgrade && (
         <button
           type="button"
           onClick={() => {
@@ -1485,6 +1505,7 @@ const NotificationDetailsModal = ({
           {isPayment ? "View Subscription" : "View Hotel Details"}
           <ArrowUpRight size={14} />
         </button>
+        )}
 
       </div>
 
@@ -1626,13 +1647,11 @@ const NotificationDetailsModal = ({
   );
 
   const tabCounts = useMemo(() => {
-    let unread = 0, review = 0, payments = 0;
+    let unread = 0;
     for (const e of indexed) {
       if (!e.item.isRead) unread++;
-      if (e.review) review++;
-      if (e.payment) payments++;
     }
-    return { all: indexed.length, unread, review, payments };
+    return { all: indexed.length, unread };
   }, [indexed]);
 
   const filtered = useMemo(() => {
@@ -1640,8 +1659,6 @@ const NotificationDetailsModal = ({
     const out = [];
     for (const e of indexed) {
       if (activeTab === "unread" && e.item.isRead) continue;
-      if (activeTab === "review" && !e.review) continue;
-      if (activeTab === "payments" && !e.payment) continue;
       if (selectedDate && !isSameDay(e.item.createdAt, selectedDate)) continue;
       if (q && !e.hay.includes(q)) continue;
       out.push(e.item);

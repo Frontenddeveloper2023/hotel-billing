@@ -25,6 +25,7 @@ import {
 } from "../../../service/bookingApi.js";
 
 import { createCheckoutBill } from "../../../service/checkoutBill.js";
+import { getSettings } from "../../../service/settingsService.js";
 
 import InvoiceTemplate from "../../InvoiceTemplate/InvoiceTemplate.jsx";
 
@@ -47,15 +48,33 @@ export default function Payment({
   const [errorMessage, setErrorMessage] = useState("");
   const [savedInvoice, setSavedInvoice] = useState(null);
   const [serverBilling, setServerBilling] = useState(null);
+  const [settings, setSettings] = useState(null);
 
   const [pdfBlob, setPdfBlob] = useState(null);
 
   const receiptRef = useRef(null);
 
-
   const successCallbackSentRef = useRef(false);
 
   const pdfGenerationStartedRef = useRef(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadSettings = async () => {
+      try {
+        const res = await getSettings();
+        if (isMounted && res?.success && res.data) {
+          setSettings(res.data);
+        }
+      } catch (err) {
+        console.warn("[Payment] Failed to load settings:", err);
+      }
+    };
+    loadSettings();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
 
   const money = (value) => {
@@ -186,6 +205,34 @@ export default function Payment({
       const serverRoom =
         getServerRoom(room);
 
+      const roomRate = money(
+        serverRoom?.pricePerNight ??
+          room?.pricePerNight ??
+          room?.rate ??
+          0
+      );
+
+      const extraFullDays = Number(
+        serverRoom?.extraFullDays ??
+          room?.extraNightsStayed ??
+          room?.extraStay?.extraDays ??
+          0
+      );
+
+      const extraFullDayCharge = money(
+        serverRoom?.extraFullDayCharge ??
+          room?.extraDayCharge ??
+          (extraFullDays * roomRate)
+      );
+
+      const checkoutPolicyCharge = money(
+        serverRoom?.checkoutDayCharge ??
+          serverRoom?.checkoutPolicy?.amount ??
+          room?.extraTimeCharge ??
+          room?.extraStay?.timeCharge ??
+          0
+      );
+
       return {
         ...room,
 
@@ -194,6 +241,9 @@ export default function Payment({
 
         physicalRoomId:
           getPhysicalRoomId(room),
+
+        rate: roomRate,
+        pricePerNight: roomRate,
 
         bookedNights: Number(
           serverRoom?.bookedNights ??
@@ -211,19 +261,9 @@ export default function Payment({
             0
         ),
 
-        extraFullDays: Number(
-          serverRoom?.extraFullDays ?? 0
-        ),
-
-        extraFullDayCharge: money(
-          serverRoom?.extraFullDayCharge ?? 0
-        ),
-
-        checkoutPolicyCharge: money(
-          serverRoom?.checkoutDayCharge ??
-            serverRoom?.checkoutPolicy?.amount ??
-            0
-        ),
+        extraFullDays,
+        extraFullDayCharge,
+        checkoutPolicyCharge,
       };
     });
 
@@ -234,88 +274,29 @@ export default function Payment({
   const foodServices =
     selectedRooms.flatMap((room) =>
       Array.isArray(room?.foodServices)
-        ? room.foodServices
+        ? room.foodServices.map((f) => ({
+            ...f,
+            roomNumber: f?.roomNumber || room?.roomNumber || "",
+          }))
         : []
     );
 
   const roomServices =
     selectedRooms.flatMap((room) =>
       Array.isArray(room?.roomServices)
-        ? room.roomServices
+        ? room.roomServices.map((r) => ({
+            ...r,
+            roomNumber: r?.roomNumber || room?.roomNumber || "",
+          }))
         : []
     );
 
   // =========================================================
-  // BILLING DISPLAY VALUES
+  // =========================================================
+  // BILLING DISPLAY VALUES (Always stable from Checkout)
   // =========================================================
 
-  const billing =
-    serverBilling?.calculation ||
-    paymentDetails?.billing ||
-    {};
-
-  const serverRoomRent = money(
-    billing.roomSubtotal
-  );
-
-  const serverFoodTotal = money(
-    billing.foodTotal
-  );
-
-  const serverRoomServiceTotal = money(
-    billing.roomServiceTotal
-  );
-
-  const serverExtraFullDayCharge =
-    money(
-      billing.extraFullDayCharge ??
-        billing.extraFullDayChargeTotal
-    );
-
-  const serverCheckoutPolicyCharge =
-    money(
-      billing.checkoutPolicy?.amount ??
-        billing.checkoutPolicyAmount ??
-        billing.checkoutPolicyCharge
-    );
-
-  /*
-   * Extra charges are two separate things:
-   *
-   * 1. Extra full day charge
-   * 2. Checkout-time policy charge
-   */
-
-  const serverExtraChargeTotal =
-    serverExtraFullDayCharge +
-    serverCheckoutPolicyCharge;
-
-  const serverGstAmount = money(
-    billing.gst?.amount ??
-      billing.gstAmount
-  );
-
-  const serverGstPercentage = money(
-    billing.gst?.rate ??
-      billing.gstPercentage
-  );
-
-  const serverGrandTotal = money(
-    billing.grandTotal
-  );
-
-  const serverAdvancePaid = money(
-    billing.initialPaidAmount ??
-      billing.advancePaid
-  );
-
-  const serverBalanceDue = money(
-    billing.balanceDue
-  );
-
-  // =========================================================
-  // PREVIEW ADVANCE
-  // =========================================================
+  const billing = paymentDetails?.billing || {};
 
   const previewAdvancePaid =
     checkoutBookings.reduce(
@@ -328,108 +309,85 @@ export default function Payment({
       0
     );
 
-  // =========================================================
-  // PREVIEW ROOM RENT
-  // =========================================================
-
-  const roomRent = serverBilling
-    ? serverRoomRent
-    : roomBreakdown.reduce(
-        (sum, room) => {
-          const bookedNights =
-            Number(
-              room.bookedNights || 0
-            );
-
-          const roomRate = money(
-            room.pricePerNight
+  const roomRent = money(
+    billing.roomTotal ??
+    billing.roomSubtotal ??
+    roomBreakdown.reduce(
+      (sum, room) => {
+        const bookedNights =
+          Number(
+            room.bookedNights || room.nights || 0
           );
 
-          return (
-            sum +
-            bookedNights * roomRate
-          );
-        },
-        0
-      );
+        const roomRate = money(
+          room.pricePerNight || room.rate
+        );
 
-  // =========================================================
-  // FOOD
-  // =========================================================
-
-  const foodTotal = serverBilling
-    ? serverFoodTotal
-    : foodServices.reduce(
-        (sum, item) =>
-          sum + money(item.total),
-        0
-      );
-
-  // =========================================================
-  // ROOM SERVICE
-  // =========================================================
-
-  const roomServiceTotal = serverBilling
-    ? serverRoomServiceTotal
-    : roomServices.reduce(
-        (sum, item) =>
-          sum + money(item.total),
-        0
-      );
-
-  // =========================================================
-  // EXTRA CHARGES
-  // =========================================================
-
-  const extraChargeTotal = serverBilling
-    ? serverExtraChargeTotal
-    : roomBreakdown.reduce(
-        (sum, room) =>
+        return (
           sum +
-          money(
-            room.extraFullDayCharge
-          ) +
-          money(
-            room.checkoutPolicyCharge
-          ),
-        0
-      );
+          bookedNights * roomRate
+        );
+      },
+      0
+    )
+  );
 
-  // =========================================================
-  // ADVANCE
-  // =========================================================
+  const foodTotal = money(
+    billing.foodTotal ??
+    foodServices.reduce(
+      (sum, item) =>
+        sum + money(item.total),
+      0
+    )
+  );
 
-  const advancePaid = serverBilling
-    ? serverAdvancePaid
-    : previewAdvancePaid;
+  const roomServiceTotal = money(
+    billing.roomServiceTotal ??
+    billing.serviceTotal ??
+    roomServices.reduce(
+      (sum, item) =>
+        sum + money(item.total),
+      0
+    )
+  );
 
-  // =========================================================
-  // GST
-  // =========================================================
+  const extraFullDayCharge = money(
+    billing.extraDayCharge ??
+    billing.extraFullDayCharge ??
+    billing.extraFullDayChargeTotal ??
+    0
+  );
 
-  const gstPercentage = serverBilling
-    ? serverGstPercentage
-    : Math.max(
-        0,
-        Number(
-          paymentDetails?.billing
-            ?.gstPercentage ?? 0
-        )
-      );
+  const checkoutPolicyCharge = money(
+    billing.extraTimeCharge ??
+    billing.checkoutPolicy?.amount ??
+    billing.checkoutPolicyAmount ??
+    billing.checkoutPolicyCharge ??
+    0
+  );
 
-  const gstAmount = serverBilling
-    ? serverGstAmount
-    : Math.max(
-        0,
-        money(
-          paymentDetails?.billing
-            ?.gstAmount
-        )
-      );
+  const extraChargeTotal = money(
+    billing.extraChargeTotal ??
+    (extraFullDayCharge + checkoutPolicyCharge)
+  );
 
-  // =========================================================
-  // PREVIEW TOTAL
-  // =========================================================
+  const advancePaid = money(
+    billing.advancePaid ?? previewAdvancePaid
+  );
+
+  const gstPercentage = Math.max(
+    0,
+    Number(
+      billing.gstPercentage ?? 0
+    )
+  );
+
+  const gstAmount = Math.max(
+    0,
+    money(
+      billing.gstAmount
+    )
+  );
 
   const previewGrandTotal =
     roomRent +
@@ -438,34 +396,18 @@ export default function Payment({
     extraChargeTotal +
     gstAmount;
 
-  const previewBalanceDue =
-    Math.max(
-      0,
-      previewGrandTotal -
-        advancePaid
-    );
+  const grandTotal = money(
+    billing.grandTotal ?? previewGrandTotal
+  );
 
-  // =========================================================
-  // FINAL DISPLAY TOTAL
-  // =========================================================
-
-  const grandTotal = serverBilling
-    ? serverGrandTotal
-    : money(
-        paymentDetails?.billing
-          ?.grandTotal
-      ) || previewGrandTotal;
-
-  const currentPayment = serverBilling
-    ? serverBalanceDue
-    : Math.max(
-        0,
-        money(
-          paymentDetails?.billing
-            ?.balanceDue ??
-            amount
-        )
-      );
+  const currentPayment = Math.max(
+    0,
+    money(
+      billing.balanceDue ??
+        (grandTotal - advancePaid) ??
+        amount
+    )
+  );
 
   const balanceDue = currentPayment;
 
@@ -611,7 +553,10 @@ export default function Payment({
           perNightRoomPrice:
             money(
               serverRoom?.pricePerNight ??
-                room?.pricePerNight
+                room?.pricePerNight ??
+                room?.perNightRoomPrice ??
+                room?.rate ??
+                0
             ),
 
           adults:
@@ -643,13 +588,16 @@ export default function Payment({
           extraFullDays:
             Number(
               serverRoom?.extraFullDays ??
+                room?.extraNightsStayed ??
+                room?.extraStay?.extraDays ??
                 0
             ),
 
           extraFullDayCharge:
             money(
               serverRoom?.extraFullDayCharge ??
-                0
+                room?.extraDayCharge ??
+                (Number(room?.extraNightsStayed ?? room?.extraStay?.extraDays ?? 0) * money(room?.pricePerNight ?? room?.rate ?? 0))
             ),
 
           checkoutPolicyCharge:
@@ -658,86 +606,106 @@ export default function Payment({
                 serverRoom
                   ?.checkoutPolicy
                   ?.amount ??
+                room?.extraTimeCharge ??
+                room?.extraStay?.timeCharge ??
                 0
             ),
 
           checkIn:
-            room?.checkIn || "",
+            room?.checkIn || serverRoom?.checkIn || room?.stay?.checkIn || "",
 
           checkInTime:
-            room?.checkInTime || "",
+            room?.checkInTime || serverRoom?.checkInTime || room?.stay?.checkInTime || "",
 
           checkOut:
-            room?.checkOut || "",
+            room?.checkOut || serverRoom?.checkOut || room?.stay?.checkOut || "",
 
           checkOutTime:
-            room?.checkOutTime || "",
+            room?.checkOutTime || serverRoom?.checkOutTime || room?.stay?.checkOutTime || "",
+
+          actualCheckoutDate:
+            room?.actualCheckoutDate || serverRoom?.actualCheckoutDate || actualCheckoutDate || "",
+
+          actualCheckoutTime:
+            room?.actualCheckoutTime || serverRoom?.actualCheckoutTime || actualCheckoutTime || "",
         };
       });
 
     // -------------------------------------------------------
-    // FINAL SERVER VALUES
+    // FINAL AUTHORITATIVE VALUES
     // -------------------------------------------------------
 
     const finalRoomSubtotal =
       money(
-        calculation?.roomSubtotal
+        calculation?.roomTotal ??
+        calculation?.roomSubtotal ??
+        roomRent
       );
 
     const finalFoodTotal =
       money(
-        calculation?.foodTotal
+        calculation?.foodTotal ?? foodTotal
       );
 
     const finalRoomServiceTotal =
       money(
-        calculation?.roomServiceTotal
+        calculation?.roomServiceTotal ??
+        calculation?.serviceTotal ??
+        roomServiceTotal
       );
 
     const finalExtraFullDayCharge =
       money(
+        calculation?.extraDayCharge ??
         calculation?.extraFullDayChargeTotal ??
-          calculation?.extraFullDayCharge
+        calculation?.extraFullDayCharge ??
+        extraFullDayCharge
       );
 
     const finalCheckoutPolicyCharge =
       money(
-        calculation?.checkoutPolicy
-          ?.amount ??
-          calculation?.checkoutPolicyAmount ??
-          calculation?.checkoutPolicyCharge
+        calculation?.extraTimeCharge ??
+        calculation?.checkoutPolicy?.amount ??
+        calculation?.checkoutPolicyAmount ??
+        calculation?.checkoutPolicyCharge ??
+        checkoutPolicyCharge
       );
 
     const finalExtraCharge =
-      finalExtraFullDayCharge +
-      finalCheckoutPolicyCharge;
+      money(
+        calculation?.extraChargeTotal ??
+        (finalExtraFullDayCharge + finalCheckoutPolicyCharge)
+      );
 
     const finalGstAmount =
       money(
+        calculation?.gstAmount ??
         calculation?.gst?.amount ??
-          calculation?.gstAmount
+        gstAmount
       );
 
     const finalGstRate =
       money(
+        calculation?.gstPercentage ??
         calculation?.gst?.rate ??
-          calculation?.gstPercentage
+        gstPercentage
       );
 
     const finalGrandTotal =
       money(
-        calculation?.grandTotal
+        calculation?.grandTotal ?? grandTotal
       );
 
     const finalAdvancePaid =
       money(
+        calculation?.advancePaid ??
         calculation?.initialPaidAmount ??
-          calculation?.advancePaid
+        advancePaid
       );
 
     const finalBalanceDue =
       money(
-        calculation?.balanceDue
+        calculation?.balanceDue ?? balanceDue
       );
 
     // -------------------------------------------------------
@@ -1049,7 +1017,9 @@ export default function Payment({
             ) {
               items.push({
                 description:
-                  `Extra Full Day - ${room.roomNumber}`,
+                  `Extra Night Stay - Room ${room.roomNumber} (${extraFullDays} Night${
+                    extraFullDays !== 1 ? "s" : ""
+                  })`,
 
                 roomNumber:
                   room.roomNumber,
@@ -1066,7 +1036,7 @@ export default function Payment({
             }
 
             // -----------------------------------------------
-            // CHECKOUT POLICY
+            // EXTRA TIME STAY CHARGE (LATE CHECKOUT)
             // -----------------------------------------------
 
             if (
@@ -1074,7 +1044,7 @@ export default function Payment({
             ) {
               items.push({
                 description:
-                  `Checkout Policy Charge - ${room.roomNumber}`,
+                  `Extra Time Stay Charge - Room ${room.roomNumber}`,
 
                 roomNumber:
                   room.roomNumber,
@@ -1099,16 +1069,13 @@ export default function Payment({
 
         ...invoiceFoodServices.map(
           (item) => ({
-            description:
-              `${item.name || "Food Item"} - Room ${
-                item.roomNumber || "-"
-              }`,
+            description: item.name || item.foodName || item.description || "Food Item",
 
             roomNumber:
-              item.roomNumber || "-",
+              item.roomNumber || "",
 
             unitPrice:
-              money(item.price),
+              money(item.price ?? item.unitPrice),
 
             quantity:
               Number(
@@ -1116,7 +1083,7 @@ export default function Payment({
               ),
 
             total:
-              money(item.total),
+              money(item.total ?? (money(item.price ?? item.unitPrice) * Number(item.quantity || 1))),
           })
         ),
 
@@ -1126,16 +1093,13 @@ export default function Payment({
 
         ...invoiceRoomServices.map(
           (item) => ({
-            description:
-              `${item.name || "Room Service"} - Room ${
-                item.roomNumber || "-"
-              }`,
+            description: item.name || item.serviceName || item.description || "Room Service",
 
             roomNumber:
-              item.roomNumber || "-",
+              item.roomNumber || "",
 
             unitPrice:
-              money(item.fees),
+              money(item.fees ?? item.price ?? item.unitPrice),
 
             quantity:
               Number(
@@ -1143,7 +1107,7 @@ export default function Payment({
               ),
 
             total:
-              money(item.total),
+              money(item.total ?? (money(item.fees ?? item.price ?? item.unitPrice) * Number(item.quantity || 1))),
           })
         ),
       ],
@@ -1420,7 +1384,7 @@ export default function Payment({
 
       // =====================================================
       // STEP 1
-      // BACKEND CALCULATES COMPLETE BILL
+      // BACKEND CREATES CHECKOUT BILL
       // =====================================================
 
       const billResponse =
@@ -1434,6 +1398,9 @@ export default function Payment({
 
           stayStatus:
             "vacated",
+
+          billing:
+            paymentDetails?.billing,
         });
 
       if (
@@ -1451,58 +1418,9 @@ export default function Payment({
           ?.calculation ||
         null;
 
-      if (!calculation) {
-        throw new Error(
-          "Backend did not return checkout calculation."
-        );
-      }
-
-      // Backend MUST provide these values.
-      if (
-        calculation.grandTotal ===
-          undefined ||
-        calculation.balanceDue ===
-          undefined
-      ) {
-        throw new Error(
-          "Invalid billing response from server."
-        );
-      }
-
-      // =====================================================
-      // SAVE SERVER BILLING
-      // =====================================================
-
-      setServerBilling({
-        ...billResponse,
-        calculation,
-      });
-
-      const serverGrandTotal =
-        Math.max(
-          0,
-          money(
-            calculation.grandTotal
-          )
-        );
-
-      const serverBalanceDue =
-        Math.max(
-          0,
-          money(
-            calculation.balanceDue
-          )
-        );
-
-      const serverAdvancePaid =
-        Math.max(
-          0,
-          money(
-            calculation
-              .initialPaidAmount ??
-              calculation.advancePaid
-          )
-        );
+      const serverGrandTotal = grandTotal;
+      const serverBalanceDue = balanceDue;
+      const serverAdvancePaid = advancePaid;
 
       console.info(
         "[Payment] Backend billing confirmed.",
@@ -2010,12 +1928,16 @@ if (!checkoutBillId) {
   );
 }
 
+const invoicePayload = buildInvoicePayload(paymentDetails?.billing);
+
 console.info(
   "[Payment] Creating invoice from CheckoutBill and Booking data.",
   {
     checkoutBillId,
     bookingIds: uniqueBookingIds,
     paymentMode,
+    grandTotal: invoicePayload.financials?.grandTotal,
+    balanceDue: invoicePayload.financials?.balanceDue,
   }
 );
 
@@ -2024,6 +1946,13 @@ const invoiceResponse =
     checkoutBillId,
     bookingIds: uniqueBookingIds,
     paymentMode,
+    financials: invoicePayload.financials,
+    extraCharges: invoicePayload.extraCharges,
+    staySummary: invoicePayload.staySummary,
+    items: invoicePayload.items,
+    rooms: invoicePayload.rooms,
+    selectedRooms: invoicePayload.rooms,
+    billing: paymentDetails?.billing,
     uiExtraDetails: {
       extraHours: paymentDetails?.staySummary?.extraHoursStayed || 0,
       extraMinutes: paymentDetails?.staySummary?.extraMinutesStayed || 0,
@@ -2032,6 +1961,10 @@ const invoiceResponse =
       extraTimeUnits: paymentDetails?.staySummary?.extraTimeUnits || 0,
     }
   });
+
+
+
+
 
 if (!invoiceResponse?.success) {
   throw new Error(
@@ -2275,6 +2208,10 @@ useEffect(() => {
               )
               .filter(Boolean),
 
+
+
+
+            
           // SAME PDF
           pdfBlob:
             generatedBlob,
@@ -2294,6 +2231,8 @@ useEffect(() => {
       );
     }
   };
+
+  
 
   generateInvoicePdf();
 
@@ -2371,8 +2310,9 @@ useEffect(() => {
           pdfHeight
         );
 
+        const safeHotelName = (settings?.companyName || "Hotel").replace(/[^a-zA-Z0-9_-]/g, "_");
         pdf.save(
-          `Invoice_${savedInvoice.invoiceNo}.pdf`
+          `${safeHotelName}_Invoice_${savedInvoice.invoiceNo}.pdf`
         );
 
         setTimeout(
@@ -2449,6 +2389,10 @@ useEffect(() => {
 
         formatTime={
           formatTime
+        }
+
+        hotelSettings={
+          settings
         }
       />
     );

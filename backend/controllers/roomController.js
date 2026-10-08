@@ -507,6 +507,20 @@ const updateRoom = async (req, res) => {
             });
         }
 
+        const currentStatus = String(existingRoom.status || "").toLowerCase();
+        if (currentStatus === "booked" || currentStatus === "occupied") {
+            log(
+                "WARN",
+                `Update Room rejected: Room is currently occupied/booked - roomNumber=${existingRoom.roomNumber}`
+            );
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "This room is currently occupied/booked by a guest and cannot be edited. Please wait until checkout.",
+            });
+        }
+
         // ----------------------------------------------------
         // ROOM NUMBER VALIDATION
         // ----------------------------------------------------

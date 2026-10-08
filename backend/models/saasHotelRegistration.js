@@ -116,6 +116,12 @@ const hotelRegistrationSchema = new mongoose.Schema(
       default: "",
     },
 
+    rejectionDetails: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
 
     // ==========================================
     // PAYMENT STATUS

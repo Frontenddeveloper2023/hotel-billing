@@ -316,10 +316,16 @@ export default function CurrentStays({ onCheckout }) {
       }
 
       const foodServices = Array.isArray(room.foodServices)
-        ? room.foodServices
+        ? room.foodServices.map((f) => ({
+            ...f,
+            roomNumber: f.roomNumber || room.roomNumber || "",
+          }))
         : [];
       const roomServices = Array.isArray(room.roomServices)
-        ? room.roomServices
+        ? room.roomServices.map((r) => ({
+            ...r,
+            roomNumber: r.roomNumber || room.roomNumber || "",
+          }))
         : [];
 
       const foodTotal = foodServices.reduce(
@@ -462,7 +468,8 @@ export default function CurrentStays({ onCheckout }) {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
        
-<h1 className="text-[12px] sm:text-[15px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">            Current Stays
+<h1 className="text-[12px] sm:text-[15px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">         
+     Current Stays
           </h1>
         
 

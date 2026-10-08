@@ -1,232 +1,390 @@
 import nodemailer from "nodemailer";
-
 import { log } from "./logger.js";
+import Settings from "../models/settings.js";
+import Hotels from "../models/hotels.js";
 
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    }
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT),
+  secure: process.env.SMTP_SECURE === "true",
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
 });
 
-const sendOTP = async (to, otp) => {
-    try {
-        await transporter.sendMail({
-            from: `"SS Residency" <${process.env.SMTP_USER}>`,
-            to,
-            subject: 'Your SS Residency Verification Code',
-
-            text: `Your SS Residency verification code is ${otp}. This code is valid for 10 minutes.`,
-
-            html: `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SS Residency - OTP Verification</title>
-</head>
-
-<body style="
-    margin: 0;
-    padding: 0;
-    background-color: #f3f9fa;
-    font-family: Arial, Helvetica, sans-serif;
-    color: #111827;
-">
-
-<table width="100%" cellpadding="0" cellspacing="0" border="0"
-    style="background-color: #f3f9fa; padding: 40px 15px;">
-
-    <tr>
-        <td align="center">
-
-            <!-- Main Container -->
-            <table width="100%" cellpadding="0" cellspacing="0" border="0"
-                style="
-                    max-width: 520px;
-                    background-color: #ffffff;
-                    border: 1px solid #d5e1e4;
-                    border-radius: 12px;
-                    overflow: hidden;
-                ">
-
-                <!-- Header -->
-                <tr>
-                    <td style="
-                        padding: 30px 35px 20px;
-                        text-align: left;
-                    ">
-
-                        <div style="
-                            font-size: 24px;
-                            font-weight: 700;
-                            color: #065b62;
-                            margin-bottom: 22px;
-                        ">
-                            SS Residency
-                        </div>
-
-                        <div style="
-                            font-size: 24px;
-                            font-weight: 700;
-                            color: #111111;
-                            margin-bottom: 10px;
-                        ">
-                            Verification Code
-                        </div>
-
-                        <div style="
-                            font-size: 14px;
-                            line-height: 22px;
-                            color: #4b5563;
-                        ">
-                            Use the verification code below to sign in
-                            to your SS Residency account.
-                        </div>
-
-                    </td>
-                </tr>
-
-                <!-- OTP Section -->
-                <tr>
-                    <td style="padding: 10px 35px 25px;">
-
-                        <div style="
-                            background-color: #f3f9fa;
-                            border: 1px solid #d7e6e8;
-                            border-radius: 8px;
-                            padding: 25px 20px;
-                            text-align: center;
-                        ">
-
-                            <div style="
-                                font-size: 12px;
-                                font-weight: 600;
-                                color: #52666a;
-                                text-transform: uppercase;
-                                letter-spacing: 1px;
-                                margin-bottom: 12px;
-                            ">
-                                Your OTP
-                            </div>
-
-                            <div style="
-                                font-size: 34px;
-                                font-weight: 700;
-                                letter-spacing: 8px;
-                                color: #065b62;
-                            ">
-                                ${otp}
-                            </div>
-
-                        </div>
-
-                    </td>
-                </tr>
-
-                <!-- Information -->
-                <tr>
-                    <td style="padding: 0 35px 25px;">
-
-                        <p style="
-                            margin: 0 0 10px;
-                            font-size: 14px;
-                            line-height: 21px;
-                            color: #4b5563;
-                        ">
-                            This verification code is valid for
-                            <strong style="color: #065b62;">5 minutes</strong>.
-                        </p>
-
-                        <p style="
-                            margin: 0;
-                            font-size: 13px;
-                            line-height: 20px;
-                            color: #6b7280;
-                        ">
-                            If you did not request this code, you can safely
-                            ignore this email.
-                        </p>
-
-                    </td>
-                </tr>
-
-                <!-- Divider -->
-                <tr>
-                    <td style="padding: 0 35px;">
-                        <div style="
-                            height: 1px;
-                            background-color: #e5eef0;
-                        "></div>
-                    </td>
-                </tr>
-
-                <!-- Footer -->
-                <tr>
-                    <td style="
-                        padding: 22px 35px 28px;
-                        text-align: center;
-                    ">
-
-                        <div style="
-                            font-size: 12px;
-                            color: #52666a;
-                            margin-bottom: 8px;
-                        ">
-                            SS Residency Hotel Management • Secured Access
-                        </div>
-
-                        <div style="
-                            font-size: 12px;
-                            color: #718096;
-                        ">
-                            🔒 Your information is secure and encrypted
-                        </div>
-
-                    </td>
-                </tr>
-
-            </table>
-
-            <!-- Bottom Text -->
-            <div style="
-                max-width: 520px;
-                padding-top: 18px;
-                text-align: center;
-                font-size: 11px;
-                line-height: 18px;
-                color: #8a9a9d;
-            ">
-                This is an automated email. Please do not reply to this message.
-            </div>
-
-        </td>
-    </tr>
-
-</table>
-
-</body>
-</html>
-            `
-        });
-
-        log(`OTP sent to ${to}`);
-
-    } catch (error) {
-        console.error('Error sending OTP:', error);
-        log(`Error sending OTP to ${to}: ${error.message}`);
-        throw error;
-    }
+const getFrontendUrl = () => {
+  // Auto-detect based on NODE_ENV from backend .env
+  if (process.env.NODE_ENV === "production") {
+    return "https://webscape.co.in/hotel-billing-system";
+  }
+  
+  return "http://localhost:5173/hotel-billing-system";
 };
 
 
 
+/**
+ * Fetch hotel name configured in the Settings page (companyName).
+ * If not found in Settings, fall back to Hotels collection or provided fallback name.
+ */
+export const getHotelNameFromSettings = async ({ hotelId, hotelName }) => {
+  try {
+    if (hotelId) {
+      const setting = await Settings.findOne({ hotelId })
+        .sort({ updatedAt: -1 })
+        .select("companyName")
+        .lean();
+
+      if (setting?.companyName && setting.companyName.trim()) {
+        return setting.companyName.trim();
+      }
+
+      const hotel = await Hotels.findById(hotelId)
+        .select("hotelName")
+        .lean();
+
+      if (hotel?.hotelName && hotel.hotelName.trim()) {
+        return hotel.hotelName.trim();
+      }
+    }
+
+    if (hotelName && hotelName.trim()) {
+      const hotel = await Hotels.findOne({
+        hotelName: hotelName.trim(),
+      })
+        .select("_id")
+        .lean();
+
+      if (hotel?._id) {
+        const setting = await Settings.findOne({
+          hotelId: hotel._id,
+        })
+          .sort({ updatedAt: -1 })
+          .select("companyName")
+          .lean();
+
+        if (setting?.companyName && setting.companyName.trim()) {
+          return setting.companyName.trim();
+        }
+      }
+
+      return hotelName.trim();
+    }
+  } catch (err) {
+    log.error(
+      `[EMAIL] Error getting hotel name from settings: ${err.message}`
+    );
+  }
+
+  return hotelName?.trim() || "Hotel";
+};
+
 // ============================================================
-// ADMIN MANUAL EMAIL
+// 1. OTP VERIFICATION EMAIL
+// ============================================================
+const sendOTP = async (to, otp) => {
+  try {
+    await transporter.sendMail({
+      from: `"StayLio" <${process.env.SMTP_USER}>`,
+      to,
+      subject: "Your StayLio Verification Code",
+
+      text: `Hello,
+
+Your StayLio verification code is ${otp}.
+
+This code is valid for 5 minutes. Please do not share this code with anyone.
+
+Thank you,
+StayLio Team`,
+
+      html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+  <title>StayLio - Verify Your Email</title>
+</head>
+
+<body
+  style="
+    margin:0;
+    padding:0;
+    background:#ffffff;
+    font-family:Arial,Helvetica,sans-serif;
+    color:#111827;
+    -webkit-font-smoothing:antialiased;
+  "
+>
+
+<table
+  width="100%"
+  cellpadding="0"
+  cellspacing="0"
+  border="0"
+  style="background:#ffffff;"
+>
+  <tr>
+    <td
+      align="center"
+      style="padding:40px 20px;"
+    >
+
+      <table
+        width="100%"
+        cellpadding="0"
+        cellspacing="0"
+        border="0"
+        style="
+          max-width:560px;
+          width:100%;
+        "
+      >
+
+        <!-- BRAND -->
+        <tr>
+          <td style="padding-bottom:34px;">
+
+            <div
+              style="
+                font-size:24px;
+                line-height:30px;
+                font-weight:700;
+                color:#111827;
+                letter-spacing:-0.5px;
+              "
+            >
+              StayLio
+            </div>
+
+            <div
+              style="
+                margin-top:4px;
+                font-size:12px;
+                line-height:18px;
+                font-weight:500;
+                color:#6B7280;
+              "
+            >
+              Hotel Management Platform
+            </div>
+
+          </td>
+        </tr>
+
+
+        <!-- HEADING -->
+        <tr>
+          <td>
+
+            <div
+              style="
+                font-size:26px;
+                line-height:34px;
+                font-weight:700;
+                color:#111827;
+                letter-spacing:-0.6px;
+                margin-bottom:12px;
+              "
+            >
+              Thank you for signing up
+            </div>
+
+            <div
+              style="
+                font-size:15px;
+                line-height:23px;
+                font-weight:400;
+                color:#4B5563;
+                margin-bottom:24px;
+              "
+            >
+              Enter this code to confirm your email
+              
+            </div>
+
+          </td>
+        </tr>
+
+
+        <!-- OTP -->
+        <tr>
+          <td>
+
+            <div
+              style="
+                font-size:30px;
+                line-height:38px;
+                font-weight:700;
+                letter-spacing:5px;
+                color:#64745F;
+                margin-bottom:26px;
+              "
+            >
+              ${otp}
+            </div>
+
+          </td>
+        </tr>
+
+
+        <!-- SECURITY BOX -->
+        <tr>
+          <td>
+
+            <table
+              width="100%"
+              cellpadding="0"
+              cellspacing="0"
+              border="0"
+              style="
+                border:1px solid #E5E7EB;
+                background:#FFFFFF;
+              "
+            >
+              <tr>
+
+                <td style="padding:18px 16px;">
+
+                  <table
+                    width="100%"
+                    cellpadding="0"
+                    cellspacing="0"
+                    border="0"
+                  >
+                    <tr>
+
+                      <td
+                        width="28"
+                        valign="top"
+                        style="padding-right:8px;"
+                      >
+                        <div
+                          style="
+                            font-size:16px;
+                            line-height:20px;
+                            color:#374151;
+                          "
+                        >
+                          ◆
+                        </div>
+                      </td>
+
+                      <td valign="top">
+
+                        <div
+                          style="
+                            font-size:14px;
+                            line-height:20px;
+                            font-weight:700;
+                            color:#111827;
+                            margin-bottom:8px;
+                          "
+                        >
+                          Your account security is important
+                        </div>
+
+                        <div
+                          style="
+                            font-size:13px;
+                            line-height:20px;
+                            color:#6B7280;
+                          "
+                        >
+                          This verification code is valid for
+                          <strong style="color:#374151;">
+                            5 minutes
+                          </strong>.
+                          If you did not request this code,
+                          you can safely ignore this email.
+                        </div>
+
+                      </td>
+
+                    </tr>
+                  </table>
+
+                </td>
+
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+
+
+       
+
+
+        <!-- EXPIRY -->
+        <tr>
+          <td style="padding-top:24px;">
+
+            <div
+              style="
+                font-size:12px;
+                line-height:19px;
+                color:#9CA3AF;
+              "
+            >
+              This verification code will expire in 5 minutes.
+            </div>
+
+          </td>
+        </tr>
+
+
+        <!-- FOOTER -->
+        <tr>
+          <td style="padding-top:40px;">
+
+            <div
+              style="
+                border-top:1px solid #F0F0F0;
+                padding-top:18px;
+                font-size:12px;
+                line-height:19px;
+                color:#9CA3AF;
+              "
+            >
+              <strong style="color:#6B7280;">
+                StayLio
+              </strong>
+              · Hotel Management Platform
+              <br>
+              This is an automated email. Please do not reply.
+            </div>
+
+          </td>
+        </tr>
+
+      </table>
+
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>
+`,
+    });
+
+    log(`OTP sent to ${to}`);
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+    log(`Error sending OTP to ${to}: ${error.message}`);
+    throw error;
+  }
+};
+
+
+// ============================================================
+// 2. ADMIN MANUAL EMAIL
 // ============================================================
 const sendAdminEmail = async ({
   to,
@@ -236,134 +394,200 @@ const sendAdminEmail = async ({
 }) => {
   try {
     await transporter.sendMail({
-      from: `"SS Residency SaaS" <${process.env.SMTP_USER}>`,
+      from: `"StayLio" <${process.env.SMTP_USER}>`,
       to,
       subject,
-      text: message,
+
+      text: `Hello ${
+        recipientName || "Valued Hotel Partner"
+      },
+
+${message}
+
+Thank you,
+StayLio Team`,
+
       html: `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <title>${subject}</title>
-        </head>
+<!DOCTYPE html>
+<html lang="en">
 
-        <body style="
-          margin:0;
-          padding:0;
-          background:#f3f9fa;
-          font-family:Arial,Helvetica,sans-serif;
-          color:#111827;
-        ">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+  <title>${subject}</title>
+</head>
 
-          <table
-            width="100%"
-            cellpadding="0"
-            cellspacing="0"
-            border="0"
-            style="background:#f3f9fa;padding:40px 15px;"
-          >
-            <tr>
-              <td align="center">
+<body
+  style="
+    margin:0;
+    padding:0;
+    background:#ffffff;
+    font-family:Arial,Helvetica,sans-serif;
+    color:#111827;
+  "
+>
 
-                <table
-                  width="100%"
-                  cellpadding="0"
-                  cellspacing="0"
-                  border="0"
-                  style="
-                    max-width:560px;
-                    background:#ffffff;
-                    border:1px solid #d5e1e4;
-                    border-radius:14px;
-                    overflow:hidden;
-                  "
-                >
+<table
+  width="100%"
+  cellpadding="0"
+  cellspacing="0"
+  border="0"
+>
+  <tr>
 
-                  <!-- Header -->
-                  <tr>
-                    <td style="padding:32px 35px 20px;">
-                      <div style="
-                        font-size:24px;
-                        font-weight:700;
-                        color:#065b62;
-                        margin-bottom:18px;
-                      ">
-                        SS Residency
-                      </div>
+    <td
+      align="center"
+      style="padding:40px 20px;"
+    >
 
-                      <div style="
-                        font-size:22px;
-                        font-weight:700;
-                        color:#111827;
-                      ">
-                        ${subject}
-                      </div>
-                    </td>
-                  </tr>
+      <table
+        width="100%"
+        cellpadding="0"
+        cellspacing="0"
+        border="0"
+        style="max-width:560px;width:100%;"
+      >
 
-                  <!-- Message -->
-                  <tr>
-                    <td style="padding:10px 35px 30px;">
+        <!-- BRAND -->
+        <tr>
+          <td style="padding-bottom:34px;">
 
-                      <p style="
-                        font-size:14px;
-                        line-height:22px;
-                        color:#4b5563;
-                        margin:0 0 18px;
-                      ">
-                        Hello <strong>${recipientName || "there"}</strong>,
-                      </p>
+            <div
+              style="
+                font-size:24px;
+                line-height:30px;
+                font-weight:700;
+                color:#111827;
+              "
+            >
+              StayLio
+            </div>
 
-                      <div style="
-                        font-size:14px;
-                        line-height:24px;
-                        color:#374151;
-                        white-space:pre-line;
-                      ">
-                        ${message}
-                      </div>
+            <div
+              style="
+                margin-top:4px;
+                font-size:12px;
+                color:#6B7280;
+              "
+            >
+              Hotel Management Platform
+            </div>
 
-                    </td>
-                  </tr>
+          </td>
+        </tr>
 
-                  <!-- Footer -->
-                  <tr>
-                    <td style="
-                      padding:22px 35px 28px;
-                      text-align:center;
-                      border-top:1px solid #e5eef0;
-                      background:#fafbfc;
-                    ">
 
-                      <div style="
-                        font-size:12px;
-                        color:#52666a;
-                        margin-bottom:6px;
-                      ">
-                        SS Residency Hotel Management System
-                      </div>
+        <!-- TITLE -->
+        <tr>
+          <td>
 
-                      <div style="
-                        font-size:11px;
-                        color:#94a3b8;
-                      ">
-                        This email was sent by the system administrator.
-                      </div>
+            <div
+              style="
+                font-size:26px;
+                line-height:34px;
+                font-weight:700;
+                color:#111827;
+                margin-bottom:14px;
+              "
+            >
+              ${subject}
+            </div>
 
-                    </td>
-                  </tr>
+            <div
+              style="
+                font-size:15px;
+                line-height:23px;
+                color:#4B5563;
+                margin-bottom:22px;
+              "
+            >
+              Hello
+              <strong style="color:#111827;">
+                ${recipientName || "Valued Hotel Partner"}
+              </strong>,
+            </div>
 
-                </table>
+          </td>
+        </tr>
 
-              </td>
-            </tr>
-          </table>
 
-        </body>
-        </html>
-      `,
+        <!-- MESSAGE BOX -->
+        <tr>
+          <td>
+
+            <div
+              style="
+                border:1px solid #E5E7EB;
+                padding:18px 16px;
+                font-size:14px;
+                line-height:23px;
+                color:#4B5563;
+                white-space:pre-line;
+              "
+            >
+              ${message}
+            </div>
+
+          </td>
+        </tr>
+
+
+        <!-- INFO -->
+        <tr>
+          <td style="padding-top:24px;">
+
+            <div
+              style="
+                font-size:12px;
+                line-height:19px;
+                color:#9CA3AF;
+              "
+            >
+              This message was sent by the StayLio
+              administration team.
+            </div>
+
+          </td>
+        </tr>
+
+
+        <!-- FOOTER -->
+        <tr>
+          <td style="padding-top:40px;">
+
+            <div
+              style="
+                border-top:1px solid #F0F0F0;
+                padding-top:18px;
+                font-size:12px;
+                line-height:19px;
+                color:#9CA3AF;
+              "
+            >
+              <strong style="color:#6B7280;">
+                StayLio
+              </strong>
+              · Hotel Management Platform
+              <br>
+              This is an automated email. Please do not reply.
+            </div>
+
+          </td>
+        </tr>
+
+      </table>
+
+    </td>
+
+  </tr>
+</table>
+
+</body>
+</html>
+`,
     });
 
     log.info(
@@ -374,9 +598,11 @@ const sendAdminEmail = async ({
       success: true,
       message: "Email sent successfully.",
     };
-
   } catch (error) {
-    console.error("[EMAIL] Admin email failed:", error);
+    console.error(
+      "[EMAIL] Admin email failed:",
+      error
+    );
 
     log.error(
       `[EMAIL] Failed to send admin email to ${to}: ${error.message}`
@@ -387,12 +613,8 @@ const sendAdminEmail = async ({
 };
 
 
-const getFrontendUrl = () => {
-  return (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
-};
-
 // ============================================================
-// SUBSCRIPTION EXPIRY REMINDER (7 Days, 3 Days, 1 Day)
+// 3. SUBSCRIPTION EXPIRY REMINDER
 // ============================================================
 const sendSubscriptionExpiryReminder = async ({
   to,
@@ -403,137 +625,422 @@ const sendSubscriptionExpiryReminder = async ({
   hotelId,
 }) => {
   try {
-    const formattedDate = new Date(endDate).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-      timeZone: "Asia/Kolkata",
-    });
+    const resolvedHotelName =
+      await getHotelNameFromSettings({
+        hotelId,
+        hotelName,
+      });
 
-    const frontendBaseUrl = getFrontendUrl();
+    const formattedDate =
+      new Date(endDate).toLocaleDateString(
+        "en-IN",
+        {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+          timeZone: "Asia/Kolkata",
+        }
+      );
+
+    const frontendBaseUrl =
+      getFrontendUrl();
+
     const upgradeUrl = hotelId
-      ? `${frontendBaseUrl}/hotel-billing-system/saas-user/choose-plan?hotelId=${hotelId}`
-      : `${frontendBaseUrl}/hotel-billing-system/saas-user/choose-plan`;
+      ? `${frontendBaseUrl}/hotel-billing-system/plan-upgrade?hotelId=${hotelId}`
+      : `${frontendBaseUrl}/hotel-billing-system/plan-upgrade`;
 
-    let subject = "Your Hotel Billing Plan is Expiring Soon";
-    let urgencyBadge = "Expiring Soon";
-    let urgencyColor = "#d97706";
-    let urgencyBg = "#fffbeb";
-    let urgencyText = `Your subscription will expire in ${daysRemaining} day${daysRemaining > 1 ? "s" : ""}.`;
+    let subject =
+      `Subscription Reminder: Plan expiring soon for ${resolvedHotelName}`;
+
+    let urgencyColor = "#D97706";
+
+    let urgencyText =
+      `Your subscription will expire in ${daysRemaining} day${
+        daysRemaining > 1 ? "s" : ""
+      }.`;
 
     if (daysRemaining <= 1) {
-      subject = `Critical Warning: Your Hotel Billing Plan Expires Tomorrow (${hotelName})`;
-      urgencyBadge = "Expires Tomorrow";
-      urgencyColor = "#dc2626";
-      urgencyBg = "#fef2f2";
-      urgencyText = "Your subscription expires tomorrow! Upgrade or renew now to avoid system interruption.";
+      subject =
+        `Subscription Reminder: 1 day left for ${resolvedHotelName}`;
+
+      urgencyColor = "#B42318";
+
+      urgencyText =
+        "Your subscription expires tomorrow. Please renew today to keep your hotel system running smoothly.";
+
     } else if (daysRemaining <= 3) {
-      subject = `Urgent Reminder: Your Hotel Billing Plan Expires in ${daysRemaining} Days (${hotelName})`;
-      urgencyBadge = `${daysRemaining} Days Left`;
-      urgencyColor = "#ea580c";
-      urgencyBg = "#fff7ed";
-      urgencyText = `Your subscription is expiring in only ${daysRemaining} days. Action is required.`;
+      subject =
+        `Subscription Reminder: ${daysRemaining} days left for ${resolvedHotelName}`;
+
+      urgencyColor = "#C2410C";
+
+      urgencyText =
+        `Your subscription will expire in ${daysRemaining} days. Please renew soon to avoid any stoppage.`;
+
     } else if (daysRemaining <= 7) {
-      subject = `Notice: Your Hotel Billing Plan Expires in ${daysRemaining} Days (${hotelName})`;
-      urgencyBadge = `${daysRemaining} Days Left`;
-      urgencyColor = "#0284c7";
-      urgencyBg = "#f0f9ff";
-      urgencyText = `Your subscription is scheduled to expire in ${daysRemaining} days.`;
+      subject =
+        `Subscription Reminder: ${daysRemaining} days left for ${resolvedHotelName}`;
+
+      urgencyColor = "#0875D1";
+
+      urgencyText =
+        `Your subscription will expire in ${daysRemaining} days.`;
     }
 
     await transporter.sendMail({
-      from: `"SS Residency SaaS" <${process.env.SMTP_USER}>`,
+      from: `"StayLio" <${process.env.SMTP_USER}>`,
       to,
       subject,
-      text: `Hello ${hotelName},\n\n${urgencyText}\n\nHotel: ${hotelName}\nPlan: ${planName || "Current Plan"}\nExpiry Date: ${formattedDate}\nDays Remaining: ${daysRemaining}\n\nPlease renew or upgrade your subscription now to ensure continuous room bookings, billing, and staff operations without interruption.\n\nRenew / Upgrade your plan here: ${upgradeUrl}\n\nThank you,\nSS Residency Team`,
+
+      text: `Hello ${resolvedHotelName},
+
+${urgencyText}
+
+Hotel Name: ${resolvedHotelName}
+Plan: ${planName || "Current Plan"}
+Expiry Date: ${formattedDate}
+Days Left: ${daysRemaining} day${
+        daysRemaining > 1 ? "s" : ""
+      }
+
+Please renew or upgrade your plan now so all hotel rooms and billing keep working without interruption.
+
+Renew or Upgrade here: ${upgradeUrl}
+
+Thank you,
+StayLio Team`,
+
       html: `
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${subject}</title>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+  <title>${subject}</title>
 </head>
-<body style="margin:0;padding:0;background:#f3f9fa;font-family:Arial,Helvetica,sans-serif;color:#111827;">
 
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f9fa;padding:40px 15px;">
+<body
+  style="
+    margin:0;
+    padding:0;
+    background:#ffffff;
+    font-family:Arial,Helvetica,sans-serif;
+    color:#111827;
+  "
+>
+
+<table
+  width="100%"
+  cellpadding="0"
+  cellspacing="0"
+  border="0"
+>
 <tr>
-<td align="center">
 
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:540px;background:#ffffff;border:1px solid #d5e1e4;border-radius:14px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.04);">
+<td
+  align="center"
+  style="padding:40px 20px;"
+>
 
+<table
+  width="100%"
+  cellpadding="0"
+  cellspacing="0"
+  border="0"
+  style="max-width:560px;width:100%;"
+>
+
+<!-- BRAND -->
 <tr>
-<td style="padding:32px 35px 20px;">
-  <div style="font-size:24px;font-weight:700;color:#065b62;margin-bottom:18px;">
-    SS Residency
-  </div>
-  
-  <div style="display:inline-block;background:${urgencyBg};border:1px solid ${urgencyColor}40;color:${urgencyColor};padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:14px;">
-    ⚠️ ${urgencyBadge}
+<td style="padding-bottom:34px;">
+
+  <div
+    style="
+      font-size:24px;
+      line-height:30px;
+      font-weight:700;
+      color:#111827;
+    "
+  >
+    StayLio
   </div>
 
-  <div style="font-size:22px;font-weight:700;color:#111111;margin-bottom:10px;">
-    Subscription Expiry Reminder
+  <div
+    style="
+      margin-top:4px;
+      font-size:12px;
+      line-height:18px;
+      color:#6B7280;
+    "
+  >
+    Hotel Management Platform
   </div>
 
-  <p style="font-size:14px;line-height:22px;color:#4b5563;margin:0;">
-    Hello <strong>${hotelName}</strong>,
-  </p>
-  <p style="font-size:14px;line-height:22px;color:#4b5563;margin-top:6px;">
-    ${urgencyText} Please review your plan details below.
-  </p>
 </td>
 </tr>
 
+
+<!-- CONTENT -->
 <tr>
-<td style="padding:5px 35px 25px;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
+<td>
+
+  <div
+    style="
+      font-size:26px;
+      line-height:34px;
+      font-weight:700;
+      color:#111827;
+      margin-bottom:12px;
+    "
+  >
+    Subscription Reminder
+  </div>
+
+  <div
+    style="
+      font-size:15px;
+      line-height:23px;
+      color:#4B5563;
+      margin-bottom:8px;
+    "
+  >
+    Hello
+    <strong style="color:#111827;">
+      ${resolvedHotelName}
+    </strong>,
+  </div>
+
+  <div
+    style="
+      font-size:15px;
+      line-height:23px;
+      color:#4B5563;
+      margin-bottom:26px;
+    "
+  >
+    ${urgencyText}
+    Here are your current plan details.
+  </div>
+
+</td>
+</tr>
+
+
+<!-- DETAILS -->
+<tr>
+<td>
+
+<table
+  width="100%"
+  cellpadding="0"
+  cellspacing="0"
+  border="0"
+  style="
+    border:1px solid #E5E7EB;
+    background:#FFFFFF;
+  "
+>
+
+<tr>
+<td style="padding:18px 16px;">
+
+  <div
+    style="
+      font-size:12px;
+      line-height:18px;
+      font-weight:700;
+      color:#6B7280;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+      margin-bottom:14px;
+    "
+  >
+    Subscription details
+  </div>
+
+
+  <table
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+  >
+
     <tr>
-      <td style="padding:20px;">
-        <table width="100%" cellpadding="0" cellspacing="0">
-          <tr>
-            <td style="font-size:13px;color:#64748b;padding-bottom:4px;">Hotel Name</td>
-            <td align="right" style="font-size:14px;font-weight:700;color:#0f172a;padding-bottom:4px;">${hotelName}</td>
-          </tr>
-          <tr>
-            <td style="font-size:13px;color:#64748b;padding-bottom:4px;padding-top:8px;border-top:1px solid #f1f5f9;">Current Plan</td>
-            <td align="right" style="font-size:14px;font-weight:700;color:#065b62;padding-bottom:4px;padding-top:8px;border-top:1px solid #f1f5f9;">${planName || "Active Plan"}</td>
-          </tr>
-          <tr>
-            <td style="font-size:13px;color:#64748b;padding-bottom:4px;padding-top:8px;border-top:1px solid #f1f5f9;">Expiry Date</td>
-            <td align="right" style="font-size:14px;font-weight:700;color:${urgencyColor};padding-bottom:4px;padding-top:8px;border-top:1px solid #f1f5f9;">${formattedDate}</td>
-          </tr>
-          <tr>
-            <td style="font-size:13px;color:#64748b;padding-top:8px;border-top:1px solid #f1f5f9;">Time Remaining</td>
-            <td align="right" style="font-size:14px;font-weight:700;color:${urgencyColor};padding-top:8px;border-top:1px solid #f1f5f9;">${daysRemaining} Day${daysRemaining > 1 ? "s" : ""}</td>
-          </tr>
-        </table>
+
+      <td
+        style="
+          font-size:13px;
+          color:#6B7280;
+          padding:7px 0;
+        "
+      >
+        Hotel Name
       </td>
+
+      <td
+        align="right"
+        style="
+          font-size:14px;
+          font-weight:600;
+          color:#111827;
+          padding:7px 0;
+        "
+      >
+        ${resolvedHotelName}
+      </td>
+
     </tr>
+
+
+    <tr>
+
+      <td
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:13px;
+          color:#6B7280;
+          padding:10px 0 7px;
+        "
+      >
+        Current Plan
+      </td>
+
+      <td
+        align="right"
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:14px;
+          font-weight:600;
+          color:#111827;
+          padding:10px 0 7px;
+        "
+      >
+        ${planName || "Active Plan"}
+      </td>
+
+    </tr>
+
+
+    <tr>
+
+      <td
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:13px;
+          color:#6B7280;
+          padding:10px 0 7px;
+        "
+      >
+        Expiry Date
+      </td>
+
+      <td
+        align="right"
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:14px;
+          font-weight:700;
+          color:${urgencyColor};
+          padding:10px 0 7px;
+        "
+      >
+        ${formattedDate}
+      </td>
+
+    </tr>
+
+
+    <tr>
+
+      <td
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:13px;
+          color:#6B7280;
+          padding:10px 0 7px;
+        "
+      >
+        Days Left
+      </td>
+
+      <td
+        align="right"
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:14px;
+          font-weight:700;
+          color:${urgencyColor};
+          padding:10px 0 7px;
+        "
+      >
+        ${daysRemaining}
+        Day${daysRemaining > 1 ? "s" : ""}
+      </td>
+
+    </tr>
+
   </table>
+
 </td>
 </tr>
 
-<tr>
-<td style="padding:0 35px 30px;text-align:center;">
-  <p style="font-size:14px;line-height:22px;color:#4b5563;margin:0 0 22px;text-align:left;">
-    To avoid any disruption to your room bookings, check-in operations, food service, or invoice generation, please renew or upgrade your subscription now. Existing hotel details are automatically linked for instant checkout.
-  </p>
+</table>
 
-  <a href="${upgradeUrl}" target="_blank" style="display:inline-block;background:#065b62;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 32px;border-radius:8px;box-shadow:0 3px 10px rgba(6,91,98,0.25);">
-    Renew or Upgrade Plan &rarr;
-  </a>
 </td>
 </tr>
 
+
+<!-- MESSAGE -->
 <tr>
-<td style="padding:22px 35px 28px;text-align:center;border-top:1px solid #e5eef0;background:#fafbfc;">
-  <div style="font-size:12px;color:#52666a;margin-bottom:6px;">
-    SS Residency Hotel Management System
+<td style="padding-top:24px;">
+
+  <div
+    style="
+      font-size:14px;
+      line-height:22px;
+      color:#4B5563;
+    "
+  >
+    To keep your room bookings, check-in,
+    and billing working without interruption,
+    please renew or upgrade your plan.
   </div>
-  <div style="font-size:11px;color:#94a3b8;">
-    This is an automated subscription alert. If you already upgraded, you can safely disregard this message.
+
+</td>
+</tr>
+
+
+<!-- BUTTON -->
+
+
+
+<!-- FOOTER -->
+<tr>
+<td style="padding-top:40px;">
+
+  <div
+    style="
+      border-top:1px solid #F0F0F0;
+      padding-top:18px;
+      font-size:12px;
+      line-height:19px;
+      color:#9CA3AF;
+    "
+  >
+    <strong style="color:#6B7280;">
+      StayLio
+    </strong>
+    · Hotel Management Platform
+    <br>
+    If you have already renewed,
+    you can safely ignore this email.
   </div>
+
 </td>
 </tr>
 
@@ -545,22 +1052,29 @@ const sendSubscriptionExpiryReminder = async ({
 
 </body>
 </html>
-      `,
+`,
     });
 
     log.info(
-      `[EMAIL] Expiry reminder sent to ${to} for ${hotelName}. Days remaining: ${daysRemaining}`
+      `[EMAIL] Expiry reminder sent to ${to} for ${resolvedHotelName}. Days remaining: ${daysRemaining}`
     );
   } catch (error) {
-    console.error("Error sending subscription expiry reminder:", error);
-    log.error(`[EMAIL] Failed to send expiry reminder to ${to}: ${error.message}`);
+    console.error(
+      "Error sending subscription expiry reminder:",
+      error
+    );
+
+    log.error(
+      `[EMAIL] Failed to send expiry reminder to ${to}: ${error.message}`
+    );
+
     throw error;
   }
 };
 
 
 // ============================================================
-// SUBSCRIPTION EXPIRED NOTIFICATION (Immediately upon Expiry)
+// 4. SUBSCRIPTION EXPIRED NOTIFICATION
 // ============================================================
 const sendSubscriptionExpiredNotification = async ({
   to,
@@ -570,103 +1084,371 @@ const sendSubscriptionExpiredNotification = async ({
   hotelId,
 }) => {
   try {
-    const formattedDate = new Date(endDate).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-      timeZone: "Asia/Kolkata",
-    });
+    const resolvedHotelName =
+      await getHotelNameFromSettings({
+        hotelId,
+        hotelName,
+      });
 
-    const frontendBaseUrl = getFrontendUrl();
+    const formattedDate =
+      new Date(endDate).toLocaleDateString(
+        "en-IN",
+        {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+          timeZone: "Asia/Kolkata",
+        }
+      );
+
+    const frontendBaseUrl =
+      getFrontendUrl();
+
     const upgradeUrl = hotelId
-      ? `${frontendBaseUrl}/hotel-billing-system/saas-user/choose-plan?hotelId=${hotelId}`
-      : `${frontendBaseUrl}/hotel-billing-system/saas-user/choose-plan`;
+      ? `${frontendBaseUrl}/hotel-billing-system/plan-upgrade?hotelId=${hotelId}`
+      : `${frontendBaseUrl}/hotel-billing-system/plan-upgrade`;
 
     await transporter.sendMail({
-      from: `"SS Residency SaaS" <${process.env.SMTP_USER}>`,
+      from: `"StayLio" <${process.env.SMTP_USER}>`,
       to,
-      subject: `Your Hotel Billing Subscription Has Expired - Action Required (${hotelName})`,
-      text: `Hello ${hotelName},\n\nYour hotel management subscription has expired on ${formattedDate}.\n\nHotel: ${hotelName}\nPlan: ${planName || "Current Plan"}\nExpired On: ${formattedDate}\n\nYour active features and room booking capacity are paused until renewal. Please upgrade or renew your plan immediately to restore full access.\n\nUpgrade your plan here: ${upgradeUrl}\n\nThank you,\nSS Residency Team`,
+      subject:
+        `Subscription Expired for ${resolvedHotelName}`,
+
+      text: `Hello ${resolvedHotelName},
+
+Your hotel subscription plan expired on ${formattedDate}.
+
+Hotel Name: ${resolvedHotelName}
+Plan: ${planName || "Current Plan"}
+Expired On: ${formattedDate}
+
+Your account features are currently paused. Please renew or upgrade your plan now to continue using all hotel features.
+
+Upgrade or renew here: ${upgradeUrl}
+
+Thank you,
+StayLio Team`,
+
       html: `
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Subscription Expired</title>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+  <title>Subscription Expired</title>
 </head>
-<body style="margin:0;padding:0;background:#f3f9fa;font-family:Arial,Helvetica,sans-serif;color:#111827;">
 
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f9fa;padding:40px 15px;">
+<body
+  style="
+    margin:0;
+    padding:0;
+    background:#ffffff;
+    font-family:Arial,Helvetica,sans-serif;
+    color:#111827;
+  "
+>
+
+<table
+  width="100%"
+  cellpadding="0"
+  cellspacing="0"
+  border="0"
+>
 <tr>
-<td align="center">
 
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:540px;background:#ffffff;border:1px solid #d5e1e4;border-radius:14px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.04);">
+<td
+  align="center"
+  style="padding:40px 20px;"
+>
 
+<table
+  width="100%"
+  cellpadding="0"
+  cellspacing="0"
+  border="0"
+  style="max-width:560px;width:100%;"
+>
+
+<!-- BRAND -->
 <tr>
-<td style="padding:32px 35px 20px;">
-  <div style="font-size:24px;font-weight:700;color:#065b62;margin-bottom:18px;">
-    SS Residency
+<td style="padding-bottom:34px;">
+
+  <div
+    style="
+      font-size:24px;
+      line-height:30px;
+      font-weight:700;
+      color:#111827;
+    "
+  >
+    StayLio
   </div>
 
-  <div style="display:inline-block;background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:14px;">
-    🚫 Subscription Expired
+  <div
+    style="
+      margin-top:4px;
+      font-size:12px;
+      color:#6B7280;
+    "
+  >
+    Hotel Management Platform
   </div>
 
-  <div style="font-size:22px;font-weight:700;color:#b91c1c;margin-bottom:10px;">
-    Your Plan Subscription Has Expired
-  </div>
-
-  <p style="font-size:14px;line-height:22px;color:#4b5563;margin:0;">
-    Hello <strong>${hotelName}</strong>,
-  </p>
-  <p style="font-size:14px;line-height:22px;color:#4b5563;margin-top:6px;">
-    We are writing to notify you that your hotel management plan has reached its expiration date. System operations and room bookings are currently halted.
-  </p>
 </td>
 </tr>
 
+
+<!-- TITLE -->
 <tr>
-<td style="padding:5px 35px 25px;">
-  <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:20px;">
-    <table width="100%" cellpadding="0" cellspacing="0">
-      <tr>
-        <td style="font-size:13px;color:#7f1d1d;padding-bottom:4px;">Hotel Name</td>
-        <td align="right" style="font-size:14px;font-weight:700;color:#7f1d1d;padding-bottom:4px;">${hotelName}</td>
-      </tr>
-      <tr>
-        <td style="font-size:13px;color:#7f1d1d;padding-bottom:4px;padding-top:8px;border-top:1px solid #fee2e2;">Expired Plan</td>
-        <td align="right" style="font-size:14px;font-weight:700;color:#7f1d1d;padding-bottom:4px;padding-top:8px;border-top:1px solid #fee2e2;">${planName || "Previous Plan"}</td>
-      </tr>
-      <tr>
-        <td style="font-size:13px;color:#7f1d1d;padding-top:8px;border-top:1px solid #fee2e2;">Expired On</td>
-        <td align="right" style="font-size:14px;font-weight:700;color:#b91c1c;padding-top:8px;border-top:1px solid #fee2e2;">${formattedDate}</td>
-      </tr>
-    </table>
+<td>
+
+  <div
+    style="
+      font-size:26px;
+      line-height:34px;
+      font-weight:700;
+      color:#111827;
+      margin-bottom:12px;
+    "
+  >
+    Your plan has expired
   </div>
+
+  <div
+    style="
+      font-size:15px;
+      line-height:23px;
+      color:#4B5563;
+      margin-bottom:8px;
+    "
+  >
+    Hello
+    <strong style="color:#111827;">
+      ${resolvedHotelName}
+    </strong>,
+  </div>
+
+  <div
+    style="
+      font-size:15px;
+      line-height:23px;
+      color:#4B5563;
+      margin-bottom:26px;
+    "
+  >
+    Your subscription plan expired on
+    <strong style="color:#111827;">
+      ${formattedDate}
+    </strong>.
+    Your hotel features are temporarily paused.
+  </div>
+
 </td>
 </tr>
 
-<tr>
-<td style="padding:0 35px 30px;text-align:center;">
-  <p style="font-size:14px;line-height:22px;color:#4b5563;margin:0 0 22px;text-align:left;">
-    <strong>How to resume immediately:</strong> Click the button below to select a new plan. Your hotel details are already stored, so you can checkout and activate your upgraded plan in one click without admin waiting time.
-  </p>
 
-  <a href="${upgradeUrl}" target="_blank" style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 32px;border-radius:8px;box-shadow:0 3px 10px rgba(220,38,38,0.25);">
-    Upgrade & Reactivate Plan Now &rarr;
+<!-- DETAILS -->
+<tr>
+<td>
+
+<table
+  width="100%"
+  cellpadding="0"
+  cellspacing="0"
+  border="0"
+  style="
+    border:1px solid #E5E7EB;
+    background:#FFFFFF;
+  "
+>
+
+<tr>
+<td style="padding:18px 16px;">
+
+  <div
+    style="
+      font-size:12px;
+      line-height:18px;
+      font-weight:700;
+      color:#6B7280;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+      margin-bottom:14px;
+    "
+  >
+    Previous subscription
+  </div>
+
+
+  <table
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+  >
+
+    <tr>
+
+      <td
+        style="
+          font-size:13px;
+          color:#6B7280;
+          padding:7px 0;
+        "
+      >
+        Hotel Name
+      </td>
+
+      <td
+        align="right"
+        style="
+          font-size:14px;
+          font-weight:600;
+          color:#111827;
+          padding:7px 0;
+        "
+      >
+        ${resolvedHotelName}
+      </td>
+
+    </tr>
+
+
+    <tr>
+
+      <td
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:13px;
+          color:#6B7280;
+          padding:10px 0 7px;
+        "
+      >
+        Previous Plan
+      </td>
+
+      <td
+        align="right"
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:14px;
+          font-weight:600;
+          color:#111827;
+          padding:10px 0 7px;
+        "
+      >
+        ${planName || "Subscription Plan"}
+      </td>
+
+    </tr>
+
+
+    <tr>
+
+      <td
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:13px;
+          color:#6B7280;
+          padding:10px 0 7px;
+        "
+      >
+        Expired Date
+      </td>
+
+      <td
+        align="right"
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:14px;
+          font-weight:700;
+          color:#B42318;
+          padding:10px 0 7px;
+        "
+      >
+        ${formattedDate}
+      </td>
+
+    </tr>
+
+  </table>
+
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+
+
+<!-- MESSAGE -->
+<tr>
+<td style="padding-top:24px;">
+
+  <div
+    style="
+      font-size:14px;
+      line-height:22px;
+      color:#4B5563;
+    "
+  >
+    Your hotel data, guest records, and invoices
+    remain safely stored. Choose a plan to restart
+    your hotel service.
+  </div>
+
+</td>
+</tr>
+
+
+<!-- BUTTON -->
+<tr>
+<td style="padding-top:26px;">
+
+  <a
+    href="${upgradeUrl}"
+    target="_blank"
+    style="
+      color:#0875D1;
+      text-decoration:underline;
+      font-size:14px;
+      line-height:20px;
+      font-weight:600;
+    "
+  >
+    Renew or choose a plan &rarr;
   </a>
+
 </td>
 </tr>
 
+
+<!-- FOOTER -->
 <tr>
-<td style="padding:22px 35px 28px;text-align:center;border-top:1px solid #e5eef0;background:#fafbfc;">
-  <div style="font-size:12px;color:#52666a;margin-bottom:6px;">
-    SS Residency Hotel Management
+<td style="padding-top:40px;">
+
+  <div
+    style="
+      border-top:1px solid #F0F0F0;
+      padding-top:18px;
+      font-size:12px;
+      line-height:19px;
+      color:#9CA3AF;
+    "
+  >
+    <strong style="color:#6B7280;">
+      StayLio
+    </strong>
+    · Hotel Management Platform
+    <br>
+    Need help? Please contact your administrator.
   </div>
-  <div style="font-size:11px;color:#94a3b8;">
-    Need help or have questions? Contact support or reply to this email.
-  </div>
+
 </td>
 </tr>
 
@@ -678,20 +1460,29 @@ const sendSubscriptionExpiredNotification = async ({
 
 </body>
 </html>
-      `,
+`,
     });
 
-    log.info(`[EMAIL] Subscription expired notification sent to ${to} for ${hotelName}`);
+    log.info(
+      `[EMAIL] Subscription expired notification sent to ${to} for ${resolvedHotelName}`
+    );
   } catch (error) {
-    console.error("Error sending subscription expired notification:", error);
-    log.error(`[EMAIL] Failed to send subscription expired notification to ${to}: ${error.message}`);
+    console.error(
+      "Error sending subscription expired notification:",
+      error
+    );
+
+    log.error(
+      `[EMAIL] Failed to send expiry notification to ${to}: ${error.message}`
+    );
+
     throw error;
   }
 };
 
 
 // ============================================================
-// SUBSCRIPTION CANCELLED / SUSPENDED NOTIFICATION (Immediate)
+// 5. SUBSCRIPTION CANCELLED / SUSPENDED NOTIFICATION
 // ============================================================
 const sendSubscriptionCancelledNotification = async ({
   to,
@@ -702,124 +1493,429 @@ const sendSubscriptionCancelledNotification = async ({
   hotelId,
 }) => {
   try {
-    const frontendBaseUrl = getFrontendUrl();
+    const resolvedHotelName =
+      await getHotelNameFromSettings({
+        hotelId,
+        hotelName,
+      });
+
+    const frontendBaseUrl =
+      getFrontendUrl();
+
     const upgradeUrl = hotelId
-      ? `${frontendBaseUrl}/hotel-billing-system/saas-user/choose-plan?hotelId=${hotelId}`
-      : `${frontendBaseUrl}/hotel-billing-system/saas-user/choose-plan`;
+      ? `${frontendBaseUrl}/hotel-billing-system/plan-upgrade?hotelId=${hotelId}`
+      : `${frontendBaseUrl}/hotel-billing-system/plan-upgrade`;
+
+    const isSuspended =
+      status === "suspended";
 
     const statusTitle =
-      status === "suspended"
+      isSuspended
         ? "Subscription Suspended"
         : "Subscription Cancelled";
 
-    const subject = `Important: Your Hotel Subscription Has Been ${
-      status === "suspended" ? "Suspended" : "Cancelled"
-    } (${hotelName})`;
+    const statusWord =
+      isSuspended
+        ? "suspended"
+        : "cancelled";
+
+    const subject =
+      `Subscription ${
+        isSuspended
+          ? "Suspended"
+          : "Cancelled"
+      } for ${resolvedHotelName}`;
 
     const defaultReason =
-      status === "suspended"
-        ? "Subscription temporarily suspended by administrator."
+      isSuspended
+        ? "Subscription temporarily paused by administrator."
         : "Subscription cancelled by system administrator.";
 
-    const formattedReason = reason?.trim() ? reason.trim() : defaultReason;
+    const formattedReason =
+      reason?.trim()
+        ? reason.trim()
+        : defaultReason;
 
     await transporter.sendMail({
-      from: `"SS Residency SaaS" <${process.env.SMTP_USER}>`,
+      from: `"StayLio" <${process.env.SMTP_USER}>`,
       to,
       subject,
-      text: `Hello ${hotelName},\n\nYour hotel management subscription has been ${
-        status === "suspended" ? "suspended" : "cancelled"
-      } by the administrator.\n\nHotel: ${hotelName}\nPlan: ${planName || "Current Plan"}\nReason: ${formattedReason}\n\nTo restore your hotel management operations and room capacity, please choose a plan to reactivate your subscription.\n\nReactivate your subscription here: ${upgradeUrl}\n\nThank you,\nSS Residency Team`,
+
+      text: `Hello ${resolvedHotelName},
+
+Your hotel subscription has been ${statusWord} by the administrator.
+
+Hotel Name: ${resolvedHotelName}
+Plan: ${planName || "Current Plan"}
+Status: ${statusWord}
+Reason: ${formattedReason}
+
+To restore your hotel operations, please choose a plan to restart your subscription.
+
+Choose a plan here: ${upgradeUrl}
+
+Thank you,
+StayLio Team`,
+
       html: `
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${statusTitle}</title>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+  <title>${statusTitle}</title>
 </head>
-<body style="margin:0;padding:0;background:#f3f9fa;font-family:Arial,Helvetica,sans-serif;color:#111827;">
 
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f9fa;padding:40px 15px;">
+<body
+  style="
+    margin:0;
+    padding:0;
+    background:#ffffff;
+    font-family:Arial,Helvetica,sans-serif;
+    color:#111827;
+  "
+>
+
+<table
+  width="100%"
+  cellpadding="0"
+  cellspacing="0"
+  border="0"
+>
 <tr>
-<td align="center">
 
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:540px;background:#ffffff;border:1px solid #d5e1e4;border-radius:14px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.04);">
+<td
+  align="center"
+  style="padding:40px 20px;"
+>
 
+<table
+  width="100%"
+  cellpadding="0"
+  cellspacing="0"
+  border="0"
+  style="max-width:560px;width:100%;"
+>
+
+<!-- BRAND -->
 <tr>
-<td style="padding:32px 35px 20px;">
-  <div style="font-size:24px;font-weight:700;color:#065b62;margin-bottom:18px;">
-    SS Residency
+<td style="padding-bottom:34px;">
+
+  <div
+    style="
+      font-size:24px;
+      line-height:30px;
+      font-weight:700;
+      color:#111827;
+    "
+  >
+    StayLio
   </div>
 
-  <div style="display:inline-block;background:#fff1f2;border:1px solid #fecdd3;color:#e11d48;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:14px;">
-    ⚠️ ${statusTitle}
+  <div
+    style="
+      margin-top:4px;
+      font-size:12px;
+      color:#6B7280;
+    "
+  >
+    Hotel Management Platform
   </div>
 
-  <div style="font-size:22px;font-weight:700;color:#be123c;margin-bottom:10px;">
-    Notice: ${statusTitle}
-  </div>
-
-  <p style="font-size:14px;line-height:22px;color:#4b5563;margin:0;">
-    Hello <strong>${hotelName}</strong>,
-  </p>
-  <p style="font-size:14px;line-height:22px;color:#4b5563;margin-top:6px;">
-    This is an official notification that your hotel billing subscription has been <strong>${
-      status === "suspended" ? "suspended" : "cancelled"
-    }</strong> by an administrator.
-  </p>
 </td>
 </tr>
 
+
+<!-- TITLE -->
 <tr>
-<td style="padding:5px 35px 25px;">
-  <div style="background:#fff1f2;border:1px solid #fecdd3;border-radius:10px;padding:20px;">
-    <table width="100%" cellpadding="0" cellspacing="0">
-      <tr>
-        <td style="font-size:13px;color:#881337;padding-bottom:4px;">Hotel Name</td>
-        <td align="right" style="font-size:14px;font-weight:700;color:#881337;padding-bottom:4px;">${hotelName}</td>
-      </tr>
-      <tr>
-        <td style="font-size:13px;color:#881337;padding-bottom:4px;padding-top:8px;border-top:1px solid #ffe4e6;">Previous Plan</td>
-        <td align="right" style="font-size:14px;font-weight:700;color:#881337;padding-bottom:4px;padding-top:8px;border-top:1px solid #ffe4e6;">${planName || "Subscription Plan"}</td>
-      </tr>
-      <tr>
-        <td style="font-size:13px;color:#881337;padding-bottom:4px;padding-top:8px;border-top:1px solid #ffe4e6;">Status</td>
-        <td align="right" style="font-size:14px;font-weight:700;color:#e11d48;padding-bottom:4px;padding-top:8px;border-top:1px solid #ffe4e6;text-transform:uppercase;">${status}</td>
-      </tr>
-      <tr>
-        <td colspan="2" style="padding-top:12px;border-top:1px solid #ffe4e6;">
-          <div style="font-size:12px;font-weight:700;color:#881337;text-transform:uppercase;margin-bottom:4px;">Reason for Action:</div>
-          <div style="font-size:14px;line-height:20px;color:#9f1239;background:#ffffff;padding:10px 14px;border-radius:6px;border:1px solid #fecdd3;">
-            ${formattedReason}
-          </div>
-        </td>
-      </tr>
-    </table>
+<td>
+
+  <div
+    style="
+      font-size:26px;
+      line-height:34px;
+      font-weight:700;
+      color:#111827;
+      margin-bottom:12px;
+    "
+  >
+    ${statusTitle}
   </div>
+
+  <div
+    style="
+      font-size:15px;
+      line-height:23px;
+      color:#4B5563;
+      margin-bottom:8px;
+    "
+  >
+    Hello
+    <strong style="color:#111827;">
+      ${resolvedHotelName}
+    </strong>,
+  </div>
+
+  <div
+    style="
+      font-size:15px;
+      line-height:23px;
+      color:#4B5563;
+      margin-bottom:26px;
+    "
+  >
+    Your hotel subscription has been
+    <strong style="color:#111827;">
+      ${statusWord}
+    </strong>
+    by the administrator.
+  </div>
+
 </td>
 </tr>
 
-<tr>
-<td style="padding:0 35px 30px;text-align:center;">
-  <p style="font-size:14px;line-height:22px;color:#4b5563;margin:0 0 22px;text-align:left;">
-    <strong>How to resolve this issue:</strong> You can reactivate your account immediately by choosing an active subscription plan. Your hotel profile and historical records remain intact.
-  </p>
 
-  <a href="${upgradeUrl}" target="_blank" style="display:inline-block;background:#065b62;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 32px;border-radius:8px;box-shadow:0 3px 10px rgba(6,91,98,0.25);">
-    Choose Plan & Reactivate &rarr;
+<!-- DETAILS -->
+<tr>
+<td>
+
+<table
+  width="100%"
+  cellpadding="0"
+  cellspacing="0"
+  border="0"
+  style="
+    border:1px solid #E5E7EB;
+    background:#FFFFFF;
+  "
+>
+
+<tr>
+<td style="padding:18px 16px;">
+
+  <div
+    style="
+      font-size:12px;
+      line-height:18px;
+      font-weight:700;
+      color:#6B7280;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+      margin-bottom:14px;
+    "
+  >
+    Subscription details
+  </div>
+
+
+  <table
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+  >
+
+    <tr>
+
+      <td
+        style="
+          font-size:13px;
+          color:#6B7280;
+          padding:7px 0;
+        "
+      >
+        Hotel Name
+      </td>
+
+      <td
+        align="right"
+        style="
+          font-size:14px;
+          font-weight:600;
+          color:#111827;
+          padding:7px 0;
+        "
+      >
+        ${resolvedHotelName}
+      </td>
+
+    </tr>
+
+
+    <tr>
+
+      <td
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:13px;
+          color:#6B7280;
+          padding:10px 0 7px;
+        "
+      >
+        Previous Plan
+      </td>
+
+      <td
+        align="right"
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:14px;
+          font-weight:600;
+          color:#111827;
+          padding:10px 0 7px;
+        "
+      >
+        ${planName || "Subscription Plan"}
+      </td>
+
+    </tr>
+
+
+    <tr>
+
+      <td
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:13px;
+          color:#6B7280;
+          padding:10px 0 7px;
+        "
+      >
+        Status
+      </td>
+
+      <td
+        align="right"
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:14px;
+          font-weight:700;
+          color:#B42318;
+          padding:10px 0 7px;
+          text-transform:capitalize;
+        "
+      >
+        ${statusWord}
+      </td>
+
+    </tr>
+
+
+    <tr>
+
+      <td
+        colspan="2"
+        style="
+          border-top:1px solid #F0F0F0;
+          padding-top:14px;
+        "
+      >
+
+        <div
+          style="
+            font-size:12px;
+            line-height:18px;
+            font-weight:700;
+            color:#6B7280;
+            margin-bottom:7px;
+          "
+        >
+          Reason
+        </div>
+
+        <div
+          style="
+            font-size:13px;
+            line-height:20px;
+            color:#4B5563;
+          "
+        >
+          ${formattedReason}
+        </div>
+
+      </td>
+
+    </tr>
+
+  </table>
+
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+
+
+<!-- MESSAGE -->
+<tr>
+<td style="padding-top:24px;">
+
+  <div
+    style="
+      font-size:14px;
+      line-height:22px;
+      color:#4B5563;
+    "
+  >
+    You can reactivate your account at any time
+    by selecting a plan. Your records and data
+    remain safely saved.
+  </div>
+
+</td>
+</tr>
+
+
+<!-- BUTTON -->
+<tr>
+<td style="padding-top:26px;">
+
+  <a
+    href="${upgradeUrl}"
+    target="_blank"
+    style="
+      color:#0875D1;
+      text-decoration:underline;
+      font-size:14px;
+      line-height:20px;
+      font-weight:600;
+    "
+  >
+    Choose a plan &amp; reactivate &rarr;
   </a>
+
 </td>
 </tr>
 
+
+<!-- FOOTER -->
 <tr>
-<td style="padding:22px 35px 28px;text-align:center;border-top:1px solid #e5eef0;background:#fafbfc;">
-  <div style="font-size:12px;color:#52666a;margin-bottom:6px;">
-    SS Residency Hotel Management
+<td style="padding-top:40px;">
+
+  <div
+    style="
+      border-top:1px solid #F0F0F0;
+      padding-top:18px;
+      font-size:12px;
+      line-height:19px;
+      color:#9CA3AF;
+    "
+  >
+    <strong style="color:#6B7280;">
+      StayLio
+    </strong>
+    · Hotel Management Platform
+    <br>
+    If you have any questions,
+    please contact your administrator.
   </div>
-  <div style="font-size:11px;color:#94a3b8;">
-    If you believe this action was made in error, please contact the administrator.
-  </div>
+
 </td>
 </tr>
 
@@ -831,20 +1927,30 @@ const sendSubscriptionCancelledNotification = async ({
 
 </body>
 </html>
-      `,
+`,
     });
 
-    log.info(`[EMAIL] Subscription cancelled notification sent to ${to} for ${hotelName}. Reason: ${formattedReason}`);
+    log.info(
+      `[EMAIL] Subscription cancelled notification sent to ${to} for ${resolvedHotelName}. Reason: ${formattedReason}`
+    );
   } catch (error) {
-    console.error("Error sending subscription cancelled notification:", error);
-    log.error(`[EMAIL] Failed to send subscription cancelled notification to ${to}: ${error.message}`);
+    console.error(
+      "Error sending subscription cancelled notification:",
+      error
+    );
+
+    log.error(
+      `[EMAIL] Failed to send subscription cancelled notification to ${to}: ${error.message}`
+    );
+
     throw error;
   }
 };
 
 
-
-
+// ============================================================
+// EXPORTS
+// ============================================================
 export {
   sendOTP,
   sendSubscriptionExpiryReminder,

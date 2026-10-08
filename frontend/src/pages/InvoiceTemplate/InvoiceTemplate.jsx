@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   computeExtraStayDetails,
   formatActualCheckOutDisplay,
@@ -7,6 +7,135 @@ import {
   formatHumanDateTime,
   exportInvoicesToExcel,
 } from "./stayDurationHelper.js";
+import { getSettings } from "../../service/settingsService";
+import { getAllBranches } from "../../service/branchApi";
+
+/**
+ * Parses any service / food item safely extracting a clean title and room number
+ */
+const parseServiceItem = (item, defaultRoomNumber = "") => {
+  let rawName = String(item.description || item.name || item.foodName || item.serviceName || "Service Item").trim();
+  let roomNum = String(item.roomNumber || item.room || "").trim();
+
+  // If description has " - Room 102" or " - Room -" pattern
+  const roomPatternMatch = rawName.match(/^(.*?)\s*-\s*room\s*([a-zA-Z0-9_-]*)/i);
+  if (roomPatternMatch) {
+    rawName = roomPatternMatch[1].trim();
+    if (!roomNum || roomNum === "-") {
+      const matchedNum = roomPatternMatch[2].trim();
+      if (matchedNum && matchedNum !== "-") {
+        roomNum = matchedNum;
+      }
+    }
+  }
+
+  // Fallback to default room number if only one room is in the invoice
+  if ((!roomNum || roomNum === "-") && defaultRoomNumber) {
+    roomNum = defaultRoomNumber;
+  }
+
+  const qty = Number(item.quantity || 1);
+  const total = Number(item.total || ((item.unitPrice || item.price || item.fees || 0) * qty));
+  const unitPrice = Number(item.unitPrice || item.price || item.fees || (total / (qty || 1)));
+
+  return {
+    name: rawName,
+    roomNumber: roomNum && roomNum !== "-" ? roomNum : "",
+    quantity: qty,
+    unitPrice,
+    total,
+  };
+};
+
+/**
+ * Robustly extracts Food and Room Services with their respective Room Numbers
+ */
+const extractCategorizedServices = (inv) => {
+  const rooms = Array.isArray(inv?.rooms) ? inv.rooms : [];
+  const defaultRoomNum = rooms.length === 1 ? (rooms[0]?.roomNumber || "") : "";
+
+  let extractedFood = [];
+  let extractedRoomServices = [];
+
+  // 1. Check if rooms have foodServicesDetails / roomServicesDetails / foodServices / roomServices
+  const hasNestedServices = rooms.some(
+    (r) =>
+      (Array.isArray(r.foodServicesDetails) && r.foodServicesDetails.length > 0) ||
+      (Array.isArray(r.foodServices) && r.foodServices.length > 0) ||
+      (Array.isArray(r.roomServicesDetails) && r.roomServicesDetails.length > 0) ||
+      (Array.isArray(r.roomServices) && r.roomServices.length > 0)
+  );
+
+  if (hasNestedServices) {
+    rooms.forEach((r, idx) => {
+      const rNum = String(r.roomNumber || (idx + 1)).trim();
+
+      const fList =
+        Array.isArray(r.foodServicesDetails) && r.foodServicesDetails.length > 0
+          ? r.foodServicesDetails
+          : (Array.isArray(r.foodServices) ? r.foodServices : []);
+
+      fList.forEach((f) => {
+        const parsed = parseServiceItem(f, rNum);
+        if (!parsed.roomNumber) parsed.roomNumber = rNum;
+        extractedFood.push(parsed);
+      });
+
+      const sList =
+        Array.isArray(r.roomServicesDetails) && r.roomServicesDetails.length > 0
+          ? r.roomServicesDetails
+          : (Array.isArray(r.roomServices) ? r.roomServices : []);
+
+      sList.forEach((s) => {
+        const parsed = parseServiceItem(s, rNum);
+        if (!parsed.roomNumber) parsed.roomNumber = rNum;
+        extractedRoomServices.push(parsed);
+      });
+    });
+
+    return { foodItems: extractedFood, roomServiceItems: extractedRoomServices };
+  }
+
+  // 2. Fallback: Parse from inv.items
+  const nonRoomItems = (inv?.items || []).filter((item) => {
+    const desc = String(item.description || "").toLowerCase();
+    return (
+      !desc.startsWith("room rent") &&
+      !desc.startsWith("extra night") &&
+      !desc.startsWith("extra full day") &&
+      !desc.startsWith("extra time stay") &&
+      !desc.startsWith("checkout")
+    );
+  });
+
+  nonRoomItems.forEach((rawItem) => {
+    const parsed = parseServiceItem(rawItem, defaultRoomNum);
+
+    // If still no room number, check if only 1 room or match with room list
+    if (!parsed.roomNumber) {
+      if (defaultRoomNum) {
+        parsed.roomNumber = defaultRoomNum;
+      } else if (rooms.length > 0) {
+        parsed.roomNumber = rooms[0]?.roomNumber || "";
+      }
+    }
+
+    const desc = String(parsed.name || "").toLowerCase();
+    if (
+      rawItem.category === "roomService" ||
+      desc.includes("cleaning") ||
+      desc.includes("laundry") ||
+      desc.includes("room service") ||
+      desc.includes("maintenance")
+    ) {
+      extractedRoomServices.push(parsed);
+    } else {
+      extractedFood.push(parsed);
+    }
+  });
+
+  return { foodItems: extractedFood, roomServiceItems: extractedRoomServices };
+};
 
 const InvoiceTemplate = ({
   activeInvoice,
@@ -16,11 +145,69 @@ const InvoiceTemplate = ({
   setActiveInvoice,
   formatDate = formatHumanDate,
   formatTime = formatHumanTime,
+  hotelSettings = null,
 }) => {
+  const [settings, setSettings] = useState(hotelSettings || null);
+  const [branchData, setBranchData] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadData = async () => {
+      try {
+        const [settingsRes, branchesRes] = await Promise.all([
+           !hotelSettings ? getSettings() : Promise.resolve({ success: true, data: hotelSettings }),
+           getAllBranches()
+        ]);
+        
+        if (isMounted) {
+          if (settingsRes?.success && settingsRes.data) {
+            setSettings(settingsRes.data);
+          }
+          if (branchesRes?.success && branchesRes.data?.length > 0) {
+            const invoiceBranchId = activeInvoice?.branchId || pdfInvoice?.branchId;
+            const bData = invoiceBranchId ? branchesRes.data.find(b => b._id === invoiceBranchId) : branchesRes.data[0];
+            setBranchData(bData || branchesRes.data[0]);
+          }
+        }
+      } catch (err) {
+        console.warn("[InvoiceTemplate] Could not load hotel data:", err);
+      }
+    };
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, [hotelSettings, activeInvoice, pdfInvoice]);
+
+  const cleanAddress = (addr) => {
+    if (!addr) return "";
+    const parts = String(addr)
+      .split(/[\n,]+/)
+      .map((p) => p.trim())
+      .filter(Boolean);
+    const uniqueParts = Array.from(new Set(parts));
+    return uniqueParts.join(", ");
+  };
+
+  const formatBranchAddress = (addr) => {
+    if (!addr) return "";
+    if (typeof addr === "string") return cleanAddress(addr);
+    const parts = [addr.street, addr.city, addr.state, addr.country, addr.pincode].filter(Boolean);
+    return cleanAddress(parts.join(", "));
+  };
+
+  const hotelName = branchData?.branchName || settings?.companyName || "HOTEL BILLING";
+  const hotelAddress = branchData?.address ? formatBranchAddress(branchData.address) : cleanAddress(settings?.address);
+  const hotelPhone = branchData?.phone || (Array.isArray(settings?.phoneNumbers)
+    ? settings.phoneNumbers.filter(Boolean).join(", ")
+    : (settings?.phoneNumbers || settings?.phone || ""));
+  const hotelEmail = branchData?.email || settings?.email || "";
+  const hotelGst = settings?.gstNumber || "";
+
   return (
     <>
       {/* ============================================================
-          ACTIVE INVOICE PREVIEW
+          ACTIVE INVOICE PREVIEW (MODAL)
       ============================================================ */}
 
       {activeInvoice &&
@@ -28,816 +215,386 @@ const InvoiceTemplate = ({
         (() => {
           const inv = activeInvoice;
           const c = inv.customer || {};
-          const rooms = Array.isArray(inv.rooms)
-            ? inv.rooms
-            : [];
+          const rooms = Array.isArray(inv.rooms) ? inv.rooms : [];
           const s = inv.staySummary || {};
           const f = inv.financials || {};
           const ec = inv.extraCharges || {};
           const p = inv.paymentInfo || {};
 
-          // ========================================================
-          // CHECKOUT TIME POLICY
-          // ========================================================
-          //
-          // This is the charge calculated by the backend according
-          // to the checkout policy.
-          //
-          // Example:
-          // Room price = ₹250
-          // Before 12 PM = 50%
-          // Policy charge = ₹125
-          //
-          // This must NOT be added again to roomRent because the
-          // backend roomRent already contains the charge.
-          // ========================================================
-
+          // Extra charges & policy
           const checkoutPolicyCharge = Number(
-            ec.checkoutPolicyCharge ??
+            f.checkoutPolicyCharge ??
               ec.lateCheckoutCharge ??
+              ec.checkoutPolicyCharge ??
               ec.checkoutPolicyAmount ??
+              f.extraTimeCharge ??
+              ec.extraTimeCharge ??
               0
           );
 
-          // ========================================================
-          // REAL EXTRA NIGHT CHARGE
-          // ========================================================
-          //
-          // This is only for an actual additional full night.
-          // It is different from the checkout time policy.
-          // ========================================================
-
           const extraNightCharge = Number(
-            ec.extraNightCharge ?? 0
-          );
-
-          const extraTimeCharge = Number(
-            ec.extraTimeCharge ?? 0
+            f.extraNightCharge ?? ec.extraNightCharge ?? 0
           );
 
           const extraStay = computeExtraStayDetails(s, ec);
-          const extraNightsStayed = extraStay.extraFullDays;
-          const extraHoursStayed = extraStay.extraHours;
-          const extraMinutesStayed = extraStay.extraMinutes;
-          const extraTimeText = extraStay.extraTimeFormatted;
 
-          // ========================================================
-          // CHECKOUT POLICY LABEL
-          // ========================================================
-
-          const getCheckoutPolicyLabel = () => {
-            const type = String(
-              ec.checkoutPolicyType ||
-                ec.policyType ||
-                ""
-            ).toLowerCase();
-
-            const value = Number(
-              ec.checkoutPolicyValue ??
-                ec.policyValue ??
-                ec.extraTimeRatePercentage ??
-                0
-            );
-
-            if (
-              type === "percentage" ||
-              type === "percent"
-            ) {
-              return `${value}% of room rate`;
-            }
-
-            if (
-              type === "fixed" ||
-              type === "flat" ||
-              type === "amount"
-            ) {
-              return `₹${value.toLocaleString(
-                "en-IN"
-              )} fixed`;
-            }
-
-            if (
-              type === "before12pm"
-            ) {
-              return "Before 12 PM";
-            }
-
-            if (
-              type === "after12pm"
-            ) {
-              return "After 12 PM";
-            }
-
-            if (
-              type === "none" ||
-              type === "disabled" ||
-              type === "nocharge"
-            ) {
-              return "No charge";
-            }
-
-            if (
-              checkoutPolicyCharge > 0
-            ) {
-              // If the policy type was not persisted, derive the
-              // label from the actual checkout time.
-              const actualTime = String(
-                s.actualCheckOutTime || ""
-              ).trim().toLowerCase();
-
-              const timeMatch = actualTime.match(
-                /(\d{1,2}):(\d{2})\s*(am|pm)?/
-              );
-
-              if (timeMatch) {
-                let hour = Number(timeMatch[1]);
-                const period = timeMatch[3];
-
-                if (period === "pm" && hour < 12) hour += 12;
-                if (period === "am" && hour === 12) hour = 0;
-
-                return hour < 12
-                  ? "Before 12 PM"
-                  : "After 12 PM";
-              }
-
-              return "Checkout time policy";
-            }
-
-            return "No charge";
-          };
-
-          const checkoutPolicyLabel =
-            getCheckoutPolicyLabel();
-
-          // ========================================================
-          // PAYMENT VALUES
-          // ========================================================
-
-          const advancePaid = Number(
-            f.advancePaid || 0
-          );
-
-          const currentPayment = Number(
-            f.currentPayment ??
-              0
-          );
-
+          // Payment values
+          const advancePaid = Number(f.advancePaid || 0);
+          const currentPayment = Number(f.currentPayment || 0);
+          const grandTotal = Number(f.grandTotal || 0);
           const totalPaid = Number(
-            f.totalPaid ??
-              advancePaid +
-                currentPayment
+            f.totalPaid ?? advancePaid + currentPayment
           );
-
-          const grandTotal = Number(
-            f.grandTotal || 0
-          );
-
           const balanceDue = Math.max(
             0,
-            Number(
-              f.balanceDue ??
-                grandTotal -
-                  totalPaid
-            )
+            Number(f.balanceDue ?? grandTotal - totalPaid)
           );
 
-          // ========================================================
-          // OVERSTAY INFORMATION
-          // ========================================================
+          // Summary breakdowns
+          const totalRoomRent =
+            rooms.length > 0
+              ? rooms.reduce(
+                  (sum, r) =>
+                    sum +
+                    (Number(r.roomRent) ||
+                      Number(r.bookedNights || 1) *
+                        Number(r.perNightRoomPrice || r.pricePerNight || 0)),
+                  0
+                )
+              : Number(f.roomRent || 0);
 
-          const overstayLabel = extraStay.overstayLabel;
+          const totalExtraStay =
+            rooms.length > 0
+              ? rooms.reduce(
+                  (sum, r) =>
+                    sum +
+                    (Number(r.extraFullDayCharge) ||
+                      Number(r.extraFullDays || 0) *
+                        Number(r.perNightRoomPrice || r.pricePerNight || 0)),
+                  0
+                )
+              : Number(extraNightCharge || 0);
+
+          const totalCheckoutCharge =
+            rooms.length > 0
+              ? rooms.reduce(
+                  (sum, r) => sum + Number(r.checkoutPolicyCharge || 0),
+                  0
+                )
+              : Number(checkoutPolicyCharge || 0);
+
+          const foodTotal = Number(f.foodServices || 0);
+          const roomServicesTotal = Number(f.roomServices || 0);
+          const taxableSubtotal = Number(
+            f.subTotal ||
+              totalRoomRent +
+                totalExtraStay +
+                totalCheckoutCharge +
+                foodTotal +
+                roomServicesTotal
+          );
+          const gstRate = Number(f.gstPercentage || 0);
+          const gstAmount = Number(f.gstAmount || 0);
+
+          // Extract Food and Room Services with specific Room Numbers
+          const { foodItems, roomServiceItems } = extractCategorizedServices(inv);
 
           return (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-              <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
-
-                {/* ==================================================
-                    HEADER
-                ================================================== */}
-
-                <div className="flex justify-between items-center border-b pb-4 mb-4">
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-800">
-                      Receipt / Tax Invoice
-                    </h2>
-
-                    <p className="text-xs text-teal-600 font-semibold">
-                      JAYAM HOTEL —{" "}
-                      {inv.invoiceNo}
-                    </p>
-                  </div>
-
+            <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+              <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-5 border border-gray-200 font-sans text-xs">
+                {/* CLOSE BUTTON */}
+                <div className="flex justify-end mb-1">
                   <button
                     type="button"
-                    onClick={() =>
-                      setActiveInvoice(null)
-                    }
-                    className="text-gray-400 hover:text-gray-600 font-bold text-xl"
+                    onClick={() => setActiveInvoice(null)}
+                    className="text-gray-400 hover:text-gray-600 font-bold text-xl leading-none cursor-pointer"
                   >
                     &times;
                   </button>
                 </div>
 
-                <div className="space-y-4 text-sm text-gray-700">
-
-                  {/* ==================================================
-                      CUSTOMER DETAILS
-                  ================================================== */}
-
-                  <div className="bg-gray-50 p-4 rounded-lg border space-y-1">
-
-                    <p className="flex justify-between">
-                      <span className="text-gray-500">
-                        Name:
-                      </span>
-
-                      <strong>
-                        {c.customerName ||
-                          "-"}
-                      </strong>
+                {/* HOTEL HEADER */}
+                <div className="text-center pb-3 space-y-0.5">
+                  <h2 className="text-base font-extrabold text-gray-900 tracking-tight uppercase">
+                    {hotelName}
+                  </h2>
+                  {hotelAddress && (
+                    <p className="text-[11px] text-gray-600">
+                      {hotelAddress}
                     </p>
-
-                    {/* ROOM DETAILS */}
-
-                    <div className="space-y-3 mt-3">
-                      <div className="text-[10px] font-extrabold text-teal-700 uppercase tracking-wider">
-                        Room Details
-                      </div>
-
-                      {rooms.length >
-                      0 ? (
-                        rooms.map(
-                          (
-                            room,
-                            index
-                          ) => (
-                            <div
-                              key={
-                                room._id ||
-                                index
-                              }
-                              className="border border-gray-200 rounded-lg bg-white p-3"
-                            >
-                              <p className="font-bold text-gray-800 mb-2">
-                                Room{" "}
-                                {index +
-                                  1}
-                              </p>
-
-                              <div className="space-y-1">
-
-                                <p className="flex justify-between">
-                                  <span className="text-gray-500">
-                                    Room No:
-                                  </span>
-
-                                  <strong>
-                                    {room.roomNumber ||
-                                      "-"}
-                                  </strong>
-                                </p>
-
-                                <p className="flex justify-between">
-                                  <span className="text-gray-500">
-                                    Room Type:
-                                  </span>
-
-                                  <span>
-                                    {room.roomType ||
-                                      "-"}
-                                  </span>
-                                </p>
-
-                                <p className="flex justify-between">
-                                  <span className="text-gray-500">
-                                    Bed Type:
-                                  </span>
-
-                                  <span>
-                                    {room.bedType ||
-                                      "-"}
-                                  </span>
-                                </p>
-
-                                <p className="flex justify-between">
-                                  <span className="text-gray-500">
-                                    Price / Night:
-                                  </span>
-
-                                  <span>
-                                    ₹
-                                    {Number(
-                                      room.perNightRoomPrice ||
-                                        0
-                                    ).toLocaleString(
-                                      "en-IN"
-                                    )}
-                                  </span>
-                                </p>
-
-                              </div>
-                            </div>
-                          )
-                        )
-                      ) : (
-                        <p className="text-gray-500">
-                          No room details
-                          available.
-                        </p>
-                      )}
-                    </div>
-
-                    <p className="flex justify-between">
-                      <span className="text-gray-500">
-                        Phone:
-                      </span>
-
-                      <span>
-                        {c.phoneNumber ||
-                          "-"}
-                      </span>
+                  )}
+                  {hotelPhone && (
+                    <p className="text-[11px] text-gray-600">
+                      Phone: {hotelPhone}
                     </p>
-
-                    {c.alternativePhone && (
-                      <p className="flex justify-between">
-                        <span className="text-gray-500">
-                          Alt Phone:
-                        </span>
-
-                        <span>
-                          {
-                            c.alternativePhone
-                          }
-                        </span>
-                      </p>
-                    )}
-
-                    {c.email && (
-                      <p className="flex justify-between">
-                        <span className="text-gray-500">
-                          Email:
-                        </span>
-
-                        <span>
-                          {c.email}
-                        </span>
-                      </p>
-                    )}
-
-                    <p className="flex justify-between">
-                      <span className="text-gray-500">
-                        ID Proof:
-                      </span>
-
-                      <span>
-                        {c.idProofType ||
-                          "-"}{" "}
-                        {c.idProofNumber
-                          ? `- ${c.idProofNumber}`
-                          : ""}
-                      </span>
+                  )}
+                  {hotelGst && (
+                    <p className="text-[11px] font-semibold text-gray-700">
+                      GSTIN: {hotelGst}
                     </p>
+                  )}
 
-                    <p className="flex justify-between gap-4">
-                      <span className="text-gray-500 shrink-0">
-                        Address:
-                      </span>
-
-                      <span className="text-right">
-                        {c.address ||
-                          "-"}
-                      </span>
-                    </p>
-
-                    <p className="flex justify-between">
-                      <span className="text-gray-500">
-                        Invoice No:
-                      </span>
-
-                      <strong>
-                        {inv.invoiceNo}
-                      </strong>
-                    </p>
-
-                    <p className="flex justify-between">
-                      <span className="text-gray-500">
-                        Invoice Date:
-                      </span>
-
-                      <span>
-                        {formatDate(inv.invoiceDate || inv.createdAt)}
-                      </span>
-                    </p>
-                  </div>
-
-                  {/* ==================================================
-                      STAY SUMMARY
-                  ================================================== */}
-
-                  <div className="border-t border-b border-dashed border-gray-300 py-3">
-
-                    <div className="text-[10px] font-extrabold text-teal-700 uppercase tracking-wider mb-2">
-                      Stay Summary
-                    </div>
-
-                    <p className="flex justify-between">
-                      <span className="text-gray-500">
-                        Booked Check-In:
-                      </span>
-
-                      <span>
-                        {formatHumanDateTime(
-                          s.bookedCheckIn,
-                          s.bookedCheckInTime,
-                          " • "
-                        )}
-                      </span>
-                    </p>
-
-                    <p className="flex justify-between">
-                      <span className="text-gray-500">
-                        Booked Check-Out:
-                      </span>
-
-                      <span>
-                        {formatHumanDateTime(
-                          s.bookedCheckOut,
-                          s.bookedCheckOutTime,
-                          " • "
-                        )}
-                      </span>
-                    </p>
-
-                    <p className="flex justify-between">
-                      <span className="text-gray-500">
-                        Actual Check-Out:
-                      </span>
-
-                      <span className="font-bold text-emerald-700">
-                        {formatActualCheckOutDisplay(
-                          s.actualCheckOut,
-                          s.actualCheckOutDate,
-                          s.actualCheckOutTime,
-                          formatDate,
-                          formatTime
-                        )}
-                      </span>
-                    </p>
-
-                    <p className="flex justify-between">
-                      <span className="text-gray-500">
-                        Booked Nights:
-                      </span>
-
-                      <span>
-                        {s.bookedNights ??
-                          0}
-                      </span>
-                    </p>
-
-                    <p className="flex justify-between">
-                      <span className="text-gray-500">
-                        Extra Full Days:
-                      </span>
-
-                      <span>
-                        {extraStay.extraFullDays}
-                      </span>
-                    </p>
-
-                    <p className="flex justify-between">
-                      <span className="text-gray-500">
-                        Extra Time:
-                      </span>
-
-                      <span>
-                        {extraStay.extraTimeFormatted}
-                      </span>
-                    </p>
-
-                    <p className="flex justify-between font-extrabold border-t border-gray-200 mt-1 pt-1">
-                      <span>
-                        Total Nights
-                        Stayed:
-                      </span>
-
-                      <span>
-                        {Number(s.bookedNights || 0) + extraStay.extraFullDays}
-                      </span>
-                    </p>
-
-                    {(
-                      extraStay.hasExtraStay ||
-                      checkoutPolicyCharge >
-                        0
-                    ) && (
-                      <div className="mt-2 p-2 rounded-md bg-orange-50 text-orange-800 text-xs">
-                        <strong>
-                          Checkout:
-                        </strong>{" "}
-                        {extraStay.hasExtraStay
-                          ? extraStay.overstayLabel
-                          : "Checkout time policy charge applied"}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* ==================================================
-                      ITEMIZED CHARGES
-                  ================================================== */}
-
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">
-                      Itemized Charges
-                    </h3>
-
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse border border-gray-200 text-xs">
-
-                        <thead>
-                          <tr className="bg-gray-100 text-left">
-                            <th className="p-2 border">
-                              Description
-                            </th>
-
-                            <th className="p-2 border">
-                              Unit Price
-                            </th>
-
-                            <th className="p-2 border">
-                              Qty
-                            </th>
-
-                            <th className="p-2 border">
-                              Total
-                            </th>
-                          </tr>
-                        </thead>
-
-                        <tbody>
-                          {inv.items?.map(
-                            (
-                              item,
-                              idx
-                            ) => (
-                              <tr
-                                key={idx}
-                              >
-                                <td className="p-2 border">
-                                  {
-                                    item.description
-                                  }
-                                </td>
-
-                                <td className="p-2 border">
-                                  ₹
-                                  {Number(
-                                    item.unitPrice ||
-                                      0
-                                  ).toFixed(
-                                    2
-                                  )}
-                                </td>
-
-                                <td className="p-2 border">
-                                  {
-                                    item.quantity
-                                  }
-                                </td>
-
-                                <td className="p-2 border font-semibold">
-                                  ₹
-                                  {Number(
-                                    item.total ||
-                                      0
-                                  ).toFixed(
-                                    2
-                                  )}
-                                </td>
-                              </tr>
-                            )
-                          )}
-                        </tbody>
-                      </table>
+                  <div className="pt-2">
+                    <div className="border-t border-b border-gray-300 py-1 font-extrabold text-gray-800 text-[11px] tracking-wider uppercase">
+                      RECEIPT / TAX INVOICE
                     </div>
                   </div>
-
-                  {/* Additional charges are included in the itemized
-                      invoice items so each charge appears exactly once. */}
-
-                  {/* ==================================================
-                      TOTALS
-                  ================================================== */}
-
-                  <div className="bg-gray-50 p-4 rounded-lg border space-y-1 text-xs">
-
-                    {/* When itemized items are not present, fallback to summary rows */}
-                    {(!inv.items || inv.items.length === 0) && (
-                      <>
-                        {Number(f.roomRent || 0) > 0 && (
-                          <p className="flex justify-between">
-                            <span className="text-gray-500">Room base rent:</span>
-                            <span>₹{Number(f.roomRent || 0).toFixed(2)}</span>
-                          </p>
-                        )}
-                        {extraNightCharge > 0 && (
-                          <p className="flex justify-between text-orange-700">
-                            <span>Extra full day:</span>
-                            <span>₹{extraNightCharge.toFixed(2)}</span>
-                          </p>
-                        )}
-                        {checkoutPolicyCharge > 0 && (
-                          <p className="flex justify-between text-orange-700">
-                            <span>Checkout policy charge:</span>
-                            <span>₹{checkoutPolicyCharge.toFixed(2)}</span>
-                          </p>
-                        )}
-                        {extraTimeCharge > 0 && checkoutPolicyCharge === 0 && (
-                          <p className="flex justify-between text-orange-700">
-                            <span>Extra time stay:</span>
-                            <span>₹{extraTimeCharge.toFixed(2)}</span>
-                          </p>
-                        )}
-                      </>
-                    )}
-
-                    {Number(f.foodServices || 0) > 0 && (
-                      <p className="flex justify-between">
-                        <span className="text-gray-500">Food:</span>
-                        <span>₹{Number(f.foodServices || 0).toFixed(2)}</span>
-                      </p>
-                    )}
-                    {Number(f.roomServices || 0) > 0 && (
-                      <p className="flex justify-between">
-                        <span className="text-gray-500">Room service:</span>
-                        <span>₹{Number(f.roomServices || 0).toFixed(2)}</span>
-                      </p>
-                    )}
-
-                    <p className="flex justify-between font-semibold border-t border-dashed border-gray-400 pt-2 mt-2">
-                      <span className="text-gray-500">
-                        Taxable subtotal:
-                      </span>
-
-                      <span>
-                        ₹
-                        {Number(
-                          f.subTotal ||
-                            0
-                        ).toFixed(
-                          2
-                        )}
-                      </span>
-                    </p>
-
-                    <p className="flex justify-between">
-                      <span className="text-gray-500">
-                        GST (
-                        {Number(
-                          f.gstPercentage ||
-                            0
-                        )}
-                        %):
-                      </span>
-
-                      <span>
-                        ₹
-                        {Number(
-                          f.gstAmount ||
-                            0
-                        ).toFixed(
-                          2
-                        )}
-                      </span>
-                    </p>
-
-                    <h3 className="flex justify-between text-base font-bold text-teal-700 pt-2 border-t border-dashed border-gray-400">
-                      <span>
-                        Grand Total:
-                      </span>
-
-                      <span>
-                        ₹
-                        {grandTotal.toFixed(
-                          2
-                        )}
-                      </span>
-                    </h3>
-
-                    <p className="flex justify-between mt-4">
-                      <span className="text-gray-500">
-                        Advance already paid{" "}
-                        {f.advancePaidVia
-                          ? `(${f.advancePaidVia})`
-                          : ""}
-                        :
-                      </span>
-
-                      <span>
-                        ₹
-                        {advancePaid.toFixed(
-                          2
-                        )}
-                      </span>
-                    </p>
-
-                    <p className="flex justify-between">
-                      <span className="text-gray-500">
-                        Current Payment:
-                      </span>
-
-                      <span>
-                        ₹
-                        {currentPayment.toFixed(
-                          2
-                        )}
-                      </span>
-                    </p>
-
-                    <p className="flex justify-between font-bold">
-                      <span>
-                        Total Paid:
-                      </span>
-
-                      <span>
-                        ₹
-                        {totalPaid.toFixed(
-                          2
-                        )}
-                      </span>
-                    </p>
-
-                    <p className="flex justify-between font-extrabold border-t border-dashed border-gray-400 pt-2 mt-2">
-                      <span>
-                        Balance Due:
-                      </span>
-
-                      <span>
-                        ₹
-                        {balanceDue.toFixed(
-                          2
-                        )}
-                      </span>
-                    </p>
-
-                  </div>
-
-                  {/* ==================================================
-                      PAYMENT
-                  ================================================== */}
-
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-teal-50 border border-teal-200 p-3 rounded-lg gap-2">
-
-                    <div>
-                      <p className="text-xs text-teal-800 font-semibold">
-                        Payment Mode:{" "}
-                        {p.paymentMode ||
-                          "-"}
-                      </p>
-
-                      <p className="text-xs text-teal-600">
-                        Paid At:{" "}
-                        {formatActualCheckOutDisplay(
-                          p.paidAt,
-                          null,
-                          null,
-                          formatDate,
-                          formatTime
-                        )}
-                      </p>
-                    </div>
-
-                    <span className="px-3 py-1 text-xs font-bold bg-green-600 text-white rounded-full">
-                      {p.paymentStatus ||
-                        "PAID"}
-                    </span>
-
-                  </div>
-
-                  <p className="text-center text-xs text-gray-400 pt-2">
-                    Thank you for staying
-                    with Jayam Hotel. We
-                    look forward to
-                    welcoming you again!
-                  </p>
-
                 </div>
 
-                {/* ==================================================
-                    ACTION BUTTONS
-                ================================================== */}
+                {/* INVOICE & CUSTOMER META */}
+                <div className="border-b border-gray-300 pb-2.5 mb-2.5 space-y-1 text-xs">
+                  <div className="flex justify-between font-medium">
+                    <span>Invoice No: <strong>{inv.invoiceNo}</strong></span>
+                    <span>Date: {formatDate(inv.invoiceDate || inv.createdAt)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Customer:</span>
+                    <strong className="text-gray-900">{c.customerName || "Walk-in Guest"}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Phone:</span>
+                    <span className="text-gray-800">{c.phoneNumber || "-"}</span>
+                  </div>
+                  {c.idProofType && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">ID Proof:</span>
+                      <span className="text-gray-800">{c.idProofType} {c.idProofNumber ? `(${c.idProofNumber})` : ""}</span>
+                    </div>
+                  )}
+                  {c.address && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Address:</span>
+                      <span className="text-gray-800 text-right">{c.address}</span>
+                    </div>
+                  )}
+                </div>
 
-                <div className="mt-6 flex justify-end gap-3 border-t pt-4">
+                {/* ACCOMMODATION DETAILS */}
+                <div className="border-b border-gray-300 pb-3 mb-3 space-y-3">
+                  <div className="font-extrabold text-gray-900 text-[11px] uppercase tracking-wider">
+                    ACCOMMODATION DETAILS
+                  </div>
 
+                  {(rooms.length > 0 ? rooms : [s]).map((room, idx) => {
+                    const roomStay = {
+                      bookedCheckIn: room.checkIn || s.bookedCheckIn || "",
+                      bookedCheckInTime: room.checkInTime || s.bookedCheckInTime || "",
+                      bookedCheckOut: room.checkOut || s.bookedCheckOut || "",
+                      bookedCheckOutTime: room.checkOutTime || s.bookedCheckOutTime || "",
+                      actualCheckOut: room.actualCheckoutDate || room.actualCheckout || s.actualCheckOutDate || s.actualCheckOut || "",
+                      actualCheckOutDate: room.actualCheckoutDate || s.actualCheckOutDate || s.actualCheckOut || "",
+                      actualCheckOutTime: room.actualCheckoutTime || s.actualCheckOutTime || "",
+                      bookedNights: room.bookedNights ?? s.bookedNights,
+                      extraFullDays: room.extraFullDays ?? (rooms.length === 1 ? extraStay.extraFullDays : 0),
+                    };
+                    const roomRate = Number(room.perNightRoomPrice ?? room.pricePerNight ?? room.roomPricePerNight ?? room.roomPrice ?? s.pricePerNight ?? 0);
+                    const roomBookedNights = Number(roomStay.bookedNights || 1);
+                    const bookedStayAmount = Number(room.roomRent ?? (roomBookedNights * roomRate));
+                    const extraNights = Number(room.extraFullDays ?? 0);
+                    const extraNightAmount = Number(room.extraFullDayCharge ?? (extraNights * roomRate));
+                    const roomPolicyCharge = Number(room.checkoutPolicyCharge ?? (rooms.length === 1 ? checkoutPolicyCharge : 0));
+                    const roomStayTotal = bookedStayAmount + extraNightAmount + roomPolicyCharge;
+
+                    return (
+                      <div key={idx} className={`${idx > 0 ? "pt-2.5 border-t border-dashed border-gray-200" : ""} space-y-1.5`}>
+                        <div className="flex justify-between items-center font-bold text-gray-900 text-xs">
+                          <span>Room {room.roomNumber || (idx + 1)} {room.roomType ? <span className="font-normal text-gray-500">({room.roomType})</span> : ""}</span>
+                          <span>₹{roomRate.toLocaleString("en-IN")}/night</span>
+                        </div>
+
+                        <div className="space-y-0.5 text-[11px] text-gray-600">
+                          <p className="flex justify-between">
+                            <span className="text-gray-500">Check-in</span>
+                            <span className="font-medium text-gray-900">{formatHumanDateTime(roomStay.bookedCheckIn, roomStay.bookedCheckInTime, ", ")}</span>
+                          </p>
+                          <p className="flex justify-between">
+                            <span className="text-gray-500">Checkout</span>
+                            <span className="font-medium text-gray-900">
+                              {formatHumanDateTime(roomStay.bookedCheckOut, roomStay.bookedCheckOutTime || "11:00 AM", ", ")}
+                            </span>
+                          </p>
+                          <p className="flex justify-between">
+                            <span className="text-gray-500">Actual Checkout Date &amp; Time</span>
+                            <span className="font-medium text-gray-900">
+                              {formatActualCheckOutDisplay(
+                                roomStay.actualCheckOut,
+                                roomStay.actualCheckOutDate,
+                                roomStay.actualCheckOutTime,
+                                formatDate,
+                                formatTime,
+                                ", "
+                              )}
+                            </span>
+                          </p>
+                          <p className="flex justify-between">
+                            <span className="text-gray-500">Stay</span>
+                            <span>{roomBookedNights} Night{roomBookedNights !== 1 ? "s" : ""}{extraNights > 0 ? ` + ${extraNights} Extra Day${extraNights !== 1 ? "s" : ""}` : ""}</span>
+                          </p>
+                        </div>
+
+                        <div className="pt-1 space-y-0.5 text-[11px]">
+                          <p className="flex justify-between">
+                            <span className="text-gray-600">Room Rent</span>
+                            <span className="font-medium text-gray-900">₹{bookedStayAmount.toLocaleString("en-IN")}</span>
+                          </p>
+                          <p className="flex justify-between">
+                            <span className="text-gray-600">Extra Night Stay Charge</span>
+                            <span className="font-medium text-gray-900">₹{extraNightAmount.toLocaleString("en-IN")}</span>
+                          </p>
+                          <p className="flex justify-between">
+                            <span className="text-gray-600">Extra Time Stay Charge</span>
+                            <span className="font-medium text-gray-900">₹{roomPolicyCharge.toLocaleString("en-IN")}</span>
+                          </p>
+                          <p className="flex justify-between font-bold text-gray-900 pt-1 border-t border-gray-100">
+                            <span>Room Total</span>
+                            <span>₹{roomStayTotal.toLocaleString("en-IN")}</span>
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* FOOD SERVICES (IF ANY) */}
+                {foodItems.length > 0 && (
+                  <div className="border-b border-gray-300 pb-3 mb-3 space-y-2">
+                    <div className="font-extrabold text-gray-900 text-[11px] uppercase tracking-wider">
+                      FOOD SERVICES
+                    </div>
+                    <div className="space-y-1.5">
+                      {foodItems.map((item, sIdx) => {
+                        return (
+                          <div key={sIdx} className="text-[11px]">
+                            <p className="font-medium text-gray-900">{item.name}</p>
+                            <p className="flex justify-between text-gray-500">
+                              <span>{item.roomNumber ? `Room ${item.roomNumber} × ` : "Qty: "}{item.quantity}</span>
+                              <span className="font-semibold text-gray-900">₹{item.total.toLocaleString("en-IN")}</span>
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* ROOM SERVICES (IF ANY) */}
+                {roomServiceItems.length > 0 && (
+                  <div className="border-b border-gray-300 pb-3 mb-3 space-y-2">
+                    <div className="font-extrabold text-gray-900 text-[11px] uppercase tracking-wider">
+                      ROOM SERVICES
+                    </div>
+                    <div className="space-y-1.5">
+                      {roomServiceItems.map((item, sIdx) => {
+                        return (
+                          <div key={sIdx} className="text-[11px]">
+                            <p className="font-medium text-gray-900">{item.name}</p>
+                            <p className="flex justify-between text-gray-500">
+                              <span>{item.roomNumber ? `Room ${item.roomNumber} × ` : "Qty: "}{item.quantity}</span>
+                              <span className="font-semibold text-gray-900">₹{item.total.toLocaleString("en-IN")}</span>
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* BILL SUMMARY */}
+                <div className="border-b border-gray-300 pb-3 mb-3 space-y-2">
+                  <div className="font-extrabold text-gray-900 text-[11px] uppercase tracking-wider">
+                    BILL SUMMARY
+                  </div>
+
+                  <div className="space-y-1 text-[11px] text-gray-700">
+                    <p className="flex justify-between">
+                      <span className="text-gray-600">Room Rent</span>
+                      <span className="font-medium">₹{totalRoomRent.toLocaleString("en-IN")}</span>
+                    </p>
+                    <p className="flex justify-between">
+                      <span className="text-gray-600">Extra Night Stay Charges</span>
+                      <span className="font-medium">₹{totalExtraStay.toLocaleString("en-IN")}</span>
+                    </p>
+                    <p className="flex justify-between">
+                      <span className="text-gray-600">Extra Time Stay Charges</span>
+                      <span className="font-medium">₹{totalCheckoutCharge.toLocaleString("en-IN")}</span>
+                    </p>
+                    {foodTotal > 0 && (
+                      <p className="flex justify-between">
+                        <span className="text-gray-600">Food</span>
+                        <span className="font-medium">₹{foodTotal.toLocaleString("en-IN")}</span>
+                      </p>
+                    )}
+                    {roomServicesTotal > 0 && (
+                      <p className="flex justify-between">
+                        <span className="text-gray-600">Room Services</span>
+                        <span className="font-medium">₹{roomServicesTotal.toLocaleString("en-IN")}</span>
+                      </p>
+                    )}
+
+                    <div className="border-t border-dashed border-gray-200 pt-1 mt-1 space-y-0.5">
+                      <p className="flex justify-between font-semibold text-gray-900">
+                        <span>Subtotal</span>
+                        <span>₹{taxableSubtotal.toLocaleString("en-IN")}</span>
+                      </p>
+                      <p className="flex justify-between text-gray-600">
+                        <span>GST ({gstRate}%)</span>
+                        <span>₹{gstAmount.toLocaleString("en-IN")}</span>
+                      </p>
+                    </div>
+
+                    <div className="border-t border-b border-gray-900 py-1.5 my-1.5">
+                      <p className="flex justify-between font-extrabold text-sm text-gray-900">
+                        <span>GRAND TOTAL</span>
+                        <span>₹{grandTotal.toLocaleString("en-IN")}</span>
+                      </p>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <p className="flex justify-between text-gray-600">
+                        <span>Advance Paid {f.advancePaidVia ? `(${f.advancePaidVia})` : ""}</span>
+                        <span>₹{advancePaid.toLocaleString("en-IN")}</span>
+                      </p>
+                      {currentPayment > 0 && (
+                        <p className="flex justify-between text-gray-600">
+                          <span>Current Payment</span>
+                          <span>₹{currentPayment.toLocaleString("en-IN")}</span>
+                        </p>
+                      )}
+                      <p className="flex justify-between font-bold text-gray-900 pt-1 border-t border-dashed border-gray-200">
+                        <span>TOTAL PAID</span>
+                        <span>₹{totalPaid.toLocaleString("en-IN")}</span>
+                      </p>
+                      <p className="flex justify-between font-bold text-gray-900">
+                        <span>BALANCE DUE</span>
+                        <span>₹{balanceDue.toLocaleString("en-IN")}</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* PAYMENT INFO */}
+                <div className="border-b border-gray-300 pb-2.5 mb-2.5 text-xs space-y-1">
+                  <p className="flex justify-between">
+                    <span className="text-gray-600">Payment Mode:</span>
+                    <span className="font-bold text-gray-900 uppercase">{p.paymentMode || "CASH"}</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span className="text-gray-600">Payment Status:</span>
+                    <span className="font-bold text-emerald-700 uppercase">{p.paymentStatus || "PAID"}</span>
+                  </p>
+                </div>
+
+                {/* FOOTER */}
+                <div className="text-center py-1 text-xs text-gray-600 font-medium">
+                  Thank You!
+                </div>
+
+                {/* ACTION BUTTONS */}
+                <div className="mt-4 flex justify-end gap-3 border-t pt-3">
                   <button
                     type="button"
-                    onClick={() =>
-                      handleDownloadPDF(
-                        inv
-                      )
-                    }
-                    className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-700 transition cursor-pointer"
+                    onClick={() => handleDownloadPDF(inv)}
+                    className="bg-teal-600 text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-teal-700 transition cursor-pointer"
                   >
                     Download PDF
                   </button>
@@ -850,200 +607,123 @@ const InvoiceTemplate = ({
                         `Invoice_${inv.invoiceNo || "Receipt"}.csv`
                       )
                     }
-                    className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 transition cursor-pointer"
+                    className="bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition cursor-pointer"
                   >
                     Export Excel / CSV
                   </button>
 
                   <button
                     type="button"
-                    onClick={() =>
-                      setActiveInvoice(
-                        null
-                      )
-                    }
-                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-400 transition cursor-pointer"
+                    onClick={() => setActiveInvoice(null)}
+                    className="bg-gray-200 text-gray-700 px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-gray-300 transition cursor-pointer"
                   >
                     Close
                   </button>
-
                 </div>
-
               </div>
             </div>
           );
         })()}
 
       {/* ============================================================
-          PDF / PRINT RECEIPT
+          PDF / PRINT RECEIPT (THERMAL & PDF EXPORT)
       ============================================================ */}
 
       {pdfInvoice &&
         (() => {
           const inv = pdfInvoice;
           const c = inv.customer || {};
-          const rooms = Array.isArray(
-            inv.rooms
-          )
-            ? inv.rooms
-            : [];
+          const rooms = Array.isArray(inv.rooms) ? inv.rooms : [];
           const s = inv.staySummary || {};
           const f = inv.financials || {};
           const ec = inv.extraCharges || {};
           const p = inv.paymentInfo || {};
 
-          // ========================================================
-          // CHECKOUT POLICY
-          // ========================================================
-
-          const checkoutPolicyCharge =
-            Number(
+          // Extra charges & policy
+          const checkoutPolicyCharge = Number(
+            f.checkoutPolicyCharge ??
               ec.lateCheckoutCharge ??
-                ec.checkoutPolicyCharge ??
-                ec.checkoutPolicyAmount ??
-                0
-            );
+              ec.checkoutPolicyCharge ??
+              ec.checkoutPolicyAmount ??
+              f.extraTimeCharge ??
+              ec.extraTimeCharge ??
+              0
+          );
 
-          // ========================================================
-          // EXTRA NIGHT
-          // ========================================================
-
-          const extraNightCharge =
-            Number(
-              ec.extraNightCharge || 0
-            );
-
-          // ========================================================
-          // EXTRA TIME
-          // ========================================================
-
-          const extraTimeCharge =
-            Number(
-              ec.extraTimeCharge || 0
-            );
+          const extraNightCharge = Number(
+            f.extraNightCharge ?? ec.extraNightCharge ?? 0
+          );
 
           const extraStay = computeExtraStayDetails(s, ec);
-          const extraNightsStayed = extraStay.extraFullDays;
-          const extraHoursStayed = extraStay.extraHours;
-          const extraMinutesStayed = extraStay.extraMinutes;
-          const extraTimeText = extraStay.extraTimeFormatted;
 
-          // ========================================================
-          // CHECKOUT POLICY LABEL
-          // ========================================================
-
-          const getCheckoutPolicyLabel =
-            () => {
-              const type = String(
-                ec.checkoutPolicyType ||
-                  ec.policyType ||
-                  ""
-              ).toLowerCase();
-
-              const value = Number(
-                ec.checkoutPolicyValue ??
-                  ec.policyValue ??
-                  ec.extraTimeRatePercentage ??
-                  0
-              );
-
-              if (
-                type ===
-                  "percentage" ||
-                type === "percent"
-              ) {
-                return `${value}% of room rate`;
-              }
-
-              if (
-                type === "fixed" ||
-                type === "flat" ||
-                type === "amount"
-              ) {
-                return `₹${value.toLocaleString(
-                  "en-IN"
-                )} fixed`;
-              }
-
-              if (
-                type ===
-                "before12pm"
-              ) {
-                return "Before 12 PM";
-              }
-
-              if (
-                type ===
-                "after12pm"
-              ) {
-                return "After 12 PM";
-              }
-
-              if (
-                type === "none" ||
-                type ===
-                  "disabled" ||
-                type === "nocharge"
-              ) {
-                return "No charge";
-              }
-
-              if (
-                checkoutPolicyCharge >
-                0
-              ) {
-                return "Checkout time policy";
-              }
-
-              return "No charge";
-            };
-
-          const checkoutPolicyLabel =
-            getCheckoutPolicyLabel();
-
-          // ========================================================
-          // PAYMENT VALUES
-          // ========================================================
-
-          const advancePaid = Number(
-            f.advancePaid || 0
-          );
-
-          const currentPayment =
-            Number(
-              f.currentPayment || 0
-            );
-
-          const grandTotal = Number(
-            f.grandTotal || 0
-          );
-
+          // Payment values
+          const advancePaid = Number(f.advancePaid || 0);
+          const currentPayment = Number(f.currentPayment || 0);
+          const grandTotal = Number(f.grandTotal || 0);
           const totalPaid = Number(
-            f.totalPaid ??
-              advancePaid +
-                currentPayment
+            f.totalPaid ?? advancePaid + currentPayment
+          );
+          const balanceDue = Math.max(
+            0,
+            Number(f.balanceDue ?? grandTotal - totalPaid)
           );
 
-          const balanceDue =
-            Math.max(
-              0,
-              Number(
-                f.balanceDue ??
-                  grandTotal -
-                    totalPaid
-              )
-            );
+          // Summary breakdowns
+          const totalRoomRent =
+            rooms.length > 0
+              ? rooms.reduce(
+                  (sum, r) =>
+                    sum +
+                    (Number(r.roomRent) ||
+                      Number(r.bookedNights || 1) *
+                        Number(
+                          r.perNightRoomPrice || r.pricePerNight || 0
+                        )),
+                  0
+                )
+              : Number(f.roomRent || 0);
 
-          // ========================================================
-          // OVERSTAY LABEL
-          // ========================================================
+          const totalExtraStay =
+            rooms.length > 0
+              ? rooms.reduce(
+                  (sum, r) =>
+                    sum +
+                    (Number(r.extraFullDayCharge) ||
+                      Number(r.extraFullDays || 0) *
+                        Number(
+                          r.perNightRoomPrice || r.pricePerNight || 0
+                        )),
+                  0
+                )
+              : Number(extraNightCharge || 0);
 
-          const overstayLabel = extraStay.overstayLabel;
+          const totalCheckoutCharge =
+            rooms.length > 0
+              ? rooms.reduce(
+                  (sum, r) => sum + Number(r.checkoutPolicyCharge || 0),
+                  0
+                )
+              : Number(checkoutPolicyCharge || 0);
+
+          const foodTotal = Number(f.foodServices || 0);
+          const roomServicesTotal = Number(f.roomServices || 0);
+          const taxableSubtotal = Number(
+            f.subTotal ||
+              totalRoomRent +
+                totalExtraStay +
+                totalCheckoutCharge +
+                foodTotal +
+                roomServicesTotal
+          );
+          const gstRate = Number(f.gstPercentage || 0);
+          const gstAmount = Number(f.gstAmount || 0);
+
+          // Extract Food and Room Services with specific Room Numbers
+          const { foodItems, roomServiceItems } = extractCategorizedServices(inv);
 
           const row = {
             display: "flex",
-            justifyContent:
-              "space-between",
+            justifyContent: "space-between",
             padding: "2px 0",
             fontSize: "11px",
           };
@@ -1051,8 +731,7 @@ const InvoiceTemplate = ({
           return (
             <div
               style={{
-                position:
-                  "absolute",
+                position: "absolute",
                 top: "-9999px",
                 left: "-9999px",
               }}
@@ -1061,985 +740,572 @@ const InvoiceTemplate = ({
                 ref={receiptRef}
                 style={{
                   width: "320px",
-                  padding: "20px",
-                  background:
-                    "#ffffff",
-                  fontFamily:
-                    "monospace",
+                  padding: "16px",
+                  background: "#ffffff",
+                  fontFamily: "monospace, Courier New, sans-serif",
                   color: "#111827",
                   fontSize: "11px",
+                  boxSizing: "border-box",
                 }}
               >
-
-                {/* ==================================================
-                    HEADER
-                ================================================== */}
-
+                {/* HEADER */}
                 <div
                   style={{
-                    textAlign:
-                      "center",
-                    marginBottom:
-                      "10px",
+                    textAlign: "center",
+                    marginBottom: "8px",
                   }}
                 >
                   <h2
                     style={{
-                      margin: 0,
-                      fontSize:
-                        "18px",
+                      margin: "0 0 4px 0",
+                      fontSize: "16px",
                       fontWeight: 800,
-                      letterSpacing:
-                        "1px",
+                      letterSpacing: "0.5px",
+                      textTransform: "uppercase",
                     }}
                   >
-                    JAYAM HOTEL
+                    {hotelName}
                   </h2>
 
-                  <p
-                    style={{
-                      margin:
-                        "2px 0",
-                      fontSize:
-                        "10px",
-                      color:
-                        "#6b7280",
-                    }}
-                  >
-                    From The Land Of
-                    Chikmagalur
-                  </p>
+                  {hotelAddress && (
+                    <p
+                      style={{
+                        margin: "2px 0",
+                        fontSize: "10px",
+                        color: "#4b5563",
+                        whiteSpace: "normal",
+                      }}
+                    >
+                      {hotelAddress}
+                    </p>
+                  )}
 
-                  <p
-                    style={{
-                      margin:
-                        "6px 0 0 0",
-                      fontWeight: 600,
-                      color:
-                        "#374151",
-                    }}
-                  >
-                    The Jayam House
-                  </p>
+                  {/* {hotelPhone && (
+                    <p
+                      style={{
+                        margin: "2px 0",
+                        fontSize: "10px",
+                        color: "#4b5563",
+                      }}
+                    >
+                      Phone: {hotelPhone}
+                    </p>
+                  )} */}
 
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize:
-                        "10px",
-                      color:
-                        "#6b7280",
-                    }}
-                  >
-                    45, North Mada
-                    Street, Mylapore,
-                    Chennai 600004
-                  </p>
-                </div>
-
-                <div
-                  style={{
-                    textAlign:
-                      "center",
-                    fontWeight: 800,
-                    fontSize:
-                      "12px",
-                    letterSpacing:
-                      "1px",
-                    borderTop:
-                      "1px dashed #d1d5db",
-                    borderBottom:
-                      "1px dashed #d1d5db",
-                    padding:
-                      "6px 0",
-                    margin:
-                      "8px 0",
-                  }}
-                >
-                  RECEIPT / TAX INVOICE
-                </div>
-
-                {/* ==================================================
-                    CUSTOMER / ROOM META
-                ================================================== */}
-
-                <div>
-
-                  <div style={row}>
-                    <span>
-                      Name:
-                    </span>
-
-                    <strong>
-                      {c.customerName ||
-                        "-"}
-                    </strong>
-                  </div>
+                  {hotelGst && (
+                    <p
+                      style={{
+                        margin: "2px 0",
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        color: "#374151",
+                      }}
+                    >
+                      GSTIN: {hotelGst}
+                    </p>
+                  )}
 
                   <div
                     style={{
-                      margin:
-                        "4px 0 6px 0",
-                      padding:
-                        "5px 0",
-                      borderTop:
-                        "1px dashed #d1d5db",
-                      borderBottom:
-                        "1px dashed #d1d5db",
+                      textAlign: "center",
+                      fontWeight: 800,
+                      fontSize: "11px",
+                      letterSpacing: "0.5px",
+                      borderTop: "1px dashed #9ca3af",
+                      borderBottom: "1px dashed #9ca3af",
+                      padding: "4px 0",
+                      margin: "6px 0 0 0",
                     }}
                   >
-                    <div
-                      style={{
-                        fontWeight: 800,
-                        fontSize:
-                          "9px",
-                        color:
-                          "#0f766e",
-                        marginBottom:
-                          "4px",
-                        textTransform:
-                          "uppercase",
-                      }}
-                    >
-                      Room Details
+                    RECEIPT / TAX INVOICE
+                  </div>
+                </div>
+
+                {/* CUSTOMER & INVOICE META */}
+                <div
+                  style={{
+                    borderBottom: "1px dashed #9ca3af",
+                    paddingBottom: "6px",
+                    marginBottom: "6px",
+                  }}
+                >
+                  <div style={row}>
+                    <span>Invoice No: <strong>{inv.invoiceNo}</strong></span>
+                    <span>Dt: {new Date(inv.invoiceDate || inv.createdAt).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "2-digit" })}</span>
+                  </div>
+                  <div style={row}>
+                    <span style={{ color: "#4b5563" }}>Customer:</span>
+                    <strong style={{ color: "#111827" }}>{c.customerName || "Walk-in Guest"}</strong>
+                  </div>
+                  <div style={row}>
+                    <span style={{ color: "#4b5563" }}>Phone:</span>
+                    <span>{c.phoneNumber || "-"}</span>
+                  </div>
+                  {c.address && (
+                    <div style={row}>
+                      <span style={{ color: "#4b5563" }}>Address:</span>
+                      <span style={{ textAlign: "right", maxWidth: "180px" }}>{c.address}</span>
                     </div>
+                  )}
+                </div>
 
-                    {rooms.length >
-                    0 ? (
-                      rooms.map(
-                        (
-                          room,
-                          index
-                        ) => (
-                          <div
-                            key={
-                              room._id ||
-                              index
-                            }
-                            style={{
-                              padding:
-                                "4px 0",
-                              borderBottom:
-                                index <
-                                rooms.length -
-                                  1
-                                  ? "1px dotted #d1d5db"
-                                  : "none",
-                            }}
-                          >
+                {/* ACCOMMODATION DETAILS */}
+                <div
+                  style={{
+                    borderBottom: "1px dashed #9ca3af",
+                    paddingBottom: "6px",
+                    marginBottom: "6px",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: 800,
+                      color: "#111827",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                      marginBottom: "6px",
+                    }}
+                  >
+                    ACCOMMODATION DETAILS
+                  </div>
 
-                            <div
-                              style={{
-                                ...row,
-                                fontWeight: 700,
-                              }}
-                            >
-                              <span>
-                                Room{" "}
-                                {index +
-                                  1}
-                                :
-                              </span>
+                  {(rooms.length > 0 ? rooms : [s]).map((room, idx) => {
+                    const roomStay = {
+                      bookedCheckIn: room.checkIn || s.bookedCheckIn || "",
+                      bookedCheckInTime: room.checkInTime || s.bookedCheckInTime || "",
+                      bookedCheckOut: room.checkOut || s.bookedCheckOut || "",
+                      bookedCheckOutTime: room.checkOutTime || s.bookedCheckOutTime || "",
+                      actualCheckOut:
+                        room.actualCheckoutDate ||
+                        room.actualCheckout ||
+                        s.actualCheckOutDate ||
+                        s.actualCheckOut ||
+                        "",
+                      actualCheckOutDate:
+                        room.actualCheckoutDate ||
+                        s.actualCheckOutDate ||
+                        s.actualCheckOut ||
+                        "",
+                      actualCheckOutTime:
+                        room.actualCheckoutTime ||
+                        s.actualCheckOutTime ||
+                        "",
+                      bookedNights: room.bookedNights ?? s.bookedNights,
+                      extraFullDays:
+                        room.extraFullDays ??
+                        (rooms.length === 1 ? extraStay.extraFullDays : 0),
+                    };
 
-                              <span>
-                                {room.roomNumber ||
-                                  "-"}
-                              </span>
-                            </div>
+                    const roomRate = Number(
+                      room.perNightRoomPrice ??
+                        room.pricePerNight ??
+                        room.roomPricePerNight ??
+                        room.roomPrice ??
+                        s.pricePerNight ??
+                        0
+                    );
+                    const roomBookedNights = Number(roomStay.bookedNights || 1);
+                    const bookedStayAmount = Number(
+                      room.roomRent ?? roomBookedNights * roomRate
+                    );
+                    const extraNights = Number(room.extraFullDays ?? 0);
+                    const extraNightAmount = Number(
+                      room.extraFullDayCharge ?? extraNights * roomRate
+                    );
+                    const roomPolicyCharge = Number(
+                      room.checkoutPolicyCharge ??
+                        (rooms.length === 1 ? checkoutPolicyCharge : 0)
+                    );
+                    const roomStayTotal =
+                      bookedStayAmount + extraNightAmount + roomPolicyCharge;
 
-                            <div
-                              style={row}
-                            >
-                              <span>
-                                Type:
-                              </span>
-
-                              <span>
-                                {room.roomType ||
-                                  "-"}
-                              </span>
-                            </div>
-
-                            <div
-                              style={row}
-                            >
-                              <span>
-                                Bed:
-                              </span>
-
-                              <span>
-                                {room.bedType ||
-                                  "-"}
-                              </span>
-                            </div>
-
-                            <div
-                              style={row}
-                            >
-                              <span>
-                                Price /
-                                Night:
-                              </span>
-
-                              <span>
-                                ₹
-                                {Number(
-                                  room.perNightRoomPrice ||
-                                    0
-                                ).toFixed(
-                                  2
-                                )}
-                              </span>
-                            </div>
-
-                          </div>
-                        )
-                      )
-                    ) : (
+                    return (
                       <div
+                        key={idx}
                         style={{
-                          ...row,
-                          color:
-                            "#6b7280",
+                          marginTop: idx > 0 ? "8px" : "0px",
+                          paddingTop: idx > 0 ? "6px" : "0px",
+                          borderTop: idx > 0 ? "1px dotted #d1d5db" : "none",
                         }}
                       >
-                        <span>
-                          No room
-                          details
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={row}>
-                    <span>
-                      Phone:
-                    </span>
-
-                    <span>
-                      {c.phoneNumber ||
-                        "-"}
-                    </span>
-                  </div>
-
-                  {c.alternativePhone && (
-                    <div style={row}>
-                      <span>
-                        Alt Phone:
-                      </span>
-
-                      <span>
-                        {
-                          c.alternativePhone
-                        }
-                      </span>
-                    </div>
-                  )}
-
-                  {c.email && (
-                    <div style={row}>
-                      <span>
-                        Email:
-                      </span>
-
-                      <span>
-                        {c.email}
-                      </span>
-                    </div>
-                  )}
-
-                  <div style={row}>
-                    <span>
-                      Address:
-                    </span>
-
-                    <span
-                      style={{
-                        textAlign:
-                          "right",
-                        maxWidth:
-                          "180px",
-                      }}
-                    >
-                      {c.address ||
-                        "-"}
-                    </span>
-                  </div>
-
-
-
-                  <div style={row}>
-                    <span>
-                      Invoice No:
-                    </span>
-
-                    <strong>
-                      {inv.invoiceNo}
-                    </strong>
-                  </div>
-
-                  <div style={row}>
-                    <span>
-                      Invoice Date:
-                    </span>
-
-                    <span>
-                      {formatDate(inv.invoiceDate || inv.createdAt)}
-                    </span>
-                  </div>
-
-                </div>
-
-                {/* ==================================================
-                    STAY SUMMARY
-                ================================================== */}
-
-                <div
-                  style={{
-                    marginTop:
-                      "10px",
-                    padding:
-                      "10px 0",
-                    borderTop:
-                      "1px dashed #d1d5db",
-                    borderBottom:
-                      "1px dashed #d1d5db",
-                  }}
-                >
-
-                  <div
-                    style={{
-                      fontSize:
-                        "9px",
-                      fontWeight: 800,
-                      color:
-                        "#0f766e",
-                      textTransform:
-                        "uppercase",
-                      letterSpacing:
-                        "1px",
-                      marginBottom:
-                        "6px",
-                    }}
-                  >
-                    Stay Summary
-                  </div>
-
-                  <div style={row}>
-                    <span>
-                      Booked Check-In:
-                    </span>
-
-                    <span>
-                      {formatHumanDateTime(
-                        s.bookedCheckIn,
-                        s.bookedCheckInTime,
-                        " • "
-                      )}
-                    </span>
-                  </div>
-
-                  <div style={row}>
-                    <span>
-                      Booked Check-Out:
-                    </span>
-
-                    <span>
-                      {formatHumanDateTime(
-                        s.bookedCheckOut,
-                        s.bookedCheckOutTime,
-                        " • "
-                      )}
-                    </span>
-                  </div>
-
-                  <div style={row}>
-                    <span>
-                      Actual Check-Out:
-                    </span>
-
-                    <span
-                      style={{
-                        fontWeight: 700,
-                        color:
-                          "#047857",
-                      }}
-                    >
-                      {formatActualCheckOutDisplay(
-                        s.actualCheckOut,
-                        s.actualCheckOutDate,
-                        s.actualCheckOutTime,
-                        formatDate,
-                        formatTime
-                      )}
-                    </span>
-                  </div>
-
-                  <div style={row}>
-                    <span>
-                      Booked Nights:
-                    </span>
-
-                    <span>
-                      {s.bookedNights ??
-                        0}
-                    </span>
-                  </div>
-
-                  <div style={row}>
-                    <span>
-                      Extra Full Days:
-                    </span>
-
-                    <span>
-                      {extraStay.extraFullDays}
-                    </span>
-                  </div>
-
-                  <div style={row}>
-                    <span>
-                      Extra Time:
-                    </span>
-
-                    <span>
-                      {extraStay.extraTimeFormatted}
-                    </span>
-                  </div>
-
-                  <div
-                    style={{
-                      ...row,
-                      fontWeight: 800,
-                      borderTop:
-                        "1px solid #e5e7eb",
-                      marginTop:
-                        "4px",
-                      paddingTop:
-                        "5px",
-                    }}
-                  >
-                    <span>
-                      Total Nights
-                      Stayed:
-                    </span>
-
-                    <span>
-                      {Number(s.bookedNights || 0) + extraStay.extraFullDays}
-                    </span>
-                  </div>
-
-                  {(
-                    extraStay.hasExtraStay ||
-                    checkoutPolicyCharge >
-                      0
-                  ) && (
-                    <div
-                      style={{
-                        marginTop:
-                          "6px",
-                        padding:
-                          "7px 8px",
-                        borderRadius:
-                          "6px",
-                        background:
-                          "#fff7ed",
-                        color:
-                          "#9a3412",
-                        fontSize:
-                          "10px",
-                        lineHeight:
-                          1.4,
-                      }}
-                    >
-                      <strong>
-                        Checkout:
-                      </strong>{" "}
-                      {extraStay.hasExtraStay
-                        ? extraStay.overstayLabel
-                        : "Checkout time policy charge applied"}
-                    </div>
-                  )}
-
-                </div>
-
-                {/* ==================================================
-                    ITEMS TABLE
-                ================================================== */}
-
-                <div
-                  style={{
-                    display:
-                      "grid",
-                    gridTemplateColumns:
-                      "6fr 2fr 4fr",
-                    fontWeight: 700,
-                    fontSize:
-                      "10px",
-                    padding:
-                      "6px 0",
-                    borderBottom:
-                      "1px solid #e5e7eb",
-                  }}
-                >
-                  <span>
-                    Item
-                  </span>
-
-                  <span
-                    style={{
-                      textAlign:
-                        "center",
-                    }}
-                  >
-                    Qty
-                  </span>
-
-                  <span
-                    style={{
-                      textAlign:
-                        "right",
-                    }}
-                  >
-                    Total
-                  </span>
-                </div>
-
-                <div
-                  style={{
-                    padding:
-                      "6px 0",
-                    borderBottom:
-                      "1px dashed #d1d5db",
-                  }}
-                >
-                  {inv.items?.length >
-                  0 ? (
-                    inv.items.map(
-                      (
-                        item,
-                        idx
-                      ) => (
+                        {/* ROOM HEADER */}
                         <div
-                          key={idx}
                           style={{
-                            display:
-                              "grid",
-                            gridTemplateColumns:
-                              "6fr 2fr 4fr",
-                            padding:
-                              "4px 0",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            fontWeight: 700,
+                            fontSize: "11px",
+                            marginBottom: "3px",
                           }}
                         >
-                          <div>
-                            <p
-                              style={{
-                                margin: 0,
-                                fontWeight: 600,
-                                color:
-                                  "#111827",
-                              }}
-                            >
-                              {
-                                item.description
-                              }
-                            </p>
-
-                            <p
-                              style={{
-                                margin: 0,
-                                fontSize:
-                                  "9px",
-                                color:
-                                  "#6b7280",
-                              }}
-                            >
-                              ₹
-                              {Number(
-                                item.unitPrice ||
-                                  0
-                              ).toFixed(
-                                2
-                              )}
-                            </p>
-                          </div>
-
-                          <div
-                            style={{
-                              textAlign:
-                                "center",
-                              fontWeight: 500,
-                            }}
-                          >
-                            {
-                              item.quantity
-                            }
-                          </div>
-
-                          <div
-                            style={{
-                              textAlign:
-                                "right",
-                              fontWeight: 600,
-                            }}
-                          >
-                            ₹
-                            {Number(
-                              item.total ||
-                                0
-                            ).toFixed(
-                              2
+                          <span>
+                            Room {room.roomNumber || idx + 1}{" "}
+                            {room.roomType ? (
+                              <span style={{ fontWeight: 400, color: "#6b7280" }}>
+                                ({room.roomType})
+                              </span>
+                            ) : (
+                              ""
                             )}
+                          </span>
+                          <span>
+                            ₹{roomRate.toLocaleString("en-IN")}/night
+                          </span>
+                        </div>
+
+                        {/* DATES */}
+                        <div style={{ color: "#4b5563", fontSize: "10px", marginBottom: "4px" }}>
+                          <div style={row}>
+                            <span>Check-in</span>
+                            <span style={{ color: "#111827", fontWeight: 600 }}>
+                              {formatHumanDateTime(
+                                roomStay.bookedCheckIn,
+                                roomStay.bookedCheckInTime,
+                                ", "
+                              )}
+                            </span>
+                          </div>
+                          <div style={row}>
+                            <span>Checkout</span>
+                            <span style={{ color: "#111827", fontWeight: 600 }}>
+                              {formatHumanDateTime(
+                                roomStay.bookedCheckOut,
+                                roomStay.bookedCheckOutTime || "11:00 AM",
+                                ", "
+                              )}
+                            </span>
+                          </div>
+                          <div style={row}>
+                            <span>Actual Checkout Date &amp; Time</span>
+                            <span style={{ color: "#111827", fontWeight: 600 }}>
+                              {formatActualCheckOutDisplay(
+                                roomStay.actualCheckOut,
+                                roomStay.actualCheckOutDate,
+                                roomStay.actualCheckOutTime,
+                                formatDate,
+                                formatTime,
+                                ", "
+                              )}
+                            </span>
+                          </div>
+                          <div style={row}>
+                            <span>Stay</span>
+                            <span style={{ color: "#111827" }}>
+                              {roomBookedNights} Night{roomBookedNights !== 1 ? "s" : ""}
+                              {extraNights > 0
+                                ? ` + ${extraNights} Extra Day${extraNights !== 1 ? "s" : ""}`
+                                : ""}
+                            </span>
                           </div>
                         </div>
-                      )
-                    )
-                  ) : (
+
+                        {/* ROOM CALCULATIONS */}
+                        <div style={{ fontSize: "10.5px" }}>
+                          <div style={row}>
+                            <span style={{ color: "#4b5563" }}>Room Rent</span>
+                            <span style={{ fontWeight: 600 }}>
+                              ₹{bookedStayAmount.toLocaleString("en-IN")}
+                            </span>
+                          </div>
+                          <div style={row}>
+                            <span style={{ color: "#4b5563" }}>Extra Night Stay Charge</span>
+                            <span style={{ fontWeight: 600 }}>
+                              ₹{extraNightAmount.toLocaleString("en-IN")}
+                            </span>
+                          </div>
+                          <div style={row}>
+                            <span style={{ color: "#4b5563" }}>Extra Time Stay Charge</span>
+                            <span style={{ fontWeight: 600 }}>
+                              ₹{roomPolicyCharge.toLocaleString("en-IN")}
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              ...row,
+                              fontWeight: 700,
+                              borderTop: "1px dotted #e5e7eb",
+                              marginTop: "2px",
+                              paddingTop: "2px",
+                            }}
+                          >
+                            <span>Room Total</span>
+                            <span>
+                              ₹{roomStayTotal.toLocaleString("en-IN")}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* FOOD SERVICES */}
+                {foodItems.length > 0 && (
+                  <div
+                    style={{
+                      borderBottom: "1px dashed #9ca3af",
+                      paddingBottom: "6px",
+                      marginBottom: "6px",
+                    }}
+                  >
                     <div
                       style={{
-                        textAlign:
-                          "center",
-                        padding:
-                          "10px",
-                        fontSize:
-                          "10px",
-                        color:
-                          "#9ca3af",
+                        fontSize: "10px",
+                        fontWeight: 800,
+                        color: "#111827",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                        marginBottom: "4px",
                       }}
                     >
-                      No billing
-                      items
+                      FOOD SERVICES
                     </div>
-                  )}
-                </div>
-
-                {/* ==================================================
-                    SERVICE / BILLING SUMMARY
-                ================================================== */}
-
-                <div
-                  style={{
-                    marginTop:
-                      "8px",
-                  }}
-                >
-
-                  {/* When itemized items are not present, fallback to summary rows */}
-                  {(!inv.items || inv.items.length === 0) && (
-                    <>
-                      {Number(f.roomRent || 0) > 0 && (
-                        <div style={row}>
-                          <span>Room base rent:</span>
-                          <span>₹{Number(f.roomRent || 0).toFixed(2)}</span>
+                    {foodItems.map((item, sIdx) => {
+                      return (
+                        <div
+                          key={sIdx}
+                          style={{
+                            marginBottom: "4px",
+                            fontSize: "10.5px",
+                          }}
+                        >
+                          <div style={{ fontWeight: 600 }}>
+                            {item.name}
+                          </div>
+                          <div style={row}>
+                            <span style={{ color: "#6b7280" }}>
+                              {item.roomNumber
+                                ? `Room ${item.roomNumber} × `
+                                : "Qty: "}
+                              {item.quantity}
+                            </span>
+                            <span style={{ fontWeight: 600 }}>
+                              ₹{item.total.toLocaleString("en-IN")}
+                            </span>
+                          </div>
                         </div>
-                      )}
-                      {extraNightCharge > 0 && (
-                        <div style={row}>
-                          <span>Extra full day:</span>
-                          <span>₹{extraNightCharge.toFixed(2)}</span>
-                        </div>
-                      )}
-                      {checkoutPolicyCharge > 0 && (
-                        <div style={row}>
-                          <span>Checkout policy charge:</span>
-                          <span>₹{checkoutPolicyCharge.toFixed(2)}</span>
-                        </div>
-                      )}
-                      {extraTimeCharge > 0 && checkoutPolicyCharge === 0 && (
-                        <div style={row}>
-                          <span>Extra time stay:</span>
-                          <span>₹{extraTimeCharge.toFixed(2)}</span>
-                        </div>
-                      )}
-                    </>
-                  )}
+                      );
+                    })}
+                  </div>
+                )}
 
-                  {Number(f.foodServices || 0) > 0 && (
-                    <div style={row}>
-                      <span>Food:</span>
-                      <span>₹{Number(f.foodServices || 0).toFixed(2)}</span>
-                    </div>
-                  )}
-                  {Number(f.roomServices || 0) > 0 && (
-                    <div style={row}>
-                      <span>Room service:</span>
-                      <span>₹{Number(f.roomServices || 0).toFixed(2)}</span>
-                    </div>
-                  )}
-
+                {/* ROOM SERVICES */}
+                {roomServiceItems.length > 0 && (
                   <div
                     style={{
-                      ...row,
-                      fontWeight: 700,
-                      borderTop:
-                        "1px dashed #d1d5db",
-                      paddingTop:
-                        "6px",
-                      marginTop:
-                        "6px"
+                      borderBottom: "1px dashed #9ca3af",
+                      paddingBottom: "6px",
+                      marginBottom: "6px",
                     }}
                   >
-                    <span>
-                      Taxable subtotal:
-                    </span>
-
-                    <span>
-                      ₹
-                      {Number(
-                        f.subTotal ||
-                          0
-                      ).toFixed(
-                        2
-                      )}
-                    </span>
+                    <div
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: 800,
+                        color: "#111827",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      ROOM SERVICES
+                    </div>
+                    {roomServiceItems.map((item, sIdx) => {
+                      return (
+                        <div
+                          key={sIdx}
+                          style={{
+                            marginBottom: "4px",
+                            fontSize: "10.5px",
+                          }}
+                        >
+                          <div style={{ fontWeight: 600 }}>
+                            {item.name}
+                          </div>
+                          <div style={row}>
+                            <span style={{ color: "#6b7280" }}>
+                              {item.roomNumber
+                                ? `Room ${item.roomNumber} × `
+                                : "Qty: "}
+                              {item.quantity}
+                            </span>
+                            <span style={{ fontWeight: 600 }}>
+                              ₹{item.total.toLocaleString("en-IN")}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
+                )}
 
-                  <div style={row}>
-                    <span>
-                      GST (
-                      {Number(
-                        f.gstPercentage ||
-                          0
-                      )}
-                      %):
-                    </span>
-
-                    <span>
-                      ₹
-                      {Number(
-                        f.gstAmount ||
-                          0
-                      ).toFixed(
-                        2
-                      )}
-                    </span>
-                  </div>
-
-                </div>
-
-                {/* ==================================================
-                    GRAND TOTAL
-                ================================================== */}
-
+                {/* BILL SUMMARY */}
                 <div
                   style={{
-                    marginTop:
-                      "10px",
-                    paddingTop:
-                      "8px",
-                    borderTop:
-                      "2px solid #111827",
-                    display:
-                      "flex",
-                    flexDirection:
-                      "column",
-                    gap: "3px",
+                    borderBottom: "1px dashed #9ca3af",
+                    paddingBottom: "6px",
+                    marginBottom: "6px",
                   }}
                 >
-
                   <div
                     style={{
-                      display:
-                        "flex",
-                      justifyContent:
-                        "space-between",
+                      fontSize: "10px",
                       fontWeight: 800,
-                      fontSize:
-                        "13px",
-                      borderBottom:
-                        "1px dashed #d1d5db",
-                      paddingBottom:
-                        "8px",
-                      marginBottom:
-                        "8px"
+                      color: "#111827",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                      marginBottom: "4px",
                     }}
                   >
-                    <span>
-                      GRAND TOTAL
-                    </span>
-
-                    <span
-                      style={{
-                        color:
-                          "#065f46",
-                      }}
-                    >
-                      ₹
-                      {grandTotal.toFixed(
-                        2
-                      )}
-                    </span>
+                    BILL SUMMARY
                   </div>
 
                   <div style={row}>
-                    <span>
-                      Advance already paid
-                      {f.advancePaidVia
-                        ? ` (${f.advancePaidVia})`
-                        : ""}
-                    </span>
-
-                    <span>
-                      ₹
-                      {advancePaid.toFixed(
-                        2
-                      )}
+                    <span style={{ color: "#4b5563" }}>Room Rent</span>
+                    <span style={{ fontWeight: 600 }}>
+                      ₹{totalRoomRent.toLocaleString("en-IN")}
                     </span>
                   </div>
-
                   <div style={row}>
-                    <span>
-                      Current Payment
+                    <span style={{ color: "#4b5563" }}>Extra Night Stay Charges</span>
+                    <span style={{ fontWeight: 600 }}>
+                      ₹{totalExtraStay.toLocaleString("en-IN")}
                     </span>
+                  </div>
+                  <div style={row}>
+                    <span style={{ color: "#4b5563" }}>Extra Time Stay Charges</span>
+                    <span style={{ fontWeight: 600 }}>
+                      ₹{totalCheckoutCharge.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                  {foodTotal > 0 && (
+                    <div style={row}>
+                      <span style={{ color: "#4b5563" }}>Food</span>
+                      <span style={{ fontWeight: 600 }}>
+                        ₹{foodTotal.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                  )}
+                  {roomServicesTotal > 0 && (
+                    <div style={row}>
+                      <span style={{ color: "#4b5563" }}>Room Services</span>
+                      <span style={{ fontWeight: 600 }}>
+                        ₹{roomServicesTotal.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                  )}
 
-                    <span>
-                      ₹
-                      {currentPayment.toFixed(
-                        2
-                      )}
-                    </span>
+                  <div
+                    style={{
+                      borderTop: "1px dotted #d1d5db",
+                      marginTop: "4px",
+                      paddingTop: "4px",
+                    }}
+                  >
+                    <div style={row}>
+                      <span style={{ fontWeight: 600 }}>Subtotal</span>
+                      <span style={{ fontWeight: 600 }}>
+                        ₹{taxableSubtotal.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                    <div style={row}>
+                      <span style={{ color: "#4b5563" }}>GST ({gstRate}%)</span>
+                      <span>₹{gstAmount.toLocaleString("en-IN")}</span>
+                    </div>
                   </div>
 
                   <div
                     style={{
-                      ...row,
-                      fontWeight: 700,
+                      borderTop: "1px solid #111827",
+                      borderBottom: "1px solid #111827",
+                      padding: "4px 0",
+                      margin: "6px 0",
                     }}
                   >
-                    <span>
-                      Total Paid
-                    </span>
-
-                    <span>
-                      ₹
-                      {totalPaid.toFixed(
-                        2
-                      )}
-                    </span>
-                  </div>
-
-                  <div
-                    style={{
-                      display:
-                        "flex",
-                      justifyContent:
-                        "space-between",
-                      fontWeight: 800,
-                      borderTop:
-                        "1px dashed #d1d5db",
-                      paddingTop:
-                        "6px",
-                    }}
-                  >
-                    <span>
-                      BALANCE DUE
-                    </span>
-
-                    <span>
-                      ₹
-                      {balanceDue.toFixed(
-                        2
-                      )}
-                    </span>
-                  </div>
-
-                </div>
-
-                {/* ==================================================
-                    PAYMENT INFO
-                ================================================== */}
-
-                <div
-                  style={{
-                    marginTop:
-                      "10px",
-                  }}
-                >
-
-                  <div style={row}>
-                    <span>
-                      Payment Mode:
-                    </span>
-
-                    <span
+                    <div
                       style={{
-                        fontWeight: 700,
-                        textTransform:
-                          "uppercase",
-                      }}
-                    >
-                      {p.paymentMode ||
-                        "-"}
-                    </span>
-                  </div>
-
-                  <div style={row}>
-                    <span>
-                      Payment Status:
-                    </span>
-
-                    <span
-                      style={{
-                        color:
-                          "#059669",
+                        ...row,
+                        fontSize: "12px",
                         fontWeight: 800,
                       }}
                     >
-                      {p.paymentStatus ||
-                        "PAID"}
-                    </span>
+                      <span>GRAND TOTAL</span>
+                      <span>₹{grandTotal.toLocaleString("en-IN")}</span>
+                    </div>
                   </div>
 
-                  <div style={row}>
-                    <span>
-                      Paid At:
-                    </span>
-
-                    <span>
-                      {formatActualCheckOutDisplay(
-                        p.paidAt,
-                        null,
-                        null,
-                        formatDate,
-                        formatTime
-                      )}
-                    </span>
+                  <div>
+                    <div style={row}>
+                      <span style={{ color: "#4b5563" }}>
+                        Advance Paid {f.advancePaidVia ? `(${f.advancePaidVia})` : ""}
+                      </span>
+                      <span>₹{advancePaid.toLocaleString("en-IN")}</span>
+                    </div>
+                    {currentPayment > 0 && (
+                      <div style={row}>
+                        <span style={{ color: "#4b5563" }}>Current Payment</span>
+                        <span>₹{currentPayment.toLocaleString("en-IN")}</span>
+                      </div>
+                    )}
+                    <div
+                      style={{
+                        ...row,
+                        fontWeight: 700,
+                        borderTop: "1px dotted #d1d5db",
+                        marginTop: "3px",
+                        paddingTop: "3px",
+                      }}
+                    >
+                      <span>TOTAL PAID</span>
+                      <span>₹{totalPaid.toLocaleString("en-IN")}</span>
+                    </div>
+                    <div
+                      style={{
+                        ...row,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {/* <span>BALANCE DUE</span>
+                      <span>₹{balanceDue.toLocaleString("en-IN")}</span> */}
+                    </div>
                   </div>
-
                 </div>
 
+                {/* PAYMENT INFO */}
                 <div
                   style={{
-                    textAlign:
-                      "center",
-                    marginTop:
-                      "14px",
-                    fontSize:
-                      "10px",
-                    color:
-                      "#6b7280",
+                    borderBottom: "1px dashed #9ca3af",
+                    paddingBottom: "6px",
+                    marginBottom: "8px",
                   }}
                 >
-                  <p
-                    style={{
-                      margin:
-                        "2px 0",
-                    }}
-                  >
-                    Thank you for
-                    visiting.
-                  </p>
-
-                  <p
-                    style={{
-                      margin:
-                        "2px 0",
-                    }}
-                  >
-                    We hope to serve
-                    you again soon!
-                  </p>
+                  <div style={row}>
+                    <span style={{ color: "#4b5563" }}>Payment Mode:</span>
+                    <span style={{ fontWeight: 700, textTransform: "uppercase" }}>
+                      {p.paymentMode || "CASH"}
+                    </span>
+                  </div>
+                  <div style={row}>
+                    <span style={{ color: "#4b5563" }}>Payment Status:</span>
+                    <span style={{ fontWeight: 800, color: "#047857", textTransform: "uppercase" }}>
+                      {p.paymentStatus || "PAID"}
+                    </span>
+                  </div>
                 </div>
 
+                {/* FOOTER */}
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "4px 0",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    color: "#4b5563",
+                  }}
+                >
+                  Thank You!
+                </div>
               </div>
             </div>
           );

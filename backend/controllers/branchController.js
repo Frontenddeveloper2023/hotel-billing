@@ -4,6 +4,7 @@ import Hotels from "../models/hotels.js";
 import Room from "../models/room.js";
 import Booking from "../models/booking.js";
 import User from "../models/users.js";
+import Settings from "../models/settings.js";
 import { log } from "../util/logger.js";
 
 /**
@@ -653,32 +654,8 @@ export const updateBranch = async (req, res) => {
 // --------------------------------------------------------
 let normalizedEmail = branch.email || "";
 
-// Sub-branch owner cannot change branch email
-if (
-  email !== undefined &&
-  req.user?.role === "hotelOwner" &&
-  req.user?.branchId &&
-  branch._id.toString() === req.user.branchId.toString()
-) {
-  const requestedEmail = email.trim().toLowerCase();
-
-  if (requestedEmail !== branch.email) {
-    return res.status(403).json({
-      success: false,
-      message: "Branch email cannot be changed.",
-    });
-  }
-}
-
 // Main branch owner / admin can still update email
-if (
-  email !== undefined &&
-  !(
-    req.user?.role === "hotelOwner" &&
-    req.user?.branchId &&
-    branch._id.toString() === req.user.branchId.toString()
-  )
-) {
+if (email !== undefined) {
   normalizedEmail = email.trim().toLowerCase();
 
   if (normalizedEmail) {
@@ -745,6 +722,11 @@ if (
             name: branch.branchName,
             status: branch.status,
           }
+        );
+        
+        await Settings.findOneAndUpdate(
+          { branchId: branch._id },
+          { $set: { email: normalizedEmail || oldEmail } }
         );
       }
     }

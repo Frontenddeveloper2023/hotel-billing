@@ -1570,6 +1570,8 @@ export const upgradeHotelSubscription = async (req, res) => {
           billingCycle: cycle,
           amount,
           transactionId,
+          startDate,
+          endDate,
         },
       });
     } catch (notifErr) {

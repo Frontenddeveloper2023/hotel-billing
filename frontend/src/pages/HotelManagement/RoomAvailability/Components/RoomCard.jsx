@@ -63,7 +63,9 @@ export default function RoomCard({ room, onEdit, onDelete, index = 0 }) {
           <button
             type="button"
             onClick={() => onEdit?.(room)}
-            className="min-w-0 inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2.5 rounded-xl bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] text-white text-xs sm:text-sm font-bold hover:brightness-110 active:scale-[0.97] transition-all shadow-sm shadow-blue-500/25"
+            disabled={isOccupied}
+            title={isOccupied ? "Occupied/Booked room cannot be edited" : "Edit room"}
+            className="min-w-0 inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2.5 rounded-xl bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] text-white text-xs sm:text-sm font-bold hover:brightness-110 active:scale-[0.97] transition-all shadow-sm shadow-blue-500/25 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:brightness-100"
           >
             <Pencil className="w-4 h-4 shrink-0" />
             <span className="truncate">Edit</span>

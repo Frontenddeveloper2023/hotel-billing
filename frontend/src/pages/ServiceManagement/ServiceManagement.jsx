@@ -169,11 +169,10 @@ const CSS = `
 const StatusChip = memo(function StatusChip({ enabled }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold whitespace-nowrap border ${
-        enabled
+      className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold whitespace-nowrap border ${enabled
           ? "bg-emerald-50 text-emerald-700 border-emerald-200"
           : "bg-amber-50 text-amber-700 border-amber-200"
-      }`}
+        }`}
     >
       {enabled ? (
         <CheckCircle2 className="w-3.5 h-3.5" />
@@ -191,9 +190,8 @@ const ActionButtons = memo(function ActionButtons({
   onDelete,
   full,
 }) {
-  const base = `sv-btn cursor-pointer inline-flex items-center justify-center gap-1.5 rounded-lg text-[11px] sm:text-xs font-bold border focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-600/20 ${
-    full ? "flex-1 py-2.5" : "px-3 py-1.5"
-  }`;
+  const base = `sv-btn cursor-pointer inline-flex items-center justify-center gap-1.5 rounded-lg text-[11px] sm:text-xs font-bold border focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-600/20 ${full ? "flex-1 py-2.5" : "px-3 py-1.5"
+    }`;
 
   return (
     <div className={`flex items-center gap-2 ${full ? "w-full" : "justify-end"}`}>
@@ -286,10 +284,9 @@ const ServiceCard = memo(function ServiceCard({
 });
 
 const inputClass = (hasError, extra = "") =>
-  `sv-input w-full px-3.5 py-2.5 text-sm rounded-xl border outline-none font-medium text-slate-900 placeholder:text-slate-400 ${
-    hasError
-      ? "border-red-400 bg-red-50/40"
-      : "border-slate-200 bg-slate-50/70"
+  `sv-input w-full px-3.5 py-2.5 text-sm rounded-xl border outline-none font-medium text-slate-900 placeholder:text-slate-400 ${hasError
+    ? "border-red-400 bg-red-50/40"
+    : "border-slate-200 bg-slate-50/70"
   } ${extra}`;
 
 const ServiceModal = memo(function ServiceModal({
@@ -326,7 +323,7 @@ const ServiceModal = memo(function ServiceModal({
               <h3 className="text-base sm:text-lg font-bold text-[#0f2a63]">
                 {isEditMode ? "Edit Service" : "Add New Service"}
               </h3>
-            
+
             </div>
           </div>
 
@@ -422,7 +419,7 @@ const ServiceModal = memo(function ServiceModal({
               <span className="block font-bold text-xs sm:text-sm text-[#0f2a63]">
                 Active / Available for Booking
               </span>
-             
+
             </div>
 
 
@@ -470,7 +467,7 @@ const ServiceModal = memo(function ServiceModal({
 // ============================================================
 
 export default function ServiceManagement() {
-  const { userData } = useAuth();
+  const { hotelUser: userData } = useAuth();
   const [hasAccess, setHasAccess] = useState(false);
   const [accessLoading, setAccessLoading] = useState(true);
 
@@ -707,24 +704,27 @@ export default function ServiceManagement() {
   // --------------------------------------------------
 
   const handleDelete = useCallback(
-    async (id) => {
-      if (!window.confirm("Are you sure you want to delete this service?")) {
-        return;
-      }
-
-      try {
-        await deleteServiceApi(id);
-
-        toastRef.current.success("Service deleted successfully!");
-
-        fetchServices();
-      } catch (err) {
-        console.error("Failed to delete service:", err);
-
-        toastRef.current.error(err.message || "Failed to delete service.");
-      }
+    (id) => {
+      toast.confirm(
+        "Are you sure you want to delete this service?",
+        async () => {
+          try {
+            await deleteServiceApi(id);
+            toastRef.current.success("Service deleted successfully!");
+            fetchServices();
+          } catch (err) {
+            console.error("Failed to delete service:", err);
+            toastRef.current.error(err.message || "Failed to delete service.");
+          }
+        },
+        {
+          title: "Delete Service",
+          confirmText: "Delete",
+          cancelText: "Cancel",
+        }
+      );
     },
-    [fetchServices]
+    [fetchServices, toast]
   );
 
   // --------------------------------------------------
@@ -763,7 +763,7 @@ export default function ServiceManagement() {
       <style>{CSS}</style>
 
       <Helmet>
-        <title>Service Management — SS Residency Hotel Management</title>
+        <title>Service Management — SatylioHotel Management</title>
 
         <meta
           name="description"
@@ -775,12 +775,12 @@ export default function ServiceManagement() {
         {/* HEADER */}
         <header className="sv-rise sv-d1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4  shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)] min-w-0">
           <div className="flex items-start gap-3 sm:gap-4 min-w-0">
-          
+
 
             <div className="min-w-0">
-              
 
-<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">   Service Management
+
+              <h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">   Service Management
               </h1>
 
             </div>
@@ -810,7 +810,7 @@ export default function ServiceManagement() {
                   <h2 className="text-sm sm:text-base font-bold text-[#0f2a63]">
                     Available Hotel Services
                   </h2>
-                 
+
                 </div>
               </div>
 

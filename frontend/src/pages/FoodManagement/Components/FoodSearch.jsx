@@ -35,7 +35,7 @@ function FoodSearch({ search, setSearch, foods = [], onFoodSelect }) {
     };
 
     return (
-        <div className="relative z-30 flex w-full justify-center">
+        <div className="relative z-30 flex w-full justify-center px-2 sm:px-4">
             <div className="relative w-full max-w-xl">
                 {/* SEARCH BAR (blue glass) */}
                 <div className="flex h-11 w-full overflow-hidden rounded-xl border border-white/25 bg-white/10 shadow-lg shadow-[#0a1a3f]/20 backdrop-blur-md transition-all duration-300 focus-within:border-sky-300 focus-within:bg-white/15 focus-within:ring-2 focus-within:ring-sky-300/40 sm:h-12">
@@ -48,14 +48,13 @@ function FoodSearch({ search, setSearch, foods = [], onFoodSelect }) {
                         value={search}
                         onChange={(e) => {
                             setSearch(e.target.value);
-                            // User started a new search
                             if (onFoodSelect) onFoodSelect(null);
                             setIsFocused(true);
                         }}
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setTimeout(() => setIsFocused(false), 120)}
                         placeholder="Search food, dishes..."
-                        className="min-w-0 flex-1 bg-transparent px-3 text-xs font-medium text-white outline-none placeholder:text-white/60 sm:text-sm"
+                        className="min-w-0 flex-1 bg-transparent px-2.5 text-xs font-medium text-white outline-none placeholder:text-white/60 sm:px-3 sm:text-sm"
                     />
 
                     {search && (
@@ -64,7 +63,7 @@ function FoodSearch({ search, setSearch, foods = [], onFoodSelect }) {
                             onClick={handleClear}
                             title="Clear search"
                             aria-label="Clear search"
-                            className="flex w-9 shrink-0 cursor-pointer items-center justify-center text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                            className="flex w-9 shrink-0 cursor-pointer items-center justify-center text-white/70 transition-colors hover:bg-white/10 hover:text-white sm:w-10"
                         >
                             <X className="h-4 w-4" />
                         </button>
@@ -82,7 +81,7 @@ function FoodSearch({ search, setSearch, foods = [], onFoodSelect }) {
 
                 {/* RESULTS */}
                 {isFocused && search.trim() && (
-                    <div className="fm-drop absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-[var(--line)] bg-white shadow-2xl shadow-[#0a1a3f]/25">
+                    <div className="fm-drop absolute left-0 right-0 top-full z-50 mt-2 max-h-72 overflow-y-auto overflow-x-hidden rounded-xl border border-[var(--line)] bg-white shadow-2xl shadow-[#0a1a3f]/25">
                         {searchResults.length > 0 ? (
                             <div className="py-1.5">
                                 {searchResults.map((food) => {
@@ -96,7 +95,7 @@ function FoodSearch({ search, setSearch, foods = [], onFoodSelect }) {
                                             onClick={() => handleFoodSelect(food)}
                                             className="group flex w-full cursor-pointer items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-[var(--tint)] active:bg-blue-100 sm:px-4 sm:py-3"
                                         >
-                                            <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--tint)] sm:h-12 sm:w-12">
+                                            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--tint)] sm:h-12 sm:w-12">
                                                 {imageUrl ? (
                                                     <img
                                                         src={imageUrl}
@@ -112,7 +111,7 @@ function FoodSearch({ search, setSearch, foods = [], onFoodSelect }) {
                                                 )}
                                             </div>
 
-                                            <div className="min-w-0 flex-1">
+                                            <div className="min-w-0 flex-1 pr-1">
                                                 <p className="truncate text-xs font-semibold text-[#0a1a3f] sm:text-sm">
                                                     {food.foodName}
                                                 </p>

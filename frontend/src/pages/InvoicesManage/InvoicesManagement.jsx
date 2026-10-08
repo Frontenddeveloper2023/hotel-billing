@@ -27,6 +27,8 @@ import {
   SearchX,
 } from "lucide-react";
 import { getAllInvoices, deleteInvoice } from "../../service/invoiceApi.js";
+import { getSettings } from "../../service/settingsService.js";
+import { useToast } from "../../Context/ToastContext.jsx";
 import InvoiceTemplate from "../InvoiceTemplate/InvoiceTemplate.jsx";
 import {
   computeExtraStayDetails,
@@ -147,7 +149,11 @@ const CSS = `
   }
 }
 
-.iv-scroll { scrollbar-width: thin; overscroll-behavior-x: contain; }
+.iv-scroll { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+.iv-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+.iv-scroll::-webkit-scrollbar-track { background: transparent; border-radius: 8px; }
+.iv-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
+.iv-scroll::-webkit-scrollbar-thumb:hover { background-color: #94a3b8; }
 
 @media (prefers-reduced-motion: reduce) {
   .iv-rise, .iv-fade, .iv-pop, .iv-row, .iv-float {
@@ -170,22 +176,13 @@ const inputClass =
   "iv-input w-full px-3 py-2.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 rounded-xl border border-slate-200 bg-slate-50/70 outline-none";
 
 const StatusBadge = memo(function StatusBadge({ status }) {
-  const value = status || "PAID";
-  const paid = String(value).toUpperCase() === "PAID";
+  const value = "PAID";
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] sm:text-xs rounded-full font-bold whitespace-nowrap border ${
-        paid
-          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-          : "bg-amber-50 text-amber-700 border-amber-200"
-      }`}
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] sm:text-xs rounded-full font-bold whitespace-nowrap border bg-emerald-50 text-emerald-700 border-emerald-200"
     >
-      <span
-        className={`w-1.5 h-1.5 rounded-full ${
-          paid ? "bg-emerald-500" : "bg-amber-500"
-        }`}
-      />
+      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
       {value}
     </span>
   );
@@ -445,6 +442,7 @@ const FilterLabel = ({ children }) => (
 // ============================================================
 
 const InvoicesManagement = () => {
+  const toast = useToast();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -460,7 +458,30 @@ const InvoicesManagement = () => {
   const [activeInvoice, setActiveInvoice] = useState(null);
   const [pdfInvoice, setPdfInvoice] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
+  const [settings, setSettings] = useState(null);
   const receiptRef = useRef();
+
+  // Drag-to-scroll state
+  const scrollContainerRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const onMouseDown = (e) => {
+    if (!scrollContainerRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
+    setScrollLeft(scrollContainerRef.current.scrollLeft);
+  };
+  const onMouseLeave = () => setIsDragging(false);
+  const onMouseUp = () => setIsDragging(false);
+  const onMouseMove = (e) => {
+    if (!isDragging || !scrollContainerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollContainerRef.current.offsetLeft;
+    const walk = (x - startX) * 2; // scroll speed multiplier
+    scrollContainerRef.current.scrollLeft = scrollLeft - walk;
+  };
 
   // Filtering runs on a deferred copy so typing never lags
   const deferredQuery = useDeferredValue(searchQuery);
@@ -474,14 +495,25 @@ const InvoicesManagement = () => {
       setLoading(true);
       setError(null);
 
-      const response = await getAllInvoices();
-      const result =
-        response?.data?.success !== undefined ? response.data : response;
+      const [invoicesRes, settingsRes] = await Promise.allSettled([
+        getAllInvoices(),
+        getSettings(),
+      ]);
 
-      if (result?.success) {
-        setInvoices(Array.isArray(result.data) ? result.data : []);
+      if (settingsRes.status === "fulfilled" && settingsRes.value?.success && settingsRes.value?.data) {
+        setSettings(settingsRes.value.data);
+      }
+
+      if (invoicesRes.status === "fulfilled") {
+        const response = invoicesRes.value;
+        const result = response?.data?.success !== undefined ? response.data : response;
+        if (result?.success) {
+          setInvoices(Array.isArray(result.data) ? result.data : []);
+        } else {
+          throw new Error(result?.message || "Failed to load invoices.");
+        }
       } else {
-        throw new Error(result?.message || "Failed to load invoices.");
+        throw new Error(invoicesRes.reason?.message || "Failed to load invoices.");
       }
     } catch (err) {
       setError(err.message || "Failed to load invoices.");
@@ -498,16 +530,25 @@ const InvoicesManagement = () => {
   // DELETE
   // ============================================================
 
-  const handleDelete = useCallback(async (id) => {
-    if (window.confirm("Are you sure you want to delete this invoice?")) {
-      try {
-        await deleteInvoice(id);
-        setInvoices((prev) => prev.filter((inv) => inv._id !== id));
-      } catch (err) {
-        alert(err.message || "Failed to delete invoice.");
+  const handleDelete = useCallback((id) => {
+    toast.confirm(
+      "Are you sure you want to delete this invoice?",
+      async () => {
+        try {
+          await deleteInvoice(id);
+          setInvoices((prev) => prev.filter((inv) => inv._id !== id));
+          toast.success("Invoice deleted successfully.");
+        } catch (err) {
+          toast.error(err?.message || "Failed to delete invoice.");
+        }
+      },
+      {
+        title: "Delete Invoice",
+        confirmText: "Delete",
+        cancelText: "Cancel",
       }
-    }
-  }, []);
+    );
+  }, [toast]);
 
   // ============================================================
   // FILTER + SORT (memoized: only recomputed when inputs change)
@@ -678,13 +719,14 @@ const InvoicesManagement = () => {
         format: [pdfWidth, pdfHeight],
       });
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Invoice_${invoice.invoiceNo}.pdf`);
+      const safeHotelName = (settings?.companyName || "Hotel").replace(/[^a-zA-Z0-9_-]/g, "_");
+      pdf.save(`${safeHotelName}_Invoice_${invoice.invoiceNo}.pdf`);
     } catch (err) {
       console.error("PDF generation failed", err);
     } finally {
       setPdfInvoice(null);
     }
-  }, []);
+  }, [settings]);
 
   const handleDownloadClick = useCallback(
     async (inv) => {
@@ -924,7 +966,14 @@ const InvoicesManagement = () => {
 
             {/* Tablet / desktop: table */}
             <div className="hidden md:block bg-white rounded-2xl border border-blue-100/80 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)] overflow-hidden">
-              <div className="iv-scroll overflow-x-auto">
+              <div
+                className={`iv-scroll overflow-x-auto ${isDragging ? "cursor-grabbing select-none" : "cursor-grab"}`}
+                ref={scrollContainerRef}
+                onMouseDown={onMouseDown}
+                onMouseLeave={onMouseLeave}
+                onMouseUp={onMouseUp}
+                onMouseMove={onMouseMove}
+              >
                 <table className="w-full text-left border-collapse min-w-[860px]">
                   <thead>
                     <tr className="bg-gradient-to-r from-[#0f2a63] to-blue-800 text-white text-[11px] font-bold">
@@ -1002,6 +1051,7 @@ const InvoicesManagement = () => {
         setActiveInvoice={setActiveInvoice}
         formatDate={formatDate}
         formatTime={formatTime}
+        hotelSettings={settings}
       />
     </div>
   );

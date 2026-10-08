@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import {
   Building2,
@@ -91,6 +91,18 @@ const formatStatus = (status) => {
   return status
     .replaceAll("_", " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+
+const formatRejectionReason = (reason) => {
+  if (!reason) return "";
+  const reasonMap = {
+    payment_reversed: "Payment Reversed",
+    payment_pending: "Payment Pending / Incomplete",
+    duplicate_registration: "Duplicate Hotel Registration",
+    other: "Other Verification Issue",
+  };
+  return reasonMap[reason] || formatStatus(reason);
 };
 
 
@@ -194,6 +206,7 @@ const getStatusData = (response) => {
 
 const SaaSUserApplicationStatus = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [registrationId, setRegistrationId] = useState("");
 
   const [application, setApplication] = useState(null);
@@ -435,6 +448,26 @@ const SaaSUserApplicationStatus = () => {
       >
 
         {/* ====================================================
+            BLOCKED LOGIN REDIRECT BANNER
+            Shown when user tried to manually bypass /hotel-login
+        ==================================================== */}
+        {location.state?.blockedMessage && (
+          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 sm:px-5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+              <AlertCircle size={19} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[14px] font-bold text-red-800">
+                Access Restricted — Hotel Login Unavailable
+              </p>
+              <p className="mt-1 text-[13px] leading-5 text-red-700">
+                {location.state.blockedMessage}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ====================================================
             HEADER
         ==================================================== */}
 
@@ -464,13 +497,13 @@ const SaaSUserApplicationStatus = () => {
               className="
                 mt-4
                 max-w-3xl
-                text-[30px]
+                text-[20px]
                 font-extrabold
                 leading-[1.08]
                 tracking-[-0.045em]
                 text-white
-                sm:text-[40px]
-                lg:text-[44px]
+                sm:text-[30px]
+                lg:text-[34px]
               "
             >
               Application Status
@@ -922,244 +955,494 @@ const SaaSUserApplicationStatus = () => {
             {/* ==================================================
                 MAIN PUBLIC VERIFICATION CARD
             ================================================== */}
-            <section
+          <section
+  className="
+    w-full
+    min-w-0
+    overflow-hidden
+    rounded-[18px]
+    border
+    border-[#DCE7F5]
+    bg-white
+    shadow-[0_14px_36px_rgba(14,42,81,0.06)]
+    sm:rounded-[20px]
+    lg:rounded-[24px]
+  "
+  style={{
+    animation: "fadeUp 0.5s ease-out both",
+  }}
+>
+  {/* CARD TOP HEADER: HOTEL & APPLICATION ID */}
+  <div
+    className="
+      w-full
+      border-b
+      border-[#E2EAF5]
+      bg-[linear-gradient(145deg,#F7FBFF_0%,#EDF5FF_100%)]
+      p-3.5
+      sm:p-5
+      md:p-6
+    "
+  >
+    <div
+      className="
+        flex
+        w-full
+        min-w-0
+        flex-col
+        gap-4
+        sm:gap-5
+        lg:flex-row
+        lg:items-center
+        lg:justify-between
+      "
+    >
+      {/* HOTEL IDENTITY */}
+      <div
+        className="
+          flex
+          w-full
+          min-w-0
+          items-start
+          gap-2.5
+          sm:items-center
+          sm:gap-3.5
+          lg:flex-1
+        "
+      >
+        {/* HOTEL ICON */}
+        <div
+          className="
+            flex
+            h-10
+            w-10
+            shrink-0
+            items-center
+            justify-center
+            rounded-xl
+            bg-[#173B63]
+            text-white
+            shadow-[0_6px_16px_rgba(23,59,99,0.18)]
+            sm:h-12
+            sm:w-12
+            sm:rounded-2xl
+            md:h-14
+            md:w-14
+          "
+        >
+          <Building2
+            size={19}
+            strokeWidth={1.8}
+            className="sm:h-[22px] sm:w-[22px] md:h-6 md:w-6"
+          />
+        </div>
+
+        {/* HOTEL DETAILS */}
+        <div className="min-w-0 flex-1">
+          {/* VERIFIED */}
+          <div className="flex min-w-0 items-center gap-2">
+            <span
               className="
-                overflow-hidden
-                rounded-[24px]
-                border
-                border-[#DCE7F5]
-                bg-white
-                shadow-[0_14px_36px_rgba(14,42,81,0.06)]
+                inline-flex
+                max-w-full
+                items-center
+                rounded-full
+                bg-[#E2F6EC]
+                px-2
+                py-0.5
+                text-[8px]
+                font-bold
+                leading-4
+                text-[#087A58]
+                sm:text-[9px]
               "
-              style={{
-                animation: "fadeUp 0.5s ease-out both",
-              }}
             >
+              Verified
+            </span>
+          </div>
 
-              {/* CARD TOP HEADER: HOTEL & APPLICATION ID */}
-              <div
-                className="
-                  border-b
-                  border-[#E2EAF5]
-                  bg-[linear-gradient(145deg,#F7FBFF_0%,#EDF5FF_100%)]
-                  p-5
-                  sm:p-6
-                "
-              >
-                <div
-                  className="
-                    flex
-                    flex-col
-                    gap-4
-                    sm:flex-row
-                    sm:items-center
-                    sm:justify-between
-                  "
-                >
+          {/* HOTEL NAME */}
+          <h2
+            className="
+              mt-1
+              break-words
+              text-[17px]
+              font-extrabold
+              leading-[1.25]
+              tracking-tight
+              text-[#17345D]
+              sm:text-[20px]
+              md:text-[22px]
+            "
+          >
+            {application.hotelName || "Hotel Application"}
+          </h2>
 
-                  {/* HOTEL IDENTITY */}
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div
-                      className="
-                        flex
-                        h-13
-                        w-13
-                        shrink-0
-                        items-center
-                        justify-center
-                        rounded-2xl
-                        bg-[#173B63]
-                        text-white
-                        shadow-[0_6px_16px_rgba(23,59,99,0.18)]
-                        sm:h-14
-                        sm:w-14
-                      "
-                    >
-                      <Building2 size={24} strokeWidth={1.8} />
-                    </div>
+          {/* ADDRESS */}
+          <div
+            className="
+              mt-1
+              flex
+              min-w-0
+              items-start
+              gap-1.5
+              text-[10px]
+              font-medium
+              leading-4
+              text-[#64748B]
+              sm:text-[12px]
+            "
+          >
+            <MapPin
+              size={12}
+              className="
+                mt-0.5
+                shrink-0
+                text-[#347BE9]
+                sm:h-[13px]
+                sm:w-[13px]
+              "
+            />
 
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                       
-                        <span
-                          className="
-                            rounded-full
-                            bg-[#E2F6EC]
-                            px-2
-                            py-0.5
-                            text-[9px]
-                            font-bold
-                            text-[#087A58]
-                          "
-                        >
-                          Verified
-                        </span>
-                      </div>
+            <span className="min-w-0 break-words">
+              {formatAddress(application.address)}
+            </span>
+          </div>
+        </div>
+      </div>
 
-                      <h2
-                        className="
-                          mt-0.5
-                          break-words
-                          text-[20px]
-                          font-extrabold
-                          leading-tight
-                          tracking-tight
-                          text-[#17345D]
-                          sm:text-[22px]
-                        "
-                      >
-                        {application.hotelName || "Hotel Application"}
-                      </h2>
+      {/* APPLICATION ID & COPY */}
+      <div
+        className="
+          flex
+          w-full
+          min-w-0
+          items-center
+          justify-between
+          gap-2.5
+          rounded-xl
+          border
+          border-[#D5E5F7]
+          bg-white/95
+          px-3
+          py-2.5
+          backdrop-blur-sm
+          sm:gap-3
+          sm:px-3.5
+          sm:py-3
+          lg:w-auto
+          lg:min-w-[250px]
+          lg:shrink-0
+          lg:justify-start
+        "
+      >
+        {/* APPLICATION ID TEXT */}
+        <div className="min-w-0 flex-1">
+          <p
+            className="
+              text-[8px]
+              font-bold
+              uppercase
+              tracking-[0.08em]
+              text-[#64748B]
+              sm:text-[9px]
+            "
+          >
+            Application ID
+          </p>
 
-                      <div
-                        className="
-                          mt-1
-                          flex
-                          items-center
-                          gap-1.5
-                          text-[12px]
-                          font-medium
-                          text-[#64748B]
-                        "
-                      >
-                        <MapPin size={13} className="shrink-0 text-[#347BE9]" />
-                        <span className="truncate">
-                          {formatAddress(application.address)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+          <p
+            className="
+              mt-0.5
+              min-w-0
+              truncate
+              font-mono
+              text-[11px]
+              font-bold
+              text-[#347BE9]
+              sm:text-[13px]
+            "
+            title={
+              application.registrationId ||
+              application._id ||
+              registrationId
+            }
+          >
+            {application.registrationId ||
+              application._id ||
+              registrationId}
+          </p>
+        </div>
 
-                  {/* APPLICATION ID & COPY */}
-                  <div
-                    className="
-                      flex
-                      items-center
-                      gap-3
-                      rounded-xl
-                      border
-                      border-[#D5E5F7]
-                      bg-white/95
-                      px-3.5
-                      py-2.5
-                      backdrop-blur-sm
-                      sm:shrink-0
-                    "
-                  >
-                    <div>
-                      <p
-                        className="
-                          text-[9px]
-                          font-bold
-                          uppercase
-                          tracking-wider
-                          text-[#64748B]
-                        "
-                      >
-                        Application ID
-                      </p>
-                      <p
-                        className="
-                          font-mono
-                          text-[13px]
-                          font-bold
-                          text-[#347BE9]
-                        "
-                      >
-                        {application.registrationId ||
-                          application._id ||
-                          registrationId}
-                      </p>
-                    </div>
+        {/* COPY BUTTON */}
+        <button
+          type="button"
+          onClick={copyApplicationId}
+          className="
+            inline-flex
+            h-9
+            shrink-0
+            items-center
+            justify-center
+            gap-1.5
+            rounded-lg
+            border
+            border-[#C9D8EB]
+            bg-[#F7FAFF]
+            px-3
+            text-[10px]
+            font-bold
+            text-[#344054]
+            transition-all
+            duration-200
+            hover:border-[#347BE9]
+            hover:bg-[#EAF3FF]
+            hover:text-[#347BE9]
+            active:scale-[0.97]
+            sm:h-10
+            sm:px-3.5
+            sm:text-[11px]
+          "
+        >
+          {copied ? (
+            <>
+              <Check
+                size={12}
+                className="shrink-0 text-[#087A58]"
+              />
+              <span className="text-[#087A58]">Copied</span>
+            </>
+          ) : (
+            <>
+              <Copy size={12} className="shrink-0 sm:h-[13px] sm:w-[13px]" />
+              <span>Copy</span>
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  </div>
 
-                    <button
-                      type="button"
-                      onClick={copyApplicationId}
-                      className="
-                        inline-flex
-                        items-center
-                        gap-1.5
-                        rounded-lg
-                        border
-                        border-[#C9D8EB]
-                        bg-[#F7FAFF]
-                        px-3
-                        py-1.5
-                        text-[11px]
-                        font-bold
-                        text-[#344054]
-                        transition-all
-                        hover:border-[#347BE9]
-                        hover:bg-[#EAF3FF]
-                        hover:text-[#347BE9]
-                      "
-                    >
-                      {copied ? (
-                        <>
-                          <Check size={13} className="text-[#087A58]" />
-                          <span className="text-[#087A58]">Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={13} />
-                          <span>Copy</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
+  {/* PROGRESS STATUS BAR & JOURNEY */}
+  <div
+    className="
+      w-full
+      min-w-0
+      p-3.5
+      sm:p-5
+      md:p-6
+    "
+  >
+    {/* TIMELINE */}
+    <div className="w-full min-w-0 overflow-hidden">
+      <ApplicationTimeline status={application.status} />
+    </div>
 
-                </div>
+    {/* ALERT NOTICES */}
+
+    {/* APPROVED */}
+    {application.status === "approved" && (
+      <div
+        className="
+          mt-4
+          flex
+          w-full
+          min-w-0
+          items-start
+          gap-2.5
+          rounded-xl
+          border
+          border-[#CBEFDE]
+          bg-[#F0FBF6]
+          p-3
+          sm:mt-5
+          sm:gap-3
+          sm:p-3.5
+        "
+      >
+        <ShieldCheck
+          size={17}
+          className="
+            mt-0.5
+            shrink-0
+            text-[#087A58]
+            sm:h-[18px]
+            sm:w-[18px]
+          "
+        />
+
+        <div className="min-w-0 flex-1">
+          <p
+            className="
+              break-words
+              text-[11px]
+              font-bold
+              leading-4
+              text-[#075E46]
+              sm:text-[12px]
+            "
+          >
+            Registration Approved & Confirmed
+          </p>
+
+          <p
+            className="
+              mt-0.5
+              break-words
+              text-[10px]
+              font-medium
+              leading-4
+              text-[#087A58]
+              sm:text-[11px]
+            "
+          >
+            The administration has verified and approved this hotel
+            registration application.
+          </p>
+        </div>
+      </div>
+    )}
+
+    {/* PENDING */}
+    {application.status === "pending" && (
+      <div
+        className="
+          mt-4
+          flex
+          w-full
+          min-w-0
+          items-start
+          gap-2.5
+          rounded-xl
+          border
+          border-[#F0DEAE]
+          bg-[#FFFBF1]
+          p-3
+          sm:mt-5
+          sm:gap-3
+          sm:p-3.5
+        "
+      >
+        <Clock3
+          size={17}
+          className="
+            mt-0.5
+            shrink-0
+            text-[#B77900]
+            sm:h-[18px]
+            sm:w-[18px]
+          "
+        />
+
+        <div className="min-w-0 flex-1">
+          <p
+            className="
+              break-words
+              text-[11px]
+              font-bold
+              leading-4
+              text-[#7C5700]
+              sm:text-[12px]
+            "
+          >
+            Admin Review Underway
+          </p>
+
+          <p
+            className="
+              mt-0.5
+              break-words
+              text-[10px]
+              font-medium
+              leading-4
+              text-[#946F13]
+              sm:text-[11px]
+            "
+          >
+            Your registration has been submitted and is actively being
+            reviewed by platform administrators.
+          </p>
+        </div>
+      </div>
+    )}
+
+    {/* REJECTED */}
+    {application.status === "rejected" && (
+      <div className="mt-4 w-full min-w-0 overflow-hidden rounded-2xl border border-red-200 bg-red-50 sm:mt-5">
+
+        {/* Header */}
+        <div className="flex items-center gap-3 border-b border-red-200 bg-red-100/60 px-4 py-3 sm:px-5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-200 text-red-700">
+            <XCircle size={19} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[13px] font-extrabold text-red-800 sm:text-sm">
+              Application Not Approved
+            </p>
+            <p className="text-[11px] text-red-600 sm:text-xs">
+              Your hotel registration was reviewed and could not be accepted at this time.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-3 px-4 py-4 sm:px-5">
+
+          {/* Reason & Additional Details block */}
+          <div className="space-y-2.5 rounded-xl border border-red-200 bg-white px-4 py-3.5 shadow-sm">
+            {application.rejectionReason && (
+              <div>
+                <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-red-400 sm:text-[11px]">
+                  Reason from Admin
+                </p>
+                <p className="break-words text-[13px] font-bold leading-5 text-red-900 sm:text-sm">
+                  {formatRejectionReason(application.rejectionReason)}
+                </p>
               </div>
+            )}
 
-              {/* PROGRESS STATUS BAR & JOURNEY */}
-              <div className="p-5 sm:p-6">
-                <ApplicationTimeline status={application.status} />
-
-                {/* ALERT NOTICES */}
-                {application.status === "approved" && (
-                  <div className="mt-5 flex items-start gap-3 rounded-xl border border-[#CBEFDE] bg-[#F0FBF6] p-3.5">
-                    <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#087A58]" />
-                    <div>
-                      <p className="text-[12px] font-bold text-[#075E46]">
-                        Registration Approved & Confirmed
-                      </p>
-                      <p className="mt-0.5 text-[11px] font-medium leading-4 text-[#087A58]">
-                        The administration has verified and approved this hotel registration application.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {application.status === "pending" && (
-                  <div className="mt-5 flex items-start gap-3 rounded-xl border border-[#F0DEAE] bg-[#FFFBF1] p-3.5">
-                    <Clock3 size={18} className="mt-0.5 shrink-0 text-[#B77900]" />
-                    <div>
-                      <p className="text-[12px] font-bold text-[#7C5700]">
-                        Admin Review Underway
-                      </p>
-                      <p className="mt-0.5 text-[11px] font-medium leading-4 text-[#946F13]">
-                        Your registration has been submitted and is actively being reviewed by platform administrators.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {application.status === "rejected" && (
-                  <div className="mt-5 flex items-start gap-3 rounded-xl border border-[#F3CCCC] bg-[#FFF7F7] p-3.5">
-                    <XCircle size={18} className="mt-0.5 shrink-0 text-[#C62828]" />
-                    <div>
-                      <p className="text-[12px] font-bold text-[#991B1B]">
-                        Registration Notice
-                      </p>
-                      <p className="mt-0.5 text-[11px] font-medium leading-4 text-[#B42318]">
-                        {application.rejectionReason || "Application was not approved. Please contact administrative support."}
-                      </p>
-                    </div>
-                  </div>
-                )}
+            {application.rejectionDetails ? (
+              <div className="rounded-lg border border-red-100 bg-red-50/70 p-3">
+                <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-red-500 sm:text-[11px]">
+                  Additional Details & Explanation
+                </p>
+                <p className="break-words text-[13px] font-medium leading-relaxed text-red-800 whitespace-pre-wrap sm:text-sm">
+                  {application.rejectionDetails}
+                </p>
               </div>
+            ) : !application.rejectionReason && (
+              <p className="break-words text-[13px] font-medium leading-5 text-red-700 sm:text-sm">
+                No specific reason was provided. Please contact our support team for details.
+              </p>
+            )}
+          </div>
 
-            </section>
+          {/* What to do next */}
+          <div className="rounded-xl border border-red-100 bg-white px-4 py-3">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-red-400 sm:text-[11px]">
+              What can you do next?
+            </p>
+            <ul className="space-y-1.5">
+              {[
+                "Review the reason above carefully and make any necessary corrections.",
+                "You may re-register with updated or corrected information.",
+              ].map((step, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-red-600">
+                    {i + 1}
+                  </span>
+                  <span className="text-[12px] leading-4 text-red-700 sm:text-[13px]">{step}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+        
+
+        </div>
+      </div>
+    )}
+  </div>
+</section>
 
             {/* ==================================================
                 IMPORTANT SHORT DETAILS (PUBLIC & MINIMAL)

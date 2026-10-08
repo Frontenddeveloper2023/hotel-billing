@@ -237,14 +237,14 @@ const StatusBadge = memo(function StatusBadge({ status }) {
     s === "PAID"
       ? "bg-emerald-50 text-emerald-700 border-emerald-200"
       : s === "REFUNDED" || s === "CANCELLED"
-      ? "bg-rose-50 text-rose-700 border-rose-200"
-      : "bg-amber-50 text-amber-700 border-amber-200";
+        ? "bg-rose-50 text-rose-700 border-rose-200"
+        : "bg-amber-50 text-amber-700 border-amber-200";
   const dot =
     s === "PAID"
       ? "bg-emerald-500"
       : s === "REFUNDED" || s === "CANCELLED"
-      ? "bg-rose-500"
-      : "bg-amber-500";
+        ? "bg-rose-500"
+        : "bg-amber-500";
 
   return (
     <span
@@ -356,11 +356,10 @@ const Bar = memo(function Bar({ item, index, max }) {
           height: `${Math.max(pct, 3)}%`,
           "--i": Math.min(index, 20),
         }}
-        className={`rp-bar w-full rounded-t-md ${
-          item.value > 0
+        className={`rp-bar w-full rounded-t-md ${item.value > 0
             ? "bg-gradient-to-t from-blue-700 to-sky-400"
             : "bg-slate-100"
-        }`}
+          }`}
       />
 
       <span className="text-[10px] font-bold text-slate-700 truncate">
@@ -423,9 +422,27 @@ export default function Reports() {
               ? rooms.map((r) => r.roomNumber).filter(Boolean).join(", ")
               : "N/A");
 
-          const itemDate = inv.invoiceDate
-            ? String(inv.invoiceDate).slice(0, 10)
-            : new Date().toISOString().slice(0, 10);
+          const rawDate = String(inv.invoiceDate || "").trim();
+          let itemDate = rawDate;
+          if (!rawDate) {
+            itemDate = new Date().toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            });
+          } else if (rawDate.includes("T")) {
+            itemDate = new Date(rawDate).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            });
+          }
+
+          const rawStatus = String(inv.status || "").toUpperCase();
+          const status =
+            rawStatus === "CANCELLED" || rawStatus === "REFUNDED"
+              ? rawStatus
+              : "PAID";
 
           return {
             id: inv.invoiceNo || inv._id,
@@ -435,7 +452,7 @@ export default function Reports() {
             roomItems: [],
             amount: Number(inv.grandTotal || 0),
             date: itemDate,
-            status: inv.status || "ISSUED",
+            status: status,
             type: "Room Stay",
           };
         });
@@ -494,15 +511,23 @@ export default function Reports() {
     return uniqueNames.size;
   }, [filteredReports]);
 
-  // Year options come from real data (plus the selected/current year)
+
+
+  // Year options come only from real data
   const yearOptions = useMemo(() => {
     const years = new Set(
-      reportData.map((r) => r.date?.split("-")[0]).filter(Boolean)
+      reportData
+        .map((r) => {
+          const date = new Date(r.date);
+          return !isNaN(date.getTime())
+            ? String(date.getFullYear())
+            : null;
+        })
+        .filter(Boolean)
     );
-    years.add(String(new Date().getFullYear()));
-    years.add(selectedYear);
+
     return [...years].sort((a, b) => Number(b) - Number(a));
-  }, [reportData, selectedYear]);
+  }, [reportData]);
 
   // Dynamic chart data generator
   const chartData = useMemo(() => {
@@ -605,9 +630,9 @@ export default function Reports() {
       const roomServiceText =
         item.roomItems?.length > 0
           ? item.roomItems
-              .map((roomItem) => roomItem.description)
-              .filter(Boolean)
-              .join(" | ")
+            .map((roomItem) => roomItem.description)
+            .filter(Boolean)
+            .join(" | ")
           : item.type || "Room Stay";
 
       const row = [
@@ -714,15 +739,15 @@ export default function Reports() {
     filterType === "month"
       ? `Daily Revenue Trend (${selectedMonth})`
       : filterType === "year"
-      ? `Monthly Revenue Trend (${selectedYear})`
-      : "Overall Revenue Breakdown";
+        ? `Monthly Revenue Trend (${selectedYear})`
+        : "Overall Revenue Breakdown";
 
   const chartBadge =
     filterType === "month"
       ? selectedMonth
       : filterType === "year"
-      ? selectedYear
-      : "All Time";
+        ? selectedYear
+        : "All Time";
 
   const thClass =
     "px-4 lg:px-6 py-3.5 text-[11px] font-bold tracking-wide whitespace-nowrap";
@@ -732,7 +757,7 @@ export default function Reports() {
       <style>{CSS}</style>
 
       <Helmet>
-        <title>Billing Reports — SS Residency Hotel Management</title>
+        <title>Billing Reports — SatylioHotel Management</title>
         <meta
           name="description"
           content="Generate and download hotel room billing, revenue, and transaction reports."
@@ -742,12 +767,12 @@ export default function Reports() {
       <main className="w-full max-w-7xl mx-auto space-y-5 sm:space-y-6 pb-8">
         {/* HEADER */}
         <header className="rp-rise rp-d1 flex flex-col gap-3 pb-4 sm:pb-5 border-b border-white/20">
-          
+
 
           <div>
-<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">              Billing & Revenue Reports
+            <h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">              Billing & Revenue Reports
             </h1>
-         
+
           </div>
         </header>
 
@@ -782,24 +807,104 @@ export default function Reports() {
         </section>
 
         {/* FILTERS */}
-        <section className="rp-rise rp-d3 bg-white rounded-2xl p-4 sm:p-6 border border-blue-100/80 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)] space-y-4">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 min-w-0">
-              <span className="text-xs font-semibold text-slate-700 shrink-0">
+        <section
+          className="
+    rp-rise
+    rp-d3
+    w-full
+    overflow-hidden
+    rounded-2xl
+    border
+    border-blue-100/80
+    bg-white
+    p-3
+    shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)]
+    sm:p-4
+    md:p-5
+    lg:p-6
+    space-y-4
+  "
+        >
+          {/* TOP CONTROLS */}
+          <div
+            className="
+      flex
+      w-full
+      min-w-0
+      flex-col
+      gap-4
+      lg:flex-row
+      lg:items-center
+      lg:justify-between
+    "
+          >
+            {/* SORT SECTION */}
+            <div
+              className="
+        flex
+        min-w-0
+        w-full
+        flex-col
+        gap-2
+        sm:flex-row
+        sm:items-center
+        sm:gap-3
+        lg:w-auto
+      "
+            >
+              <span
+                className="
+          shrink-0
+          text-xs
+          font-semibold
+          text-slate-700
+          sm:text-sm
+        "
+              >
                 Sort by
               </span>
 
-              <div className="flex items-center gap-1 bg-blue-50 p-1 rounded-xl overflow-x-auto rp-scroll">
+              {/* FILTER TABS */}
+              <div
+                className="
+          rp-scroll
+          flex
+          min-w-0
+          w-full
+          max-w-full
+          items-center
+          gap-1
+          overflow-x-auto
+          rounded-xl
+          bg-blue-50
+          p-1
+          [scrollbar-width:none]
+          sm:w-auto
+        "
+              >
                 {FILTER_TABS.map(([value, label]) => (
                   <button
                     key={value}
                     type="button"
                     onClick={() => setFilterType(value)}
-                    className={`rp-btn cursor-pointer whitespace-nowrap px-3 sm:px-4 py-2 text-xs font-semibold rounded-lg ${
-                      filterType === value
+                    className={`
+              rp-btn
+              shrink-0
+              cursor-pointer
+              whitespace-nowrap
+              rounded-lg
+              px-3
+              py-2
+              text-xs
+              font-semibold
+              transition-all
+              duration-200
+              sm:px-4
+              ${filterType === value
                         ? "bg-white text-blue-700 shadow-sm"
-                        : "text-slate-600 hover:text-blue-700"
-                    }`}
+                        : "text-slate-600 hover:bg-white/60 hover:text-blue-700"
+                      }
+            `}
                   >
                     {label}
                   </button>
@@ -807,41 +912,194 @@ export default function Reports() {
               </div>
             </div>
 
-            <div className="relative w-full lg:w-72">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400 pointer-events-none" />
+            {/* SEARCH */}
+            <div
+              className="
+        relative
+        w-full
+        min-w-0
+        lg:w-72
+        xl:w-80
+      "
+            >
+              <Search
+                className="
+          pointer-events-none
+          absolute
+          left-3
+          top-1/2
+          h-4
+          w-4
+          -translate-y-1/2
+          text-blue-400
+          sm:left-3.5
+        "
+              />
+
               <input
                 type="text"
                 placeholder="Search guest, room, bill id..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="rp-input w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm bg-slate-50/70 border border-slate-200 rounded-xl outline-none font-medium text-slate-900 placeholder:text-slate-400"
+                className="
+          rp-input
+          h-10
+          w-full
+          min-w-0
+          rounded-xl
+          border
+          border-slate-200
+          bg-slate-50/70
+          pl-10
+          pr-3
+          text-xs
+          font-medium
+          text-slate-900
+          outline-none
+          transition-all
+          duration-200
+          placeholder:text-slate-400
+          hover:border-blue-200
+          focus:border-blue-400
+          focus:bg-white
+          focus:ring-4
+          focus:ring-blue-100
+          sm:h-11
+          sm:pl-11
+          sm:pr-4
+          sm:text-sm
+        "
               />
             </div>
           </div>
 
+          {/* MONTH FILTER */}
           {filterType === "month" && (
-            <div className="rp-pop flex flex-wrap items-center gap-3 pt-3 border-t border-slate-100">
-              <span className="text-xs font-semibold text-slate-700">
+            <div
+              className="
+        rp-pop
+        flex
+        w-full
+        min-w-0
+        flex-col
+        gap-3
+        border-t
+        border-slate-100
+        pt-3
+        sm:flex-row
+        sm:flex-wrap
+        sm:items-center
+        sm:gap-3
+      "
+            >
+              <span
+                className="
+          shrink-0
+          text-xs
+          font-semibold
+          text-slate-700
+          sm:text-sm
+        "
+              >
                 Select month & year
               </span>
+
               <input
                 type="month"
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="rp-input cursor-pointer px-3 py-2 text-xs sm:text-sm bg-slate-50/70 border border-slate-200 rounded-xl outline-none font-semibold text-slate-900"
+                className="
+          rp-input
+          h-10
+          w-full
+          max-w-full
+          cursor-pointer
+          rounded-xl
+          border
+          border-slate-200
+          bg-slate-50/70
+          px-3
+          py-2
+          text-xs
+          font-semibold
+          text-slate-900
+          outline-none
+          transition-all
+          duration-200
+          hover:border-blue-200
+          focus:border-blue-400
+          focus:bg-white
+          focus:ring-4
+          focus:ring-blue-100
+          sm:w-auto
+          sm:min-w-[170px]
+          sm:text-sm
+        "
               />
             </div>
           )}
 
+          {/* YEAR FILTER */}
           {filterType === "year" && (
-            <div className="rp-pop flex flex-wrap items-center gap-3 pt-3 border-t border-slate-100">
-              <span className="text-xs font-semibold text-slate-700">
+            <div
+              className="
+        rp-pop
+        flex
+        w-full
+        min-w-0
+        flex-col
+        gap-3
+        border-t
+        border-slate-100
+        pt-3
+        sm:flex-row
+        sm:flex-wrap
+        sm:items-center
+        sm:gap-3
+      "
+            >
+              <span
+                className="
+          shrink-0
+          text-xs
+          font-semibold
+          text-slate-700
+          sm:text-sm
+        "
+              >
                 Select year
               </span>
+
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
-                className="rp-input cursor-pointer px-3 py-2 text-xs sm:text-sm bg-slate-50/70 border border-slate-200 rounded-xl outline-none font-semibold text-slate-900"
+                className="
+          rp-input
+          h-10
+          w-full
+          max-w-full
+          cursor-pointer
+          rounded-xl
+          border
+          border-slate-200
+          bg-slate-50/70
+          px-3
+          py-2
+          text-xs
+          font-semibold
+          text-slate-900
+          outline-none
+          transition-all
+          duration-200
+          hover:border-blue-200
+          focus:border-blue-400
+          focus:bg-white
+          focus:ring-4
+          focus:ring-blue-100
+          sm:w-auto
+          sm:min-w-[130px]
+          sm:text-sm
+        "
               >
                 {yearOptions.map((y) => (
                   <option key={y} value={y}>
@@ -864,7 +1122,7 @@ export default function Reports() {
                 <h2 className="text-sm sm:text-base font-bold text-[#0f2a63]">
                   {chartTitle}
                 </h2>
-               
+
               </div>
             </div>
 
@@ -877,11 +1135,10 @@ export default function Reports() {
             {/* key re-triggers the grow animation when the period changes */}
             <div
               key={`${filterType}-${selectedMonth}-${selectedYear}`}
-              className={`h-56 sm:h-60 flex items-end gap-2 sm:gap-3 px-2 border-b border-slate-200 bg-[linear-gradient(to_top,rgba(148,163,184,.22)_1px,transparent_1px)] bg-[length:100%_25%] ${
-                filterType === "month"
+              className={`h-56 sm:h-60 flex items-end gap-2 sm:gap-3 px-2 border-b border-slate-200 bg-[linear-gradient(to_top,rgba(148,163,184,.22)_1px,transparent_1px)] bg-[length:100%_25%] ${filterType === "month"
                   ? "min-w-max"
                   : "w-full justify-around"
-              }`}
+                }`}
             >
               {chartData.map((item, index) => (
                 <Bar
@@ -902,7 +1159,7 @@ export default function Reports() {
               <h2 className="text-sm sm:text-base font-bold text-[#0f2a63]">
                 Reports
               </h2>
-             
+
             </div>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
@@ -944,9 +1201,9 @@ export default function Reports() {
                 <SearchX className="w-7 h-7" />
               </div>
               <span className="font-bold text-sm text-[#0f2a63] mt-4">
-                No report records found 
+                No report records found
               </span>
-             
+
             </div>
           ) : (
             <>
@@ -993,14 +1250,14 @@ export default function Reports() {
             <div ref={pdfRef} className="pdf-export-container">
               <div className="pdf-header">
                 <div className="pdf-title">
-                  <h1>SS Residency - Financial & Revenue Report</h1>
+                  <h1>Satylio- Financial & Revenue Report</h1>
                 </div>
                 <div className="pdf-meta">
                   <p>
                     <strong>Generated On:</strong>{" "}
                     {new Date().toLocaleDateString("en-IN")}
                   </p>
-                  <p>SS Residency Hotel Management System</p>
+                  <p>SatylioHotel Management System</p>
                 </div>
               </div>
 

@@ -1085,6 +1085,7 @@ export const approveRegistration = async (req, res) => {
     registration.approvedAt = new Date();
 
     registration.rejectionReason = "";
+    registration.rejectionDetails = "";
 
     await registration.save();
 
@@ -1261,6 +1262,7 @@ export const rejectRegistration = async (req, res) => {
 
     const {
       rejectionReason,
+      rejectionDetails,
     } = req.body;
 
 
@@ -1286,25 +1288,17 @@ export const rejectRegistration = async (req, res) => {
 
 
     // ========================================================
-    // STEP 2: VALIDATE REASON
+    // STEP 2: VALIDATE REASON & DETAILS
     // ========================================================
 
-    if (
-      !rejectionReason ||
-      !rejectionReason.trim()
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Please provide a reason for rejecting this hotel registration.",
-      });
-    }
+    const reason = typeof rejectionReason === "string" ? rejectionReason.trim() : "";
+    const details = typeof rejectionDetails === "string" ? rejectionDetails.trim() : "";
 
-    if (rejectionReason.trim().length < 5) {
+    if (!reason && !details) {
       return res.status(400).json({
         success: false,
         message:
-          "The rejection reason must contain at least 5 characters.",
+          "Please select a rejection reason or provide additional details.",
       });
     }
 
@@ -1351,9 +1345,8 @@ export const rejectRegistration = async (req, res) => {
     // ========================================================
 
     registration.status = "rejected";
-
-    registration.rejectionReason =
-      rejectionReason.trim();
+    registration.rejectionReason = reason;
+    registration.rejectionDetails = details;
 
     await registration.save();
 
@@ -1363,7 +1356,7 @@ export const rejectRegistration = async (req, res) => {
     // ========================================================
 
     log.info(
-      `Hotel registration rejected successfully. Registration ID: ${id}, Reason: ${registration.rejectionReason}`
+      `Hotel registration rejected successfully. Registration ID: ${id}, Reason: ${registration.rejectionReason}, Details: ${registration.rejectionDetails}`
     );
 
 
@@ -1379,6 +1372,9 @@ export const rejectRegistration = async (req, res) => {
 
         rejectionReason:
           registration.rejectionReason,
+
+        rejectionDetails:
+          registration.rejectionDetails,
       },
     });
 

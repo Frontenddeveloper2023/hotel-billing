@@ -78,6 +78,23 @@ const SaaSUserCheckout = () => {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [transactionId, setTransactionId] = useState("");
   const [error, setError] = useState("");
+  // Only mark as already-paid when the *current* registration is the one
+  // that was previously paid.  A brand-new hotel must always be payable.
+  const [alreadyPaid, setAlreadyPaid] = useState(() => {
+    if (sessionStorage.getItem("saasPaymentStatus") !== "paid") return false;
+    const paidRegId = sessionStorage.getItem("saasRegistrationId") || "";
+    const currentRegId =
+      location.state?.registration?.registrationId ||
+      location.state?.registration?._id ||
+      location.state?.registrationId ||
+      "";
+    // If we can determine the current registration and it differs from the
+    // paid one, this is a new hotel — allow payment.
+    if (currentRegId && paidRegId && currentRegId !== paidRegId) return false;
+    // If current ID is unknown at mount (will be resolved from sessionStorage
+    // fallback later) but paidRegId exists, stay safe and still mark paid.
+    return true;
+  });
 
   // ==========================================================
   // ROUTER DATA
@@ -203,6 +220,34 @@ const addressText =
 const handlePayNow = () => {
   setError("");
 
+  // ── Duplicate-payment guard ────────────────────────────────────────────
+  // Only block if the *same* registration was already paid
+  const paidRegId = sessionStorage.getItem("saasRegistrationId") || "";
+  if (
+    sessionStorage.getItem("saasPaymentStatus") === "paid" &&
+    paidRegId &&
+    registrationId &&
+    paidRegId === registrationId
+  ) {
+    setAlreadyPaid(true);
+    setError(
+      "Your hotel registration payment has already been completed. Please wait for admin approval — no further payment is required."
+    );
+    return;
+  }
+
+  // Check if registration data itself says paid
+  if (registration?.paymentStatus === "paid") {
+    setAlreadyPaid(true);
+    sessionStorage.setItem("saasPaymentStatus", "paid");
+    sessionStorage.setItem("saasRegistrationId", registrationId);
+    setError(
+      "Your hotel registration payment has already been completed. Please wait for admin approval — no further payment is required."
+    );
+    return;
+  }
+  // ──────────────────────────────────────────────────────────────────────
+
   if (!registrationId) {
     setError(
       "Registration details are missing. Please go back and complete registration again."
@@ -231,9 +276,25 @@ const handlePayNow = () => {
     const response = await confirmDummyPayment(registrationId);
 
     if (!response?.success) {
-      throw new Error(
-        response?.message || "Payment could not be completed."
-      );
+      // ── Professional duplicate-payment error ────────────────────────
+      const msg = response?.message || "";
+      const isDuplicate =
+        msg.toLowerCase().includes("already been completed") ||
+        msg.toLowerCase().includes("already paid") ||
+        msg.toLowerCase().includes("duplicate");
+
+      if (isDuplicate) {
+        setAlreadyPaid(true);
+        sessionStorage.setItem("saasPaymentStatus", "paid");
+        setIsPaymentModalOpen(false);
+        setError(
+          "Your hotel is already registered and the subscription payment has been successfully received. Our admin team is reviewing your application — you will be notified once approved."
+        );
+        return;
+      }
+      // ───────────────────────────────────────────────────────────────
+
+      throw new Error(msg || "Payment could not be completed.");
     }
 
     const paymentTransactionId =
@@ -1381,54 +1442,89 @@ Most Popular      </span>
 
 
         {/* ========================================================
-            PAY NOW
+            PAY NOW / ALREADY PAID
         ======================================================== */}
-        <button
-          type="button"
-          onClick={handlePayNow}
-          disabled={isPaying}
-          className="
-            flex
-            min-h-[50px]
-            w-full
-            cursor-pointer
-            items-center
-            justify-center
-            gap-2
-            rounded-xl
-            bg-[#347BE9]
-            px-4
-            py-3.5
-            text-[15px]
-            font-bold
-            text-white
-            shadow-[0_2px_5px_rgba(52,123,233,0.25)]
-            transition
-            hover:bg-[#2467D5]
-            active:scale-[0.99]
-            disabled:cursor-not-allowed
-            disabled:opacity-60
-            sm:px-5
-          "
-        >
-          <CreditCard
-            size={18}
-            className="shrink-0"
-          />
+        {alreadyPaid ? (
+          /* ── Already-Paid Premium Banner ── */
+          <div className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 sm:p-5">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                <CheckCircle2 size={20} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[14px] font-bold text-amber-800">
+                  Payment Already Received
+                </p>
+                <p className="mt-0.5 text-[12px] leading-5 text-amber-700">
+                  Your hotel registration is confirmed and subscription payment
+                  has been successfully received. Our admin team is currently
+                  reviewing your application.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-white px-3 py-2.5">
+              <Clock3 size={14} className="shrink-0 text-amber-500" />
+              <p className="text-[12px] font-semibold text-amber-700">
+                Awaiting admin approval — you will be notified via email once your hotel account is activated.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleViewApplicationStatus}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#347BE9] bg-white px-4 py-2.5 text-[13px] font-bold text-[#347BE9] transition hover:bg-[#EAF3FF] active:scale-[0.99]"
+            >
+              <Info size={15} className="shrink-0" />
+              View Application Status
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={handlePayNow}
+            disabled={isPaying}
+            className="
+              flex
+              min-h-[50px]
+              w-full
+              cursor-pointer
+              items-center
+              justify-center
+              gap-2
+              rounded-xl
+              bg-[#347BE9]
+              px-4
+              py-3.5
+              text-[15px]
+              font-bold
+              text-white
+              shadow-[0_2px_5px_rgba(52,123,233,0.25)]
+              transition
+              hover:bg-[#2467D5]
+              active:scale-[0.99]
+              disabled:cursor-not-allowed
+              disabled:opacity-60
+              sm:px-5
+            "
+          >
+            <CreditCard
+              size={18}
+              className="shrink-0"
+            />
 
-          <span className="truncate">
-            Pay Now
-          </span>
+            <span className="truncate">
+              Pay Now
+            </span>
 
-          <span className="shrink-0">
-            {formatCurrency(total)}
-          </span>
+            <span className="shrink-0">
+              {formatCurrency(total)}
+            </span>
 
-          <ArrowRight
-            size={17}
-            className="ml-auto shrink-0"
-          />
-        </button>
+            <ArrowRight
+              size={17}
+              className="ml-auto shrink-0"
+            />
+          </button>
+        )}
 
 
       

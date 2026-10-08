@@ -15,7 +15,6 @@ const router = express.Router();
 router.get(
     "/get-settings",
     authVerify,
-    permissionVerify("settings"),
     getSettings
 );
 
