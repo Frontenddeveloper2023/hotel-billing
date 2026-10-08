@@ -10,7 +10,31 @@ import User from "../models/users.js";
 const authVerify = async (req, res, next) => {
     try {
 
-        const token = req.cookies.hotelbilling;
+        let token = null;
+        const authHeader = req.headers.authorization || req.headers.Authorization;
+        if (authHeader && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        }
+
+        if (!token) {
+            const reqCookieName = req.headers["x-cookie-name"];
+            if (reqCookieName && req.cookies[reqCookieName]) {
+                token = req.cookies[reqCookieName];
+            }
+        }
+
+        if (!token) {
+            const portal = req.headers["x-portal"];
+            const cookieMap = {
+                admin: "hotelbilling_admin",
+                owner: "hotelbilling_owner",
+                staff: "hotelbilling_staff",
+            };
+            token = cookieMap[portal] ? req.cookies[cookieMap[portal]] : null;
+            if (!token && (!portal || portal === "hotel")) {
+                token = req.cookies.hotelbilling_owner || req.cookies.hotelbilling_staff || req.cookies.hotelbilling || req.cookies.hotelbilling_admin;
+            }
+        }
 
         // -------------------------------------------------
         // TOKEN NOT FOUND
@@ -172,9 +196,18 @@ const adminVerify = async (req, res, next) => {
         // req.user already contains fresh DB data.
 
         if (!req.user) {
-
-            const token =
-                req.cookies.hotelbilling;
+            const reqCookieName = req.headers["x-cookie-name"];
+            let token = reqCookieName ? req.cookies[reqCookieName] : null;
+            
+            if (!token) {
+                const portal = req.headers["x-portal"];
+                const cookieMap = {
+                    admin: "hotelbilling_admin",
+                    owner: "hotelbilling_owner",
+                    staff: "hotelbilling_staff",
+                };
+                token = req.cookies.hotelbilling_admin || (cookieMap[portal] ? req.cookies[cookieMap[portal]] : null) || req.cookies.hotelbilling;
+            }
 
             if (!token) {
 

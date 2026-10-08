@@ -5,14 +5,17 @@ import React, {
   useEffect,
   useMemo,
   useState,
+  useRef,
 } from "react";
 import {
   deleteCustomer,
   updateCustomer,
 } from "../../service/customersService";
 import { getCustomerManagementData } from "../../service/customersApi";
+import { useToast } from "../../Context/ToastContext";
 
 import {
+  History,
   Search,
   Edit3,
   Trash2,
@@ -258,7 +261,11 @@ const CSS = `
   }
 }
 
-.cm-scroll { scrollbar-width: thin; overscroll-behavior: contain; }
+.cm-scroll { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+.cm-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+.cm-scroll::-webkit-scrollbar-track { background: transparent; border-radius: 8px; }
+.cm-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
+.cm-scroll::-webkit-scrollbar-thumb:hover { background-color: #94a3b8; }
 
 @media (prefers-reduced-motion: reduce) {
   .cm-rise, .cm-fade, .cm-modal, .cm-pop, .cm-row {
@@ -341,38 +348,15 @@ const divider = (index) =>
 // Desktop / tablet table row
 const BookingRow = memo(function BookingRow({
   customer,
-  booking,
-  status,
+  bookings,
   index,
   now,
   onEdit,
   onDelete,
+  onViewHistory,
 }) {
-  const rooms = Array.isArray(booking?.rooms) ? booking.rooms : [];
-
   return (
     <tr style={{ "--i": Math.min(index, 10) }} className="cm-row">
-      {/* ROOM */}
-      <td className="px-4 lg:px-5 py-4 align-top">
-        {rooms.length > 0 ? (
-          <div className="space-y-2.5">
-            {rooms.map((room, i) => (
-              <div key={room?._id || i} className={divider(i)}>
-                <div className="text-sm font-bold text-[#0f2a63] whitespace-nowrap">
-                  Room {room?.roomNumber || "-"}
-                </div>
-                <div className="text-[11px] text-slate-500 mt-0.5 whitespace-nowrap">
-                  {room?.roomType || "-"} • {room?.bedType || "-"}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <span className="text-slate-400">-</span>
-        )}
-      </td>
-
-      {/* CUSTOMER */}
       <td className="px-4 lg:px-5 py-4 align-top">
         <div className="flex items-center gap-2.5">
           <Avatar />
@@ -380,68 +364,41 @@ const BookingRow = memo(function BookingRow({
             <p className="text-sm font-bold text-[#0f2a63] whitespace-nowrap">
               {customer?.customerName || "-"}
             </p>
-            <div className="mt-1">
-              <StatusChip status={status} />
-            </div>
           </div>
         </div>
       </td>
-
-      {/* PHONE */}
       <td className="px-4 lg:px-5 py-4 align-top">
         <div className="flex items-center gap-2 text-sm text-slate-800 whitespace-nowrap">
           <Phone className="w-3.5 h-3.5 text-blue-400 shrink-0" />
           {customer?.phoneNumber || "-"}
         </div>
       </td>
-
-      {/* CHECK IN */}
       <td className="px-4 lg:px-5 py-4 align-top">
-        <div className="space-y-2.5">
-          {rooms.length > 0 ? (
-            rooms.map((room, i) => (
-              <div key={room?._id || i} className={divider(i)}>
-                <p className="text-sm font-semibold text-slate-900 whitespace-nowrap">
-                  {formatDate(room?.checkIn)}
-                </p>
-                <p className="text-[12px] text-slate-500 mt-0.5 whitespace-nowrap">
-                  {formatTime12(room?.checkInTime)}
-                </p>
-              </div>
-            ))
-          ) : (
-            <span className="text-slate-400">-</span>
-          )}
+        <div className="flex items-center gap-2 text-sm text-slate-800 whitespace-nowrap">
+          <Mail className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+          {customer?.email || "-"}
         </div>
       </td>
-
-      {/* CHECK OUT */}
       <td className="px-4 lg:px-5 py-4 align-top">
-        <div className="space-y-2.5">
-          {rooms.length > 0 ? (
-            rooms.map((room, i) => (
-              <div key={room?._id || i} className={divider(i)}>
-                <p className="text-sm font-semibold text-slate-900 whitespace-nowrap">
-                  {formatDate(room?.checkOut)}
-                </p>
-                <p className="text-[12px] text-slate-500 mt-0.5 whitespace-nowrap">
-                  {formatTime12(room?.checkOutTime)}
-                </p>
-                <ActualCheckout room={room} />
-                <div className="mt-1.5">
-                  <StatusChip status={getRoomCurrentStatus(room, now)} />
-                </div>
-              </div>
-            ))
-          ) : (
-            <span className="text-slate-400">-</span>
-          )}
+        <div className="text-sm text-slate-800 max-w-[200px] truncate">
+          {customer?.address || "-"}
         </div>
       </td>
-
-      {/* ACTIONS */}
+      <td className="px-4 lg:px-5 py-4 align-top">
+        <div className="text-sm font-bold text-slate-800">
+          {bookings?.length || 0} Bookings
+        </div>
+      </td>
       <td className="px-4 lg:px-5 py-4 align-top">
         <div className="flex justify-end items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onViewHistory(customer, bookings)}
+            className="cm-btn cursor-pointer inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-bold border border-emerald-200"
+          >
+            <History className="w-3.5 h-3.5" />
+            History
+          </button>
           <button
             type="button"
             onClick={() => onEdit(customer)}
@@ -450,7 +407,6 @@ const BookingRow = memo(function BookingRow({
             <Edit3 className="w-3.5 h-3.5" />
             Edit
           </button>
-
           <button
             type="button"
             onClick={() => onDelete(customer?._id)}
@@ -465,93 +421,51 @@ const BookingRow = memo(function BookingRow({
   );
 });
 
-// Mobile card
 const BookingCard = memo(function BookingCard({
   customer,
-  booking,
-  status,
+  bookings,
   index,
   now,
   onEdit,
   onDelete,
+  onViewHistory,
 }) {
-  const rooms = Array.isArray(booking?.rooms) ? booking.rooms : [];
-
   return (
-    <article
-      style={{ "--i": Math.min(index, 10) }}
-      className="cm-row cm-card bg-white border border-blue-100/80 rounded-2xl p-4 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)] space-y-3"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2.5 min-w-0">
+    <article style={{ "--i": Math.min(index, 10) }} className="cm-row bg-white border border-blue-100/80 rounded-2xl p-4 sm:p-5 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)] cm-card space-y-4">
+      <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
+        <div className="flex items-center gap-3">
           <Avatar />
           <div className="min-w-0">
-            <p className="text-base font-bold text-[#0f2a63] truncate">
+            <h3 className="text-sm font-bold text-[#0f2a63] whitespace-nowrap">
               {customer?.customerName || "-"}
-            </p>
-            <p className="text-xs text-slate-500 inline-flex items-center gap-1.5">
-              <Phone className="w-3 h-3 text-blue-400" />
-              {customer?.phoneNumber || "-"}
+            </h3>
+            <p className="text-[11px] text-slate-500 font-medium">
+              {customer?.email || "No Email"}
             </p>
           </div>
         </div>
-        <StatusChip status={status} />
       </div>
 
-      {rooms.length > 0 ? (
-        <div className="space-y-2.5">
-          {rooms.map((room, i) => (
-            <div
-              key={room?._id || i}
-              className="bg-blue-50/60 rounded-xl p-3 space-y-2"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="inline-flex items-center gap-1.5 text-sm font-bold text-[#0f2a63]">
-                  <BedDouble className="w-4 h-4 text-blue-500" />
-                  Room {room?.roomNumber || "-"}
-                </span>
-                <span className="text-[11px] text-slate-500 truncate">
-                  {room?.roomType || "-"} • {room?.bedType || "-"}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div>
-                  <p className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500">
-                    <LogIn className="w-3 h-3" /> Check-in
-                  </p>
-                  <p className="font-semibold text-slate-900">
-                    {formatDate(room?.checkIn)}
-                  </p>
-                  <p className="text-slate-500">
-                    {formatTime12(room?.checkInTime)}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500">
-                    <LogOut className="w-3 h-3" /> Check-out
-                  </p>
-                  <p className="font-semibold text-slate-900">
-                    {formatDate(room?.checkOut)}
-                  </p>
-                  <p className="text-slate-500">
-                    {formatTime12(room?.checkOutTime)}
-                  </p>
-                </div>
-              </div>
-
-              <ActualCheckout room={room} />
-
-              <StatusChip status={getRoomCurrentStatus(room, now)} />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-xs text-slate-400">No rooms on this booking.</p>
-      )}
+      <div className="grid grid-cols-2 gap-3">
+         <div>
+            <p className="text-[11px] font-semibold text-slate-500">Phone</p>
+            <p className="text-xs font-bold text-slate-800">{customer?.phoneNumber || "-"}</p>
+         </div>
+         <div>
+            <p className="text-[11px] font-semibold text-slate-500">Bookings</p>
+            <p className="text-xs font-bold text-slate-800">{bookings?.length || 0} Bookings</p>
+         </div>
+      </div>
 
       <div className="flex items-center gap-2 pt-1">
+        <button
+          type="button"
+          onClick={() => onViewHistory(customer, bookings)}
+          className="cm-btn cursor-pointer flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-bold border border-emerald-200"
+        >
+          <History className="w-3.5 h-3.5" />
+          History
+        </button>
         <button
           type="button"
           onClick={() => onEdit(customer)}
@@ -560,7 +474,6 @@ const BookingCard = memo(function BookingCard({
           <Edit3 className="w-3.5 h-3.5" />
           Edit
         </button>
-
         <button
           type="button"
           onClick={() => onDelete(customer?._id)}
@@ -783,10 +696,39 @@ const EditModal = memo(function EditModal({
 // ============================================================
 
 const CustomerManagement = () => {
+  const tableScrollRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setStartX(e.pageX - tableScrollRef.current.offsetLeft);
+    setScrollLeft(tableScrollRef.current.scrollLeft);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.pageX - tableScrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    tableScrollRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+  const toast = useToast();
   const [customers, setCustomers] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [viewingHistoryFor, setViewingHistoryFor] = useState(null);
 
   // SEARCH / FILTER / PAGINATION STATE
   const [searchTerm, setSearchTerm] = useState("");
@@ -923,6 +865,7 @@ const CustomerManagement = () => {
   // A customer can have MANY bookings. Each booking is its own row.
   // ============================================================
 
+  
   const allRows = useMemo(() => {
     const query = deferredSearch.trim().toLowerCase();
     const rows = [];
@@ -931,22 +874,17 @@ const CustomerManagement = () => {
       if (query && !(searchIndex.get(customer?._id) || "").includes(query)) {
         return;
       }
-
       const customerBookings =
         bookingsByCustomer.get(normalizeId(customer?._id)) || [];
-
-      customerBookings.forEach((booking) => {
-        rows.push({
-          customer,
-          booking,
-          status: getBookingStatus(booking, currentDateTime),
-        });
+      rows.push({
+        customer,
+        bookings: customerBookings,
       });
     });
 
-    // Newest booking first.
-    return rows.sort((a, b) => bookingTime(b.booking) - bookingTime(a.booking));
-  }, [customers, bookingsByCustomer, searchIndex, deferredSearch, currentDateTime]);
+    return rows;
+  }, [customers, searchIndex, deferredSearch, bookingsByCustomer]);
+
 
   const bookingRows = useMemo(
     () =>
@@ -956,13 +894,11 @@ const CustomerManagement = () => {
     [allRows, statusFilter]
   );
 
+  
   const statusCounts = useMemo(() => {
-    const counts = { All: allRows.length, Staying: 0, Overstaying: 0, "Checked Out": 0 };
-    allRows.forEach((row) => {
-      if (counts[row.status] !== undefined) counts[row.status] += 1;
-    });
-    return counts;
+    return { All: allRows.length }; // simplified
   }, [allRows]);
+
 
   // ============================================================
   // PAGINATION
@@ -988,23 +924,29 @@ const CustomerManagement = () => {
   // DELETE CUSTOMER
   // ============================================================
 
-  const handleDelete = useCallback(async (id) => {
-    if (!window.confirm("Are you sure you want to delete this customer record?")) {
-      return;
-    }
-
-    try {
-      await deleteCustomer(id);
-
-      setCustomers((prev) => prev.filter((customer) => customer._id !== id));
-    } catch (err) {
-      alert(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Failed to delete customer."
-      );
-    }
-  }, []);
+  const handleDelete = useCallback((id) => {
+    toast.confirm(
+      "Are you sure you want to delete this customer record?",
+      async () => {
+        try {
+          await deleteCustomer(id);
+          setCustomers((prev) => prev.filter((customer) => customer._id !== id));
+          toast.success("Customer record deleted successfully.");
+        } catch (err) {
+          toast.error(
+            err?.response?.data?.message ||
+              err?.message ||
+              "Failed to delete customer."
+          );
+        }
+      },
+      {
+        title: "Delete Customer",
+        confirmText: "Delete",
+        cancelText: "Cancel",
+      }
+    );
+  }, [toast]);
 
   // ============================================================
   // EDIT MODAL
@@ -1129,7 +1071,7 @@ const CustomerManagement = () => {
       setEditForm(EMPTY_FORM);
       setEditError("");
 
-      alert("Customer details updated successfully.");
+      toast.success("Customer details updated successfully.");
     } catch (err) {
       console.error("Update customer error:", err);
 
@@ -1149,7 +1091,73 @@ const CustomerManagement = () => {
 
   const pageKey = `${currentPage}-${statusFilter}`;
 
-  const thClass =
+  
+const CustomerHistoryModal = memo(function CustomerHistoryModal({ customerData, onClose, now }) {
+  if (!customerData) return null;
+  const { customer, bookings } = customerData;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#0b1d3d]/60 backdrop-blur-sm cm-fade">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden cm-modal">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+              <History className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-[#0f2a63]">
+                {customer?.customerName || 'Customer'}
+              </h2>
+              <p className="text-xs text-slate-500 font-medium">Booking History</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto cm-scroll p-5 sm:p-6 space-y-4 bg-slate-50">
+          {bookings && bookings.length > 0 ? (
+            bookings.map((booking, i) => {
+              const rooms = Array.isArray(booking?.rooms) ? booking.rooms : [];
+              return (
+                <div key={booking?._id || i} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
+                     <span className="text-sm font-bold text-slate-800">Booking #{booking?.bookingId || booking?._id?.substring(0,6)}</span>
+                     <StatusChip status={getBookingStatus(booking, now)} />
+                  </div>
+                  {rooms.length > 0 ? (
+                    <div className="space-y-3">
+                      {rooms.map((room, ri) => (
+                        <div key={ri} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
+                           <div>
+                              <p className="text-sm font-bold text-slate-800 flex items-center gap-2"><BedDouble className="w-4 h-4 text-blue-500"/> Room {room?.roomNumber}</p>
+                              <p className="text-[11px] text-slate-500">{room?.roomType} • {room?.bedType}</p>
+                           </div>
+                           <div className="text-right">
+                              <p className="text-xs font-semibold text-slate-700">Check-in: {formatDate(room?.checkIn)}</p>
+                              <p className="text-xs font-semibold text-slate-700">Check-out: {formatDate(room?.checkOut)}</p>
+                           </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : <p className="text-sm text-slate-500">No rooms found for this booking.</p>}
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-center py-10">
+               <p className="text-sm text-slate-500 font-bold">No bookings found for this customer.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+const thClass =
     "px-4 lg:px-5 py-3.5 text-[11px] font-bold tracking-wide whitespace-nowrap";
 
   return (
@@ -1180,44 +1188,154 @@ const CustomerManagement = () => {
         </header>
 
         {/* SEARCH / FILTER */}
-        <section className="cm-rise cm-d2 bg-white border border-blue-100/80 rounded-2xl p-3 sm:p-4 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)] flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
-          <div className="relative w-full lg:max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-400 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search name, phone, email, room or ID proof..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`${inputClass} pl-10 pr-4 py-2.5`}
-            />
-          </div>
+      <section
+  className="
+    cm-rise
+    cm-d2
+    flex
+    w-full
+    min-w-0
+    flex-col
+    gap-3
+    overflow-hidden
+    rounded-2xl
+    border
+    border-blue-100/80
+    bg-white
+    p-3
+    shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)]
+    sm:gap-4
+    sm:p-4
+    lg:flex-row
+    lg:items-center
+    lg:justify-between
+  "
+>
+  {/* Search */}
+  <div
+    className="
+      relative
+      w-full
+      min-w-0
+      lg:max-w-md
+      lg:flex-1
+    "
+  >
+    <Search
+      className="
+        pointer-events-none
+        absolute
+        left-3
+        top-1/2
+        h-4
+        w-4
+        -translate-y-1/2
+        text-blue-400
+        sm:left-3.5
+      "
+    />
 
-          <div className="flex items-center gap-1 bg-blue-50 p-1 rounded-xl overflow-x-auto cm-scroll">
-            {STATUS_TABS.map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setStatusFilter(tab)}
-                className={`cm-btn cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 text-xs font-semibold rounded-lg ${
-                  statusFilter === tab
-                    ? "bg-white text-blue-700 shadow-sm"
-                    : "text-slate-600 hover:text-blue-700"
-                }`}
-              >
-                {tab === "All" ? "All Statuses" : tab}
-                <span
-                  className={`px-1.5 py-0.5 rounded-md text-[10px] tabular-nums ${
-                    statusFilter === tab
-                      ? "bg-blue-100 text-blue-700"
-                      : "bg-white/70 text-slate-500"
-                  }`}
-                >
-                  {statusCounts[tab]}
-                </span>
-              </button>
-            ))}
-          </div>
-        </section>
+    <input
+      type="text"
+      placeholder="Search name, phone, email, room or ID proof..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      className={`
+        ${inputClass}
+        h-10
+        w-full
+        min-w-0
+        pl-10
+        pr-3
+        py-2.5
+        text-xs
+        sm:h-11
+        sm:pl-11
+        sm:pr-4
+        sm:text-sm
+      `}
+    />
+  </div>
+
+  {/* Status Filters */}
+  <div
+    className="
+      w-full
+      min-w-0
+      overflow-hidden
+      lg:w-auto
+      lg:max-w-full
+    "
+  >
+    <div
+      className="
+        cm-scroll
+        flex
+        w-full
+        min-w-0
+        items-center
+        gap-1
+        overflow-x-auto
+        rounded-xl
+        bg-blue-50
+        p-1
+        [scrollbar-width:none]
+        [-ms-overflow-style:none]
+        lg:w-auto
+      "
+    >
+      {STATUS_TABS.map((tab) => (
+        <button
+          key={tab}
+          type="button"
+          onClick={() => setStatusFilter(tab)}
+          className={`
+            cm-btn
+            inline-flex
+            shrink-0
+            cursor-pointer
+            items-center
+            gap-1.5
+            whitespace-nowrap
+            rounded-lg
+            px-3
+            py-2
+            text-xs
+            font-semibold
+            transition-all
+            duration-200
+            sm:px-4
+            sm:py-2.5
+            ${
+              statusFilter === tab
+                ? "bg-white text-blue-700 shadow-sm"
+                : "text-slate-600 hover:bg-white/60 hover:text-blue-700"
+            }
+          `}
+        >
+          {tab === "All" ? "All Statuses" : tab}
+
+          <span
+            className={`
+              rounded-md
+              px-1.5
+              py-0.5
+              text-[10px]
+              tabular-nums
+              ${
+                statusFilter === tab
+                  ? "bg-blue-100 text-blue-700"
+                  : "bg-white/70 text-slate-500"
+              }
+            `}
+          >
+            {statusCounts[tab]}
+          </span>
+        </button>
+      ))}
+    </div>
+  </div>
+</section>
 
         {/* ERROR */}
         {error && (
@@ -1264,32 +1382,36 @@ const CustomerManagement = () => {
               <>
                 {/* Mobile: cards */}
                 <div key={`m-${pageKey}`} className="md:hidden space-y-4">
-                  {paginatedBookingRows.map(({ customer, booking, status }, index) => (
+                  {
+                  paginatedBookingRows.map(({ customer, bookings }, index) => (
                     <BookingCard
-                      key={`${booking?._id}-${customer?._id}`}
+                      key={`${customer?._id}`}
                       customer={customer}
-                      booking={booking}
-                      status={status}
+                      bookings={bookings}
                       index={index}
                       now={currentDateTime}
                       onEdit={openEditModal}
                       onDelete={handleDelete}
+                      onViewHistory={setViewingHistoryFor}
                     />
-                  ))}
+                  ))
+}
                 </div>
 
                 {/* Tablet / desktop: table */}
                 <div className="hidden md:block bg-white border border-blue-100/80 rounded-2xl shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)] overflow-hidden">
-                  <div className="cm-scroll overflow-x-auto">
+                  <div className={`cm-scroll overflow-x-auto ${isDragging ? "cursor-grabbing" : "cursor-grab"}`} ref={tableScrollRef} onMouseDown={handleMouseDown} onMouseLeave={handleMouseLeave} onMouseUp={handleMouseUp} onMouseMove={handleMouseMove}>
                     <table className="min-w-[980px] w-full text-left">
                       <thead>
                         <tr className="bg-gradient-to-r from-[#0f2a63] to-blue-800 text-white">
-                          <th className={thClass}>Room</th>
+                          
                           <th className={thClass}>Customer</th>
                           <th className={thClass}>Phone</th>
-                          <th className={thClass}>Check-In</th>
-                          <th className={thClass}>Check-Out</th>
+                          <th className={thClass}>Email</th>
+                          <th className={thClass}>Address</th>
+                          <th className={thClass}>Total Bookings</th>
                           <th className={`${thClass} text-right`}>Actions</th>
+
                         </tr>
                       </thead>
 
@@ -1298,16 +1420,16 @@ const CustomerManagement = () => {
                         className="divide-y divide-slate-100"
                       >
                         {paginatedBookingRows.map(
-                          ({ customer, booking, status }, index) => (
+                          ({ customer, bookings }, index) => (
                             <BookingRow
-                              key={`${booking?._id}-${customer?._id}`}
+                              key={`${customer?._id}`}
                               customer={customer}
-                              booking={booking}
-                              status={status}
+                              bookings={bookings}
                               index={index}
                               now={currentDateTime}
                               onEdit={openEditModal}
                               onDelete={handleDelete}
+                              onViewHistory={setViewingHistoryFor}
                             />
                           )
                         )}
@@ -1320,6 +1442,14 @@ const CustomerManagement = () => {
           </section>
         )}
 
+        {viewingHistoryFor && (
+          <CustomerHistoryModal
+            customerData={{ customer: viewingHistoryFor, bookings: viewingHistoryFor ? (bookingsByCustomer.get(normalizeId(viewingHistoryFor._id)) || []) : [] }}
+            onClose={() => setViewingHistoryFor(null)}
+            now={currentDateTime}
+          />
+        )}
+        
         {/* PAGINATION */}
         {!loading && !error && totalPages > 1 && (
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3 bg-white border border-blue-100/80 rounded-2xl p-3 sm:p-4 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)]">

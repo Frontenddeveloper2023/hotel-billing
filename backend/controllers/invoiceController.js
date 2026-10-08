@@ -7,6 +7,7 @@ import Hotels from "../models/hotels.js";
 import BranchHotels from "../models/branchHotels.js";
 import CheckoutBill from "../models/checkoutBill.js";
 import Booking from "../models/booking.js";
+import Settings from "../models/settings.js";
 import nodemailer from "nodemailer";
 
 
@@ -220,18 +221,22 @@ const handleControllerError = (
         });
     }
 
+    console.error("[Invoice Controller Error]:", error);
+
     return res.status(500).json({
         success: false,
         message:
-            "Something went wrong while processing the invoice. Please try again later.",
+            error?.message || "Something went wrong while processing the invoice. Please try again later.",
     });
 };
+
 
 // ============================================================
 // GENERATE INVOICE NUMBER
 // ============================================================
 // RESOLVE UNIQUE HOTEL CODE
 // ============================================================
+
 
 const generateHotelCode = (hotelName) => {
     const raw = String(hotelName || "HOTEL").trim();
@@ -241,57 +246,67 @@ const generateHotelCode = (hotelName) => {
     let code = "";
     if (words.length >= 2) {
         const first = words[0].toUpperCase();
-        if (first.length >= 3 && first !== "THE" && first !== "HOTEL") {
-            code = first.slice(0, 6);
+        const second = words[1].toUpperCase();
+        if ((first === "THE" || first === "HOTEL") && words.length > 1) {
+            code = second.slice(0, 8);
         } else {
-            code = words.map((w) => w[0]).join("").toUpperCase().slice(0, 5);
+            code = first.slice(0, 8);
         }
     } else if (words.length === 1) {
-        code = words[0].slice(0, 6).toUpperCase();
+        code = words[0].slice(0, 8).toUpperCase();
     }
 
     if (!code || code.length < 2) {
-        code = "HTL";
+        code = clean.replace(/\s+/g, "").toUpperCase().slice(0, 8) || "HTL";
     }
 
-    return code;
+    return code.toUpperCase();
 };
 
-const resolveHotelCode = async (hotelId) => {
+const resolveHotelCode = async (hotelId, branchId) => {
     try {
-        const hotel = await Hotels.findById(hotelId);
-        if (!hotel) {
-            return "HTL";
+        let effectiveHotelName = "";
+
+        // 1. Always prioritize dynamic companyName from Settings
+        const settings =
+            (branchId
+                ? await Settings.findOne({ hotelId, branchId })
+                      .select("companyName")
+                      .sort({ updatedAt: -1 })
+                      .lean()
+                : null) ||
+            (await Settings.findOne({ hotelId })
+                .select("companyName")
+                .sort({ updatedAt: -1 })
+                .lean());
+
+        if (settings?.companyName && String(settings.companyName).trim()) {
+            effectiveHotelName = String(settings.companyName).trim();
         }
 
-        if (hotel.hotelCode && String(hotel.hotelCode).trim()) {
-            return String(hotel.hotelCode).trim().toUpperCase();
+        // 2. Fallback to Hotels collection if settings not created yet
+        if (!effectiveHotelName) {
+            const hotel = await Hotels.findById(hotelId).select("hotelName hotelCode").lean();
+            if (hotel?.hotelName && String(hotel.hotelName).trim()) {
+                effectiveHotelName = String(hotel.hotelName).trim();
+            } else if (hotel?.hotelCode && String(hotel.hotelCode).trim()) {
+                return String(hotel.hotelCode).trim().toUpperCase();
+            }
         }
 
-        let baseCode = generateHotelCode(hotel.hotelName);
-
-        // Check if another hotel already has this hotelCode
-        const existing = await Hotels.findOne({
-            _id: { $ne: hotel._id },
-            hotelCode: baseCode,
-        });
-
-        if (existing) {
-            const suffix = String(hotel._id).slice(-4).toUpperCase();
-            baseCode = `${baseCode}${suffix}`;
+        if (!effectiveHotelName) {
+            effectiveHotelName = "HOTEL";
         }
 
-        // Persist hotelCode on the hotel document so it stays constant
-        hotel.hotelCode = baseCode;
-        await hotel.save();
+        const baseCode = generateHotelCode(effectiveHotelName);
 
         log.info(
-            `[Invoice] Assigned unique hotelCode: ${baseCode} to hotel: ${hotel.hotelName} (${hotel._id})`
+            `[Invoice] Dynamic hotel code resolved from Settings: ${baseCode} (Hotel/Company Name: "${effectiveHotelName}")`
         );
 
         return baseCode;
     } catch (err) {
-        log.error(`[Invoice] Error resolving hotelCode: ${err.message}`);
+        log.error(`[Invoice] Error resolving hotelCode from settings: ${err.message}`);
         return "HTL";
     }
 };
@@ -334,12 +349,11 @@ const resolveBranchCode = async (branchId) => {
 // Sequence is scoped by: hotelId + branchId + year
 //
 // Format:
-// INV-[HOTEL_CODE]-[BRANCH_CODE]-[YEAR]-[SEQUENCE]
+// INV-[HOTEL_CODE]-[BRANCH_CODE_IF_NOT_MAIN]-[YYYYMMDD]-[SEQUENCE]
 //
 // Example:
-// INV-TEST-MAIN-2026-000001
-// INV-TEST-BR1-2026-000001
-// INV-MANI-MAIN-2026-000001
+// INV-JAYAM-20261007-0001
+// INV-GRAND-BR1-20261007-0001
 //
 // ============================================================
 
@@ -347,16 +361,21 @@ const generateInvoiceNumber = async (
     hotelId,
     branchId
 ) => {
-    const year = new Date().getFullYear();
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const dateFormatted = `${year}${month}${day}`; // YYYYMMDD e.g. 20261007
 
     log.info(
         `[Invoice] Starting invoice number generation. ` +
         `hotelId=${hotelId}, ` +
         `branchId=${branchId}, ` +
-        `year=${year}`
+        `year=${year}, ` +
+        `dateFormatted=${dateFormatted}`
     );
 
-    const hotelCode = await resolveHotelCode(hotelId);
+    const hotelCode = await resolveHotelCode(hotelId, branchId);
     const branchCode = await resolveBranchCode(branchId);
 
     log.info(
@@ -462,11 +481,12 @@ const generateInvoiceNumber = async (
             updatedCounter.sequence
         );
 
-    // Format: INV-[HOTEL_CODE]-[BRANCH_CODE]-[YEAR]-[SEQUENCE]
+    // Format: INV-[HOTEL_FIRST_3_LETTERS]-[SEQUENCE]
+    const firstThreeLetters = hotelCode ? hotelCode.substring(0, 3).toUpperCase() : "HTL";
     const invoiceNo =
-        `INV-${hotelCode}-${branchCode}-${year}-${String(
+        `INV-${firstThreeLetters}-${String(
             invoiceSequence
-        ).padStart(6, "0")}`;
+        ).padStart(4, "0")}`;
 
     log.info(
         `[Invoice] Invoice number generated successfully. ` +
@@ -530,9 +550,9 @@ const normalizeRoom = (room) => {
         perNightRoomPrice:
             roundMoney(
                 room?.perNightRoomPrice ??
-                    room?.pricePerNight ??
-                    room?.roomPrice ??
-                    0
+                room?.pricePerNight ??
+                room?.roomPrice ??
+                0
             ),
 
         adults: Math.max(
@@ -558,23 +578,23 @@ const normalizeRoom = (room) => {
             Math.floor(
                 normalizeNumber(
                     room?.bookedNights ??
-                        room?.nights ??
-                        0
+                    room?.nights ??
+                    0
                 )
             )
         ),
 
         roomRent: roundMoney(
             room?.roomRent ??
-                room?.baseRoomRent ??
-                0
+            room?.baseRoomRent ??
+            0
         ),
 
         checkoutPolicyCharge:
             roundMoney(
                 room?.checkoutPolicyCharge ??
-                    room?.checkoutPolicyAmount ??
-                    0
+                room?.checkoutPolicyAmount ??
+                0
             ),
 
         checkoutPolicyType:
@@ -589,12 +609,9 @@ const normalizeRoom = (room) => {
     };
 };
 
-// ============================================================
-// NORMALIZE FOOD SERVICES
-// ============================================================
-
 const normalizeFoodServices = (
-    foodServices
+    foodServices,
+    fallbackRoomNumber = ""
 ) => {
     if (!Array.isArray(foodServices)) {
         return [];
@@ -602,6 +619,12 @@ const normalizeFoodServices = (
 
     return foodServices.map(
         (food) => ({
+            roomNumber: normalizeString(
+                food?.roomNumber ||
+                food?.room ||
+                fallbackRoomNumber
+            ),
+
             foodId:
                 food?.foodId ||
                 food?._id ||
@@ -609,28 +632,28 @@ const normalizeFoodServices = (
 
             name: normalizeString(
                 food?.name ??
-                    food?.foodName
+                food?.foodName
             ),
 
             price: roundMoney(
                 food?.price ??
-                    food?.foodPrice ??
-                    0
+                food?.foodPrice ??
+                0
             ),
 
             quantity: Math.max(
                 0,
                 normalizeNumber(
                     food?.quantity ??
-                        food?.qty ??
-                        1
+                    food?.qty ??
+                    1
                 )
             ),
 
             total: roundMoney(
                 food?.total ??
-                    food?.totalPrice ??
-                    0
+                food?.totalPrice ??
+                0
             ),
         })
     );
@@ -641,7 +664,8 @@ const normalizeFoodServices = (
 // ============================================================
 
 const normalizeRoomServices = (
-    services
+    services,
+    fallbackRoomNumber = ""
 ) => {
     if (!Array.isArray(services)) {
         return [];
@@ -649,6 +673,12 @@ const normalizeRoomServices = (
 
     return services.map(
         (service) => ({
+            roomNumber: normalizeString(
+                service?.roomNumber ||
+                service?.room ||
+                fallbackRoomNumber
+            ),
+
             serviceId:
                 service?.serviceId ||
                 service?._id ||
@@ -656,32 +686,32 @@ const normalizeRoomServices = (
 
             name: normalizeString(
                 service?.name ??
-                    service?.serviceName
+                service?.serviceName
             ),
 
             fees: roundMoney(
                 service?.fees ??
-                    service?.serviceFees ??
-                    service?.fee ??
-                    service?.amount ??
-                    0
+                service?.serviceFees ??
+                service?.fee ??
+                service?.amount ??
+                0
             ),
 
             quantity: Math.max(
                 0,
                 normalizeNumber(
                     service?.quantity ??
-                        1
+                    1
                 )
             ),
 
             total: roundMoney(
                 service?.total ??
-                    service?.serviceFees ??
-                    service?.fees ??
-                    service?.fee ??
-                    service?.amount ??
-                    0
+                service?.serviceFees ??
+                service?.fees ??
+                service?.fee ??
+                service?.amount ??
+                0
             ),
         })
     );
@@ -734,6 +764,12 @@ export const createInvoice = async (req, res) => {
             checkoutBillId,
             bookingIds,
             paymentMode,
+            financials: reqFinancials,
+            extraCharges: reqExtraCharges,
+            staySummary: reqStaySummary,
+            items: reqItems,
+            billing: reqBilling,
+            uiExtraDetails = {},
         } = req.body;
 
         // ========================================================
@@ -981,87 +1017,103 @@ export const createInvoice = async (req, res) => {
                         booking.rooms
                     )
                         ? booking.rooms.map(
-                              (room) => ({
-                                  bookingId:
-                                      booking._id,
+                            (room) => ({
+                                bookingId:
+                                    booking._id,
 
-                                  roomId:
-                                      room.roomId ||
-                                      null,
+                                roomId:
+                                    room.roomId ||
+                                    null,
 
-                                  roomNumber:
-                                      normalizeString(
-                                          room.roomNumber
-                                      ),
+                                roomNumber:
+                                    normalizeString(
+                                        room.roomNumber
+                                    ),
 
-                                  roomType:
-                                      normalizeString(
-                                          room.roomType
-                                      ),
+                                roomType:
+                                    normalizeString(
+                                        room.roomType
+                                    ),
 
-                                  bedType:
-                                      normalizeString(
-                                          room.bedType
-                                      ),
+                                bedType:
+                                    normalizeString(
+                                        room.bedType
+                                    ),
 
-                                  perNightRoomPrice:
-                                      roundMoney(
-                                          room.pricePerNight
-                                      ),
+                                perNightRoomPrice:
+                                    roundMoney(
+                                        room.pricePerNight
+                                    ),
 
-                                  adults:
-                                      Math.max(
-                                          0,
-                                          Math.floor(
-                                              normalizeNumber(
-                                                  room.adults
-                                              )
-                                          )
-                                      ),
+                                adults:
+                                    Math.max(
+                                        0,
+                                        Math.floor(
+                                            normalizeNumber(
+                                                room.adults
+                                            )
+                                        )
+                                    ),
 
-                                  children:
-                                      Math.max(
-                                          0,
-                                          Math.floor(
-                                              normalizeNumber(
-                                                  room.children
-                                              )
-                                          )
-                                      ),
+                                children:
+                                    Math.max(
+                                        0,
+                                        Math.floor(
+                                            normalizeNumber(
+                                                room.children
+                                            )
+                                        )
+                                    ),
 
-                                  checkIn:
-                                      room.checkIn ||
-                                      null,
+                                checkIn:
+                                    room.checkIn ||
+                                    booking.checkIn ||
+                                    null,
 
-                                  checkInTime:
-                                      normalizeString(
-                                          room.checkInTime
-                                      ),
+                                checkInTime:
+                                    normalizeString(
+                                        room.checkInTime ||
+                                        booking.checkInTime ||
+                                        ""
+                                    ),
 
-                                  checkOut:
-                                      room.checkOut ||
-                                      null,
+                                checkOut:
+                                    room.checkOut ||
+                                    booking.checkOut ||
+                                    null,
 
-                                  checkOutTime:
-                                      normalizeString(
-                                          room.checkOutTime
-                                      ),
+                                checkOutTime:
+                                    normalizeString(
+                                        room.checkOutTime ||
+                                        booking.checkOutTime ||
+                                        ""
+                                    ),
 
-                                  actualCheckoutDate:
-                                      normalizeString(
-                                          room.actualCheckoutDate
-                                      ),
+                                actualCheckoutDate:
+                                    normalizeString(
+                                        room.actualCheckoutDate ||
+                                        booking.actualCheckoutDate ||
+                                        ""
+                                    ),
 
-                                  actualCheckoutTime:
-                                      normalizeString(
-                                          room.actualCheckoutTime
-                                      ),
+                                actualCheckoutTime:
+                                    normalizeString(
+                                        room.actualCheckoutTime ||
+                                        booking.actualCheckoutTime ||
+                                        ""
+                                    ),
 
-                                  foodServicesDetails: normalizeFoodServices(room.foodServices),
+                                foodServicesDetails: normalizeFoodServices(
+                                    room.foodServices,
+                                    room.roomNumber
+                                ),
 
-                                 roomServicesDetails: normalizeRoomServices(room.roomServices),
-                              })
-                          )
+                                roomServicesDetails: normalizeRoomServices(
+                                    room.roomServices,
+                                    room.roomNumber
+                                ),
+                            })
+                        )
                         : []
             );
 
@@ -1175,18 +1227,18 @@ export const createInvoice = async (req, res) => {
         const taxableSubtotal =
             roundMoney(
                 roomSubtotal +
-                    foodTotal +
-                    roomServiceTotal
+                foodTotal +
+                roomServiceTotal
             );
 
         const gstPercentage =
             taxableSubtotal > 0
                 ? roundMoney(
-                      (
-                          gstAmount /
-                          taxableSubtotal
-                      ) * 100
-                  )
+                    (
+                        gstAmount /
+                        taxableSubtotal
+                    ) * 100
+                )
                 : 0;
 
         // ========================================================
@@ -1217,8 +1269,8 @@ export const createInvoice = async (req, res) => {
                 0,
                 roundMoney(
                     roomSubtotal -
-                        extraFullDayCharge -
-                        checkoutPolicyCharge
+                    extraFullDayCharge -
+                    checkoutPolicyCharge
                 )
             );
 
@@ -1358,8 +1410,8 @@ export const createInvoice = async (req, res) => {
         const currentPayment =
             roundMoney(
                 checkoutPayment +
-                    servicePayment +
-                    otherPayment
+                servicePayment +
+                otherPayment
             );
 
         // ========================================================
@@ -1371,115 +1423,84 @@ export const createInvoice = async (req, res) => {
                 0,
                 roundMoney(
                     grandTotal -
-                        totalPaid
+                    totalPaid
                 )
             );
 
         // ========================================================
-        // ROOM SNAPSHOT
+        // CHECKED OUT ROOMS (Prioritize req.body.rooms / selectedRooms)
         // ========================================================
 
-        const roomCount =
-            bookingRooms.length;
+        const requestedRooms = Array.isArray(req.body.rooms) && req.body.rooms.length > 0
+            ? req.body.rooms
+            : Array.isArray(req.body.selectedRooms) && req.body.selectedRooms.length > 0
+                ? req.body.selectedRooms
+                : Array.isArray(req.body.billing?.rooms) && req.body.billing.rooms.length > 0
+                    ? req.body.billing.rooms
+                    : null;
 
-        const roomNightsPerRoom =
-            roomCount > 0
-                ? Math.floor(
-                      bookedNights /
-                          roomCount
-                  )
-                : 0;
+        let effectiveRooms = [];
 
-        let remainingNights =
-            bookedNights;
+        if (requestedRooms && requestedRooms.length > 0) {
+            effectiveRooms = requestedRooms.map((r, idx) => {
+                const dbMatch = bookingRooms.find(
+                    (br) =>
+                        (r.roomNumber && String(br.roomNumber).trim() === String(r.roomNumber).trim()) ||
+                        (r.roomId && String(br.roomId) === String(r.roomId)) ||
+                        (r._id && String(br.roomId || br._id) === String(r._id))
+                );
 
-        let remainingRoomRent =
-            baseRoomRent;
+                const bookedNights = Math.max(1, Math.floor(normalizeNumber(r.bookedNights ?? r.nights ?? dbMatch?.bookedNights ?? 1)));
+                const perNightRoomPrice = roundMoney(r.perNightRoomPrice ?? r.pricePerNight ?? r.rate ?? dbMatch?.perNightRoomPrice ?? 0);
+                const extraFullDays = Math.max(0, Math.floor(normalizeNumber(r.extraFullDays ?? r.extraNightsStayed ?? r.extraStay?.extraDays ?? 0)));
+                const extraFullDayCharge = roundMoney(r.extraFullDayCharge ?? r.extraDayCharge ?? (extraFullDays * perNightRoomPrice));
+                const checkoutPolicyCharge = roundMoney(r.checkoutPolicyCharge ?? r.extraTimeCharge ?? r.extraStay?.timeCharge ?? 0);
 
-        const formattedRooms =
-            bookingRooms.map(
-                (room, index) => {
-                    let nights;
+                const dbBooking = bookings.find(
+                    (b) =>
+                        (r.bookingId && String(b._id) === String(r.bookingId)) ||
+                        (dbMatch?.bookingId && String(b._id) === String(dbMatch.bookingId))
+                );
 
-                    if (
-                        index ===
-                        roomCount - 1
-                    ) {
-                        nights =
-                            remainingNights;
-                    } else {
-                        nights =
-                            roomNightsPerRoom;
-                    }
+                return {
+                    bookingId: r.bookingId || dbMatch?.bookingId || primaryBooking._id,
+                    roomId: r.roomId || r._id || dbMatch?.roomId || null,
+                    roomNumber: normalizeString(r.roomNumber || dbMatch?.roomNumber || `Room ${idx + 1}`),
+                    roomType: normalizeString(r.roomType || dbMatch?.roomType || "Standard"),
+                    bedType: normalizeString(r.bedType || dbMatch?.bedType || "Single"),
+                    perNightRoomPrice,
+                    adults: Math.max(0, Math.floor(normalizeNumber(r.adults ?? dbMatch?.adults ?? 1))),
+                    children: Math.max(0, Math.floor(normalizeNumber(r.children ?? dbMatch?.children ?? 0))),
+                    bookedNights,
+                    roomRent: roundMoney(
+                        r.roomSubtotal ??
+                        r.roomRent ??
+                        (perNightRoomPrice * bookedNights)
+                    ),
+                    extraFullDays,
+                    extraFullDayCharge,
+                    checkoutPolicyCharge,
+                    checkoutPolicyType: normalizeString(r.checkoutPolicyType || r.extraStay?.timePolicyType || checkoutPolicyType),
+                    checkoutPolicyValue: normalizeNumber(r.checkoutPolicyValue ?? r.extraStay?.timePolicyValue ?? checkoutPolicyValue),
+                    checkIn: r.checkIn || dbMatch?.checkIn || dbBooking?.checkIn || null,
+                    checkInTime: normalizeString(r.checkInTime || dbMatch?.checkInTime || dbBooking?.checkInTime || ""),
+                    checkOut: r.checkOut || dbMatch?.checkOut || dbBooking?.checkOut || null,
+                    checkOutTime: normalizeString(r.checkOutTime || dbMatch?.checkOutTime || dbBooking?.checkOutTime || ""),
+                    actualCheckoutDate: normalizeString(r.actualCheckoutDate || dbMatch?.actualCheckoutDate || dbBooking?.actualCheckoutDate || ""),
+                    actualCheckoutTime: normalizeString(r.actualCheckoutTime || dbMatch?.actualCheckoutTime || dbBooking?.actualCheckoutTime || ""),
+                    foodServicesDetails: Array.isArray(r.foodServices)
+                        ? normalizeFoodServices(r.foodServices, r.roomNumber)
+                        : (dbMatch?.foodServicesDetails || []),
+                    roomServicesDetails: Array.isArray(r.roomServices)
+                        ? normalizeRoomServices(r.roomServices, r.roomNumber)
+                        : (dbMatch?.roomServicesDetails || []),
+                };
+            });
+        } else {
+            effectiveRooms = bookingRooms;
+        }
 
-                    nights =
-                        Math.max(
-                            0,
-                            nights
-                        );
-
-                    let roomRent;
-
-                    if (
-                        index ===
-                        roomCount - 1
-                    ) {
-                        roomRent =
-                            roundMoney(
-                                remainingRoomRent
-                            );
-                    } else {
-                        roomRent =
-                            roundMoney(
-                                room.perNightRoomPrice *
-                                    nights
-                            );
-                    }
-
-                    remainingNights =
-                        Math.max(
-                            0,
-                            remainingNights -
-                                nights
-                        );
-
-                    remainingRoomRent =
-                        Math.max(
-                            0,
-                            roundMoney(
-                                remainingRoomRent -
-                                    roomRent
-                            )
-                        );
-
-                    return {
-                        ...room,
-
-                        bookedNights:
-                            nights,
-
-                        roomRent,
-
-                        checkoutPolicyCharge:
-                            index ===
-                            roomCount - 1
-                                ? checkoutPolicyCharge
-                                : 0,
-
-                        checkoutPolicyType:
-                            index ===
-                            roomCount - 1
-                                ? checkoutPolicyType
-                                : "",
-
-                        checkoutPolicyValue:
-                            index ===
-                            roomCount - 1
-                                ? checkoutPolicyValue
-                                : 0,
-                    };
-                }
-            );
+        const formattedRooms = effectiveRooms;
 
         // ========================================================
         // INVOICE ITEMS
@@ -1487,116 +1508,101 @@ export const createInvoice = async (req, res) => {
 
         const invoiceItems = [];
 
-        formattedRooms.forEach(
-            (room, index) => {
-                const nights =
-                    Math.max(
-                        0,
-                        Math.floor(
-                            normalizeNumber(
-                                room.bookedNights
-                            )
-                        )
-                    );
-
-                const unitPrice =
-                    roundMoney(
-                        room.perNightRoomPrice
-                    );
-
-                const total =
-                    roundMoney(
-                        unitPrice *
-                            nights
-                    );
-
+        if (Array.isArray(reqItems) && reqItems.length > 0) {
+            reqItems.forEach((item) => {
                 invoiceItems.push({
-                    description:
-                        `Room Rent - ${
-                            room.roomNumber ||
+                    roomNumber: normalizeString(item.roomNumber || item.room || ""),
+                    description: normalizeString(item.description || "Item"),
+                    unitPrice: roundMoney(item.unitPrice || 0),
+                    quantity: Math.max(1, normalizeNumber(item.quantity || 1)),
+                    total: roundMoney(item.total || (roundMoney(item.unitPrice || 0) * Math.max(1, normalizeNumber(item.quantity || 1)))),
+                });
+            });
+        } else {
+            formattedRooms.forEach(
+                (room, index) => {
+                    const nights =
+                        Math.max(
+                            0,
+                            Math.floor(
+                                normalizeNumber(
+                                    room.bookedNights
+                                )
+                            )
+                        );
+
+                    const unitPrice =
+                        roundMoney(
+                            room.perNightRoomPrice
+                        );
+
+                    const total =
+                        roundMoney(
+                            unitPrice *
+                            nights
+                        );
+
+                    invoiceItems.push({
+                        description:
+                            `Room Rent - ${room.roomNumber ||
                             index + 1
-                        } (${
-                            room.roomType ||
+                            } (${room.roomType ||
                             "Room"
-                        } - ${nights} ${
-                            nights === 1
+                            } - ${nights} ${nights === 1
                                 ? "Night"
                                 : "Nights"
-                        })`,
+                            })`,
 
-                    unitPrice,
+                        unitPrice,
 
-                    quantity:
-                        nights,
+                        quantity:
+                            nights,
 
-                    total,
-                });
-            }
-        );
+                        total,
+                    });
 
-        // ========================================================
-        // EXTRA FULL DAY ITEM
-        // ========================================================
+                    let roomPolicyLabel = "Extra Time Stay Charge";
 
-        if (
-            extraFullDays > 0 &&
-            extraFullDayCharge > 0
-        ) {
+                    if (room.extraFullDays > 0 && room.extraFullDayCharge > 0) {
+                        invoiceItems.push({
+                            description: `Extra Night Stay - Room ${room.roomNumber} (${room.extraFullDays} ${room.extraFullDays === 1 ? "Night" : "Nights"})`,
+                            unitPrice: unitPrice,
+                            quantity: room.extraFullDays,
+                            total: room.extraFullDayCharge,
+                        });
+                    }
+
+                    if (room.checkoutPolicyCharge > 0) {
+                        invoiceItems.push({
+                            description: `${roomPolicyLabel} - Room ${room.roomNumber}`,
+                            unitPrice: room.checkoutPolicyCharge,
+                            quantity: 1,
+                            total: room.checkoutPolicyCharge,
+                        });
+                    }
+                }
+            );
+        }
+
+        // Fallback global extra charges only if not already added room-wise
+        const hasRoomWiseExtraFullDays = formattedRooms.some((r) => (r.extraFullDays > 0 && r.extraFullDayCharge > 0));
+        const hasRoomWiseCheckoutPolicy = formattedRooms.some((r) => (r.checkoutPolicyCharge > 0));
+
+        if (!hasRoomWiseExtraFullDays && extraFullDays > 0 && extraFullDayCharge > 0) {
             invoiceItems.push({
-                description:
-                    "Extra Full Day Stay",
-
-                unitPrice:
-                    roundMoney(
-                        extraFullDayCharge /
-                            extraFullDays
-                    ),
-
-                quantity:
-                    extraFullDays,
-
-                total:
-                    extraFullDayCharge,
+                description: "Extra Night Stay",
+                unitPrice: roundMoney(extraFullDayCharge / extraFullDays),
+                quantity: extraFullDays,
+                total: extraFullDayCharge,
             });
         }
 
-        // ========================================================
-        // CHECKOUT POLICY ITEM
-        // ========================================================
-
-        if (
-            checkoutPolicyCharge > 0
-        ) {
-            let policyLabel =
-                "Checkout Time Policy";
-
-            if (
-                checkoutPolicyType ===
-                "before12PM"
-            ) {
-                policyLabel =
-                    "Checkout Time Policy - Before 12 PM";
-            }
-
-            if (
-                checkoutPolicyType ===
-                "after12PM"
-            ) {
-                policyLabel =
-                    "Checkout Time Policy - After 12 PM";
-            }
-
+        if (!hasRoomWiseCheckoutPolicy && checkoutPolicyCharge > 0) {
             invoiceItems.push({
-                description:
-                    policyLabel,
-
-                unitPrice:
-                    checkoutPolicyCharge,
-
+                description: "Extra Time Stay Charge",
+                unitPrice: checkoutPolicyCharge,
                 quantity: 1,
-
-                total:
-                    checkoutPolicyCharge,
+                total: checkoutPolicyCharge,
             });
         }
 
@@ -1664,13 +1670,13 @@ export const createInvoice = async (req, res) => {
             (
                 actualCheckoutDateTime
                     ? new Date(
-                          actualCheckoutDateTime
-                      )
-                          .toISOString()
-                          .slice(
-                              0,
-                              10
-                          )
+                        actualCheckoutDateTime
+                    )
+                        .toISOString()
+                        .slice(
+                            0,
+                            10
+                        )
                     : ""
             );
 
@@ -1708,35 +1714,33 @@ export const createInvoice = async (req, res) => {
             actualCheckOutTime:
                 actualCheckoutTime,
 
-            bookedNights,
+            bookedNights: Number(reqStaySummary?.bookedNights ?? reqBilling?.bookedNights ?? bookedNights),
 
             extraNights:
-                extraFullDays,
+                Number(reqStaySummary?.extraNights ?? reqBilling?.extraNightsStayed ?? extraFullDays),
 
-            extraHours: uiDetails.extraHours || 0,
+            extraHours: Number(reqStaySummary?.extraHours ?? reqBilling?.extraHoursStayed ?? uiDetails.extraHours ?? 0),
 
-            extraMinutes: uiDetails.extraMinutes || 0,
+            extraMinutes: Number(reqStaySummary?.extraMinutes ?? reqBilling?.extraMinutesStayed ?? uiDetails.extraMinutes ?? 0),
 
-            extraTime: (uiDetails.extraHours || uiDetails.extraMinutes) ? `${uiDetails.extraHours || 0}h ${uiDetails.extraMinutes || 0}m` : "",
+            extraTime: reqStaySummary?.extraTime || ((uiDetails.extraHours || uiDetails.extraMinutes || reqBilling?.extraHoursStayed || reqBilling?.extraMinutesStayed) ? `${reqBilling?.extraHoursStayed ?? uiDetails.extraHours ?? 0}h ${reqBilling?.extraMinutesStayed ?? uiDetails.extraMinutes ?? 0}m` : ""),
 
-            totalExtraStayMinutes: uiDetails.totalExtraStayMinutes || 0,
+            totalExtraStayMinutes: Number(reqStaySummary?.totalExtraStayMinutes ?? reqBilling?.totalExtraStayMinutes ?? uiDetails.totalExtraStayMinutes ?? 0),
 
             totalNightsStayed:
-                bookedNights +
-                extraFullDays,
+                Number(reqStaySummary?.totalNightsStayed ?? (bookedNights + extraFullDays)),
 
             overstayDescription:
                 extraFullDays > 0
-                    ? `${extraFullDays} extra full day${
-                          extraFullDays >
-                          1
-                              ? "s"
-                              : ""
-                      }`
+                    ? `${extraFullDays} extra full day${extraFullDays >
+                        1
+                        ? "s"
+                        : ""
+                    }`
                     : checkoutPolicyCharge >
-                      0
-                    ? "Checkout time policy charge"
-                    : "",
+                        0
+                        ? "Checkout time policy charge"
+                        : "",
         };
 
         // ========================================================
@@ -1746,31 +1750,32 @@ export const createInvoice = async (req, res) => {
         const totalExtraStayCharges =
             roundMoney(
                 extraFullDayCharge +
-                    checkoutPolicyCharge
+                checkoutPolicyCharge
             );
 
         const extraCharges = {
             extraNightsStayed:
-                extraFullDays,
+                Math.max(0, Math.floor(normalizeNumber(reqExtraCharges?.extraNightsStayed ?? reqBilling?.extraNightsStayed ?? extraFullDays))),
 
             extraNightRate:
-                extraFullDays > 0
-                    ? roundMoney(
-                          extraFullDayCharge /
-                              extraFullDays
-                      )
-                    : 0,
+                roundMoney(
+                    reqExtraCharges?.extraNightRate ?? (
+                        extraFullDays > 0
+                            ? roundMoney(extraFullDayCharge / extraFullDays)
+                            : 0
+                    )
+                ),
 
             extraNightCharge:
-                extraFullDayCharge,
+                roundMoney(reqExtraCharges?.extraNightCharge ?? reqBilling?.extraDayCharge ?? extraFullDayCharge),
 
-            extraHoursStayed: uiDetails.extraHours || 0,
+            extraHoursStayed: Number(reqExtraCharges?.extraHoursStayed ?? reqBilling?.extraHoursStayed ?? uiDetails.extraHours ?? 0),
 
-            extraMinutesStayed: uiDetails.extraMinutes || 0,
+            extraMinutesStayed: Number(reqExtraCharges?.extraMinutesStayed ?? reqBilling?.extraMinutesStayed ?? uiDetails.extraMinutes ?? 0),
 
             extraHoursCharge: 0,
 
-            extraTimeCharge: uiDetails.extraTimeCharge || 0,
+            extraTimeCharge: roundMoney(reqExtraCharges?.extraTimeCharge ?? reqBilling?.extraTimeCharge ?? uiDetails.extraTimeCharge ?? 0),
 
             extraTimeChargeType:
                 "No extra time charge",
@@ -1779,13 +1784,13 @@ export const createInvoice = async (req, res) => {
                 0,
 
             lateCheckoutCharge:
-                checkoutPolicyCharge,
+                roundMoney(reqExtraCharges?.lateCheckoutCharge ?? reqBilling?.extraTimeCharge ?? checkoutPolicyCharge),
 
             checkoutPolicyType:
-                checkoutPolicyType,
+                reqExtraCharges?.checkoutPolicyType || checkoutPolicyType,
 
             checkoutPolicyValue:
-                checkoutPolicyValue,
+                reqExtraCharges?.checkoutPolicyValue ?? checkoutPolicyValue,
 
             damageCharge: 0,
 
@@ -1795,7 +1800,7 @@ export const createInvoice = async (req, res) => {
                 "",
 
             total:
-                totalExtraStayCharges,
+                roundMoney(reqExtraCharges?.total ?? reqBilling?.extraChargeTotal ?? totalExtraStayCharges),
         };
 
         // ========================================================
@@ -1805,65 +1810,73 @@ export const createInvoice = async (req, res) => {
         const subtotal =
             roundMoney(
                 roomSubtotal +
-                    foodTotal +
-                    roomServiceTotal
+                foodTotal +
+                roomServiceTotal
             );
 
         const financials = {
             roomRent:
-                baseRoomRent,
+                roundMoney(reqFinancials?.roomRent ?? reqBilling?.roomTotal ?? reqBilling?.roomSubtotal ?? baseRoomRent),
 
             roomRentPerNight:
                 roundMoney(
-                    firstRoom
-                        ?.perNightRoomPrice
+                    reqFinancials?.roomRentPerNight ??
+                    firstRoom?.perNightRoomPrice ??
+                    0
                 ),
 
             foodServices:
-                foodTotal,
+                roundMoney(reqFinancials?.foodServices ?? reqBilling?.foodTotal ?? foodTotal),
 
             roomServices:
-                roomServiceTotal,
+                roundMoney(reqFinancials?.roomServices ?? reqBilling?.roomServiceTotal ?? roomServiceTotal),
 
             extraNightCharge:
-                extraFullDayCharge,
+                roundMoney(reqFinancials?.extraNightCharge ?? reqBilling?.extraDayCharge ?? extraFullDayCharge),
+
+            checkoutPolicyCharge:
+                roundMoney(reqFinancials?.checkoutPolicyCharge ?? reqBilling?.extraTimeCharge ?? checkoutPolicyCharge),
 
             extraTimeCharge:
-                uiDetails.extraTimeCharge || 0,
+                roundMoney(reqFinancials?.extraTimeCharge ?? reqBilling?.extraTimeCharge ?? checkoutPolicyCharge ?? (uiDetails.extraTimeCharge || 0)),
 
             totalExtraStayCharges:
-                totalExtraStayCharges,
+                roundMoney(reqFinancials?.totalExtraStayCharges ?? reqBilling?.extraChargeTotal ?? totalExtraStayCharges),
 
             subTotal:
-                subtotal,
+                roundMoney(reqFinancials?.subTotal ?? reqBilling?.subtotal ?? subtotal),
 
             gstPercentage:
-                gstPercentage,
+                roundMoney(reqFinancials?.gstPercentage ?? reqBilling?.gstPercentage ?? gstPercentage),
 
             gstAmount:
-                gstAmount,
+                roundMoney(reqFinancials?.gstAmount ?? reqBilling?.gstAmount ?? gstAmount),
 
             grandTotal:
-                grandTotal,
+                roundMoney(reqFinancials?.grandTotal ?? reqBilling?.grandTotal ?? grandTotal),
 
             advancePaid:
-                initialPaid,
+                roundMoney(reqFinancials?.advancePaid ?? reqBilling?.advancePaid ?? Math.min(initialPaid, grandTotal)),
 
             advancePaidVia:
                 normalizeString(
-                    primaryBooking
-                        ?.initialPaidVia,
+                    reqFinancials?.advancePaidVia || primaryBooking?.initialPaidVia,
                     "Cash"
                 ),
 
             currentPayment:
-                currentPayment,
+                roundMoney(reqFinancials?.currentPayment ?? reqBilling?.balanceDue ?? currentPayment),
 
             totalPaid:
-                totalPaid,
+                roundMoney(
+                    reqFinancials?.totalPaid ??
+                    (roundMoney(reqFinancials?.advancePaid ?? reqBilling?.advancePaid ?? Math.min(initialPaid, grandTotal)) +
+                     roundMoney(reqFinancials?.currentPayment ?? reqBilling?.balanceDue ?? currentPayment)) ??
+                    totalPaid
+                ),
 
             balanceDue:
-                balanceDue,
+                roundMoney(reqFinancials?.balanceDue ?? (Math.max(0, roundMoney(reqFinancials?.grandTotal ?? reqBilling?.grandTotal ?? grandTotal) - roundMoney(reqFinancials?.totalPaid ?? totalPaid)))),
         };
 
         // ========================================================
@@ -1895,18 +1908,14 @@ export const createInvoice = async (req, res) => {
             "Cash";
 
         const paymentStatus =
-            balanceDue <= 0
-                ? "PAID"
-                : totalPaid > 0
-                ? "PARTIAL"
-                : "PENDING";
+            normalizeString(req.body?.paymentInfo?.paymentStatus || req.body?.paymentStatus) ||
+            "PAID";
 
         const paymentInfo = {
             paymentMode:
                 finalPaymentMode,
 
             paymentStatus:
-
                 paymentStatus,
 
             paidAt:
@@ -1934,6 +1943,8 @@ export const createInvoice = async (req, res) => {
                 branchId
             );
 
+
+            
         log.info(
             `[Invoice] Creating invoice document. ` +
             `invoiceNo=${invoiceNo}, ` +
@@ -2069,7 +2080,7 @@ export const createInvoice = async (req, res) => {
                 // ROOM SERVICES
                 // ==================================================
 
-              
+
 
                 // ==================================================
                 // EXTRA CHARGES
@@ -2133,11 +2144,11 @@ export const createInvoice = async (req, res) => {
                 // ==================================================
 
                 status:
-                    balanceDue <= 0
+                    paymentStatus === "PAID" || balanceDue <= 0
                         ? "PAID"
                         : totalPaid > 0
-                        ? "PARTIAL"
-                        : "ISSUED",
+                            ? "PARTIAL"
+                            : "ISSUED",
             });
 
         // ========================================================
@@ -2598,7 +2609,7 @@ export const sendInvoiceEmail = async (req, res) => {
         // ------------------------------------------
 
         const mailOptions = {
-            from: `"SS Residency" <${process.env.SMTP_USER}>`,
+            from: `"StayLio" <${process.env.SMTP_USER}>`,
 
             to: safeEmail,
 
@@ -2682,7 +2693,7 @@ Hotel Management Team
                                 color:#ffffff;
                             "
                         >
-                            SS Residency
+                            StayLio
                         </div>
 
                         <div
@@ -2893,7 +2904,9 @@ Hotel Management Team
             attachments: [
                 {
                     filename:
-                        `Invoice_${safeInvoiceNo}.pdf`,
+                        safeInvoiceNo.endsWith(".pdf")
+                            ? safeInvoiceNo
+                            : `${safeInvoiceNo}.pdf`,
 
                     content: req.file.buffer,
 

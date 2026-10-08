@@ -133,6 +133,12 @@ const navigate = useNavigate();
     // New customer registration flow (no auto‑upgrade)
     sessionStorage.removeItem("saasIsUpgrade");
     sessionStorage.removeItem("saasHotelDetails");
+
+    // Clear stale payment data from any previous registration so the new
+    // hotel checkout doesn't incorrectly show "Payment Already Received"
+    sessionStorage.removeItem("saasPaymentStatus");
+    sessionStorage.removeItem("saasRegistrationId");
+    sessionStorage.removeItem("saasRegistration");
     navigate("/saas-user/registration", {
       state: {
         selectedPlan: planToUse,

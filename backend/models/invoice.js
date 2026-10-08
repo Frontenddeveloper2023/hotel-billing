@@ -6,6 +6,12 @@ import mongoose from "mongoose";
 
 const invoiceItemSchema = new mongoose.Schema(
     {
+        roomNumber: {
+            type: String,
+            default: "",
+            trim: true,
+        },
+
         description: {
             type: String,
             required: true,
@@ -102,6 +108,12 @@ const invoiceCustomerSchema = new mongoose.Schema(
 
 const foodServiceSchema = new mongoose.Schema(
     {
+        roomNumber: {
+            type: String,
+            default: "",
+            trim: true,
+        },
+
         foodId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Food",
@@ -144,6 +156,12 @@ const foodServiceSchema = new mongoose.Schema(
 
 const roomServiceSchema = new mongoose.Schema(
     {
+        roomNumber: {
+            type: String,
+            default: "",
+            trim: true,
+        },
+
         serviceId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "RoomService",
@@ -186,6 +204,16 @@ const roomServiceSchema = new mongoose.Schema(
 
 const invoiceRoomSchema = new mongoose.Schema(
     {
+        roomId: {
+            type: mongoose.Schema.Types.Mixed,
+            default: null,
+        },
+
+        bookingId: {
+            type: mongoose.Schema.Types.Mixed,
+            default: null,
+        },
+
         roomNumber: {
             type: String,
             default: "",
@@ -220,6 +248,81 @@ const invoiceRoomSchema = new mongoose.Schema(
             type: Number,
             default: 0,
             min: 0,
+        },
+
+        bookedNights: {
+            type: Number,
+            default: 1,
+            min: 0,
+        },
+
+        roomRent: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+
+        extraFullDays: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+
+        extraFullDayCharge: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+
+        checkoutPolicyCharge: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+
+        checkoutPolicyType: {
+            type: String,
+            default: "",
+            trim: true,
+        },
+
+        checkoutPolicyValue: {
+            type: Number,
+            default: 0,
+        },
+
+        checkIn: {
+            type: mongoose.Schema.Types.Mixed,
+            default: null,
+        },
+
+        checkInTime: {
+            type: String,
+            default: "",
+            trim: true,
+        },
+
+        checkOut: {
+            type: mongoose.Schema.Types.Mixed,
+            default: null,
+        },
+
+        checkOutTime: {
+            type: String,
+            default: "",
+            trim: true,
+        },
+
+        actualCheckoutDate: {
+            type: String,
+            default: "",
+            trim: true,
+        },
+
+        actualCheckoutTime: {
+            type: String,
+            default: "",
+            trim: true,
         },
 
         foodServicesDetails: {

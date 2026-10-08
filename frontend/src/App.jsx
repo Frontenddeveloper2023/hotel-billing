@@ -1,16 +1,20 @@
 import React, {
   lazy,
   Suspense,
+  useEffect,
+  useState,
 } from "react";
 
 import {
   Routes,
   Route,
   Navigate,
+  useNavigate,
 } from "react-router-dom";
 
 import LazyFallback from "./Components/LazyFallback";
 import { useAuth } from "./Context/AuthContext";
+import { getRegistrationStatus } from "./service/hotelRegistrationApi";
 
 import "./App.css";
 
@@ -156,19 +160,101 @@ const SaaSAdminHotelBills = lazy(() =>
 
 
 // =====================================================
-// PERMISSION ROUTE
+// HOTEL LOGIN GUARD
+// Prevents pending/rejected hotels from bypassing the
+// disabled button by manually navigating to /hotel-login
 // =====================================================
+
+// const HotelLoginGuard = ({ children }) => {
+//   const navigate = useNavigate();
+//   const [checking, setChecking] = useState(true);
+
+//   useEffect(() => {
+//     let cancelled = false;
+
+//     const check = async () => {
+//       // If user is already logged in as hotelOwner, allow through
+//       const registrationId =
+//         sessionStorage.getItem("saasRegistrationId") ||
+//         localStorage.getItem("saasRegistrationId");
+
+//       // No pending registration in storage → fresh login, allow through
+//       if (!registrationId) {
+//         if (!cancelled) setChecking(false);
+//         return;
+//       }
+
+//       try {
+//         const res = await getRegistrationStatus(registrationId);
+//         const status =
+//           res?.data?.status ||
+//           res?.data?.registration?.status ||
+//           res?.status;
+
+//         if (cancelled) return;
+
+//         if (status === "approved") {
+//           // Approved → allow through
+//           setChecking(false);
+//         } else {
+//           // Pending or rejected → redirect to application status with message
+//           navigate("/saas-user/application-status", {
+//             replace: true,
+//             state: {
+//               registrationId,
+//               blockedMessage:
+//                 status === "rejected"
+//                   ? "Your hotel application has been rejected. You cannot log in at this time."
+//                   : "Your hotel application is still under review. Login will be available once the admin approves your application.",
+//             },
+//           });
+//         }
+//       } catch {
+//         // If API fails, allow through (don't block on network error)
+//         if (!cancelled) setChecking(false);
+//       }
+//     };
+
+//     check();
+//     return () => { cancelled = true; };
+//   }, [navigate]);
+
+//   if (checking) return <LazyFallback />;
+//   return children;
+// };
+
+
 
 const PermissionRoute = ({
   permission,
   children,
 }) => {
 
-  const {
-    isAuthenticated,
-    userData,
-    loading,
-  } = useAuth();
+const {
+  adminUser,
+  hotelUser,
+  adminLoading,
+  hotelLoading,
+} = useAuth();
+
+
+const isAdminRoute = [
+  "saasAdmin",
+  "hotels",
+  "plans",
+  "hotelRegistrations",
+  "subscriptions",
+].includes(permission);
+
+const currentUser = isAdminRoute
+  ? adminUser
+  : hotelUser;
+
+const loading = isAdminRoute
+  ? adminLoading
+  : hotelLoading;
+
+const isAuthenticated = Boolean(currentUser);
 
 
   // -------------------------------------------------
@@ -193,13 +279,33 @@ const PermissionRoute = ({
     );
   }
 
+  const adminPermissions = [
+    "saasAdmin",
+    "hotels",
+    "plans",
+    "hotelRegistrations",
+    "subscriptions"
+  ];
+
 
   // -------------------------------------------------
   // ADMIN
   // -------------------------------------------------
 
-  if (userData?.role === "admin") {
+if (currentUser?.role === "admin") {
+      if (!isAdminRoute) {
+      return <Navigate to="/saas-admin/dashboard" replace />;
+    }
     return children;
+  }
+
+
+  // -------------------------------------------------
+  // NON-ADMIN trying to access ADMIN routes
+  // -------------------------------------------------
+
+  if (isAdminRoute) {
+    return <Navigate to="/hotel/dashboard" replace />;
   }
 
 
@@ -207,8 +313,8 @@ const PermissionRoute = ({
   // HOTEL OWNER – full access to all hotel pages
   // -------------------------------------------------
 
-  if (userData?.role === "hotelOwner") {
-    return children;
+if (currentUser?.role === "hotelOwner") {
+      return children;
   }
 
 
@@ -217,8 +323,7 @@ const PermissionRoute = ({
   // -------------------------------------------------
 
   const allowed =
-    userData?.permission?.[permission] === true;
-
+currentUser?.permission?.[permission] === true;
 
   // -------------------------------------------------
   // ALLOWED
@@ -236,7 +341,7 @@ const PermissionRoute = ({
   return (
     <Navigate
       to={
-        userData?.role === "admin"
+currentUser?.role === "admin"
           ? "/saas-admin/dashboard"
           : "/hotel/dashboard"
       }
@@ -252,11 +357,18 @@ const PermissionRoute = ({
 
 function App() {
 
-  const {
-    isAuthenticated,
-    userData,
-    loading,
-  } = useAuth();
+const {
+  adminUser,
+  hotelUser,
+  adminLoading,
+  hotelLoading,
+} = useAuth();
+
+const isAuthenticated =
+  Boolean(adminUser || hotelUser);
+
+const loading =
+  adminLoading || hotelLoading;
 
 
   // -------------------------------------------------
@@ -273,7 +385,7 @@ function App() {
   // -------------------------------------------------
 
 const defaultAuthenticatedRoute =
-  userData?.role === "admin"
+  adminUser
     ? "/saas-admin/dashboard"
     : "/hotel/dashboard";
 
@@ -294,21 +406,25 @@ const defaultAuthenticatedRoute =
 
         <Route
   path="/login"
-  element={
-    !isAuthenticated ? (
-      <Login />
-    ) : (
-      <Navigate
-        to={defaultAuthenticatedRoute}
-        replace
-      />
-    )
-  }
+element={
+  adminUser ? (
+    <Navigate
+      to="/saas-admin/dashboard"
+      replace
+    />
+  ) : (
+    <Login />
+  )
+}
 />
 
 <Route
   path="/hotel-login"
-  element={<HotelLogin />}
+  element={
+    
+      <HotelLogin />
+  
+  }
 />
 
 
@@ -534,7 +650,8 @@ const defaultAuthenticatedRoute =
           <Route
             path="dashboard"
             element={
-              userData?.role === "admin" ? (
+              adminUser?.role === "admin" ? (
+    
                 <Navigate
                   to="/saas-admin/dashboard"
                   replace

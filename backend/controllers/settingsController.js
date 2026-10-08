@@ -1,5 +1,7 @@
 import Settings from "../models/settings.js";
 import BranchHotels from "../models/branchHotels.js";
+import Hotels from "../models/hotels.js";
+import User from "../models/users.js";
 
 import fs from "fs";
 import path from "path";
@@ -726,22 +728,7 @@ export const updateSettings =
         });
       }
 
-      if (
-        !String(
-          updateData.gstNumber ||
-            ""
-        ).trim()
-      ) {
-        log.error(
-          `[Settings] GST number missing. hotelId=${hotelId}, branchId=${branchId}`
-        );
-
-        return res.status(400).json({
-          success: false,
-          message:
-            "GST number is required.",
-        });
-      }
+      // GST number is optional (no requirement check)
 
       if (
         phoneNumbers.length === 0
@@ -917,6 +904,37 @@ export const updateSettings =
         log.info(
           `[Settings] Settings updated successfully. settingsId=${settings._id}, hotelId=${hotelId}, branchId=${branchId}`
         );
+      }
+
+      // --------------------------------------------------------
+      // UPDATE MAIN HOTEL DB
+      // --------------------------------------------------------
+      if (true) {
+         const updates = {};
+         
+         if (req.body.street !== undefined) {
+             updates["address.street"] = req.body.street || "";
+             updates["address.city"] = req.body.city || "";
+             updates["address.state"] = req.body.state || "";
+             updates["address.country"] = req.body.country || "";
+             updates["address.pincode"] = req.body.pincode || "";
+         }
+         
+         if (updateData.email) {
+             updates.email = updateData.email;
+         }
+
+         if (Object.keys(updates).length > 0) {
+             await Hotels.findByIdAndUpdate(hotelId, { $set: updates });
+         }
+         
+         if (updateData.email) {
+             // Also update the hotel owner's email in Users table
+             await User.findOneAndUpdate(
+                 { hotelId: hotelId, role: "hotelOwner", branchId: null },
+                 { $set: { email: updateData.email } }
+             );
+         }
       }
 
       // --------------------------------------------------------

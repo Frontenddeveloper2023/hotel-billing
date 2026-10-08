@@ -48,4 +48,18 @@ export const getAllInvoicesAdmin = async () => {
   } catch (error) {
     throw error.response?.data || { success: false, message: error.message };
   }
+};
+
+// 6. Send invoice PDF to customer email
+export const sendInvoiceEmail = async (formData) => {
+  try {
+    const response = await api.post("/invoice-management/send-email", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { success: false, message: error.message };
+  }
 };

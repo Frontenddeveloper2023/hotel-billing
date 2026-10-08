@@ -8,20 +8,39 @@ import {
   BarChart3,
 } from "lucide-react";
 
+import logo from "../../public/logo.png"
 
-import logoImg from "../../public/logo.png"
-
+import { getSettings } from "../service/settingsService.js";
 import SubscriptionAlertBanner from "./SubscriptionAlertBanner";
+
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
+const getLogoUrl = (logoPath) => {
+  if (!logoPath) return "";
+  if (
+    logoPath.startsWith("blob:") ||
+    logoPath.startsWith("http://") ||
+    logoPath.startsWith("https://")
+  ) {
+    return logoPath;
+  }
+  const cleanBase = API_BASE_URL.replace(/\/+$/, "");
+  const cleanPath = logoPath.replace(/^\/+/, "");
+  return `${cleanBase}/${cleanPath}`;
+};
 
 const ic = "w-5 h-5";
 
 export default function Layout() {
-  const { logoutUser, userData } = useAuth();
+  const { logoutUser, adminUser, hotelUser } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [companyLogo, setCompanyLogo] = useState(null);
   const toast = useToast();
 
+  const isAdminRoute = location.pathname.startsWith("/saas-admin");
+  const userData = isAdminRoute ? adminUser : hotelUser;
   const isMainAdmin = userData?.role === "admin";
 
   const adminNavigation = [
@@ -55,27 +74,36 @@ export default function Layout() {
     return userData?.permission?.[permissionKey] === true;
   };
 
- const handleLogout = async () => {
-  // Save the role before logout clears userData
-  const currentRole = userData?.role;
-
-  try {
-    await logoutUser();
-  } catch (error) {
-    console.error("Logout error:", error);
-  } finally {
-    if (currentRole === "admin") {
-      window.location.replace("/hotel-billing-system/hotel-login");
-    } else if (
-      currentRole === "hotelOwner" ||
-      currentRole === "receptionist"
-    ) {
-      window.location.replace("/hotel-billing-system/hotel-login");
-    } else {
-      window.location.replace("/hotel-billing-system/hotel-login");
+  React.useEffect(() => {
+    if (!isAdminRoute && userData) {
+      const loadLogo = async () => {
+        try {
+          const res = await getSettings();
+          if (res?.success && res.data?.companyLogo) {
+            setCompanyLogo(getLogoUrl(res.data.companyLogo));
+          }
+        } catch (error) {
+          console.warn("Could not load company logo", error);
+        }
+      };
+      loadLogo();
     }
-  }
-};
+  }, [isAdminRoute, userData]);
+
+  const handleLogout = async () => {
+    const portal = isAdminRoute ? "admin" : (userData?.role === "receptionist" ? "staff" : "owner");
+    const redirectUrl = isAdminRoute ? "/hotel-billing-system/login" : "/hotel-billing-system/hotel-login";
+
+    try {
+      await logoutUser(portal);
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      sessionStorage.removeItem("hotelPortal");
+      sessionStorage.removeItem("hotelToken");
+      window.location.replace(redirectUrl);
+    }
+  };
 
 
   const handleNavClick = (e, item, isMobile) => {
@@ -103,11 +131,10 @@ export default function Layout() {
         key={item.name}
         to={item.href}
         onClick={(e) => handleNavClick(e, item, isMobile)}
-        className={`group flex items-center gap-3 px-3.5 sm:px-4 h-11 rounded-xl text-[13px] sm:text-sm font-semibold transition-all duration-200 relative ${
-          isActive
+        className={`group flex items-center gap-3 px-3.5 sm:px-4 h-11 rounded-xl text-[13px] sm:text-sm font-semibold transition-all duration-200 relative ${isActive
             ? "bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] text-white shadow-lg shadow-blue-500/30"
             : "text-blue-100/70 hover:bg-white/10 hover:text-white hover:translate-x-0.5"
-        }`}
+          }`}
       >
         <span className={`shrink-0 transition-transform group-hover:scale-110 ${isActive ? "text-white" : "text-blue-200/70 group-hover:text-white"}`}>
           {item.icon}
@@ -116,7 +143,7 @@ export default function Layout() {
       </Link>
     );
   };
-  
+
 
   const getHeaderTitle = () => {
     if (isMainAdmin) return `${userData?.name || "Admin"} Admin`;
@@ -140,10 +167,10 @@ export default function Layout() {
       {/* DESKTOP SIDEBAR */}
       <aside className="hidden md:flex md:w-60 lg:w-64 flex-col bg-white/[0.06] backdrop-blur-xl border-r border-white/10 shrink-0">
         <div className="h-16 flex items-center gap-2.5 px-5 lg:px-6 border-b border-white/10">
-          <img src={logoImg} alt="SS Residency Logo" className="w-9 h-9 lg:w-10 lg:h-10 object-contain shrink-0" />
+          <img src={companyLogo || logo} alt="StayLio" className="w-9 h-9 lg:w-10 lg:h-10 object-contain shrink-0 rounded" />
           <span className="text-lg lg:text-xl font-bold tracking-tight text-white truncate">{brand}</span>
         </div>
-<nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto staylio-scrollbar">          {navigation.map((item) => renderNavItem(item, false))}
+        <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto staylio-scrollbar">          {navigation.map((item) => renderNavItem(item, false))}
         </nav>
         <div className="p-3 border-t border-white/10">{logoutBtn()}</div>
       </aside>
@@ -155,13 +182,12 @@ export default function Layout() {
 
       {/* MOBILE SIDEBAR */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-[78vw] max-w-64 bg-[#132f57] border-r border-white/10 flex flex-col transition-transform duration-300 md:hidden ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed top-0 bottom-0 left-0 z-50 w-[78vw] max-w-64 bg-[#132f57] border-r border-white/10 flex flex-col transition-transform duration-300 md:hidden ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         <div className="h-16 flex items-center justify-between px-4 sm:px-5 border-b border-white/10">
           <div className="flex items-center gap-2 min-w-0">
-            <img src={logoImg} alt="SS Residency Logo" className="w-9 h-9 object-contain shrink-0" />
+            <img src={companyLogo || logo} alt="SatylioLogo" className="w-9 h-9 object-contain shrink-0 rounded" />
             <span className="text-lg font-bold tracking-tight text-white truncate">{brand}</span>
           </div>
           <button
@@ -171,7 +197,7 @@ export default function Layout() {
             <X className="w-5 h-5 text-blue-100" />
           </button>
         </div>
-<nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto staylio-scrollbar">          {navigation.map((item) => renderNavItem(item, true))}
+        <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto staylio-scrollbar">          {navigation.map((item) => renderNavItem(item, true))}
         </nav>
         <div className="p-3 border-t border-white/10">{logoutBtn()}</div>
       </aside>
@@ -199,18 +225,18 @@ export default function Layout() {
 
         <SubscriptionAlertBanner />
 
-<main className="flex-1 p-3 sm:p-4 lg:p-6 flex flex-col overflow-y-auto staylio-scrollbar">          <Suspense
-            fallback={
-              <div className="flex-1 flex items-center justify-center">
-                <div className="flex items-center gap-2 text-sm text-blue-100">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-                  Loading page...
-                </div>
+        <main className="flex-1 p-3 sm:p-4 lg:p-6 flex flex-col overflow-y-auto staylio-scrollbar">          <Suspense
+          fallback={
+            <div className="flex-1 flex items-center justify-center">
+              <div className="flex items-center gap-2 text-sm text-blue-100">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                Loading page...
               </div>
-            }
-          >
-            <Outlet />
-          </Suspense>
+            </div>
+          }
+        >
+          <Outlet />
+        </Suspense>
         </main>
 
         <footer className="mt-auto py-2 text-center text-[11px] sm:text-xs text-blue-100/60 px-4">

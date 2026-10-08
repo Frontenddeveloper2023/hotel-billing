@@ -23,6 +23,21 @@ export default function InvoiceTemplate({
     }
   };
 
+  const rooms = Array.isArray(stay.selectedRooms) && stay.selectedRooms.length > 0
+    ? stay.selectedRooms
+    : Array.isArray(stay.rooms) && stay.rooms.length > 0
+      ? stay.rooms
+      : [
+          {
+            roomNumber: stay.roomNo || stay.roomNumber || "101",
+            roomType: stay.roomType || "Deluxe Suite",
+            checkIn: stay.checkIn || "01 Sep 2026, 12:00 PM",
+            nights: stay.nights || 1,
+            rate: stay.roomRate || stay.rate || stay.pricePerNight || 2500,
+            roomSubtotal: roomSubtotal || (Number(stay.nights || 1) * Number(stay.roomRate || stay.rate || stay.pricePerNight || 2500)),
+          }
+        ];
+
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-6 overflow-y-auto">
       <div className="w-full max-w-4xl bg-white shadow-2xl rounded-3xl overflow-hidden flex flex-col my-auto border border-slate-200 print:m-0 print:shadow-none print:rounded-none">
@@ -55,8 +70,7 @@ export default function InvoiceTemplate({
                 <Building className="w-7 h-7" />
                 <h1 className="text-2xl font-extrabold tracking-tight uppercase">Grand Stay Hotel & Suites</h1>
               </div>
-              <p className="text-xs text-slate-500">Luxury Hospitality Group • West Tambaram, Chennai - 600045</p>
-              <p className="text-xs text-slate-500">GSTIN: 33AAAAA0000A1Z5 | Ph: +91 98765 43210</p>
+              <p className="text-xs text-slate-500"> West Tambaram, Chennai - 600045</p>
             </div>
 
             <div className="text-left sm:text-right space-y-1">
@@ -85,18 +99,33 @@ export default function InvoiceTemplate({
               </div>
             </div>
 
-            <div className="space-y-2 sm:border-l sm:border-slate-200 sm:pl-6">
-              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Stay Summary</div>
-              <div className="flex items-center gap-2 text-slate-700">
-                <BedDouble className="w-4 h-4 text-teal-600 shrink-0" />
-                <span>Room No: <strong>{stay.roomNo || "101"}</strong> ({stay.roomType || "Deluxe Suite"})</span>
+            <div className="space-y-3 sm:border-l sm:border-slate-200 sm:pl-6">
+              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                Stay Summary ({rooms.length} Room{rooms.length !== 1 ? "s" : ""})
               </div>
-              <div className="flex items-center gap-2 text-slate-700">
-                <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                <span>Check-In: <strong>{stay.checkIn || "01 Sep 2026, 12:00 PM"}</strong></span>
-              </div>
-              <div className="text-slate-600 pl-6">
-                Duration: <strong>{stay.nights || 1} Nights</strong>
+              <div className="space-y-2">
+                {rooms.map((r, idx) => (
+                  <div key={idx} className="bg-white p-2.5 rounded-xl border border-slate-200 space-y-1">
+                    <div className="flex items-center justify-between text-slate-900 font-bold">
+                      <span className="flex items-center gap-1.5 text-xs">
+                        <BedDouble className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                        Room {r.roomNumber || r.roomNo || idx + 1}
+                      </span>
+                      <span className="text-[11px] text-slate-500 font-normal">
+                        ({r.roomType || "Deluxe Suite"})
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-600">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-slate-400 shrink-0" />
+                        {r.checkIn || stay.checkIn || "01 Sep 2026, 12:00 PM"}
+                      </span>
+                      <span className="font-semibold text-slate-700">
+                        {r.bookedNights || r.nights || stay.nights || 1} Night{Number(r.bookedNights || r.nights || stay.nights || 1) !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -117,15 +146,25 @@ export default function InvoiceTemplate({
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {/* Room Accommodation */}
-                  <tr>
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-slate-900">Room Accommodation (Room #{stay.roomNo || "101"})</div>
-                      <div className="text-[11px] text-slate-400">{stay.roomType || "Standard AC"}</div>
-                    </td>
-                    <td className="py-3.5 px-4 text-center">{stay.nights || 1} Nights</td>
-                    <td className="py-3.5 px-4 text-right">₹{stay.roomRate || 2500}</td>
-                    <td className="py-3.5 px-4 text-right font-bold text-slate-900">₹{roomSubtotal}</td>
-                  </tr>
+                  {rooms.map((r, idx) => {
+                    const rNo = r.roomNumber || r.roomNo || `${idx + 1}`;
+                    const rType = r.roomType || "Standard AC";
+                    const rNights = Number(r.bookedNights || r.nights || stay.nights || 1);
+                    const rRate = Number(r.rate || r.pricePerNight || r.roomRate || stay.roomRate || 2500);
+                    const rTotal = Number(r.roomSubtotal || r.roomRent || (rNights * rRate));
+
+                    return (
+                      <tr key={`room-${idx}`}>
+                        <td className="py-3.5 px-4">
+                          <div className="font-bold text-slate-900">Room Accommodation (Room #{rNo})</div>
+                          <div className="text-[11px] text-slate-400">{rType}{r.bedType ? ` · ${r.bedType}` : ""}</div>
+                        </td>
+                        <td className="py-3.5 px-4 text-center">{rNights} Night{rNights !== 1 ? "s" : ""}</td>
+                        <td className="py-3.5 px-4 text-right">₹{rRate}</td>
+                        <td className="py-3.5 px-4 text-right font-bold text-slate-900">₹{rTotal}</td>
+                      </tr>
+                    );
+                  })}
 
                   {/* Extra Night / Extension Fee if applied */}
                   {extraNightAmount > 0 && (

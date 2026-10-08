@@ -10,52 +10,40 @@ import {
   getUser,
 } from "../service/usersService";
 
-
 const AuthContext = createContext(null);
-
 
 export const AuthProvider = ({ children }) => {
 
-  const [isAuthenticated, setIsAuthenticated] =
-    useState(false);
+  // =====================================================
+  // SEPARATE ADMIN + HOTEL SESSIONS
+  // =====================================================
 
-  const [userData, setUserData] =
-    useState(null);
+  const [adminUser, setAdminUser] = useState(null);
+  const [hotelUser, setHotelUser] = useState(null);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [adminLoading, setAdminLoading] = useState(true);
+  const [hotelLoading, setHotelLoading] = useState(true);
 
 
   // =====================================================
-  // FETCH CURRENT USER
+  // FETCH ADMIN USER
   // =====================================================
 
-  const fetchUser = async () => {
-
+  const fetchAdminUser = async () => {
     try {
 
-      const response = await getUser();
+      const response = await getUser("admin");
 
       console.log(
-        "[AuthContext] getUser response:",
+        "[AuthContext] Admin getUser response:",
         response
       );
-
-
-      // -------------------------------------------------
-      // GET USER OBJECT
-      // -------------------------------------------------
 
       const userObj =
         response?.user ||
         response?.data?.user ||
         response?.data ||
         response;
-
-
-      // -------------------------------------------------
-      // USER FOUND
-      // -------------------------------------------------
 
       if (
         userObj &&
@@ -67,52 +55,100 @@ export const AuthProvider = ({ children }) => {
       ) {
 
         console.log(
-          "[AuthContext] User:",
+          "[AuthContext] Admin user:",
           userObj
         );
 
-        console.log(
-          "[AuthContext] Role:",
-          userObj.role
-        );
-
-        console.log(
-          "[AuthContext] Permissions:",
-          userObj.permission
-        );
-
-
-        setIsAuthenticated(true);
-
-        setUserData(userObj);
+        setAdminUser(userObj);
 
       } else {
 
-        setIsAuthenticated(false);
-
-        setUserData(null);
+        setAdminUser(null);
       }
 
     } catch (error) {
 
-      console.error(
-        "[AuthContext] Session check failed:",
-        error
-      );
-
-
-      if (
-        error?.response?.status === 401
-      ) {
-
-        setIsAuthenticated(false);
-
-        setUserData(null);
+      if (error?.response?.status === 401) {
+        setAdminUser(null);
+      } else {
+        console.error(
+          "[AuthContext] Admin session check failed:",
+          error
+        );
       }
 
     } finally {
 
-      setLoading(false);
+      setAdminLoading(false);
+    }
+  };
+
+
+  // =====================================================
+  // FETCH HOTEL USER
+  // =====================================================
+
+  const fetchHotelUser = async () => {
+    try {
+      let activePortal = sessionStorage.getItem("hotelPortal");
+      let response;
+
+      if (activePortal === "owner" || activePortal === "staff") {
+        response = await getUser(activePortal);
+      } else {
+        // Unset tab: try owner first, then fallback to staff
+        try {
+          response = await getUser("owner");
+          sessionStorage.setItem("hotelPortal", "owner");
+        } catch (err) {
+          if (err?.response?.status === 401) {
+            response = await getUser("staff");
+            sessionStorage.setItem("hotelPortal", "staff");
+          } else {
+            throw err;
+          }
+        }
+      }
+
+      console.log(
+        "[AuthContext] Hotel getUser response:",
+        response
+      );
+
+      const userObj =
+        response?.user ||
+        response?.data?.user ||
+        response?.data ||
+        response;
+
+      if (
+        userObj &&
+        (
+          userObj._id ||
+          userObj.id ||
+          userObj.email
+        )
+      ) {
+        console.log(
+          "[AuthContext] Hotel user:",
+          userObj
+        );
+        setHotelUser(userObj);
+      } else {
+        setHotelUser(null);
+      }
+
+    } catch (error) {
+      if (error?.response?.status === 401) {
+        setHotelUser(null);
+      } else {
+        console.error(
+          "[AuthContext] Hotel session check failed:",
+          error
+        );
+      }
+    } finally {
+      setHotelLoading(false);
     }
   };
 
@@ -123,7 +159,8 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
 
-    fetchUser();
+    fetchAdminUser();
+    fetchHotelUser();
 
   }, []);
 
@@ -139,36 +176,33 @@ export const AuthProvider = ({ children }) => {
       user
     );
 
+    if (user?.role === "admin") {
+      sessionStorage.setItem("hotelPortal", "admin");
+      setAdminUser(user);
+      await fetchAdminUser();
 
-    setIsAuthenticated(true);
+    } else if (user?.role === "hotelOwner") {
+      sessionStorage.setItem("hotelPortal", "owner");
+      setHotelUser(user);
+      await fetchHotelUser();
 
-    setUserData(user);
-
-
-    // Fetch latest database permissions
-    try {
-
-      await fetchUser();
-
-    } catch (error) {
-
-      console.error(
-        "[AuthContext] Refresh after login failed:",
-        error
-      );
+    } else if (user?.role === "receptionist") {
+      sessionStorage.setItem("hotelPortal", "staff");
+      setHotelUser(user);
+      await fetchHotelUser();
     }
   };
 
 
   // =====================================================
-  // LOGOUT
+  // LOGOUT USER
   // =====================================================
 
-  const logoutUser = async () => {
+  const logoutUser = async (portal) => {
 
     try {
-
-      await logout();
+      const activePortal = portal || sessionStorage.getItem("hotelPortal") || "hotel";
+      await logout(activePortal);
 
     } catch (error) {
 
@@ -178,10 +212,17 @@ export const AuthProvider = ({ children }) => {
       );
 
     } finally {
+      sessionStorage.removeItem("hotelPortal");
+      sessionStorage.removeItem("hotelToken");
+      sessionStorage.removeItem("hotelCookieName");
+      if (portal === "admin") {
 
-      setIsAuthenticated(false);
+        setAdminUser(null);
 
-      setUserData(null);
+      } else {
+
+        setHotelUser(null);
+      }
     }
   };
 
@@ -190,10 +231,46 @@ export const AuthProvider = ({ children }) => {
   // REFRESH USER
   // =====================================================
 
-  const refreshUser = async () => {
+  const refreshUser = async (portal) => {
 
-    await fetchUser();
+    if (portal === "admin") {
+
+      await fetchAdminUser();
+
+    } else if (portal === "hotel") {
+
+      await fetchHotelUser();
+    }
   };
+
+
+
+  
+
+  // ================================
+  // =====================
+  // BACKWARD COMPATIBILITY
+  // =====================================================
+  //
+  // Existing pages still using:
+  //
+  //   isAuthenticated
+  //   userData
+  //
+  // will receive the currently available session.
+  //
+  // App.jsx will be updated next to use the correct
+  // portal-specific session.
+  // =====================================================
+
+  const isAuthenticated =
+    Boolean(adminUser || hotelUser);
+
+  const userData =
+    adminUser || hotelUser || null;
+
+  const loading =
+    adminLoading || hotelLoading;
 
 
   // =====================================================
@@ -203,13 +280,26 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider
       value={{
+        // New separate sessions
+        adminUser,
+        hotelUser,
+
+        adminLoading,
+        hotelLoading,
+
+        // Existing values
         isAuthenticated,
         userData,
         loading,
 
+        // Functions
         loginUser,
         logoutUser,
         refreshUser,
+
+        // Optional direct refresh functions
+        fetchAdminUser,
+        fetchHotelUser,
       }}
     >
       {children}
@@ -218,16 +308,13 @@ export const AuthProvider = ({ children }) => {
 };
 
 
-
 // =====================================================
 // USE AUTH
 // =====================================================
 
 export const useAuth = () => {
 
-  const context =
-    useContext(AuthContext);
-
+  const context = useContext(AuthContext);
 
   if (!context) {
 
@@ -235,7 +322,6 @@ export const useAuth = () => {
       "useAuth must be used within an AuthProvider"
     );
   }
-
 
   return context;
 };

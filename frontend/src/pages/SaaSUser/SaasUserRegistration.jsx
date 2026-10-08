@@ -917,7 +917,6 @@ const [form, setForm] = useState({
             <SectionCard
               icon={User}
               title="Contact Information"
-              description="These details will be used for communication and account access."
               delay="0.10s"
             >
 
@@ -1059,7 +1058,7 @@ const [form, setForm] = useState({
                 MOBILE BUTTONS
             ================================================= */}
 
-            <div className="
+            {/* <div className="
               flex
               flex-col-reverse
               gap-3
@@ -1076,7 +1075,8 @@ const [form, setForm] = useState({
                 loading={loading}
               />
 
-            </div>
+            </div> */}
+
 
           </div>
 
@@ -1092,385 +1092,588 @@ const [form, setForm] = useState({
             xl:self-start
           ">
 
-            <div
-              className="
-                overflow-hidden
-                rounded-[22px]
-                border
-                border-[#DCE7F5]
-                bg-white
-              "
-              style={{
-                animation:
-                  "fadeUp 0.5s ease-out 0.1s both",
-              }}
-            >
-
-
-              {/* =================================================
-                  PLAN HEADER
-              ================================================= */}
-
-              <div
-                className="
-                  relative
-                  overflow-hidden
-                  border-b
-                  border-[#6AA5FF]
-                  bg-[linear-gradient(145deg,#5597F5_0%,#347BE9_58%,#2868DA_100%)]
-                  px-5 py-6 sm:px-6 sm:py-7
-                "
-              >
-                <div className="pointer-events-none absolute right-0 top-0 h-[150px] w-[180px] bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24)_0%,transparent_72%)]" />
-                <div className="relative flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#E2EEFF]">Selected Plan Summary</p>
-                    <h2 className="mt-2 break-words text-[23px] font-bold leading-tight tracking-[-0.03em] text-white">
-                      {selectedPlan.planName}
-                    </h2>
-                  </div>
-                  <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border border-white/30 bg-white/20 px-3 py-1.5 text-[11px] font-bold text-white">
-                    <span className="h-1.5 w-1.5 rounded-full bg-white" style={{ animation: "softPulse 1.8s ease-in-out infinite" }} />
-                    Active 
-                  </span>
-                </div>
-                <div className="relative mt-6 flex flex-wrap items-end gap-x-2 gap-y-1">
-                  <span className="break-words text-[34px] font-extrabold leading-none tracking-[-0.04em] text-white sm:text-[38px]">
-                    {formatCurrency(currentPrice)}
-                  </span>
-                  <span className="pb-0.5 text-[14px] font-semibold text-[#EAF3FF]">/ {getBillingLabel(form.billingCycle)}</span>
-                </div>
-                <p className="relative mt-2 text-[12px] font-medium leading-5 text-[#E2EEFF]">
-                  Billed {getBillingLabel(form.billingCycle)} • Subscription billing
-                </p>
-              </div>
-
-              {/* =================================================
-                  PLAN BODY
-              ================================================= */}
-
-              <div className="w-full p-4 sm:p-6 lg:p-7">
-
-
-                {/* BILLING CYCLE */}
-
-                <div>
-
-                  <p className="
-                    text-[10px]
-                    font-extrabold
-                    uppercase
-                    tracking-[0.1em]
-                    text-[#475569]
-                  ">
-                    Billing Cycle
-                  </p>
-
-
-                  <div className="relative mt-2">
-
-                    <CreditCard
-                      size={16}
-                      className="
-                        pointer-events-none
-                        absolute
-                        left-3
-                        top-1/2
-                        -translate-y-1/2
-                        text-[#1769D2]
-                      "
-                    />
-
-                    <select
-                      name="billingCycle"
-                      value={form.billingCycle}
-                      onChange={handleChange}
-                      className="
-                        w-full
-                        appearance-none
-                        rounded-xl
-                        border
-                        border-[#D6E1EF]
-                        bg-[#F8FBFF]
-                        py-3
-                        pl-10
-                        pr-4
-                        text-[13px]
-                        font-bold
-                        text-[#1E293B]
-                        outline-none
-                        transition-all
-                        duration-200
-                        focus:border-[#3B8EF3]
-                        focus:bg-white
-                        focus:ring-2
-                        focus:ring-[#3B8EF3]/10
-                      "
-                    >
-
-                      <option value="monthly">
-                        Monthly
-                      </option>
-
-                      <option value="quarterly">
-                        Quarterly
-                      </option>
-
-                      <option value="halfYearly">
-                        Half Yearly
-                      </option>
-
-                      <option value="yearly">
-                        Yearly
-                      </option>
-
-                    </select>
-
-                  </div>
-
-                </div>
-
-
-                <div className="
-                  my-6
-                  h-px
-                  bg-[#E7E9EF]
-                " />
-
-
-                {/* =================================================
-                    LIMITS
-                ================================================= */}
-
-                {selectedPlan.limits && (
-                  <div>
-
-                  
-
-
-                <div
+    <div
   className="
-    mt-3
-    grid
-    grid-cols-1
-    gap-2
-    rounded-xl
+    w-full
+    min-w-0
+    overflow-hidden
+    rounded-[18px]
     border
-    border-[#D7E8FA]
-    bg-[#EEF6FF]
-    p-3
-    sm:grid-cols-3
+    border-[#DCE7F5]
+    bg-white
+    shadow-[0_12px_35px_rgba(31,78,121,0.07)]
+    sm:rounded-[20px]
+    lg:rounded-[22px]
   "
+  style={{
+    animation: "fadeUp 0.5s ease-out 0.1s both",
+  }}
 >
-  <Quota
-    value={selectedPlan?.limits?.rooms}
-    label="Rooms"
-  />
+  {/* =================================================
+      PLAN HEADER
+  ================================================= */}
 
-  <Quota
-    value={selectedPlan?.limits?.branches}
-    label="Branches"
-  />
+  <div
+    className="
+      relative
+      w-full
+      min-w-0
+      overflow-hidden
+      border-b
+      border-[#6AA5FF]
+      bg-[linear-gradient(145deg,#5597F5_0%,#347BE9_58%,#2868DA_100%)]
+      px-4
+      py-5
+      sm:px-5
+      sm:py-6
+      md:px-6
+      md:py-7
+    "
+  >
+    <div
+      className="
+        pointer-events-none
+        absolute
+        right-0
+        top-0
+        h-[110px]
+        w-[130px]
+        bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24)_0%,transparent_72%)]
+        sm:h-[150px]
+        sm:w-[180px]
+      "
+    />
 
-  <Quota
-    value={selectedPlan?.limits?.receptionists}
-    label="Staff Access"
-  />
+    <div
+      className="
+        relative
+        flex
+        min-w-0
+        flex-col
+        gap-3
+        sm:flex-row
+        sm:items-start
+        sm:justify-between
+      "
+    >
+      <div className="min-w-0 flex-1">
+        <p
+          className="
+            text-[10px]
+            font-bold
+            uppercase
+            tracking-[0.08em]
+            text-[#E2EEFF]
+            sm:text-[11px]
+            md:text-[12px]
+          "
+        >
+          Selected Plan Summary
+        </p>
+
+        <h2
+          className="
+            mt-1.5
+            break-words
+            text-[20px]
+            font-bold
+            leading-tight
+            tracking-[-0.03em]
+            text-white
+            sm:mt-2
+            sm:text-[22px]
+            md:text-[23px]
+          "
+        >
+          {selectedPlan.planName}
+        </h2>
+      </div>
+
+      <span
+        className="
+          inline-flex
+          w-fit
+          shrink-0
+          items-center
+          gap-1.5
+          rounded-full
+          border
+          border-white/30
+          bg-white/20
+          px-2.5
+          py-1.5
+          text-[10px]
+          font-bold
+          text-white
+          sm:px-3
+          sm:text-[11px]
+        "
+      >
+        <span
+          className="
+            h-1.5
+            w-1.5
+            shrink-0
+            rounded-full
+            bg-white
+          "
+          style={{
+            animation:
+              "softPulse 1.8s ease-in-out infinite",
+          }}
+        />
+
+        Active
+      </span>
+    </div>
+
+    {/* PRICE */}
+    <div
+      className="
+        relative
+        mt-4
+        flex
+        min-w-0
+        flex-wrap
+        items-end
+        gap-x-2
+        gap-y-1
+        sm:mt-5
+        md:mt-6
+      "
+    >
+      <span
+        className="
+          break-words
+          text-[28px]
+          font-extrabold
+          leading-none
+          tracking-[-0.04em]
+          text-white
+          sm:text-[34px]
+          md:text-[38px]
+        "
+      >
+        {formatCurrency(currentPrice)}
+      </span>
+
+      <span
+        className="
+          pb-0.5
+          text-[11px]
+          font-semibold
+          text-[#EAF3FF]
+          sm:text-[13px]
+          md:text-[14px]
+        "
+      >
+        / {getBillingLabel(form.billingCycle)}
+      </span>
+    </div>
+
+    <p
+      className="
+        relative
+        mt-2
+        break-words
+        text-[10px]
+        font-medium
+        leading-5
+        text-[#E2EEFF]
+        sm:text-[11px]
+        md:text-[12px]
+      "
+    >
+      Billed {getBillingLabel(form.billingCycle)} •
+      Subscription billing
+    </p>
+  </div>
+
+  {/* =================================================
+      PLAN BODY
+  ================================================= */}
+
+  <div
+    className="
+      w-full
+      min-w-0
+      p-3
+      sm:p-5
+      md:p-6
+      lg:p-7
+    "
+  >
+    {/* BILLING CYCLE */}
+
+    <div className="w-full min-w-0">
+      <p
+        className="
+          text-[10px]
+          font-extrabold
+          uppercase
+          tracking-[0.1em]
+          text-[#475569]
+          sm:text-[11px]
+        "
+      >
+        Billing Cycle
+      </p>
+
+      <div className="relative mt-2 w-full">
+        <CreditCard
+          size={16}
+          className="
+            pointer-events-none
+            absolute
+            left-3
+            top-1/2
+            z-10
+            -translate-y-1/2
+            text-[#1769D2]
+          "
+        />
+
+        <select
+          name="billingCycle"
+          value={form.billingCycle}
+          onChange={handleChange}
+          className="
+            h-11
+            w-full
+            min-w-0
+            appearance-none
+            rounded-xl
+            border
+            border-[#D6E1EF]
+            bg-[#F8FBFF]
+            py-2.5
+            pl-10
+            pr-4
+            text-[12px]
+            font-bold
+            text-[#1E293B]
+            outline-none
+            transition-all
+            duration-200
+            focus:border-[#3B8EF3]
+            focus:bg-white
+            focus:ring-2
+            focus:ring-[#3B8EF3]/10
+            sm:h-12
+            sm:text-[13px]
+          "
+        >
+          <option value="monthly">
+            Monthly
+          </option>
+
+          <option value="quarterly">
+            Quarterly
+          </option>
+
+          <option value="halfYearly">
+            Half Yearly
+          </option>
+
+          <option value="yearly">
+            Yearly
+          </option>
+        </select>
+      </div>
+    </div>
+
+    {/* DIVIDER */}
+
+    <div
+      className="
+        my-5
+        h-px
+        w-full
+        bg-[#E7E9EF]
+        sm:my-6
+      "
+    />
+
+    {/* =================================================
+        LIMITS
+    ================================================= */}
+
+    {selectedPlan.limits && (
+      <div className="w-full min-w-0">
+        <div
+          className="
+            mt-3
+            grid
+            w-full
+            min-w-0
+            grid-cols-1
+            gap-2
+            rounded-xl
+            border
+            border-[#D7E8FA]
+            bg-[#EEF6FF]
+            p-2.5
+            sm:grid-cols-3
+            sm:gap-3
+            sm:p-3
+          "
+        >
+          <div className="min-w-0">
+            <Quota
+              value={selectedPlan?.limits?.rooms}
+              label="Rooms"
+            />
+          </div>
+
+          <div className="min-w-0">
+            <Quota
+              value={selectedPlan?.limits?.branches}
+              label="Branches"
+            />
+          </div>
+
+          <div className="min-w-0">
+            <Quota
+              value={selectedPlan?.limits?.receptionists}
+              label="Staff Access"
+            />
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* =================================================
+        FEATURES
+    ================================================= */}
+
+    {selectedPlan.features && (
+      <div className="mt-5 w-full min-w-0 sm:mt-6">
+        <p
+          className="
+            text-[10px]
+            font-extrabold
+            uppercase
+            tracking-[0.1em]
+            text-[#475569]
+            sm:text-[11px]
+          "
+        >
+          Included Features
+        </p>
+
+        <div className="mt-3 w-full min-w-0 space-y-2.5 sm:space-y-3">
+          <FeatureRow
+            label="Food Service"
+            enabled={
+              selectedPlan?.features?.foodService
+            }
+          />
+
+          <FeatureRow
+            label="Room Service"
+            enabled={
+              selectedPlan?.features?.roomService
+            }
+          />
+        </div>
+      </div>
+    )}
+
+    {/* =================================================
+        PLAN DESCRIPTION
+    ================================================= */}
+
+    {selectedPlan.description && (
+      <div
+        className="
+          mt-5
+          w-full
+          min-w-0
+          rounded-xl
+          border
+          border-[#D8E7F7]
+          bg-[#F8FBFF]
+          p-3
+          sm:mt-6
+          sm:p-4
+        "
+      >
+        <p
+          className="
+            text-[10px]
+            font-extrabold
+            uppercase
+            tracking-[0.1em]
+            text-[#475569]
+            sm:text-[11px]
+          "
+        >
+          Plan Description
+        </p>
+
+        <p
+          className="
+            mt-2
+            break-words
+            text-[11px]
+            font-medium
+            leading-5
+            text-[#475569]
+            sm:text-[12px]
+          "
+        >
+          {selectedPlan.description}
+        </p>
+      </div>
+    )}
+
+    {/* =================================================
+        INFO
+    ================================================= */}
+
+    <div
+      className="
+        mt-5
+        flex
+        w-full
+        min-w-0
+        items-start
+        gap-2.5
+        rounded-xl
+        border
+        border-[#CFE2FA]
+        bg-[#EFF7FF]
+        px-3
+        py-3
+        sm:mt-6
+        sm:gap-3
+        sm:px-4
+        sm:py-3.5
+      "
+    >
+      <div
+        className="
+          flex
+          h-7
+          w-7
+          shrink-0
+          items-center
+          justify-center
+          rounded-full
+          bg-[#2F80ED]
+          text-white
+        "
+      >
+        <CheckCircle2 size={14} />
+      </div>
+
+      <p
+        className="
+          min-w-0
+          break-words
+          text-[10px]
+          font-semibold
+          leading-5
+          text-[#475569]
+          sm:text-[11px]
+        "
+      >
+        Your hotel details will be submitted before
+        continuing to checkout.
+      </p>
+    </div>
+
+    {/* =================================================
+        CHECKOUT ACTIONS
+    ================================================= */}
+
+    <div
+      className="
+        mt-5
+        flex
+        w-full
+        justify-center
+        sm:mt-6
+      "
+    >
+      <div
+        className="
+          w-full
+          max-w-[320px]
+          sm:max-w-[340px]
+        "
+      >
+        <SubmitButton loading={loading} />
+      </div>
+    </div>
+
+    <div
+      className="
+        mt-2.5
+        flex
+        w-full
+        justify-center
+        sm:mt-3
+      "
+    >
+      <div
+        className="
+          w-full
+          max-w-[320px]
+          sm:max-w-[340px]
+        "
+      >
+        <BackToPlansButton
+          navigate={navigate}
+          fullWidth
+        />
+      </div>
+    </div>
+
+    {/* =================================================
+        SECURITY
+    ================================================= */}
+
+    <div
+      className="
+        mt-5
+        flex
+        w-full
+        min-w-0
+        items-start
+        gap-2
+        border-t
+        border-[#E7E9EF]
+        pt-4
+        sm:gap-2.5
+      "
+    >
+      <ShieldCheck
+        size={15}
+        className="
+          mt-0.5
+          shrink-0
+          text-[#087A58]
+        "
+      />
+
+      <p
+        className="
+          min-w-0
+          break-words
+          text-[10px]
+          font-medium
+          leading-5
+          text-[#64748B]
+          sm:text-[11px]
+        "
+      >
+        Your information is securely submitted for admin
+        review.
+      </p>
+    </div>
+  </div>
 </div>
-
-                  </div>
-                )}
-
-
-                {/* =================================================
-                    FEATURES
-                ================================================= */}
-
-                {selectedPlan.features && (
-                  <div className="mt-6">
-
-                    <p className="
-                      text-[10px]
-                      font-extrabold
-                      uppercase
-                      tracking-[0.1em]
-                      text-[#475569]
-                    ">
-                      Included Features
-                    </p>
-
-
-                    <div className="
-                      mt-3
-                      space-y-3
-                    ">
-
-                      <FeatureRow
-                        label="Food Service"
-                        enabled={
-                          selectedPlan
-                            ?.features
-                            ?.foodService
-                        }
-                      />
-
-
-                      <FeatureRow
-                        label="Room Service"
-                        enabled={
-                          selectedPlan
-                            ?.features
-                            ?.roomService
-                        }
-                      />
-
-                    </div>
-
-                  </div>
-                )}
-
-
-                {/* =================================================
-                    PLAN DESCRIPTION
-                ================================================= */}
-
-                {selectedPlan.description && (
-                  <div className="
-                    mt-6
-                    rounded-xl
-                    border
-                    border-[#D8E7F7]
-                    bg-[#F8FBFF]
-                    p-4
-                  ">
-
-                    <p className="
-                      text-[10px]
-                      font-extrabold
-                      uppercase
-                      tracking-[0.1em]
-                      text-[#475569]
-                    ">
-                      Plan Description
-                    </p>
-
-                    <p className="
-                      mt-2
-                      text-[12px]
-                      font-medium
-                      leading-5
-                      text-[#475569]
-                    ">
-                      {selectedPlan.description}
-                    </p>
-
-                  </div>
-                )}
-
-
-                {/* =================================================
-                    INFO
-                ================================================= */}
-
-                <div className="
-                  mt-6
-                  flex
-                  items-start
-                  gap-3
-                  rounded-xl
-                  border
-                  border-[#CFE2FA]
-                  bg-[#EFF7FF]
-                  px-4
-                  py-3.5
-                ">
-
-                  <div className="
-                    flex
-                    h-7
-                    w-7
-                    shrink-0
-                    items-center
-                    justify-center
-                    rounded-full
-                    bg-[#2F80ED]
-                    text-white
-                  ">
-                    <CheckCircle2 size={14} />
-                  </div>
-
-
-                  <p className="
-                    text-[11px]
-                    font-semibold
-                    leading-5
-                    text-[#475569]
-                  ">
-                    Your hotel details will be submitted
-                    before continuing to checkout.
-                  </p>
-
-                </div>
-
-
-          {/* =================================================
-    CHECKOUT ACTIONS
-================================================= */}
-
-<div className="mt-6">
-
-  <SubmitButton
-    loading={loading}
-  />
-
-</div>
-
-<div className="mt-3">
-
-  <BackToPlansButton
-    navigate={navigate}
-    fullWidth
-  />
-
-</div>
-
-
-                {/* SECURITY */}
-
-                <div className="
-                  mt-5
-                  flex
-                  items-start
-                  gap-2.5
-                  border-t
-                  border-[#E7E9EF]
-                  pt-4
-                ">
-
-                  <ShieldCheck
-                    size={15}
-                    className="
-                      mt-0.5
-                      shrink-0
-                      text-[#087A58]
-                    "
-                  />
-
-                  <p className="
-                    text-[11px]
-                    font-medium
-                    leading-5
-                    text-[#64748B]
-                  ">
-                    Your information is securely
-                    submitted for admin review.
-                  </p>
-
-                </div>
-
-              </div>
-
-            </div>
 
           </aside>
 
@@ -1679,37 +1882,117 @@ const SectionCard = ({
   delay = "0s",
 }) => {
   return (
+  
+
     <section
+  className="
+    w-full
+    min-w-0
+    overflow-hidden
+    rounded-[18px]
+    border
+    border-[#DCE7F5]
+    bg-white
+    p-3
+    shadow-[0_12px_35px_rgba(31,78,121,0.07)]
+    sm:rounded-[20px]
+    sm:p-4
+    md:p-5
+    lg:rounded-[22px]
+    lg:p-6
+    xl:p-7
+  "
+  style={{
+    animation: `fadeUp 0.5s ease-out ${delay} both`,
+  }}
+>
+  <div
+    className="
+      mb-4
+      flex
+      w-full
+      min-w-0
+      items-start
+      gap-2.5
+      sm:mb-5
+      sm:gap-3
+      md:mb-6
+      md:gap-4
+    "
+  >
+    {/* ICON */}
+    <div
       className="
-        w-full
-        overflow-hidden
-        rounded-[22px]
+        flex
+        h-9
+        w-9
+        shrink-0
+        items-center
+        justify-center
+        rounded-lg
         border
-        border-[#DCE7F5]
-        bg-white
-        p-4
-        shadow-[0_12px_35px_rgba(31,78,121,0.07)]
-        sm:p-5
-        lg:p-6
-        xl:p-7
+        border-[#D5E6FF]
+        bg-[#EAF3FF]
+        text-[#1769D2]
+        sm:h-10
+        sm:w-10
+        sm:rounded-xl
+        md:h-11
+        md:w-11
       "
-      style={{ animation: `fadeUp 0.5s ease-out ${delay} both` }}
     >
-      <div className="mb-6 flex min-w-0 items-start gap-3 sm:gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#D5E6FF] bg-[#EAF3FF] text-[#1769D2]">
-          <Icon size={20} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <h2 className="break-words text-[19px] font-bold leading-6 tracking-[-0.02em] text-[#17324D]">{title}</h2>
-          {description && (
-            <p className="mt-1.5 break-words text-[14px] font-medium leading-5 text-[#647B91]">
-              {description}
-            </p>
-          )}
-        </div>
-      </div>
-      {children}
-    </section>
+      <Icon
+        size={17}
+        className="sm:h-[18px] sm:w-[18px] md:h-5 md:w-5"
+      />
+    </div>
+
+    {/* TITLE + DESCRIPTION */}
+    <div className="min-w-0 flex-1">
+      <h2
+        className="
+          break-words
+          text-[16px]
+          font-bold
+          leading-5
+          tracking-[-0.02em]
+          text-[#17324D]
+          sm:text-[17px]
+          sm:leading-6
+          md:text-[19px]
+        "
+      >
+        {title}
+      </h2>
+
+      {description && (
+        <p
+          className="
+            mt-1
+            break-words
+            text-[12px]
+            font-medium
+            leading-[18px]
+            text-[#647B91]
+            sm:mt-1.5
+            sm:text-[13px]
+            sm:leading-5
+            md:text-[14px]
+          "
+        >
+          {description}
+        </p>
+      )}
+    </div>
+  </div>
+
+  {/* CONTENT */}
+  <div className="w-full min-w-0">
+    {children}
+  </div>
+</section>
+
+
   );
 };
 
@@ -1885,4 +2168,3 @@ const SubmitButton = ({ loading }) => {
 };
 
 export default SaaSUserRegistration;
-

@@ -86,6 +86,15 @@ const HotelLogin = () => {
       const loggedInUser =
         response?.user ||
         response?.data?.user;
+      const authToken = response?.token || response?.data?.token;
+      const cookieName = response?.cookieName || response?.data?.cookieName;
+
+      if (authToken) {
+        sessionStorage.setItem("hotelToken", authToken);
+      }
+      if (cookieName) {
+        sessionStorage.setItem("hotelCookieName", cookieName);
+      }
 
       if (loggedInUser) {
         await loginUser(loggedInUser);

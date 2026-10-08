@@ -32,7 +32,8 @@ const settingsSchema = new mongoose.Schema(
 
     gstNumber: {
       type: String,
-      required: true,
+      required: false,
+      default: "",
       trim: true,
     },
 

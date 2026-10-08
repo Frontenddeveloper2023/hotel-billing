@@ -41,7 +41,7 @@ const StatCard = memo(({ title, value, icon, cls, index }) => (
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { userData } = useAuth();
+  const { hotelUser: userData } = useAuth();
   
   const [dashboardData, setDashboardData] = useState({
     stats: {

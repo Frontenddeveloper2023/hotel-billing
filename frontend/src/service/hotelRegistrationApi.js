@@ -112,12 +112,13 @@ export const approveRegistration = async (id) => {
 };
 
 // REJECT REGISTRATION
-export const rejectRegistration = async (id, rejectionReason) => {
+export const rejectRegistration = async (id, rejectionReason, rejectionDetails = "") => {
   try {
     const response = await api.put(
       `/hotel-registrations/reject/${id}`,
       {
         rejectionReason,
+        rejectionDetails,
       }
     );
 

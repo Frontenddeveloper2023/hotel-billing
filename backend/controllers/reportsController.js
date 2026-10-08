@@ -35,24 +35,33 @@ export const getReportsSummary = async (req, res) => {
         // total bills
         const totalBills = await Invoice.countDocuments({ hotelId, branchId });
 
-        // recent 10 invoices
+        // recent invoices
         const recentInvoices = await Invoice.find({ hotelId, branchId })
             .sort({ createdAt: -1 })
-            .limit(10)
+            .limit(500)
             .lean();
 
-        const recentTransactions = recentInvoices.map((inv) => ({
-            _id: inv._id,
-            invoiceNo: inv.invoiceNo || "-",
-            customer: { customerName: inv.customer?.customerName || "N/A" },
-            roomNumber:
-                inv.room?.roomNumber ||
-                inv.customer?.roomNumber ||
-                "-",
-            invoiceDate: inv.invoiceDate || "",
-            grandTotal: Number(inv.financials?.grandTotal || 0),
-            status: inv.status || "ISSUED",
-        }));
+        const recentTransactions = recentInvoices.map((inv) => {
+            const isPaid =
+                inv.paymentInfo?.paymentStatus === "PAID" ||
+                inv.status === "PAID" ||
+                (inv.status !== "CANCELLED" && inv.status !== "REFUNDED");
+
+            return {
+                _id: inv._id,
+                invoiceNo: inv.invoiceNo || "-",
+                customer: { customerName: inv.customer?.customerName || "N/A" },
+                roomNumber:
+                    inv.room?.roomNumber ||
+                    inv.customer?.roomNumber ||
+                    (Array.isArray(inv.rooms) && inv.rooms.length > 0
+                        ? inv.rooms.map((r) => r.roomNumber).filter(Boolean).join(", ")
+                        : "-"),
+                invoiceDate: inv.invoiceDate || "",
+                grandTotal: Number(inv.financials?.grandTotal || 0),
+                status: isPaid ? "PAID" : (inv.status || "PAID"),
+            };
+        });
 
         return res.status(200).json({
             success: true,

@@ -102,20 +102,33 @@ const checkSubscriptionExpiry = async () => {
           expiryNotificationSentAt: null,
         },
       ],
-    }).populate(
-      "planId",
-      "planName"
+    })
+      .sort({ endDate: -1, createdAt: -1 })
+      .populate("planId", "planName");
+
+    // Deduplicate by hotelId: only evaluate the single latest subscription per hotel
+    const latestSubscriptionsByHotel = new Map();
+    for (const sub of subscriptions) {
+      if (!sub.hotelId) continue;
+      const hId = String(sub.hotelId._id || sub.hotelId);
+      if (!latestSubscriptionsByHotel.has(hId)) {
+        latestSubscriptionsByHotel.set(hId, sub);
+      }
+    }
+
+    const deduplicatedSubscriptions = Array.from(
+      latestSubscriptionsByHotel.values()
     );
 
     log.info(
-      `[SUBSCRIPTION] Subscriptions found: ${subscriptions.length}`
+      `[SUBSCRIPTION] Subscriptions found: ${subscriptions.length} (Deduplicated active per hotel: ${deduplicatedSubscriptions.length})`
     );
 
     // ========================================================
     // PROCESS EACH SUBSCRIPTION
     // ========================================================
 
-    for (const subscription of subscriptions) {
+    for (const subscription of deduplicatedSubscriptions) {
       try {
         if (!subscription.endDate) {
           continue;
@@ -144,8 +157,13 @@ const checkSubscriptionExpiry = async () => {
         });
 
         // Determine recipient email: prioritize hotelOwner user email, fallback to hotel.email
-        const recipientEmail = ownerUser?.email || hotel.email;
+const recipientEmail = String(
+  ownerUser?.email || hotel.email || ""
+)
+  .trim()
+  .replace(/^['"]+|['"]+$/g, "");
 
+  
         if (!recipientEmail) {
           log.warn(
             `[SUBSCRIPTION] No email found for hotel ${hotel.hotelName} (hotelId: ${hotel._id})`
@@ -181,30 +199,37 @@ const checkSubscriptionExpiry = async () => {
         // ====================================================
 
         if (now >= new Date(subscription.endDate) || daysRemaining <= 0) {
-          log.info(
-            `[SUBSCRIPTION] ${hotel.hotelName} subscription has expired.`
-          );
-
-          subscription.status = "expired";
-
-          // --------------------------------------------------
-          // SEND EXPIRED EMAIL ONLY ONCE
-          // --------------------------------------------------
-
           if (!subscription.expiryNotificationSentAt) {
+            // Atomic Lock: Try to claim this specific email notification
+            const lockedSub = await Subscription.findOneAndUpdate(
+              {
+                _id: subscription._id,
+                expiryNotificationSentAt: null,
+              },
+              {
+                $set: {
+                  status: "expired",
+                  expiryNotificationSentAt: new Date(),
+                },
+              },
+              { new: true }
+            );
+
+            // If null, another server instance already claimed and sent it
+            if (!lockedSub) continue;
+
+            log.info(
+              `[SUBSCRIPTION] ${hotel.hotelName} subscription has expired.`
+            );
+
             try {
               await sendSubscriptionExpiredNotification({
                 to: recipientEmail,
                 hotelName: hotel.hotelName,
-                planName:
-                  subscription.planId?.planName ||
-                  "Current Plan",
+                planName: subscription.planId?.planName || "Current Plan",
                 endDate: subscription.endDate,
                 hotelId: hotel._id,
               });
-
-              subscription.expiryNotificationSentAt =
-                new Date();
 
               log.info(
                 `[SUBSCRIPTION] Expired email sent to ${recipientEmail}`
@@ -214,9 +239,11 @@ const checkSubscriptionExpiry = async () => {
                 `[SUBSCRIPTION] Failed to send expired email to ${recipientEmail}: ${emailError.message}`
               );
             }
+          } else if (subscription.status !== "expired") {
+            // Fallback to just update status if email was already sent
+            subscription.status = "expired";
+            await subscription.save();
           }
-
-          await subscription.save();
 
           continue;
         }
@@ -230,26 +257,36 @@ const checkSubscriptionExpiry = async () => {
           daysRemaining > 3 &&
           !subscription.expiryReminder7DaysSentAt
         ) {
+          // Atomic Lock
+          const lockedSub = await Subscription.findOneAndUpdate(
+            {
+              _id: subscription._id,
+              expiryReminder7DaysSentAt: null,
+            },
+            {
+              $set: {
+                status: "expiring_soon",
+                expiryReminder7DaysSentAt: new Date(),
+              },
+            },
+            { new: true }
+          );
+
+          if (!lockedSub) continue;
+
           log.info(
             `[SUBSCRIPTION] ${hotel.hotelName} has ${daysRemaining} days remaining (7-day window).`
           );
-
-          subscription.status = "expiring_soon";
 
           try {
             await sendSubscriptionExpiryReminder({
               to: recipientEmail,
               hotelName: hotel.hotelName,
-              planName:
-                subscription.planId?.planName ||
-                "Current Plan",
+              planName: subscription.planId?.planName || "Current Plan",
               endDate: subscription.endDate,
               daysRemaining: daysRemaining,
               hotelId: hotel._id,
             });
-
-            subscription.expiryReminder7DaysSentAt =
-              new Date();
 
             log.info(
               `[SUBSCRIPTION] 7-day reminder sent to ${recipientEmail}`
@@ -259,8 +296,6 @@ const checkSubscriptionExpiry = async () => {
               `[SUBSCRIPTION] Failed to send 7-day reminder to ${recipientEmail}: ${emailError.message}`
             );
           }
-
-          await subscription.save();
 
           continue;
         }
@@ -274,26 +309,36 @@ const checkSubscriptionExpiry = async () => {
           daysRemaining > 1 &&
           !subscription.expiryReminder3DaysSentAt
         ) {
+          // Atomic Lock
+          const lockedSub = await Subscription.findOneAndUpdate(
+            {
+              _id: subscription._id,
+              expiryReminder3DaysSentAt: null,
+            },
+            {
+              $set: {
+                status: "expiring_soon",
+                expiryReminder3DaysSentAt: new Date(),
+              },
+            },
+            { new: true }
+          );
+
+          if (!lockedSub) continue;
+
           log.info(
             `[SUBSCRIPTION] ${hotel.hotelName} has ${daysRemaining} days remaining (3-day window).`
           );
-
-          subscription.status = "expiring_soon";
 
           try {
             await sendSubscriptionExpiryReminder({
               to: recipientEmail,
               hotelName: hotel.hotelName,
-              planName:
-                subscription.planId?.planName ||
-                "Current Plan",
+              planName: subscription.planId?.planName || "Current Plan",
               endDate: subscription.endDate,
               daysRemaining: daysRemaining,
               hotelId: hotel._id,
             });
-
-            subscription.expiryReminder3DaysSentAt =
-              new Date();
 
             log.info(
               `[SUBSCRIPTION] 3-day reminder sent to ${recipientEmail}`
@@ -303,8 +348,6 @@ const checkSubscriptionExpiry = async () => {
               `[SUBSCRIPTION] Failed to send 3-day reminder to ${recipientEmail}: ${emailError.message}`
             );
           }
-
-          await subscription.save();
 
           continue;
         }
@@ -318,26 +361,36 @@ const checkSubscriptionExpiry = async () => {
           daysRemaining > 0 &&
           !subscription.expiryReminder1DaySentAt
         ) {
+          // Atomic Lock
+          const lockedSub = await Subscription.findOneAndUpdate(
+            {
+              _id: subscription._id,
+              expiryReminder1DaySentAt: null,
+            },
+            {
+              $set: {
+                status: "expiring_soon",
+                expiryReminder1DaySentAt: new Date(),
+              },
+            },
+            { new: true }
+          );
+
+          if (!lockedSub) continue;
+
           log.info(
             `[SUBSCRIPTION] ${hotel.hotelName} has 1 day remaining.`
           );
-
-          subscription.status = "expiring_soon";
 
           try {
             await sendSubscriptionExpiryReminder({
               to: recipientEmail,
               hotelName: hotel.hotelName,
-              planName:
-                subscription.planId?.planName ||
-                "Current Plan",
+              planName: subscription.planId?.planName || "Current Plan",
               endDate: subscription.endDate,
               daysRemaining: Math.max(1, daysRemaining),
               hotelId: hotel._id,
             });
-
-            subscription.expiryReminder1DaySentAt =
-              new Date();
 
             log.info(
               `[SUBSCRIPTION] 1-day reminder sent to ${recipientEmail}`
@@ -347,8 +400,6 @@ const checkSubscriptionExpiry = async () => {
               `[SUBSCRIPTION] Failed to send 1-day reminder to ${recipientEmail}: ${emailError.message}`
             );
           }
-
-          await subscription.save();
 
           continue;
         }

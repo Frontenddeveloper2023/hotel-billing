@@ -279,6 +279,7 @@ const SaaSAdminHotels = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [rejectionDetails, setRejectionDetails] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const toast = useToast();
   const [successMessage, setSuccessMessage] = useState("");
@@ -489,13 +490,21 @@ const [emailForm, setEmailForm] = useState({
   const handleOpenReject = (registration) => {
     setSelectedRegistration(registration);
     setRejectionReason("");
+    setRejectionDetails("");
     setShowRejectModal(true);
   };
 
   const handleReject = async () => {
     const reason = rejectionReason.trim();
-    if (reason.length < 5) {
-      toast.error("Please provide a rejection reason with at least 5 characters.");
+    const details = rejectionDetails.trim();
+
+    if (!reason && !details) {
+      toast.error("Please select a rejection reason or provide additional details.");
+      return;
+    }
+
+    if (details.length > 0 && details.length < 5) {
+      toast.error("Please provide at least 5 characters for additional details.");
       return;
     }
 
@@ -506,15 +515,14 @@ const [emailForm, setEmailForm] = useState({
 
     try {
       setActionLoading(true);
-      
       setSuccessMessage("");
 
-      await rejectRegistration(selectedRegistration._id, reason);
+      await rejectRegistration(selectedRegistration._id, reason, details);
 
       setRegistrations((prev) =>
         prev.map((item) =>
           String(item._id) === String(selectedRegistration._id)
-            ? { ...item, status: "rejected", rejectionReason: reason }
+            ? { ...item, status: "rejected", rejectionReason: reason, rejectionDetails: details }
             : item
         )
       );
@@ -524,6 +532,7 @@ const [emailForm, setEmailForm] = useState({
       setShowDetailsModal(false);
       setSelectedRegistration(null);
       setRejectionReason("");
+      setRejectionDetails("");
     } catch (err) {
       console.error("Reject application error:", err);
       toast.error(err?.message || err?.data?.message || "Unable to reject this application.");
@@ -1033,7 +1042,7 @@ const handleViewEmailHistory = async () => {
     className="flex justify-end items-center gap-2"
     onClick={(e) => e.stopPropagation()}
   >
-    {registration.status === "pending" && (
+    {registration.status === "pending" && registration.paymentStatus === "paid" && (
       <>
         <button
           type="button"
@@ -1194,7 +1203,6 @@ const handleViewEmailHistory = async () => {
                     <Info label="Hotel Owner">{selectedRegistration.ownerName || "Not provided"}</Info>
                     <Info label="Email Address">{selectedRegistration.email || "Not provided"}</Info>
                     <Info label="Phone Number">{selectedRegistration.phone || "Not provided"}</Info>
-                    <Info label="GSTIN">{selectedRegistration.gstNumber || "Not provided"}</Info>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1245,19 +1253,34 @@ const handleViewEmailHistory = async () => {
                     <Info label="Application ID" icon={FileCheck2} mono>{selectedRegistration._id}</Info>
                   </div>
 
-                  {selectedRegistration.rejectionReason && (
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-2xl">
+                  {(selectedRegistration.rejectionReason || selectedRegistration.rejectionDetails) && (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-2xl space-y-2">
                       <div className="flex items-center gap-2">
                         <XCircle size={16} className="text-red-600" />
-                        <p className="text-xs font-semibold text-red-700">Reason for Rejection</p>
+                        <p className="text-xs font-semibold text-red-700">Rejection Information</p>
                       </div>
-                      <p className="mt-1 text-sm text-red-800">{selectedRegistration.rejectionReason}</p>
+                      {selectedRegistration.rejectionReason && (
+                        <div>
+                          <p className="text-[11px] font-bold uppercase tracking-wide text-red-400">Reason</p>
+                          <p className="mt-0.5 text-sm font-semibold text-red-800">
+                            {rejectionReasons.find((r) => r.value === selectedRegistration.rejectionReason)?.label || selectedRegistration.rejectionReason}
+                          </p>
+                        </div>
+                      )}
+                      {selectedRegistration.rejectionDetails && (
+                        <div>
+                          <p className="text-[11px] font-bold uppercase tracking-wide text-red-400">Additional Details</p>
+                          <p className="mt-0.5 text-xs text-red-700 whitespace-pre-wrap leading-relaxed">
+                            {selectedRegistration.rejectionDetails}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
 
                   
 
-                  {selectedRegistration.status === "pending" && (
+                  {selectedRegistration.status === "pending" && selectedRegistration.paymentStatus === "paid" && (
                     <div className="flex flex-col sm:flex-row gap-3 pt-2">
                       <button
                         type="button"
@@ -1299,7 +1322,6 @@ const handleViewEmailHistory = async () => {
                     <Info label="Hotel Owner" icon={Users}>{selectedHotel.ownerName || "Not provided"}</Info>
                     <Info label="Email Address" icon={Mail}>{selectedHotel.email || "Not provided"}</Info>
                     <Info label="Phone Number" icon={Phone}>{selectedHotel.phone || "Not provided"}</Info>
-                    <Info label="GSTIN" icon={ShieldCheck}>{selectedHotel.gstNumber || "Not provided"}</Info>
                   </div>
 
 
@@ -1721,12 +1743,7 @@ const handleViewEmailHistory = async () => {
 
   <select
     value={rejectionReason}
-    onChange={(e) => {
-      setRejectionReason(e.target.value);
-
-      // Keep additional details empty
-      setRejectionDetails("");
-    }}
+    onChange={(e) => setRejectionReason(e.target.value)}
     className={`${inputCls} cursor-pointer px-3 py-2.5`}
   >
     {rejectionReasons.map((reason) => (
@@ -1754,7 +1771,9 @@ const handleViewEmailHistory = async () => {
   />
 
   <p className="mt-1 text-xs text-[#8fa2ba]">
-    Please provide at least 5 characters.
+    {rejectionReason
+      ? "Additional context or notes for the applicant (optional)."
+      : "Please select a reason or provide at least 5 characters."}
   </p>
 
 
@@ -1766,6 +1785,7 @@ const handleViewEmailHistory = async () => {
       type="button"
       onClick={() => {
         setShowRejectModal(false);
+        setRejectionReason("");
         setRejectionDetails("");
       }}
       disabled={actionLoading}
@@ -1794,7 +1814,7 @@ const handleViewEmailHistory = async () => {
       onClick={handleReject}
       disabled={
         actionLoading ||
-        rejectionDetails.trim().length < 5
+        (!rejectionReason && rejectionDetails.trim().length < 5)
       }
       className={`
         flex-1

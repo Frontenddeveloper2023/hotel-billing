@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import User from "../models/users.js";
+import Hotels from "../models/hotels.js";
+import Settings from "../models/settings.js";
 import Subscription from "../models/subscription.js";
 import { log } from "../util/logger.js";
 
@@ -1230,6 +1232,15 @@ export const updateUser =
           message:
             "The user could not be updated because the account was not found in your branch.",
         });
+      }
+
+      // Sync email to Hotels and Settings if hotelOwner is updated
+      if (
+          normalizedEmail &&
+          updatedUser.role === "hotelOwner"
+      ) {
+          await Hotels.findByIdAndUpdate(hotelId, { $set: { email: normalizedEmail } });
+          await Settings.findOneAndUpdate({ hotelId, branchId: branchId }, { $set: { email: normalizedEmail } });
       }
 
       /**

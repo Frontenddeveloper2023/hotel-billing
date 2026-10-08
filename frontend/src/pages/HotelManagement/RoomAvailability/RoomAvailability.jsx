@@ -377,7 +377,7 @@ export default function RoomAvailability({ onNewBooking }) {
                     </div>
                     <button
                         type="button"
-                        onClick={() => navigate("/saas-user/choose-plan")}
+                        onClick={() => navigate("/plan-upgrade")}
                         className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold shrink-0 transition-colors shadow-sm cursor-pointer"
                     >
                         <Crown className="w-3.5 h-3.5" />

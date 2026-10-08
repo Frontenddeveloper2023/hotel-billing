@@ -657,13 +657,43 @@ const SaaSAdminSubscriptions = () => {
         )}
 
         {/* STATS */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
-          <StatCard index={1} title="Total" value={subscriptions.length} icon={Layers} wrapperClass="bg-[#EAF3FF] text-[#2568e0]" loading={loading} />
-          <StatCard index={2} title="Active" value={activeCount} icon={CheckCircle2} wrapperClass="bg-[#E1FAF0] text-[#087A58]" loading={loading} />
-          <StatCard index={3} title="Expired" value={expiredCount} icon={XCircle} wrapperClass="bg-red-50 text-red-600" loading={loading} />
-          <StatCard index={4} title="Collected" value={formatCurrency(collectedRevenue)} icon={Wallet} wrapperClass="bg-violet-50 text-violet-600" loading={loading} />
-        </div>
+<div className="mb-5 grid w-full grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+  <StatCard
+    index={1}
+    title="Total"
+    value={subscriptions.length}
+    icon={Layers}
+    wrapperClass="bg-[#EAF3FF] text-[#2568e0]"
+    loading={loading}
+  />
 
+  <StatCard
+    index={2}
+    title="Active"
+    value={activeCount}
+    icon={CheckCircle2}
+    wrapperClass="bg-[#E1FAF0] text-[#087A58]"
+    loading={loading}
+  />
+
+  <StatCard
+    index={3}
+    title="Expired"
+    value={expiredCount}
+    icon={XCircle}
+    wrapperClass="bg-red-50 text-red-600"
+    loading={loading}
+  />
+
+  <StatCard
+    index={4}
+    title="Collected"
+    value={formatCurrency(collectedRevenue)}
+    icon={Wallet}
+    wrapperClass="bg-violet-50 text-violet-600"
+    loading={loading}
+  />
+</div>
         {/* BAR CHART + RECENT ACTIVITY */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-5 mb-5">
           <section style={delay(6)} className={`ss-in lg:col-span-3 ${card} p-5 sm:p-6`}>

@@ -322,12 +322,12 @@ const BranchCard = memo(function BranchCard({
             </span>
           </div>
 
-          <div className="flex items-center gap-2.5 min-w-0">
+          {/* <div className="flex items-center gap-2.5 min-w-0">
             <Mail className="w-4 h-4 text-blue-400 shrink-0" />
             <span className="truncate">
               {branch.email || "No email provided"}
             </span>
-          </div>
+          </div> */}
 
           <div className="flex items-start gap-2.5">
             <MapPin className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
@@ -587,7 +587,7 @@ const BranchFormModal = memo(function BranchFormModal({
               />
             </Field>
 
-            <Field label="Branch Email" error={formErrors.email}>
+            {/* <Field label="Branch Email" error={formErrors.email}>
               <input
                 type="email"
                 name="email"
@@ -596,7 +596,7 @@ const BranchFormModal = memo(function BranchFormModal({
                 onChange={onChange}
                 className={inputClass(formErrors.email, "px-3.5 py-2.5")}
               />
-            </Field>
+            </Field> */}
           </div>
 
           {/* Address */}
@@ -737,7 +737,7 @@ const DeleteModal = memo(function DeleteModal({
 
 export default function BranchManagement() {
   const toast = useToast();
-  const { userData } = useAuth(); // kept for parity with original
+  const { hotelUser: userData } = useAuth(); // kept for parity with original
   const navigate = useNavigate();
 
   // ============================================================
