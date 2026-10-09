@@ -53,7 +53,7 @@ const EMPTY_FORM = {
   idProofNumber: "",
 };
 
-const STATUS_TABS = ["All", "Staying", "Overstaying", "Checked Out"];
+const STATUS_TABS = ["All"];
 
 const ID_PROOF_OPTIONS = [
   "Aadhaar Card",
@@ -1313,7 +1313,7 @@ const thClass =
             }
           `}
         >
-          {tab === "All" ? "All Statuses" : tab}
+          {tab === "All" ? "Customers" : tab}
 
           <span
             className={`

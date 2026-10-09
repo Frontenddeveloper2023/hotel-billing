@@ -482,6 +482,7 @@ const [emailForm, setEmailForm] = useState({
         title: "Approve Hotel Application",
         confirmText: "Approve",
         cancelText: "Cancel",
+        variant: "success",
       }
     );
   };

@@ -146,7 +146,7 @@ export const ToastProvider = ({ children }) => {
       title = "Confirm Action",
       confirmText = "Confirm",
       cancelText = "Cancel",
-      variant = "danger", // "danger" | "primary" | "warning"
+      variant = "danger", // "danger" | "primary" | "warning" | "success"
     } = options;
 
     clearTimeout(confirmTimerRef.current);
@@ -212,6 +212,7 @@ export const ToastProvider = ({ children }) => {
 
   const variant = confirmDialog?.variant || "danger";
   const DialogIcon =
+    variant === "success" ? CheckCircle2 :
     variant === "danger" || variant === "warning" ? AlertTriangle : HelpCircle;
 
   return (
@@ -519,6 +520,7 @@ const TOAST_CSS = `
 .tn-v-danger  { --a1:#f43f5e; --a2:#dc2626; --glow:rgba(244,63,94,.38);  --soft:rgba(244,63,94,.10); }
 .tn-v-warning { --a1:#fbbf24; --a2:#f97316; --glow:rgba(245,158,11,.40); --soft:rgba(245,158,11,.12); }
 .tn-v-primary { --a1:#3b82f6; --a2:#0f2a63; --glow:rgba(37,99,235,.38);  --soft:rgba(59,130,246,.10); }
+.tn-v-success { --a1:#10b981; --a2:#0d9488; --glow:rgba(16,185,129,.38);  --soft:rgba(16,185,129,.10); }
 
 .tn-modal {
   position: relative;
