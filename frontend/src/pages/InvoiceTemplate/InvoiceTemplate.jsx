@@ -564,10 +564,7 @@ const InvoiceTemplate = ({
                         <span>TOTAL PAID</span>
                         <span>₹{totalPaid.toLocaleString("en-IN")}</span>
                       </p>
-                      <p className="flex justify-between font-bold text-gray-900">
-                        <span>BALANCE DUE</span>
-                        <span>₹{balanceDue.toLocaleString("en-IN")}</span>
-                      </p>
+                     
                     </div>
                   </div>
                 </div>

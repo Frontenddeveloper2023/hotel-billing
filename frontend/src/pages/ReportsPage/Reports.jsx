@@ -292,7 +292,7 @@ const ReportRow = memo(function ReportRow({ row, index }) {
         <ServiceCell row={row} />
       </td>
       <td className="px-4 lg:px-6 py-4 font-semibold text-slate-700 tabular-nums whitespace-nowrap">
-        {row.date}
+        {formatHumanDate(row.date)}
       </td>
       <td className="px-4 lg:px-6 py-4 font-bold text-[#0f2a63] tabular-nums whitespace-nowrap">
         ₹ {inr(row.amount)}
@@ -329,7 +329,7 @@ const ReportCard = memo(function ReportCard({ row, index }) {
       <div className="flex items-center justify-between">
         <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 tabular-nums">
           <CalendarDays className="w-3.5 h-3.5 text-blue-400" />
-          {row.date}
+          {formatHumanDate(row.date)}
         </span>
         <span className="text-lg font-extrabold text-[#0f2a63] tabular-nums">
           ₹ {inr(row.amount)}
@@ -423,20 +423,9 @@ export default function Reports() {
               : "N/A");
 
           const rawDate = String(inv.invoiceDate || "").trim();
-          let itemDate = rawDate;
-          if (!rawDate) {
-            itemDate = new Date().toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            });
-          } else if (rawDate.includes("T")) {
-            itemDate = new Date(rawDate).toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            });
-          }
+          let d = rawDate ? new Date(rawDate) : new Date();
+          if (isNaN(d.getTime())) d = new Date();
+          const itemDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
           const rawStatus = String(inv.status || "").toUpperCase();
           const status =

@@ -228,10 +228,7 @@ export default function InvoiceTemplate({
                 <span>Advance Paid:</span>
                 <span>- ₹{advancePaid}</span>
               </div>
-              <div className="flex justify-between text-sm font-extrabold text-rose-600 border-t border-dashed border-slate-300 pt-2">
-                <span>Balance Due:</span>
-                <span>₹{Number(remainingAmount).toFixed(2)}</span>
-              </div>
+            
             </div>
           </div>
 

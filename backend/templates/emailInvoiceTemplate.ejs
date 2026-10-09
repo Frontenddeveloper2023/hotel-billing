@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333;
+            margin: 0;
+            padding: 40px;
+            background: #fff;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #0e2a4a;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .hotel-info h1 {
+            margin: 0;
+            color: #0e2a4a;
+            font-size: 28px;
+        }
+        .hotel-info p {
+            margin: 5px 0 0;
+            color: #555;
+            font-size: 14px;
+        }
+        .invoice-title {
+            text-align: right;
+        }
+        .invoice-title h2 {
+            margin: 0;
+            color: #555;
+            font-size: 24px;
+            text-transform: uppercase;
+        }
+        .invoice-title p {
+            margin: 5px 0 0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .details-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .details-box {
+            width: 48%;
+            background: #f9fbfd;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e5edf6;
+        }
+        .details-box h3 {
+            margin-top: 0;
+            font-size: 14px;
+            color: #0e2a4a;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        .details-box p {
+            margin: 5px 0;
+            font-size: 13px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e5edf6;
+            text-align: left;
+            font-size: 13px;
+        }
+        th {
+            background-color: #0e2a4a;
+            color: #fff;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .totals-section {
+            width: 50%;
+            float: right;
+        }
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+        .totals-row.grand-total {
+            font-size: 18px;
+            font-weight: bold;
+            color: #0e2a4a;
+            border-top: 2px solid #0e2a4a;
+            padding-top: 10px;
+            margin-top: 5px;
+        }
+        .clear {
+            clear: both;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+            border-top: 1px solid #e5edf6;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="hotel-info">
+            <h1><%= invoice.dynamicHotelName || 'StayLio' %></h1>
+            <p>Hotel Management</p>
+        </div>
+        <div class="invoice-title">
+            <h2>INVOICE</h2>
+            <p># <%= invoice.invoiceNo %></p>
+            <p style="font-weight:normal;">Date: <%= invoice.invoiceDate %></p>
+        </div>
+    </div>
+
+    <div class="details-section">
+        <div class="details-box">
+            <h3>Guest Details</h3>
+            <p><strong>Name:</strong> <%= invoice.customer.customerName %></p>
+            <p><strong>Phone:</strong> <%= invoice.customer.phoneNumber || 'N/A' %></p>
+            <p><strong>Email:</strong> <%= invoice.customer.email || 'N/A' %></p>
+            <p><strong>Address:</strong> <%= invoice.customer.address || 'N/A' %></p>
+        </div>
+        <div class="details-box">
+            <h3>Stay Summary</h3>
+            <p><strong>Check-In:</strong> <%= invoice.formattedCheckIn %></p>
+            <p><strong>Check-Out:</strong> <%= invoice.formattedCheckOut %></p>
+            <p><strong>Total Nights:</strong> <%= invoice.staySummary.totalNightsStayed %></p>
+            <p><strong>Rooms:</strong> <%= invoice.rooms.map(r => r.roomNumber).join(', ') %></p>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th class="text-right">Amount (INR)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Room Rent (Base)</td>
+                <td class="text-right"><%= invoice.financials.roomRent.toFixed(2) %></td>
+            </tr>
+            <% if (invoice.financials.totalExtraStayCharges > 0) { %>
+            <tr>
+                <td>Extra Stay Charges</td>
+                <td class="text-right"><%= invoice.financials.totalExtraStayCharges.toFixed(2) %></td>
+            </tr>
+            <% } %>
+            <% if (invoice.financials.foodServices > 0) { %>
+            <tr>
+                <td>Food Services</td>
+                <td class="text-right"><%= invoice.financials.foodServices.toFixed(2) %></td>
+            </tr>
+            <% } %>
+            <% if (invoice.financials.roomServices > 0) { %>
+            <tr>
+                <td>Room Services</td>
+                <td class="text-right"><%= invoice.financials.roomServices.toFixed(2) %></td>
+            </tr>
+            <% } %>
+        </tbody>
+    </table>
+
+    <div class="totals-section">
+        <div class="totals-row">
+            <span>Subtotal:</span>
+            <span><%= invoice.financials.subTotal.toFixed(2) %></span>
+        </div>
+        <div class="totals-row">
+            <span>GST (<%= invoice.financials.gstPercentage %>%):</span>
+            <span><%= invoice.financials.gstAmount.toFixed(2) %></span>
+        </div>
+        <div class="totals-row grand-total">
+            <span>Grand Total:</span>
+            <span><%= invoice.financials.grandTotal.toFixed(2) %></span>
+        </div>
+        <div style="margin-top:15px; padding-top:10px; border-top: 1px dashed #ccc;">
+            <div class="totals-row">
+                <span>Advance Paid:</span>
+                <span><%= invoice.financials.advancePaid.toFixed(2) %></span>
+            </div>
+            <div class="totals-row">
+                <span>Current Payment:</span>
+                <span><%= invoice.financials.currentPayment.toFixed(2) %></span>
+            </div>
+            <div class="totals-row">
+                <span>Total Paid:</span>
+                <span><%= invoice.financials.totalPaid.toFixed(2) %></span>
+            </div>
+         
+        </div>
+    </div>
+
+    <div class="clear"></div>
+
+    <div class="footer">
+        <p>Thank you for choosing <%= invoice.dynamicHotelName || 'StayLio' %>. We hope you had a wonderful stay!</p>
+        <p>If you have any questions about this invoice, please contact our support.</p>
+        <p style="margin-top:20px; font-weight:bold;">Status: <%= invoice.paymentInfo.paymentStatus %></p>
+    </div>
+
+</body>
+</html>

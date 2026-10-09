@@ -9,6 +9,7 @@ import CheckoutBill from "../models/checkoutBill.js";
 import Booking from "../models/booking.js";
 import Settings from "../models/settings.js";
 import nodemailer from "nodemailer";
+import { generateInvoicePdfBuffer } from "../util/pdfGenerator.js";
 
 
 import { log } from "../util/logger.js";
@@ -2560,24 +2561,39 @@ export const sendInvoiceEmail = async (req, res) => {
         }
 
         // ------------------------------------------
-        // VALIDATE PDF
+        // GENERATE PDF
         // ------------------------------------------
 
-        if (!req.file) {
-            return res.status(400).json({
+        const invoiceData = await Invoice.findOne({ invoiceNo }).populate('hotelId').lean();
+        if (!invoiceData) {
+            return res.status(404).json({
                 success: false,
-                message: "Invoice PDF is required.",
+                message: "Invoice not found for the given Invoice No.",
             });
         }
 
-        // ------------------------------------------
-        // VALIDATE PDF TYPE
-        // ------------------------------------------
+        // Fetch dynamic hotel name
+        let dynamicHotelName = invoiceData.hotelId?.hotelName || "StayLio";
+        try {
+            const SettingsModel = mongoose.model("Settings");
+            const settings = await SettingsModel.findOne({ hotelId: invoiceData.hotelId?._id }).select("companyName").lean();
+            if (settings && settings.companyName) {
+                dynamicHotelName = settings.companyName;
+            }
+        } catch (e) {
+            console.error("Failed to fetch settings for hotel name", e);
+        }
+        invoiceData.dynamicHotelName = dynamicHotelName;
 
-        if (req.file.mimetype !== "application/pdf") {
-            return res.status(400).json({
+
+        let generatedPdfBuffer;
+        try {
+            generatedPdfBuffer = await generateInvoicePdfBuffer(invoiceData);
+        } catch (err) {
+            console.error("Failed to generate PDF backend:", err);
+            return res.status(500).json({
                 success: false,
-                message: "Only PDF invoice files are allowed.",
+                message: "Failed to generate professional PDF.",
             });
         }
 
@@ -2609,7 +2625,7 @@ export const sendInvoiceEmail = async (req, res) => {
         // ------------------------------------------
 
         const mailOptions = {
-            from: `"StayLio" <${process.env.SMTP_USER}>`,
+            from: `"${dynamicHotelName}" <${process.env.SMTP_USER}>`,
 
             to: safeEmail,
 
@@ -2630,7 +2646,7 @@ Thank you for choosing us.
 We hope to welcome you back soon!
 
 Warm regards,
-Hotel Management Team
+${dynamicHotelName} Team
             `.trim(),
 
             html: `
@@ -2693,7 +2709,7 @@ Hotel Management Team
                                 color:#ffffff;
                             "
                         >
-                            StayLio
+                            ${dynamicHotelName}
                         </div>
 
                         <div
@@ -2861,7 +2877,7 @@ Hotel Management Team
                         >
                             Warm regards,<br />
                             <strong>
-                                Hotel Management Team
+                                ${dynamicHotelName} Team
                             </strong>
                         </p>
 
@@ -2908,7 +2924,7 @@ Hotel Management Team
                             ? safeInvoiceNo
                             : `${safeInvoiceNo}.pdf`,
 
-                    content: req.file.buffer,
+                    content: generatedPdfBuffer,
 
                     contentType:
                         "application/pdf",
