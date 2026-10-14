@@ -1,0 +1,53 @@
+# =================( Dependencies )=================
+node_modules/
+jspm_packages/
+
+# =================( Environment & Secrets )=================
+# Never push your database connection strings or secret keys
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# =================( Build & Production Outputs )=================
+# Frontend build files (Vite, React Scripts, Next.js, etc.)
+dist/
+build/
+.next/
+out/
+
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+backend/.env
+frontend/.env
+
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+
+# =================( Logs & Debugging )=================
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# =================( OS & Editor Specific )=================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
