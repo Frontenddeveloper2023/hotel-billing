@@ -21,6 +21,7 @@ import {
     permissionVerify,
     permissionVerifyAny,
 } from "../middleware/userVerify.js";
+import { subscriptionVerify } from "../middleware/subscriptionVerify.js";
 
 const router = express.Router();
 
@@ -32,6 +33,7 @@ router.post(
     "/",
     authVerify,
     permissionVerify("roomsBooking"),
+    subscriptionVerify,
     createBooking
 );
 
@@ -67,6 +69,7 @@ router.put(
     "/:id",
     authVerify,
     permissionVerify("roomsBooking"),
+    subscriptionVerify,
     updateBooking
 );
 
@@ -74,6 +77,7 @@ router.delete(
     "/:id",
     authVerify,
     permissionVerify("roomsBooking"),
+    subscriptionVerify,
     deleteBooking
 );
 
@@ -85,6 +89,7 @@ router.post(
     "/:id/payment",
     authVerify,
     permissionVerify("roomsBooking"),
+    subscriptionVerify,
     addBookingPayment
 );
 
@@ -96,6 +101,7 @@ router.post(
     "/:id/checkout",
     authVerify,
     permissionVerify("roomsBooking"),
+    subscriptionVerify,
     checkoutRooms
 );
 
@@ -107,6 +113,7 @@ router.post(
     "/:id/rooms/:roomId/food",
     authVerify,
     permissionVerify("foodManagement"),
+    subscriptionVerify,
     addFoodService
 );
 
@@ -114,6 +121,7 @@ router.patch(
     "/:id/rooms/:roomId/food/paid",
     authVerify,
     permissionVerifyAny("foodManagement", "roomsBooking"),
+    subscriptionVerify,
     markFoodServicesPaid
 );
 
@@ -125,6 +133,7 @@ router.post(
     "/:id/rooms/:roomId/room-service",
     authVerify,
     permissionVerify("serviceManagement"),
+    subscriptionVerify,
     addRoomService
 );
 
@@ -132,6 +141,7 @@ router.patch(
     "/:id/rooms/:roomId/room-service/paid",
     authVerify,
     permissionVerifyAny("serviceManagement", "roomsBooking"),
+    subscriptionVerify,
     markRoomServicesPaid
 );
 

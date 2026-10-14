@@ -23,6 +23,7 @@ import {
   Globe2,
   MapPinned,
   CreditCard,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -34,6 +35,7 @@ import { useToast } from "../../Context/ToastContext";
 
 import {
   createRegistration,
+  registerFreeTrial,
 } from "../../service/hotelRegistrationApi";
 
 
@@ -163,6 +165,14 @@ const SaaSUserRegistration = () => {
   const selectedPlan = routerPlan || savedPlan || null;
   const selectedBillingCycle = routerBillingCycle || savedBillingCycle || "monthly";
 
+  const isFreeTrial = Boolean(
+    location.state?.isFreeTrial ||
+    selectedPlan?.isFreeTrial ||
+    sessionStorage.getItem("saasIsFreeTrial") === "true"
+  );
+
+  const [trialSuccessModal, setTrialSuccessModal] = useState(null);
+
   // ==========================================================
   // FORM
   // ==========================================================
@@ -182,7 +192,7 @@ const [form, setForm] = useState({
 
   gstNumber: "",
   taxEnabled: false,
-  billingCycle: selectedBillingCycle,
+  billingCycle: isFreeTrial ? "trial" : selectedBillingCycle,
 });
 
 
@@ -287,7 +297,7 @@ const [form, setForm] = useState({
       return "Please enter your pincode.";
     }
 
-    if (!form.billingCycle) {
+    if (!form.billingCycle && !isFreeTrial) {
       return "Please select a billing cycle.";
     }
 
@@ -311,10 +321,54 @@ const [form, setForm] = useState({
     try {
       setLoading(true);
 
-      // ------------------------------------------------------
-      // REGISTRATION DATA
-      // ------------------------------------------------------
+      // ======================================================
+      // 1. FREE TRIAL REGISTRATION FLOW (INSTANT ACCESS)
+      // ======================================================
+      if (isFreeTrial) {
+        const trialResponse = await registerFreeTrial({
+          hotelName: form.hotelName.trim(),
+          ownerName: form.ownerName.trim(),
+          email: form.email.trim().toLowerCase(),
+          phone: form.phone.trim(),
+          address: {
+            street: form.street.trim(),
+            city: form.city.trim(),
+            state: form.state.trim(),
+            country: form.country.trim(),
+            pincode: form.pincode.trim(),
+          },
+          gstNumber: form.gstNumber.trim(),
+          taxEnabled: form.taxEnabled,
+          planId: selectedPlan?._id !== "free-trial" ? selectedPlan?._id : undefined,
+        });
 
+        if (!trialResponse?.success) {
+          throw new Error(
+            trialResponse?.message || "Unable to start your free trial."
+          );
+        }
+
+        sessionStorage.removeItem("saasSelectedPlan");
+        sessionStorage.removeItem("saasBillingCycle");
+        sessionStorage.removeItem("saasIsFreeTrial");
+
+        setTrialSuccessModal(
+          trialResponse.data || {
+            hotelName: form.hotelName.trim(),
+            ownerEmail: form.email.trim().toLowerCase(),
+            startDate: new Date(),
+            endDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+            trialDays: 14,
+          }
+        );
+
+        toast.success("Your free trial plan was enabled successfully!");
+        return;
+      }
+
+      // ======================================================
+      // 2. REGULAR PAID REGISTRATION FLOW (CHECKOUT & REVIEW)
+      // ======================================================
       const registrationData = {
         hotelName:
           form.hotelName.trim(),
@@ -537,38 +591,24 @@ const [form, setForm] = useState({
             }}
           >
 
-            <button
-              type="button"
-              onClick={() =>
-                navigate(
-                  "/saas-user/choose-plan"
-                )
-              }
-              className="
-                mb-8
-                inline-flex
-                items-center
-                gap-2
-                rounded-xl
-                border
-                border-[#D8DCE7]
-                bg-white
-                px-5
-                py-3
-                text-sm
-                font-bold
-                text-[#334155]
-                transition-all
-                duration-200
-                hover:border-[#3B8EF3]
-                hover:bg-[#F4F9FF]
-                hover:text-[#1769D2]
-              "
-            >
-              <ArrowLeft size={16} />
-
-              Back to Plans
-            </button>
+<button
+  type="button"
+  onClick={() => navigate("/saas-user/choose-plan")}
+  className="
+    group mb-8 inline-flex items-center gap-2 
+    text-sm font-medium text-slate-600 
+    transition-colors duration-200 
+    hover:text-indigo-600 focus:outline-none focus-visible:underline
+  "
+>
+  <ArrowLeft 
+    size={16} 
+    className="transition-transform duration-200 group-hover:-translate-x-1" 
+  />
+  <span className="hover:underline underline-offset-4">
+    Back to Plans
+  </span>
+</button>
 
 
             <div className="
@@ -1267,7 +1307,7 @@ const [form, setForm] = useState({
           md:text-[14px]
         "
       >
-        / {getBillingLabel(form.billingCycle)}
+        {isFreeTrial ? "Free Trial" : `/ ${getBillingLabel(form.billingCycle)}`}
       </span>
     </div>
 
@@ -1284,8 +1324,9 @@ const [form, setForm] = useState({
         md:text-[12px]
       "
     >
-      Billed {getBillingLabel(form.billingCycle)} •
-      Subscription billing
+      {isFreeTrial
+        ? "Full feature access • No payment required"
+        : `Billed ${getBillingLabel(form.billingCycle)} • Subscription billing`}
     </p>
   </div>
 
@@ -1303,96 +1344,98 @@ const [form, setForm] = useState({
       lg:p-7
     "
   >
-    {/* BILLING CYCLE */}
+    {/* BILLING CYCLE (Hidden for Free Trial) */}
+    {!isFreeTrial && (
+      <>
+        <div className="w-full min-w-0">
+          <p
+            className="
+              text-[10px]
+              font-extrabold
+              uppercase
+              tracking-[0.1em]
+              text-[#475569]
+              sm:text-[11px]
+            "
+          >
+            Billing Cycle
+          </p>
 
-    <div className="w-full min-w-0">
-      <p
-        className="
-          text-[10px]
-          font-extrabold
-          uppercase
-          tracking-[0.1em]
-          text-[#475569]
-          sm:text-[11px]
-        "
-      >
-        Billing Cycle
-      </p>
+          <div className="relative mt-2 w-full">
+            <CreditCard
+              size={16}
+              className="
+                pointer-events-none
+                absolute
+                left-3
+                top-1/2
+                z-10
+                -translate-y-1/2
+                text-[#1769D2]
+              "
+            />
 
-      <div className="relative mt-2 w-full">
-        <CreditCard
-          size={16}
+            <select
+              name="billingCycle"
+              value={form.billingCycle}
+              onChange={handleChange}
+              className="
+                h-11
+                w-full
+                min-w-0
+                appearance-none
+                rounded-xl
+                border
+                border-[#D6E1EF]
+                bg-[#F8FBFF]
+                py-2.5
+                pl-10
+                pr-4
+                text-[12px]
+                font-bold
+                text-[#1E293B]
+                outline-none
+                transition-all
+                duration-200
+                focus:border-[#3B8EF3]
+                focus:bg-white
+                focus:ring-2
+                focus:ring-[#3B8EF3]/10
+                sm:h-12
+                sm:text-[13px]
+              "
+            >
+              <option value="monthly">
+                Monthly
+              </option>
+
+              <option value="quarterly">
+                Quarterly
+              </option>
+
+              <option value="halfYearly">
+                Half Yearly
+              </option>
+
+              <option value="yearly">
+                Yearly
+              </option>
+            </select>
+          </div>
+        </div>
+
+        {/* DIVIDER */}
+        <div
           className="
-            pointer-events-none
-            absolute
-            left-3
-            top-1/2
-            z-10
-            -translate-y-1/2
-            text-[#1769D2]
+            my-5
+            h-px
+            w-full
+            bg-[#E7E9EF]
+            sm:my-6
           "
         />
-
-        <select
-          name="billingCycle"
-          value={form.billingCycle}
-          onChange={handleChange}
-          className="
-            h-11
-            w-full
-            min-w-0
-            appearance-none
-            rounded-xl
-            border
-            border-[#D6E1EF]
-            bg-[#F8FBFF]
-            py-2.5
-            pl-10
-            pr-4
-            text-[12px]
-            font-bold
-            text-[#1E293B]
-            outline-none
-            transition-all
-            duration-200
-            focus:border-[#3B8EF3]
-            focus:bg-white
-            focus:ring-2
-            focus:ring-[#3B8EF3]/10
-            sm:h-12
-            sm:text-[13px]
-          "
-        >
-          <option value="monthly">
-            Monthly
-          </option>
-
-          <option value="quarterly">
-            Quarterly
-          </option>
-
-          <option value="halfYearly">
-            Half Yearly
-          </option>
-
-          <option value="yearly">
-            Yearly
-          </option>
-        </select>
-      </div>
-    </div>
-
-    {/* DIVIDER */}
-
-    <div
-      className="
-        my-5
-        h-px
-        w-full
-        bg-[#E7E9EF]
-        sm:my-6
-      "
-    />
+      </>
+    )}
 
     {/* =================================================
         LIMITS
@@ -1578,8 +1621,9 @@ const [form, setForm] = useState({
           sm:text-[11px]
         "
       >
-        Your hotel details will be submitted before
-        continuing to checkout.
+        {isFreeTrial
+          ? "Your free trial will be activated immediately with full feature access."
+          : "Your hotel details will be submitted before continuing to checkout."}
       </p>
     </div>
 
@@ -1603,7 +1647,7 @@ const [form, setForm] = useState({
           sm:max-w-[340px]
         "
       >
-        <SubmitButton loading={loading} />
+        <SubmitButton loading={loading} isFreeTrial={isFreeTrial} />
       </div>
     </div>
 
@@ -1680,6 +1724,12 @@ const [form, setForm] = useState({
         </form>
 
       </main>
+
+      {/* FREE TRIAL SUCCESS MODAL */}
+      <FreeTrialSuccessModal
+        data={trialSuccessModal}
+        onLogin={() => navigate("/hotel-login")}
+      />
 
     </div>
   );
@@ -2116,20 +2166,19 @@ const getBillingLabel = (
 
 const BackToPlansButton = ({ navigate, fullWidth = false }) => {
   return (
-    <button
-      type="button"
-      onClick={() => navigate("/saas-user/choose-plan")}
-      className={`
-        inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl border
-        border-[#D6E1EF] bg-white px-5 py-3 text-[14px] font-extrabold text-[#36516B]
-        shadow-[0_4px_12px_rgba(31,78,121,0.05)] transition-all duration-200
-        hover:border-[#AFCDF0] hover:bg-[#F4F9FF] hover:text-[#1769D2] active:scale-[0.98]
-        ${fullWidth ? "w-full" : "w-full sm:w-auto"}
-      `}
-    >
-      <ArrowLeft size={17} />
-      Back to Plans
-    </button>
+<button
+  type="button"
+  onClick={() => navigate("/saas-user/choose-plan")}
+  className={`
+    inline-flex items-center gap-1.5 text-xs font-medium text-slate-600
+    transition-colors duration-150 hover:text-slate-900 hover:underline
+    underline-offset-2 focus:outline-none focus-visible:ring-1 focus-visible:ring-slate-400
+    ${fullWidth ? "w-full justify-start" : "w-auto"}
+  `}
+>
+  <ArrowLeft size={14} className="text-slate-500" />
+  <span>Back to Plans</span>
+</button>
   );
 };
 
@@ -2138,32 +2187,130 @@ const BackToPlansButton = ({ navigate, fullWidth = false }) => {
 // SUBMIT BUTTON
 // ============================================================
 
-const SubmitButton = ({ loading }) => {
+const SubmitButton = ({ loading, isFreeTrial }) => {
   return (
-    <button
-      type="submit"
-      disabled={loading}
-      className="
-        flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl
-        bg-[linear-gradient(135deg,#3B8EF3_0%,#1769D2_100%)] px-5 py-3.5
-        text-[15px] font-extrabold text-white shadow-[0_10px_22px_rgba(47,128,237,0.22)]
-        transition-all duration-200 hover:-translate-y-0.5
-        hover:shadow-[0_14px_28px_rgba(47,128,237,0.28)] active:translate-y-0
-        disabled:cursor-not-allowed disabled:opacity-60
-      "
-    >
-      {loading ? (
-        <>
-          <Loader2 size={18} className="animate-spin" />
-          Submitting...
-        </>
-      ) : (
-        <>
-          Continue to Checkout
-          <ArrowRight size={18} />
-        </>
-      )}
-    </button>
+<button
+  type="submit"
+  disabled={loading}
+  className={`
+    group relative inline-flex w-full sm:w-auto sm:min-w-[280px] items-center justify-center gap-2.5 
+    rounded-xl px-6 py-3.5 text-sm sm:text-[15px] font-semibold text-white
+    transition-all duration-200 ease-out
+    hover:-translate-y-0.5 active:translate-y-0
+    disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 cursor-pointer
+    focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
+    ${
+      isFreeTrial
+        ? "bg-gradient-to-r from-emerald-600 to-teal-600 shadow-[0_4px_20px_rgba(13,148,136,0.25)] hover:shadow-[0_6px_24px_rgba(13,148,136,0.35)] focus-visible:ring-emerald-500 border border-emerald-500/20"
+        : "bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 shadow-[0_4px_20px_rgba(15,23,42,0.3)] hover:shadow-[0_6px_24px_rgba(15,23,42,0.4)] focus-visible:ring-indigo-500 border border-slate-700/50"
+    }
+  `}
+>
+  {loading ? (
+    <>
+      <Loader2 size={18} className="animate-spin text-white/80" />
+      <span>{isFreeTrial ? "Starting Free Trial..." : "Processing..."}</span>
+    </>
+  ) : isFreeTrial ? (
+    <>
+      <Sparkles size={18} className="text-emerald-300 transition-transform duration-300 group-hover:scale-110" />
+      <span>Start your free trial</span>
+      <ArrowRight size={18} className="transition-transform duration-200 group-hover:translate-x-1" />
+    </>
+  ) : (
+    <>
+      <span>Continue to Checkout</span>
+      <ArrowRight size={18} className="transition-transform duration-200 group-hover:translate-x-1" />
+    </>
+  )}
+</button>
+  );
+};
+
+// ============================================================
+// FREE TRIAL SUCCESS MODAL
+// ============================================================
+
+const FreeTrialSuccessModal = ({ data, onLogin }) => {
+  if (!data) return null;
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const startFormatted = formatDate(data.startDate);
+  const endFormatted = formatDate(data.endDate);
+
+  return (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+  <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white p-6 sm:p-7 shadow-2xl border border-slate-100 text-left">
+    
+    {/* Header Section */}
+    <div className="flex items-start gap-4">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+        <Sparkles size={20} />
+      </div>
+      <div>
+        <h2 className="text-xl font-semibold text-slate-900 tracking-tight">
+          Free Trial Activated
+        </h2>
+        <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+          Your hotel account has been successfully set up with instant trial access.
+        </p>
+      </div>
+    </div>
+
+    {/* Trial Window Banner */}
+    <div className="mt-5 rounded-xl bg-slate-50 border border-slate-200/70 p-3.5">
+      <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+        <span>Trial Period</span>
+        <span className="font-semibold text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-md">
+          {data.trialDays || 14} Days Active
+        </span>
+      </div>
+      <div className="mt-2 flex items-center gap-2 text-sm font-semibold text-slate-900">
+        <span>{startFormatted}</span>
+        <span className="text-slate-400 font-normal text-xs">to</span>
+        <span>{endFormatted}</span>
+      </div>
+    </div>
+
+    {/* Details Section */}
+    <div className="mt-4 space-y-2.5 rounded-xl border border-slate-200/60 bg-white p-3.5 text-xs">
+      <div className="flex justify-between items-center">
+        <span className="text-slate-500">Hotel Name</span>
+        <span className="font-medium text-slate-900 truncate max-w-[200px]">{data.hotelName}</span>
+      </div>
+      <div className="flex justify-between items-center">
+        <span className="text-slate-500">Login Email</span>
+        <span className="font-medium text-slate-900 truncate max-w-[200px]">{data.ownerEmail}</span>
+      </div>
+      <div className="flex justify-between items-center pt-2 border-t border-slate-100">
+        <span className="text-slate-500">Unlocked Access</span>
+        <span className="font-medium text-emerald-700">Food, Service & Bookings</span>
+      </div>
+    </div>
+
+    {/* Primary Action Button */}
+    <div className="mt-6">
+      <button
+        type="button"
+        onClick={onLogin}
+        className="w-full cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-slate-800 active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+      >
+        <span>Go to Hotel Dashboard</span>
+        <ArrowRight size={16} className="text-slate-400" />
+      </button>
+    </div>
+
+  </div>
+</div>
   );
 };
 

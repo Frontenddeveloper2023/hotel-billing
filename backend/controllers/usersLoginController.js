@@ -2,6 +2,7 @@ import User from "../models/users.js";
 import Hotels from "../models/hotels.js";
 import Subscription from "../models/subscription.js";
 import BranchHotels from "../models/branchHotels.js";
+import SaasHotelRegistration from "../models/saasHotelRegistration.js";
 import { sendOTP } from "../util/email.js";
 import jwt from "jsonwebtoken";
 import { log } from "../util/logger.js";
@@ -619,6 +620,14 @@ const sendHotelOTP = async (req, res) => {
         });
 
         if (!user) {
+            // Check if there was a registration associated with this email
+            const reg = await SaasHotelRegistration.findOne({ email: normalizedEmail }).sort({ createdAt: -1 });
+            if (reg?.status === "rejected") {
+                return res.status(403).json({
+                    message: "Your hotel was blocked by admin.",
+                });
+            }
+
             return res.status(404).json({
                 message: "No hotel owner or receptionist account found with this email. Please check your email or ensure your hotel registration is approved.",
             });
@@ -635,18 +644,7 @@ const sendHotelOTP = async (req, res) => {
         }
 
         // -------------------------------------------------
-        // 3. USER STATUS
-        // -------------------------------------------------
-
-        if (user.status !== "active") {
-            return res.status(401).json({
-                message:
-                    "Your account is currently inactive. Please contact the administrator.",
-            });
-        }
-
-        // -------------------------------------------------
-        // 4. HOTEL CHECK
+        // 3. HOTEL CHECK & BLOCKED STATUS
         // -------------------------------------------------
 
         if (!user.hotelId) {
@@ -658,8 +656,28 @@ const sendHotelOTP = async (req, res) => {
         const hotel = await Hotels.findById(user.hotelId);
 
         if (!hotel) {
+            // Check registration fallback
+            const reg = await SaasHotelRegistration.findOne({ email: normalizedEmail }).sort({ createdAt: -1 });
             return res.status(404).json({
                 message: "Hotel account could not be found.",
+            });
+        }
+
+        // Specific admin blocked/cancelled condition (without refund)
+        if (hotel.status === "blocked" || hotel.status === "cancelled" || hotel.status === "suspended") {
+            return res.status(403).json({
+                message: "Your hotel was blocked by admin.",
+            });
+        }
+
+        // -------------------------------------------------
+        // 4. USER STATUS
+        // -------------------------------------------------
+
+        if (user.status !== "active") {
+            return res.status(401).json({
+                message:
+                    "Your account is currently inactive. Please contact the administrator.",
             });
         }
 
@@ -764,7 +782,7 @@ const verifyHotelOTP = async (req, res) => {
             });
         }
 
-        // 4. HOTEL CHECK
+        // 4. HOTEL CHECK & BLOCKED STATUS
         if (!user.hotelId) {
             return res.status(403).json({
                 message: "Your account is not linked to any hotel profile.",
@@ -774,8 +792,16 @@ const verifyHotelOTP = async (req, res) => {
         const hotel = await Hotels.findById(user.hotelId);
 
         if (!hotel) {
+            const reg = await SaasHotelRegistration.findOne({ email: normalizedEmail }).sort({ createdAt: -1 });
             return res.status(404).json({
                 message: "Hotel account could not be found.",
+            });
+        }
+
+        // Specific admin blocked/cancelled condition (without refund)
+        if (hotel.status === "blocked" || hotel.status === "cancelled" || hotel.status === "suspended") {
+            return res.status(403).json({
+                message: "Your hotel was blocked by admin.",
             });
         }
 

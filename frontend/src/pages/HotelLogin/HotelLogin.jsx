@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Mail,
@@ -30,6 +30,14 @@ const HotelLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    const logoutMsg = sessionStorage.getItem("hotelLogoutToast");
+    if (logoutMsg) {
+      setError(logoutMsg);
+      sessionStorage.removeItem("hotelLogoutToast");
+    }
+  }, []);
 
   const handleSendOTP = async (e) => {
     e.preventDefault();

@@ -29,8 +29,11 @@ import {
 } from "lucide-react";
 
 import { useLocation, useNavigate } from "react-router-dom";
-
-import { confirmDummyPayment } from "../../service/hotelRegistrationApi";
+import {
+  createRegistrationOrder,
+  verifyRegistrationPayment,
+} from "../../service/paymentApi";
+import { openCashfreeCheckoutModal } from "../../util/cashfreeCheckout";
 
 // ============================================================
 // DESIGN: dark hotel-inspired hero, blue featured plan, white cards
@@ -263,66 +266,66 @@ const handlePayNow = () => {
   setIsPaymentModalOpen(true);
 };
 
- const handleConfirmPayment = async () => {
-  try {
-    setIsPaying(true);
-    setError("");
+  const handleConfirmPayment = async () => {
+    try {
+      setIsPaying(true);
+      setError("");
 
-    if (!registrationId) {
-      setError("Registration ID is missing. Please try again.");
-      return;
-    }
-
-    const response = await confirmDummyPayment(registrationId);
-
-    if (!response?.success) {
-      // ── Professional duplicate-payment error ────────────────────────
-      const msg = response?.message || "";
-      const isDuplicate =
-        msg.toLowerCase().includes("already been completed") ||
-        msg.toLowerCase().includes("already paid") ||
-        msg.toLowerCase().includes("duplicate");
-
-      if (isDuplicate) {
-        setAlreadyPaid(true);
-        sessionStorage.setItem("saasPaymentStatus", "paid");
-        setIsPaymentModalOpen(false);
-        setError(
-          "Your hotel is already registered and the subscription payment has been successfully received. Our admin team is reviewing your application — you will be notified once approved."
-        );
+      if (!registrationId) {
+        setError("Registration ID is missing. Please try again.");
         return;
       }
-      // ───────────────────────────────────────────────────────────────
 
-      throw new Error(msg || "Payment could not be completed.");
+      // 1. Create Cashfree Order session from backend
+      const orderRes = await createRegistrationOrder(registrationId);
+      if (!orderRes?.success || !orderRes?.data?.paymentSessionId) {
+        throw new Error(orderRes?.message || "Failed to initiate payment with Cashfree.");
+      }
+
+      const { paymentSessionId, orderId, env } = orderRes.data;
+
+      // Close pre-payment overview modal before launching popup
+      setIsPaymentModalOpen(false);
+
+      // 2. Launch Cashfree Web SDK Checkout Popup
+      const checkoutResult = await openCashfreeCheckoutModal({
+        paymentSessionId,
+        mode: env || "sandbox",
+      });
+
+      if (checkoutResult?.error) {
+        throw new Error(checkoutResult.error.message || "Payment was cancelled or failed.");
+      }
+
+      // 3. Server-side verification with Cashfree API
+      setIsPaying(true);
+      const verifyRes = await verifyRegistrationPayment({
+        registrationId,
+        orderId,
+      });
+
+      if (!verifyRes?.success) {
+        throw new Error(verifyRes?.message || "Payment verification failed. Please contact support.");
+      }
+
+      const paymentTransactionId =
+        verifyRes?.data?.paymentTransactionId || `CF-${orderId}`;
+
+      setTransactionId(paymentTransactionId);
+      setPaymentSuccess(true);
+
+      sessionStorage.setItem("saasRegistrationId", registrationId);
+      sessionStorage.setItem("saasPaymentStatus", "paid");
+    } catch (error) {
+      setError(
+        error?.message ||
+          error?.data?.message ||
+          "Unable to complete payment."
+      );
+    } finally {
+      setIsPaying(false);
     }
-
-    const paymentTransactionId =
-      response?.data?.paymentTransactionId || "";
-
-    setTransactionId(paymentTransactionId);
-    setPaymentSuccess(true);
-    setIsPaymentModalOpen(false);
-
-    sessionStorage.setItem(
-      "saasRegistrationId",
-      registrationId
-    );
-
-    sessionStorage.setItem(
-      "saasPaymentStatus",
-      "paid"
-    );
-  } catch (error) {
-    setError(
-      error?.message ||
-        error?.data?.message ||
-        "Unable to complete payment."
-    );
-  } finally {
-    setIsPaying(false);
-  }
-};
+  };
 
   // ==========================================================
   // NAVIGATION
@@ -1713,8 +1716,8 @@ Most Popular      </span>
                         </>
                       ) : (
                         <>
-                          <CheckCircle2 size={16} />
-                          Confirm Payment
+                          <LockKeyhole size={16} />
+                          Pay Securely with Cashfree
                           <span className="ml-1">{formatCurrency(total)}</span>
                         </>
                       )}

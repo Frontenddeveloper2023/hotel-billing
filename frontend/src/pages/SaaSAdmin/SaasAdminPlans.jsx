@@ -5,7 +5,14 @@ import {
   Crown, Gem, Rocket, Sparkles, Wallet, Gauge, Zap,
 } from "lucide-react";
 
-import { createPlan, getAllPlans, updatePlan, deletePlan } from "../../service/planApi";
+import {
+  createPlan,
+  getAllPlans,
+  updatePlan,
+  deletePlan,
+  getAdminFreeTrialConfig,
+  updateAdminFreeTrialConfig,
+} from "../../service/planApi";
 
 // ======================================================
 // DEFAULT FORM
@@ -262,6 +269,12 @@ const SaaSAdminPlans = () => {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
 
+  // FREE TRIAL SETTINGS STATE
+  const [trialConfig, setTrialConfig] = useState({ isEnabled: true, trialDays: 14 });
+  const [trialLoading, setTrialLoading] = useState(true);
+  const [trialSaving, setTrialSaving] = useState(false);
+  const [trialSuccess, setTrialSuccess] = useState("");
+
   // FETCH PLANS
   const fetchPlans = useCallback(async (isRefresh = false) => {
     try {
@@ -280,7 +293,46 @@ const SaaSAdminPlans = () => {
     }
   }, []);
 
-  useEffect(() => { fetchPlans(); }, [fetchPlans]);
+  // FETCH FREE TRIAL CONFIG
+  const fetchTrialConfig = useCallback(async () => {
+    try {
+      setTrialLoading(true);
+      const res = await getAdminFreeTrialConfig();
+      if (res?.success && res?.data) {
+        setTrialConfig({
+          isEnabled: Boolean(res.data.isEnabled),
+          trialDays: Number(res.data.trialDays || 14),
+        });
+      }
+    } catch (err) {
+      console.error("Get free trial config error:", err);
+    } finally {
+      setTrialLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPlans();
+    fetchTrialConfig();
+  }, [fetchPlans, fetchTrialConfig]);
+
+  const handleSaveTrialConfig = async (e) => {
+    e.preventDefault();
+    try {
+      setTrialSaving(true);
+      setTrialSuccess("");
+      const res = await updateAdminFreeTrialConfig(trialConfig);
+      if (res?.success) {
+        setTrialSuccess("Free trial settings updated successfully!");
+        setTimeout(() => setTrialSuccess(""), 4000);
+      }
+    } catch (err) {
+      console.error("Save free trial config error:", err);
+      setError(err?.message || "Failed to update free trial configuration.");
+    } finally {
+      setTrialSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (!successMessage) return;
@@ -528,6 +580,101 @@ const SaaSAdminPlans = () => {
           <StatCard index={2} title="Active Plans" value={activePlans} icon={Check} cls="bg-[#E1FAF0] text-[#087A58]" valueCls="text-[#087A58]" loading={loading} />
           <StatCard index={3} title="Inactive Plans" value={inactivePlans} icon={Settings2} cls="bg-slate-100 text-slate-600" valueCls="text-slate-600" loading={loading} />
         </div>
+
+        {/* FREE TRIAL SETTINGS CARD */}
+     <div
+  style={delay(3)}
+  className={`sp-in ${card} mb-6 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm transition-all hover:shadow-md`}
+>
+  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+    
+    {/* Left Info Group */}
+    <div className="flex items-start gap-3.5">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700 border border-slate-200/80">
+        <Sparkles size={20} />
+      </div>
+
+      <div className="space-y-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="text-base sm:text-lg font-semibold tracking-tight text-slate-900">
+            Free Trial Access
+          </h3>
+          <span
+            className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${
+              trialConfig.isEnabled
+                ? "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20"
+                : "bg-slate-100 text-slate-600"
+            }`}
+          >
+            {trialConfig.isEnabled ? "Enabled" : "Disabled"}
+          </span>
+        </div>
+
+        <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-xl">
+Choose how many days new hotel owners get free trial access.        </p>
+      </div>
+    </div>
+
+    {/* Right Controls Form */}
+    <form
+      onSubmit={handleSaveTrialConfig}
+      className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100"
+    >
+      {/* Toggle Checkbox */}
+      <label className="inline-flex cursor-pointer select-none items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-xs sm:text-sm font-medium text-slate-700 transition hover:bg-slate-100/70">
+        <input
+          type="checkbox"
+          checked={trialConfig.isEnabled}
+          onChange={(e) =>
+            setTrialConfig((prev) => ({ ...prev, isEnabled: e.target.checked }))
+          }
+          className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 cursor-pointer"
+        />
+        <span>Allow Free Trial</span>
+      </label>
+
+      {/* Duration Input */}
+      <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 shadow-sm">
+        <input
+          type="number"
+          min="1"
+          max="365"
+          value={trialConfig.trialDays}
+          onChange={(e) =>
+            setTrialConfig((prev) => ({
+              ...prev,
+              trialDays: Math.max(1, Number(e.target.value) || 1),
+            }))
+          }
+          className="w-14 rounded-md border border-slate-200 bg-slate-50 py-1 text-center text-xs sm:text-sm font-semibold text-slate-900 outline-none focus:border-slate-400 focus:bg-white"
+        />
+        <span className="text-xs font-medium text-slate-500">Days</span>
+      </div>
+
+      {/* Save Button */}
+      <button
+        type="submit"
+        disabled={trialSaving || trialLoading}
+        className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs sm:text-sm font-medium text-white shadow-sm transition-all hover:bg-slate-800 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900"
+      >
+        {trialSaving ? (
+          <RefreshCw size={15} className="animate-spin text-slate-300" />
+        ) : (
+          <Check size={15} />
+        )}
+        <span>{trialSaving ? "Saving..." : "Save Settings"}</span>
+      </button>
+    </form>
+  </div>
+
+  {/* Success Banner */}
+  {trialSuccess && (
+    <div className="mt-4 flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200/80 p-3 text-xs font-medium text-emerald-800">
+      <Check size={15} className="text-emerald-600 shrink-0" />
+      <span>{trialSuccess}</span>
+    </div>
+  )}
+</div>
 
         {/* SEARCH */}
         <div style={delay(4)} className="sp-in relative mb-6">

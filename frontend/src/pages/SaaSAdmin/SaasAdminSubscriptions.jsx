@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 
 import { getAllSubscriptions, getSubscriptionById, cancelSubscription } from "../../service/subscriptionApi";
+import { useToast } from "../../Context/ToastContext";
 
 import {
   sendAdminEmail,
@@ -282,6 +283,7 @@ const DragTable = ({ minWidth, children }) => {
 const SaaSAdminSubscriptions = () => {
   const [searchParams] = useSearchParams();
   const registrationIdFromUrl = searchParams.get("registrationId");
+  const toast = useToast();
 
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -530,15 +532,17 @@ const SaaSAdminSubscriptions = () => {
         message: "",
       });
 
+      toast.success("Email sent successfully.");
       setSuccessMessage("Email sent successfully.");
     } catch (err) {
       console.error("Send subscription email error:", err);
 
-      setError(
+      const errMsg =
         err?.message ||
         err?.data?.message ||
-        "Unable to send email."
-      );
+        "Unable to send email.";
+      setError(errMsg);
+      toast.error(errMsg);
     } finally {
       setEmailLoading(false);
     }
@@ -592,31 +596,41 @@ const SaaSAdminSubscriptions = () => {
   const handleCancel = async (subscription) => {
     const hotelName = subscription.hotelId?.hotelName || "this hotel";
 
-    const reason = window.prompt(
-      `Are you sure you want to cancel the subscription for "${hotelName}"?\n\nEnter reason for cancellation (this will be emailed directly to the hotel):`,
-      "Subscription cancelled by system administrator."
+    toast.confirm(
+      `Are you sure you want to cancel the subscription for "${hotelName}"? This will deactivate the plan immediately and notify the hotel by email.`,
+      async () => {
+        try {
+          setActionLoading(true);
+          setError("");
+          setSuccessMessage("");
+
+          await cancelSubscription(
+            subscription._id,
+            "Subscription cancelled by system administrator."
+          );
+
+          toast.success(`Subscription for ${hotelName} has been cancelled.`);
+          setSuccessMessage(`Subscription for ${hotelName} has been cancelled and notification email sent.`);
+          setShowDetailsModal(false);
+          setSelectedSubscription(null);
+
+          await fetchSubscriptions(true);
+        } catch (err) {
+          console.error("Cancel subscription error:", err);
+          const errMsg = err?.message || err?.data?.message || "Unable to cancel the subscription.";
+          setError(errMsg);
+          toast.error(errMsg);
+        } finally {
+          setActionLoading(false);
+        }
+      },
+      {
+        title: "Cancel Subscription",
+        confirmText: "Yes, Cancel",
+        cancelText: "Keep Active",
+        variant: "danger",
+      }
     );
-
-    if (reason === null) return;
-
-    try {
-      setActionLoading(true);
-      setError("");
-      setSuccessMessage("");
-
-      await cancelSubscription(subscription._id, reason || "Subscription cancelled by system administrator.");
-
-      setSuccessMessage(`Subscription for ${hotelName} has been cancelled and notification email sent.`);
-      setShowDetailsModal(false);
-      setSelectedSubscription(null);
-
-      await fetchSubscriptions(true);
-    } catch (err) {
-      console.error("Cancel subscription error:", err);
-      setError(err?.message || err?.data?.message || "Unable to cancel the subscription.");
-    } finally {
-      setActionLoading(false);
-    }
   };
 
   const sel = selectedSubscription;

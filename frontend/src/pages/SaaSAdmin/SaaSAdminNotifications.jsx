@@ -65,13 +65,16 @@ const TYPE_CONFIG = {
   payment_submitted: { actionText: "has sent a new payment" },
   payment_received: { actionText: "has successfully paid" },
   payment_failed: { actionText: "had a payment fail" },
-  payment_reversed: { actionText: "had a payment refunded" },
+  payment_reversed: { actionText: "had a payment reversed" },
   escrow_cleared: { actionText: "has passed the payment check" },
   escrow_pending: { actionText: "is waiting for a payment check" },
   subscription_renewed: { actionText: "has renewed their subscription" },
   subscription_activated: { actionText: "has started their subscription" },
   registration_created: { actionText: "has started registering" },
   registration_submitted: { actionText: "has submitted details to join" },
+  free_trial_activated: { actionText: "has activated a free trial plan" },
+  trial_started: { actionText: "has started a free trial" },
+  hotel_registered: { actionText: "has registered" },
   kyc_pending: { actionText: "has sent documents for ID check" },
   kyc_verified: { actionText: "has passed the ID check" },
   kyc_failed: { actionText: "has failed the ID check" },
@@ -409,19 +412,34 @@ const isUpgradeNotification =
   notificationMessage.includes("upgraded") ||
   notificationMessage.includes("upgrade");
 
-const isRegistrationNotification =
-  type === "registration_created" ||
-  type === "registration_submitted" ||
-  type === "hotel_registered" ||
-  type === "hotel_registration" ||
-  notificationMessage.includes("new hotel") ||
-  notificationMessage.includes("registered");
+  const isFreeTrialNotification =
+    type === "free_trial_activated" ||
+    type === "trial_started" ||
+    notificationMessage.includes("free trial");
 
+  if (isFreeTrialNotification) {
+    const trialDays = metadata.trialDays || 14;
+    return {
+      title: "Free Trial Activated",
+      description: `${hotelName} (${ownerName}) registered and activated a ${trialDays}-day Free Trial plan on ${actionDate}.${
+        validUntil ? ` Access is active until ${validUntil}.` : " Access is granted immediately."
+      }`,
+      badge: "Free Trial Plan",
+    };
+  }
 
+  const isRegistrationNotification =
+    !isFreeTrialNotification &&
+    (type === "registration_created" ||
+      type === "registration_submitted" ||
+      type === "hotel_registered" ||
+      type === "hotel_registration" ||
+      notificationMessage.includes("new hotel") ||
+      notificationMessage.includes("registered"));
 
   // =====================================================
-// FALLBACK: SUBSCRIPTION UPGRADE
-// =====================================================
+  // FALLBACK: SUBSCRIPTION UPGRADE
+  // =====================================================
 
 if (isUpgradeNotification) {
   return {
@@ -575,7 +593,7 @@ if (isRegistrationNotification) {
         title: "Payment Reversed",
 
         description:
-          `The previous subscription payment from ${hotelName} was reversed or refunded.`,
+          `The previous subscription payment from ${hotelName} was reversed.`,
 
         badge: "Payment Reversed",
       };

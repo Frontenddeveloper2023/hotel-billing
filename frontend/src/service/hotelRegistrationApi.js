@@ -133,5 +133,25 @@ export const rejectRegistration = async (id, rejectionReason, rejectionDetails =
   }
 };
 
+// REGISTER FREE TRIAL (INSTANT ACTIVATION)
+export const registerFreeTrial = async (registrationData) => {
+  try {
+    const response = await api.post(
+      "/hotel-registrations/free-trial",
+      registrationData
+    );
+
+    return response.data;
+  } catch (error) {
+    throw (
+      error.response?.data || {
+        success: false,
+        message: error.message,
+      }
+    );
+  }
+};
+
+
 
 

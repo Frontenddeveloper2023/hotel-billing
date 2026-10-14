@@ -7,6 +7,8 @@ import {
   getPlanById,
   updatePlan,
   deletePlan,
+  getFreeTrialConfig,
+  updateFreeTrialConfig,
 } from "../controllers/planController.js";
 
 import {
@@ -25,6 +27,12 @@ const router = express.Router();
 router.get(
   "/public/active-plans",
   getActivePlans
+);
+
+// Public route to get current free trial configuration
+router.get(
+  "/public/free-trial-config",
+  getFreeTrialConfig
 );
 
 
@@ -46,6 +54,22 @@ router.get(
   authVerify,
   permissionVerify("plans"),
   getActivePlans
+);
+
+// Get Free Trial Config - Admin
+router.get(
+  "/free-trial-config",
+  authVerify,
+  permissionVerify("plans"),
+  getFreeTrialConfig
+);
+
+// Update Free Trial Config - Admin
+router.put(
+  "/free-trial-config",
+  authVerify,
+  permissionVerify("plans"),
+  updateFreeTrialConfig
 );
 
 // Create new plan

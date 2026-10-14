@@ -79,8 +79,14 @@ const hotelSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["active", "inactive", "suspended", "cancelled"],
+      enum: ["active", "inactive", "suspended", "cancelled", "blocked"],
       default: "active",
+    },
+
+    blockReason: {
+      type: String,
+      default: "",
+      trim: true,
     },
   },
   {

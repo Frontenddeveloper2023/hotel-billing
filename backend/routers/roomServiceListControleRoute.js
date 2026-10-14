@@ -12,6 +12,7 @@ import {
     authVerify,
     permissionVerify,
 } from "../middleware/userVerify.js";
+import { subscriptionVerify } from "../middleware/subscriptionVerify.js";
 
 const router = express.Router();
 
@@ -23,6 +24,7 @@ router.post(
     "/create-service",
     authVerify,
     permissionVerify("serviceManagement"),
+    subscriptionVerify,
     createService
 );
 
@@ -56,6 +58,7 @@ router.put(
     "/update-service/:id",
     authVerify,
     permissionVerify("serviceManagement"),
+    subscriptionVerify,
     updateService
 );
 
@@ -67,6 +70,7 @@ router.delete(
     "/delete-service/:id",
     authVerify,
     permissionVerify("serviceManagement"),
+    subscriptionVerify,
     deleteService
 );
 

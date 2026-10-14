@@ -13,7 +13,7 @@ export function getFoodImageUrl(imagePath) {
 
     let baseUrl =
         import.meta.env.VITE_BACKEND_URL ||
-        "https://webscape.co.in/hotel-billing-system-backend";
+        "https://jayam.co.in/hotel-billing-system-backend";
 
     baseUrl = baseUrl.replace(/\/+$/, "");
     baseUrl = baseUrl.replace(/\/api$/, "");

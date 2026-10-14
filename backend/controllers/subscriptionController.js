@@ -9,6 +9,7 @@ import {
   sendSubscriptionCancelledNotification,
   sendSubscriptionExpiredNotification,
 } from "../util/email.js";
+import SaasHotelRegistration from "../models/saasHotelRegistration.js";
 
 import { log } from "../util/logger.js";
 
@@ -263,7 +264,6 @@ export const createSubscription = async (req, res) => {
       "pending",
       "paid",
       "failed",
-      "refunded",
       "partially_paid",
     ];
 
@@ -993,7 +993,6 @@ export const updateSubscription = async (req, res) => {
         "pending",
         "paid",
         "failed",
-        "refunded",
         "partially_paid",
       ];
 
@@ -1247,6 +1246,8 @@ export const updateSubscription = async (req, res) => {
                 `Subscription status updated to ${status} by administrator.`,
               status,
               hotelId: hotel?._id,
+              planId: plan?._id || subscription.planId,
+              billingCycle: subscription.billingCycle || "monthly",
             });
             log.info(
               `[updateSubscription] Status notification sent to ${recipientEmail} (${status})`
@@ -1258,6 +1259,8 @@ export const updateSubscription = async (req, res) => {
               planName: plan?.planName || "Current Plan",
               endDate: subscription.endDate,
               hotelId: hotel?._id,
+              planId: plan?._id || subscription.planId,
+              billingCycle: subscription.billingCycle || "monthly",
             });
             log.info(
               `[updateSubscription] Expiry notification sent to ${recipientEmail}`
@@ -1370,6 +1373,8 @@ export const cancelSubscription = async (req, res) => {
           reason: reason,
           status: "cancelled",
           hotelId: hotel?._id,
+          planId: subscription.planId?._id || subscription.planId,
+          billingCycle: subscription.billingCycle || "monthly",
         });
 
         log.info(

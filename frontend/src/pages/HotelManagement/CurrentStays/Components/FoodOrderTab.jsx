@@ -77,9 +77,8 @@ export default function FoodOrderTab({
         setFeatureAllowed(false);
         setFeatureMessage(
           access.message ||
-            `Food Service is not included in your current ${
-              access.plan?.planName || "subscription"
-            } plan.`
+          `Food Service is not included in your current ${access.plan?.planName || "subscription"
+          } plan.`
         );
         return;
       }
@@ -91,8 +90,8 @@ export default function FoodOrderTab({
       setFeatureAllowed(false);
       setFeatureMessage(
         err?.response?.data?.message ||
-          err?.message ||
-          "Unable to verify your Food Service subscription."
+        err?.message ||
+        "Unable to verify your Food Service subscription."
       );
     } finally {
       setSubscriptionLoading(false);
@@ -162,10 +161,10 @@ export default function FoodOrderTab({
         ) ||
         (roomNumber
           ? booking.rooms.find(
-              (room) =>
-                String(room.roomNumber).trim() ===
-                String(roomNumber).trim()
-            )
+            (room) =>
+              String(room.roomNumber).trim() ===
+              String(roomNumber).trim()
+          )
           : null);
 
       if (!selectedRoom) {
@@ -243,7 +242,7 @@ export default function FoodOrderTab({
 
     let backendUrl =
       import.meta.env.VITE_BACKEND_URL ||
-      "https://webscape.co.in/hotel-billing-system-backend";
+      "https://jayam.co.in/hotel-billing-system-backend";
 
     backendUrl = backendUrl.replace(/\/+$/, "");
     backendUrl = backendUrl.replace(/\/api$/, "");
@@ -344,8 +343,7 @@ export default function FoodOrderTab({
     }
 
     toast.confirm(
-      `Confirm food order of ₹${cartTotalAmount} (${cartItems.length} items) for Room ${
-        roomNumber || ""
+      `Confirm food order of ₹${cartTotalAmount} (${cartItems.length} items) for Room ${roomNumber || ""
       }? These charges will be attached to checkout.`,
       async () => {
         try {
@@ -379,8 +377,7 @@ export default function FoodOrderTab({
           await fetchBookingFoodServices();
 
           toast.success(
-            `Food order of ₹${cartTotalAmount} added to Room ${
-              roomNumber || ""
+            `Food order of ₹${cartTotalAmount} added to Room ${roomNumber || ""
             } successfully.`
           );
         } catch (err) {
@@ -418,8 +415,7 @@ export default function FoodOrderTab({
     }
 
     toast.confirm(
-      `Remove "${foodItemName || "this food item"}" (₹${
-        itemPrice || 0
+      `Remove "${foodItemName || "this food item"}" (₹${itemPrice || 0
       }) from Room ${roomNumber || ""}?`,
       async () => {
         try {
@@ -545,11 +541,10 @@ export default function FoodOrderTab({
                   key={filter}
                   type="button"
                   onClick={() => setSelectedFilter(filter)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-150 cursor-pointer ${
-                    selectedFilter === filter
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-150 cursor-pointer ${selectedFilter === filter
                       ? "bg-[#0f2a63] text-white shadow-sm"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200"
-                  }`}
+                    }`}
                 >
                   {filter}
                 </button>
@@ -617,11 +612,10 @@ export default function FoodOrderTab({
                         </h4>
                         {(food.type || food.foodType) && (
                           <span
-                            className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${
-                              (food.type || food.foodType) === "Veg"
+                            className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${(food.type || food.foodType) === "Veg"
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                 : "bg-rose-50 text-rose-700 border-rose-200"
-                            }`}
+                              }`}
                           >
                             {food.type || food.foodType}
                           </span>
@@ -974,4 +968,4 @@ export default function FoodOrderTab({
       </div>
     </div>
   );
-}
+}

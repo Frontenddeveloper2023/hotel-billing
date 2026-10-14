@@ -1313,7 +1313,7 @@ const handleViewEmailHistory = async () => {
                       <h3 className="text-xl font-bold text-[#0e2a4a]">{selectedHotel.hotelName || "Unnamed Hotel"}</h3>
                       <div className="mt-1.5">
                         <Badge status={selectedHotel.status} label={formatStatus(selectedHotel.status)}>
-                          {hotel.status === "active" && <CheckCircle2 size={12} />}
+                          {selectedHotel.status === "active" && <CheckCircle2 size={12} />}
                         </Badge>
                       </div>
                     </div>

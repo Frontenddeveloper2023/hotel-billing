@@ -10,17 +10,12 @@ export const subscriptionVerify = async (req, res, next) => {
     // GET HOTEL ID FROM AUTHENTICATED USER
     // ==========================================
 
+    // SaaS Admin bypass
+    if (req.user?.role === "admin") {
+      return next();
+    }
+
     const hotelId = req.user?.hotelId;
-
-    console.log(
-      "[Subscription Verify] User:",
-      req.user?._id
-    );
-
-    console.log(
-      "[Subscription Verify] Hotel ID:",
-      hotelId
-    );
 
     if (!hotelId) {
       return res.status(403).json({
@@ -38,15 +33,19 @@ export const subscriptionVerify = async (req, res, next) => {
       .select("_id hotelName status")
       .lean();
 
-    console.log(
-      "[Subscription Verify] Hotel:",
-      hotel
-    );
-
     if (!hotel) {
       return res.status(404).json({
         success: false,
         message: "Hotel account was not found.",
+      });
+    }
+
+    if (hotel.status === "blocked" || hotel.status === "cancelled" || hotel.status === "suspended") {
+      return res.status(403).json({
+        success: false,
+        action: "LOGOUT",
+        reason: "blocked",
+        message: "Your hotel was blocked by admin.",
       });
     }
 
@@ -63,11 +62,6 @@ export const subscriptionVerify = async (req, res, next) => {
     // ==========================================
 
     const now = new Date();
-
-    console.log(
-      "[Subscription Verify] Current time:",
-      now
-    );
 
     // ==========================================
     // FIND SUBSCRIPTION
@@ -93,17 +87,12 @@ export const subscriptionVerify = async (req, res, next) => {
       })
       .lean();
 
-    console.log(
-      "[Subscription Verify] Subscription:",
-      subscription
-    );
-
     // ==========================================
-    // NO ACTIVE SUBSCRIPTION
+    // NO ACTIVE SUBSCRIPTION / EXPIRED
     // ==========================================
 
     if (!subscription) {
-      // Find any subscription for debugging
+      // Find latest subscription to determine if it was a trial
       const existingSubscription =
         await Subscription.findOne({
           hotelId: hotelId,
@@ -113,13 +102,24 @@ export const subscriptionVerify = async (req, res, next) => {
           })
           .lean();
 
-      console.log(
-        "[Subscription Verify] Existing subscription for hotel:",
-        existingSubscription
-      );
+      const wasTrial =
+        existingSubscription?.status === "trial" ||
+        existingSubscription?.trialStatus === "active" ||
+        existingSubscription?.trialStatus === "completed" ||
+        existingSubscription?.billingCycle === "trial";
+
+      if (wasTrial) {
+        return res.status(403).json({
+          success: false,
+          isTrialEnded: true,
+          message:
+            "Your free trial was ended so purchase any active plan and continue your portal.",
+        });
+      }
 
       return res.status(403).json({
         success: false,
+        isExpired: true,
         message:
           "Your subscription has expired or is not active. Please renew your plan.",
       });

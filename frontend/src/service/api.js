@@ -37,4 +37,34 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        const status = error.response?.status;
+        const data = error.response?.data;
+
+        // If backend issues a LOGOUT action (due to hotel blocked or cancelled by admin)
+        if (status === 403 && data?.action === "LOGOUT") {
+            const logoutMsg = data?.message || "Your session was terminated.";
+            sessionStorage.setItem("hotelLogoutToast", logoutMsg);
+
+            // Clear session data
+            sessionStorage.removeItem("hotelToken");
+            sessionStorage.removeItem("hotelCookieName");
+            sessionStorage.removeItem("hotelPortal");
+            sessionStorage.removeItem("user");
+            localStorage.removeItem("hotelUser");
+
+            // Redirect immediately to hotel login
+            const basename = import.meta.env.VITE_BASENAME || "";
+            const loginPath = `${basename}/hotel-login`;
+            if (window.location.pathname !== loginPath) {
+                window.location.href = loginPath;
+            }
+        }
+
+        return Promise.reject(error);
+    }
+);
+
 export default api;

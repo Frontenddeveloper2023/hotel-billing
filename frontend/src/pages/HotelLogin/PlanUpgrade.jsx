@@ -10,6 +10,12 @@ import {
   getMySubscription,
   upgradeHotelSubscription,
 } from "../../service/subscriptionApi";
+import {
+  createSubscriptionUpgradeOrder,
+  verifySubscriptionUpgradePayment,
+} from "../../service/paymentApi";
+import { openCashfreeCheckoutModal } from "../../util/cashfreeCheckout";
+import api from "../../service/api";
 
 import {
   CreditCard,
@@ -528,6 +534,47 @@ export default function PlanUpgrade() {
     };
   }, []);
 
+  // Handle return parameters from 1-click email renewal
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get("payment");
+    const orderId = params.get("order_id");
+    const err = params.get("error");
+    const notice = params.get("notice");
+
+    if (notice === "already_active") {
+      toastRef.current.info("Your subscription is already active and up to date!");
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    if (err) {
+      toastRef.current.error(decodeURIComponent(err));
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    if (payment === "success" && orderId?.startsWith("REN_")) {
+      const verifyRenewal = async () => {
+        try {
+          const res = await api.get(`/payments/verify-renewal?orderId=${encodeURIComponent(orderId)}`);
+          if (res.data?.success) {
+            toastRef.current.success("Subscription successfully renewed! Thank you.");
+            if (res.data.data) {
+              setCurrentSub(res.data.data);
+            }
+            window.dispatchEvent(new CustomEvent("subscriptionUpdated"));
+          }
+        } catch (e) {
+          console.warn("[verifyRenewal] Auto-check:", e?.message);
+        } finally {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      };
+      verifyRenewal();
+    }
+  }, []);
+
   const getPrice = (plan, cycle) =>
     plan?.pricing?.[cycle] ?? 0;
 
@@ -567,24 +614,52 @@ export default function PlanUpgrade() {
     setProcessing(true);
 
     try {
-      const res = await upgradeHotelSubscription({
+      // 1. Create Cashfree Order for Upgrade
+      const orderRes = await createSubscriptionUpgradeOrder({
         planId: selectedPlan._id,
         billingCycle,
       });
 
-      if (res.success) {
-        toastRef.current.success(
-          res.message || "Plan upgraded successfully!"
-        );
-
-        setCurrentSub(res.data);
-        setShowPaymentModal(false);
-        setSelectedPlan(null);
-      } else {
-        toastRef.current.error(
-          res.message || "Upgrade failed. Please try again."
-        );
+      if (!orderRes?.success || !orderRes?.data?.paymentSessionId) {
+        throw new Error(orderRes?.message || "Failed to initiate payment with Cashfree.");
       }
+
+      const { paymentSessionId, orderId, env } = orderRes.data;
+
+      // Close local overview modal
+      setShowPaymentModal(false);
+
+      // 2. Launch Cashfree Web SDK Modal Checkout
+      const checkoutResult = await openCashfreeCheckoutModal({
+        paymentSessionId,
+        mode: env || "sandbox",
+      });
+
+      if (checkoutResult?.error) {
+        throw new Error(checkoutResult.error.message || "Payment was cancelled or failed.");
+      }
+
+      // 3. Double-check with backend to activate upgraded subscription
+      setProcessing(true);
+      const verifyRes = await verifySubscriptionUpgradePayment({
+        orderId,
+        planId: selectedPlan._id,
+        billingCycle,
+      });
+
+      if (!verifyRes?.success) {
+        throw new Error(verifyRes?.message || "Payment verification failed. Please contact support.");
+      }
+
+      toastRef.current.success(
+        verifyRes.message || "Plan upgraded successfully!"
+      );
+
+      setCurrentSub(verifyRes.data);
+      setSelectedPlan(null);
+
+      // Notify other components (e.g. SubscriptionAlertBanner) immediately
+      window.dispatchEvent(new CustomEvent("subscriptionUpdated"));
     } catch (err) {
       toastRef.current.error(
         err.message || "Upgrade failed. Please try again."

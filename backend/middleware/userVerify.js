@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { log } from "../util/logger.js";
 import User from "../models/users.js";
+import Hotels from "../models/hotels.js";
 
 
 // =====================================================
@@ -156,6 +157,22 @@ const authVerify = async (req, res, next) => {
             });
         }
 
+        // -------------------------------------------------
+        // HOTEL STATUS & AUTO LOGOUT SIGNALS
+        // -------------------------------------------------
+        if (user.hotelId && (user.role === "hotelOwner" || user.role === "receptionist")) {
+            const hotel = await Hotels.findById(user.hotelId).select("status").lean();
+            if (hotel) {
+                if (hotel.status === "blocked" || hotel.status === "cancelled" || hotel.status === "suspended") {
+                    return res.status(403).json({
+                        success: false,
+                        action: "LOGOUT",
+                        reason: "blocked",
+                        message: "Your hotel was blocked by admin.",
+                    });
+                }
+            }
+        }
 
         // -------------------------------------------------
         // STORE FRESH USER DATA

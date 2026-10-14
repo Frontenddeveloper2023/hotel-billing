@@ -7,9 +7,13 @@ import {
   Loader2,
   AlertCircle,
   RefreshCw,
+  Sparkles,
+  Gift,
+  Clock,
+  Zap,
 } from "lucide-react";
 
-import { getPublicActivePlans } from "../../service/planApi";
+import { getPublicActivePlans, getPublicFreeTrialConfig } from "../../service/planApi";
 
 import { useNavigate } from "react-router-dom";
 
@@ -67,38 +71,47 @@ const navigate = useNavigate();
   const [error, setError] = useState("");
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [billingCycle, setBillingCycle] = useState("monthly");
+  const [freeTrialConfig, setFreeTrialConfig] = useState({ isEnabled: true, trialDays: 14 });
 
 
   // ==========================================================
-  // FETCH PLANS
+  // FETCH PLANS & FREE TRIAL CONFIG
   // ==========================================================
 
   const fetchPlans = async () => {
     try {
       setLoading(true);
 
-      const response = await getPublicActivePlans();
+      const [plansRes, trialRes] = await Promise.allSettled([
+        getPublicActivePlans(),
+        getPublicFreeTrialConfig(),
+      ]);
 
-      if (!response?.success) {
-        throw new Error(response?.message || "Unable to load subscription plans.");
+      if (plansRes.status === "fulfilled" && plansRes.value?.success) {
+        const fetchedPlans = Array.isArray(plansRes.value?.data)
+          ? plansRes.value.data
+          : Array.isArray(plansRes.value?.data?.plans)
+          ? plansRes.value.data.plans
+          : Array.isArray(plansRes.value?.plans)
+          ? plansRes.value.plans
+          : [];
+
+        setPlans(fetchedPlans);
+        if (fetchedPlans.length > 0 && !selectedPlan) {
+          setSelectedPlan(fetchedPlans[0]);
+        }
+      } else if (plansRes.status === "rejected") {
+        throw new Error(plansRes.reason?.message || "Unable to load subscription plans.");
       }
 
-      const fetchedPlans = Array.isArray(response?.data)
-        ? response.data
-        : Array.isArray(response?.data?.plans)
-        ? response.data.plans
-        : Array.isArray(response?.plans)
-        ? response.plans
-        : [];
-
-      setPlans(fetchedPlans);
-
-      if (fetchedPlans.length > 0 && !selectedPlan) {
-        setSelectedPlan(fetchedPlans[0]);
+      if (trialRes.status === "fulfilled" && trialRes.value?.success && trialRes.value?.data) {
+        setFreeTrialConfig({
+          isEnabled: Boolean(trialRes.value.data.isEnabled),
+          trialDays: Number(trialRes.value.data.trialDays || 14),
+        });
       }
     } catch (err) {
       console.error("Get public plans error:", err);
-
       setError(err?.message || err?.data?.message || "Unable to load subscription plans.");
     } finally {
       setLoading(false);
@@ -116,7 +129,7 @@ const navigate = useNavigate();
 
 
   // ==========================================================
-  // CONTINUE
+  // CONTINUE WITH PAID PLAN
   // ==========================================================
 
   const handleContinue = (planObj) => {
@@ -129,13 +142,13 @@ const navigate = useNavigate();
 
     sessionStorage.setItem("saasSelectedPlan", JSON.stringify(planToUse));
     sessionStorage.setItem("saasBillingCycle", billingCycle);
+    sessionStorage.removeItem("saasIsFreeTrial");
 
     // New customer registration flow (no auto‑upgrade)
     sessionStorage.removeItem("saasIsUpgrade");
     sessionStorage.removeItem("saasHotelDetails");
 
-    // Clear stale payment data from any previous registration so the new
-    // hotel checkout doesn't incorrectly show "Payment Already Received"
+    // Clear stale payment data from any previous registration
     sessionStorage.removeItem("saasPaymentStatus");
     sessionStorage.removeItem("saasRegistrationId");
     sessionStorage.removeItem("saasRegistration");
@@ -143,6 +156,57 @@ const navigate = useNavigate();
       state: {
         selectedPlan: planToUse,
         billingCycle: billingCycle,
+        isFreeTrial: false,
+      },
+    });
+  };
+
+  // ==========================================================
+  // CONTINUE WITH FREE TRIAL
+  // ==========================================================
+
+  const handleFreeTrialClick = () => {
+    const defaultRefPlan = plans[0] || null;
+
+    const trialPlanObj = {
+      _id: defaultRefPlan?._id || "free-trial",
+      planName: "Free Trial Plan",
+      description: `Full access to all system features for ${freeTrialConfig.trialDays} days.`,
+      trialDays: freeTrialConfig.trialDays,
+      validityDays: freeTrialConfig.trialDays,
+      isFreeTrial: true,
+      pricing: {
+        monthly: 0,
+        quarterly: 0,
+        halfYearly: 0,
+        yearly: 0,
+      },
+      limits: {
+        rooms: defaultRefPlan?.limits?.rooms || 50,
+        branches: defaultRefPlan?.limits?.branches || 5,
+        receptionists: defaultRefPlan?.limits?.receptionists || 10,
+      },
+      features: {
+        foodService: true,
+        roomService: true,
+      },
+    };
+
+    sessionStorage.setItem("saasSelectedPlan", JSON.stringify(trialPlanObj));
+    sessionStorage.setItem("saasBillingCycle", "trial");
+    sessionStorage.setItem("saasIsFreeTrial", "true");
+
+    sessionStorage.removeItem("saasIsUpgrade");
+    sessionStorage.removeItem("saasHotelDetails");
+    sessionStorage.removeItem("saasPaymentStatus");
+    sessionStorage.removeItem("saasRegistrationId");
+    sessionStorage.removeItem("saasRegistration");
+
+    navigate("/saas-user/registration", {
+      state: {
+        selectedPlan: trialPlanObj,
+        billingCycle: "trial",
+        isFreeTrial: true,
       },
     });
   };
@@ -277,6 +341,59 @@ Select Your Plan          </h1>
           </div>
         )}
 
+        {/* FREE TRIAL OPTION BANNER */}
+        {freeTrialConfig.isEnabled && (
+       <div className="mx-auto mt-6 w-full max-w-[1120px] rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm transition-all hover:shadow-md">
+  <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+    
+    {/* Left content group */}
+    <div className="flex items-start gap-4">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+        <Sparkles size={20} />
+      </div>
+
+      <div className="space-y-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+            {freeTrialConfig.trialDays}-Day Free Trial
+          </span>
+          <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+            Instant Activation
+          </span>
+        </div>
+
+        <h2 className="text-lg sm:text-xl font-semibold text-slate-900 tracking-tight">
+          Try premium features completely free
+        </h2>
+
+        <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-2xl">
+          Get full access to hotel billing, room reservations, food orders, and room service. No credit card required.
+        </p>
+      </div>
+    </div>
+
+    {/* Right CTA group */}
+    <div className="flex shrink-0 flex-col sm:flex-row items-start sm:items-center gap-4 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+      <div className="text-left sm:text-right">
+        <div className="text-xl font-bold text-slate-900">₹0</div>
+        <div className="text-xs text-slate-500">For {freeTrialConfig.trialDays} days</div>
+      </div>
+
+      <button
+        type="button"
+        onClick={handleFreeTrialClick}
+        className="w-full cursor-pointer sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-slate-800 active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+      >
+        <span>Start Free Trial</span>
+        <ArrowRight size={16} className="text-slate-400" />
+      </button>
+    </div>
+
+  </div>
+</div>
+
+        )}
+
         {/* PLANS */}
        {plans.length > 0 && (
   <section className="mt-8 sm:mt-10">
@@ -318,298 +435,107 @@ Select Your Plan          </h1>
               {/* =====================================================
                   PLAN CARD
               ====================================================== */}
-              <div
-                onClick={handlePlanClick}
-                className="
-                  group
-                  relative
-                  flex
-                  min-h-[560px]
-                  w-full
-                  cursor-pointer
-                  flex-col
-                  overflow-hidden
-                  rounded-2xl
-                  border
-                  border-[#E6E8ED]
-                  bg-white
-                  text-[#171717]
-                  shadow-[0_5px_22px_rgba(15,23,42,0.06)]
-                  transition-all
-                  duration-300
-                  ease-out
+         <div
+  onClick={handlePlanClick}
+  className="
+    group relative flex min-h-[500px] w-full cursor-pointer flex-col overflow-hidden 
+    rounded-2xl border border-slate-200 bg-white p-6 sm:p-7 text-slate-900 
+    shadow-sm transition-all duration-200 ease-out 
+    hover:-translate-y-1 hover:border-slate-300 hover:shadow-md active:translate-y-0
+  "
+>
+  {/* Header: Plan Name & Description */}
+  <div className="flex flex-col">
+    <div className="flex items-center justify-between gap-3">
+      <h2 className="text-xl font-semibold tracking-tight text-slate-900 transition-colors group-hover:text-indigo-600">
+        {plan.planName}
+      </h2>
+      {Number(plan.trialDays || 0) > 0 && (
+        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+          {plan.trialDays}d Trial
+        </span>
+      )}
+    </div>
 
-                  hover:-translate-y-1
-                  hover:border-[#3B82F6]
-                  hover:bg-[#F4F9FF]
-                  hover:shadow-[0_18px_40px_rgba(37,99,235,0.16)]
+    <p className="mt-2 min-h-[38px] text-xs sm:text-sm text-slate-500 leading-relaxed">
+      {plan.description || "Get advanced features and flexibility. Perfect for frequent, professional use."}
+    </p>
 
-                  active:translate-y-0
-                  active:scale-[0.99]
-                "
-              >
-                {/* =================================================
-                    TOP BLUE ACCENT
-                ================================================== */}
-                <div
-                  className="
-                    pointer-events-none
-                    absolute
-                    left-0
-                    right-0
-                    top-0
-                    h-[3px]
-                    bg-gradient-to-r
-                    from-[#60A5FA]
-                    via-[#3B82F6]
-                    to-[#2563EB]
-                    opacity-0
-                    transition-opacity
-                    duration-300
-                    group-hover:opacity-100
-                  "
-                />
+    {/* Price Section */}
+    <div className="mt-5 flex items-baseline gap-1">
+      <span className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
+        {formatCurrency(price)}
+      </span>
+      <span className="text-xs font-medium text-slate-500">
+        /{getBillingLabel(billingCycle)}
+      </span>
+    </div>
+  </div>
 
-                {/* =================================================
-                    SOFT HOVER GLOW
-                ================================================== */}
-                <div
-                  className="
-                    pointer-events-none
-                    absolute
-                    -right-20
-                    -top-20
-                    h-44
-                    w-44
-                    rounded-full
-                    bg-[#3B82F6]/10
-                    blur-3xl
-                    opacity-0
-                    transition-opacity
-                    duration-300
-                    group-hover:opacity-100
-                  "
-                />
+  {/* Divider */}
+  <div className="my-6 h-px w-full bg-slate-100" />
 
-                {/* =================================================
-                    TOP CONTENT
-                ================================================== */}
-                <div className="relative z-10 p-5 sm:p-6">
-                  <div className="flex min-h-[28px] items-start justify-between gap-3">
-                    <h2
-                      className="
-                        truncate
-                        text-[18px]
-                        font-bold
-                        leading-6
-                        tracking-[-0.02em]
-                        text-[#171717]
-                        transition-colors
-                        duration-300
-                        group-hover:text-[#1769D2]
-                        sm:text-[19px]
-                      "
-                    >
-                      {plan.planName}
-                    </h2>
+  {/* Features List */}
+  <div className="flex flex-1 flex-col justify-between">
+    <div className="space-y-3">
+      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+        Included with this plan
+      </p>
 
-                 
-                  </div>
+      <div className="space-y-2.5 text-xs sm:text-sm text-slate-600">
+        <PlanFeatureRow
+          label={`Up to ${limitValue(plan?.limits?.rooms)} rooms`}
+          selected={false}
+        />
+        <PlanFeatureRow
+          label={`Up to ${limitValue(plan?.limits?.branches)} branches`}
+          selected={false}
+        />
+        <PlanFeatureRow
+          label={`Up to ${limitValue(plan?.limits?.receptionists)} receptionists`}
+          selected={false}
+        />
+        <PlanFeatureRow
+          label="Food Service"
+          enabled={plan?.features?.foodService}
+          selected={false}
+        />
+        <PlanFeatureRow
+          label="Room Service"
+          enabled={plan?.features?.roomService}
+          selected={false}
+        />
+        {Number(plan.trialDays || 0) > 0 && (
+          <PlanFeatureRow
+            label={`${plan.trialDays} days free trial`}
+            selected={false}
+          />
+        )}
+      </div>
+    </div>
 
-                  {/* DESCRIPTION */}
-                  <p
-                    className="
-                      mt-2
-                      min-h-[40px]
-                      text-[11px]
-                      font-medium
-                      leading-5
-                      text-[#667085]
-                      transition-colors
-                      duration-300
-                      group-hover:text-[#52677D]
-                      sm:text-[12px]
-                    "
-                  >
-                    {plan.description ||
-                      "Get advanced features and flexibility. Perfect for frequent, professional use."}
-                  </p>
-
-                  {/* =================================================
-                      PRICE
-                  ================================================== */}
-                  <div className="mt-6 flex items-end gap-1.5">
-                    <span
-                      className="
-                        text-[31px]
-                        font-extrabold
-                        leading-none
-                        tracking-[-0.045em]
-                        text-[#171717]
-                        transition-colors
-                        duration-300
-                        group-hover:text-[#1769D2]
-                        sm:text-[34px]
-                      "
-                    >
-                      {formatCurrency(price)}
-                    </span>
-
-                    <span
-                      className="
-                        mb-0.5
-                        text-[10px]
-                        font-semibold
-                        text-[#7B8492]
-                        sm:text-[11px]
-                      "
-                    >
-                      per {getBillingLabel(billingCycle)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* =================================================
-                    DIVIDER
-                ================================================== */}
-                <div
-                  className="
-                    relative
-                    z-10
-                    h-px
-                    bg-[#ECEEF2]
-                    transition-colors
-                    duration-300
-                    group-hover:bg-[#D7E7FA]
-                  "
-                />
-
-                {/* =================================================
-                    FEATURES
-                ================================================== */}
-                <div
-                  className="
-                    relative
-                    z-10
-                    flex
-                    flex-1
-                    flex-col
-                    px-5
-                    py-5
-                    sm:px-6
-                    sm:py-6
-                  "
-                >
-                  <p
-                    className="
-                      mb-4
-                      text-[11px]
-                      font-bold
-                      uppercase
-                      tracking-[0.04em]
-                      text-[#344054]
-                    "
-                  >
-                    Included with this plan
-                  </p>
-
-                  <div className="space-y-2.5">
-                    {/* ROOMS */}
-                    <PlanFeatureRow
-                      label={`Up to ${limitValue(
-                        plan?.limits?.rooms
-                      )} rooms`}
-                      selected={false}
-                    />
-
-                    {/* BRANCHES */}
-                    <PlanFeatureRow
-                      label={`Up to ${limitValue(
-                        plan?.limits?.branches
-                      )} branches`}
-                      selected={false}
-                    />
-
-                    {/* RECEPTIONISTS */}
-                    <PlanFeatureRow
-                      label={`Up to ${limitValue(
-                        plan?.limits?.receptionists
-                      )} receptionists`}
-                      selected={false}
-                    />
-
-                    {/* FOOD SERVICE */}
-                    <PlanFeatureRow
-                      label="Food Service"
-                      enabled={plan?.features?.foodService}
-                      selected={false}
-                    />
-
-                    {/* ROOM SERVICE */}
-                    <PlanFeatureRow
-                      label="Room Service"
-                      enabled={plan?.features?.roomService}
-                      selected={false}
-                    />
-
-                    {/* FREE TRIAL */}
-                    {Number(plan.trialDays || 0) > 0 && (
-                      <PlanFeatureRow
-                        label={`${plan.trialDays} days free trial`}
-                        selected={false}
-                      />
-                    )}
-                  </div>
-
-                  {/* =================================================
-                      CTA
-                  ================================================== */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-
-                      setSelectedPlan(plan);
-                      handleContinue(plan);
-                    }}
-                    className="
-                      mt-auto
-                      flex
-                      h-11
-                      w-full
-                      items-center
-                      justify-center
-                      gap-2
-                      rounded-xl
-                      border
-                      border-[#D7DCE5]
-                      bg-white
-                      px-4
-                      text-[11px]
-                      font-bold
-                      text-[#17324D]
-                      shadow-[0_3px_10px_rgba(15,23,42,0.05)]
-                      transition-all
-                      duration-200
-
-                      group-hover:border-[#3B82F6]
-                      group-hover:bg-[#1769D2]
-                      group-hover:text-white
-                      group-hover:shadow-[0_8px_20px_rgba(37,99,235,0.18)]
-
-                      active:scale-[0.98]
-
-                      sm:text-[12px]
-                    "
-                  >
-                    {price === 0
-  ? "Get Started for Free"
-  : "Select Plan"}
-
-
-                  </button>
-                </div>
-              </div>
+    {/* Primary CTA Button */}
+    <div className="mt-8">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelectedPlan(plan);
+          handleContinue(plan);
+        }}
+        className="
+          inline-flex cursor-pointer h-11 w-full items-center justify-center gap-2 rounded-xl 
+          bg-slate-900 px-4 text-xs sm:text-sm font-medium text-white 
+          shadow-sm transition-all duration-150 
+          hover:bg-slate-800 active:scale-[0.98] 
+          focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900
+        "
+      >
+        <span>{price === 0 ? "Get Started for Free" : "Select Plan"}</span>
+      </button>
+    </div>
+  </div>
+</div>
             </div>
           );
         })}

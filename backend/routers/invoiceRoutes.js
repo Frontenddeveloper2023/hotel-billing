@@ -15,6 +15,7 @@ import {
     permissionVerify,
     permissionVerifyAny,
 } from "../middleware/userVerify.js";
+import { subscriptionVerify } from "../middleware/subscriptionVerify.js";
 
 const router = express.Router();
 
@@ -39,6 +40,7 @@ router.post(
     "/send-email",
     authVerify,
     permissionVerifyAny("invoice", "roomsBooking"),
+    subscriptionVerify,
     upload.single("pdf"),
     sendInvoiceEmail
 );
@@ -52,6 +54,7 @@ router.post(
     "/",
     authVerify,
     permissionVerifyAny("invoice", "roomsBooking"),
+    subscriptionVerify,
     createInvoice
 );
 
@@ -99,6 +102,7 @@ router.delete(
     "/:id",
     authVerify,
     permissionVerify("invoice"),
+    subscriptionVerify,
     deleteInvoice
 );
 

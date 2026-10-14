@@ -148,3 +148,49 @@ export const deletePlan = async (id) => {
     );
   }
 };
+
+// ==========================================
+// FREE TRIAL CONFIG API
+// ==========================================
+
+export const getPublicFreeTrialConfig = async () => {
+  try {
+    const response = await api.get("/plans/public/free-trial-config");
+    return response.data;
+  } catch (error) {
+    throw (
+      error.response?.data || {
+        success: false,
+        message: error.message,
+      }
+    );
+  }
+};
+
+export const getAdminFreeTrialConfig = async () => {
+  try {
+    const response = await api.get("/plans/free-trial-config");
+    return response.data;
+  } catch (error) {
+    throw (
+      error.response?.data || {
+        success: false,
+        message: error.message,
+      }
+    );
+  }
+};
+
+export const updateAdminFreeTrialConfig = async (configData) => {
+  try {
+    const response = await api.put("/plans/free-trial-config", configData);
+    return response.data;
+  } catch (error) {
+    throw (
+      error.response?.data || {
+        success: false,
+        message: error.message,
+      }
+    );
+  }
+};

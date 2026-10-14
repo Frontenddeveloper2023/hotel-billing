@@ -43,6 +43,7 @@ import reportsRoutes from "./routers/reportsRoutes.js";
 import customersManagementRoutes from "./routers/customersManagementRoutes.js";
 
 import emailRoutes from "./routers/emailRoutes.js";
+import paymentRoutes from "./routers/paymentRoutes.js";
 
 
 // ----------------------------------
@@ -67,8 +68,9 @@ const app = express();
 const allowedOrigins = [
     "http://localhost:5173",
     "http://localhost:4173",
-    "https://webscape.co.in",
-];
+    process.env.VITE_API_BASE_URL,
+    process.env.CLIENT_URL,
+].filter(Boolean);
 
 app.use(
     cors({
@@ -111,7 +113,7 @@ const baseName =
 // STATIC UPLOADS (FIXED ROUTE)
 // ----------------------------------
 // This now correctly maps static files to:
-// https://webscape.co.in/hotel-billing-system-backend/uploads/foods/...
+// https://jayam.co.in/hotel-billing-system-backend/uploads/foods/...
 // ----------------------------------
 
 app.use(
@@ -255,7 +257,7 @@ apiRouter.use(
 apiRouter.use("/bookings", bookingRoutes);
 
 apiRouter.use("/dashboard", dashboardRoutes);
-apiRouter.use("/reports",   reportsRoutes);
+apiRouter.use("/reports", reportsRoutes);
 apiRouter.use("/customers", customersManagementRoutes);
 
 
@@ -265,8 +267,8 @@ apiRouter.use("/plans", plansRoute);
 apiRouter.use("/subscriptions", subscriptionsRoute);
 
 apiRouter.use(
-  "/hotel-registrations",
-  hotelRegistrationRoutes
+    "/hotel-registrations",
+    hotelRegistrationRoutes
 );
 
 
@@ -274,9 +276,11 @@ apiRouter.use("/emails", emailRoutes);
 
 
 apiRouter.use(
-  "/saas-notifications",
-  saasNotificationRoutes
+    "/saas-notifications",
+    saasNotificationRoutes
 );
+
+apiRouter.use("/payments", paymentRoutes);
 
 // ----------------------------------
 // MOUNT API ROUTER

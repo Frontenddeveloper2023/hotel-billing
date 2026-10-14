@@ -491,6 +491,18 @@ element={
         />
 
 
+        {/* -----------------------------------------------
+            PUBLIC PLAN UPGRADE / RENEWAL STATUS
+        ------------------------------------------------ */}
+
+        {!isAuthenticated && (
+          <Route
+            path="/plan-upgrade"
+            element={<PlanUpgrade />}
+          />
+        )}
+
+
         {/* =================================================
             MAIN HOTEL MANAGEMENT LAYOUT
         ================================================= */}

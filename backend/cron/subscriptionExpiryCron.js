@@ -229,6 +229,8 @@ const recipientEmail = String(
                 planName: subscription.planId?.planName || "Current Plan",
                 endDate: subscription.endDate,
                 hotelId: hotel._id,
+                planId: subscription.planId?._id || subscription.planId,
+                billingCycle: subscription.billingCycle || "monthly",
               });
 
               log.info(
@@ -286,6 +288,8 @@ const recipientEmail = String(
               endDate: subscription.endDate,
               daysRemaining: daysRemaining,
               hotelId: hotel._id,
+              planId: subscription.planId?._id || subscription.planId,
+              billingCycle: subscription.billingCycle || "monthly",
             });
 
             log.info(
@@ -338,6 +342,8 @@ const recipientEmail = String(
               endDate: subscription.endDate,
               daysRemaining: daysRemaining,
               hotelId: hotel._id,
+              planId: subscription.planId?._id || subscription.planId,
+              billingCycle: subscription.billingCycle || "monthly",
             });
 
             log.info(
@@ -390,6 +396,8 @@ const recipientEmail = String(
               endDate: subscription.endDate,
               daysRemaining: Math.max(1, daysRemaining),
               hotelId: hotel._id,
+              planId: subscription.planId?._id || subscription.planId,
+              billingCycle: subscription.billingCycle || "monthly",
             });
 
             log.info(

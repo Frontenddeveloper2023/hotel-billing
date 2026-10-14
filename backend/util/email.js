@@ -2,6 +2,10 @@ import nodemailer from "nodemailer";
 import { log } from "./logger.js";
 import Settings from "../models/settings.js";
 import Hotels from "../models/hotels.js";
+import User from "../models/users.js";
+import Subscription from "../models/subscription.js";
+import Plans from "../models/plans.js";
+import { generateRenewalToken } from "./renewalToken.js";
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -13,13 +17,27 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+const getBaseUrl = () => {
+  return String(process.env.VITE_API_BASE_URL || "http://localhost:5000").trim().replace(/\/+$/, "");
+};
+
 const getFrontendUrl = () => {
-  // Auto-detect based on NODE_ENV from backend .env
-  if (process.env.NODE_ENV === "production") {
-    return "https://webscape.co.in/hotel-billing-system";
+  if (process.env.CLIENT_URL) {
+    return String(process.env.CLIENT_URL).trim().replace(/\/+$/, "");
   }
-  
-  return "http://localhost:5173/hotel-billing-system";
+  const base = getBaseUrl();
+  // Local development fallback to vite dev server port 5173
+  if (base.includes("localhost:5000") || base.includes("127.0.0.1:5000")) {
+    return "http://localhost:5173/hotel-billing-system";
+  }
+  // Custom / live domain directly from .env (e.g. VITE_API_BASE_URL)
+  return `${base}/hotel-billing-system`;
+};
+
+const getBackendApiUrl = () => {
+  const base = getBaseUrl();
+  const baseName = process.env.BASE_NAME || "hotel-billing-system-backend";
+  return `${base}/${baseName}/api`;
 };
 
 
@@ -398,9 +416,8 @@ const sendAdminEmail = async ({
       to,
       subject,
 
-      text: `Hello ${
-        recipientName || "Valued Hotel Partner"
-      },
+      text: `Hello ${recipientName || "Valued Hotel Partner"
+        },
 
 ${message}
 
@@ -623,6 +640,8 @@ const sendSubscriptionExpiryReminder = async ({
   endDate,
   daysRemaining,
   hotelId,
+  planId,
+  billingCycle,
 }) => {
   try {
     const resolvedHotelName =
@@ -646,8 +665,40 @@ const sendSubscriptionExpiryReminder = async ({
       getFrontendUrl();
 
     const upgradeUrl = hotelId
-      ? `${frontendBaseUrl}/hotel-billing-system/plan-upgrade?hotelId=${hotelId}`
-      : `${frontendBaseUrl}/hotel-billing-system/plan-upgrade`;
+      ? `${frontendBaseUrl}/plan-upgrade?hotelId=${hotelId}`
+      : `${frontendBaseUrl}/plan-upgrade`;
+
+    // Resolve planId and billingCycle for 1-click renewal token
+    let resolvedPlanId = planId;
+    let resolvedBillingCycle = billingCycle || "monthly";
+    if (!resolvedPlanId && hotelId) {
+      const latestSub = await Subscription.findOne({ hotelId })
+        .sort({ createdAt: -1 })
+        .select("planId billingCycle")
+        .lean();
+      if (latestSub?.planId) {
+        resolvedPlanId = latestSub.planId;
+        resolvedBillingCycle = latestSub.billingCycle || "monthly";
+      }
+    }
+
+    if (!resolvedPlanId) {
+      const defaultPlan = await Plans.findOne().sort({ price: 1 }).lean();
+      if (defaultPlan?._id) {
+        resolvedPlanId = defaultPlan._id;
+      }
+    }
+
+    let quickRenewUrl = upgradeUrl;
+    if (hotelId && resolvedPlanId) {
+      const renewToken = generateRenewalToken({
+        hotelId: String(hotelId),
+        planId: String(resolvedPlanId),
+        billingCycle: resolvedBillingCycle,
+        expiresInDays: 7,
+      });
+      quickRenewUrl = `${getBackendApiUrl()}/payments/quick-renew?token=${renewToken}`;
+    }
 
     let subject =
       `Subscription Reminder: Plan expiring soon for ${resolvedHotelName}`;
@@ -655,8 +706,7 @@ const sendSubscriptionExpiryReminder = async ({
     let urgencyColor = "#D97706";
 
     let urgencyText =
-      `Your subscription will expire in ${daysRemaining} day${
-        daysRemaining > 1 ? "s" : ""
+      `Your subscription will expire in ${daysRemaining} day${daysRemaining > 1 ? "s" : ""
       }.`;
 
     if (daysRemaining <= 1) {
@@ -699,13 +749,13 @@ ${urgencyText}
 Hotel Name: ${resolvedHotelName}
 Plan: ${planName || "Current Plan"}
 Expiry Date: ${formattedDate}
-Days Left: ${daysRemaining} day${
-        daysRemaining > 1 ? "s" : ""
-      }
+Days Left: ${daysRemaining} day${daysRemaining > 1 ? "s" : ""
+        }
 
 Please renew or upgrade your plan now so all hotel rooms and billing keep working without interruption.
 
-Renew or Upgrade here: ${upgradeUrl}
+Renew & Pay Now: ${quickRenewUrl}
+Or choose another plan: ${upgradeUrl}
 
 Thank you,
 StayLio Team`,
@@ -1016,6 +1066,37 @@ StayLio Team`,
 
 
 <!-- BUTTON -->
+<tr>
+<td align="center" style="padding-top:28px;padding-bottom:12px;">
+  <table border="0" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+    <tr>
+      <td align="center" bgcolor="#4F46E5" style="border-radius:10px;">
+        <a
+          href="${quickRenewUrl}"
+          target="_blank"
+          style="
+            display:inline-block;
+            padding:14px 38px;
+            font-family:Arial,Helvetica,sans-serif;
+            font-size:15px;
+            font-weight:700;
+            color:#FFFFFF;
+            text-decoration:none;
+            background-color:#4F46E5;
+            border-radius:10px;
+            letter-spacing:0.3px;
+          "
+        >
+          💳 Pay &amp; Renew Subscription &rarr;
+        </a>
+      </td>
+    </tr>
+  </table>
+  <div style="margin-top:10px;font-size:12px;color:#9CA3AF;text-align:center;">
+    Instant 1-click checkout powered by Cashfree (UPI, Cards &amp; NetBanking)
+  </div>
+</td>
+</tr>
 
 
 
@@ -1082,6 +1163,8 @@ const sendSubscriptionExpiredNotification = async ({
   planName,
   endDate,
   hotelId,
+  planId,
+  billingCycle,
 }) => {
   try {
     const resolvedHotelName =
@@ -1105,8 +1188,40 @@ const sendSubscriptionExpiredNotification = async ({
       getFrontendUrl();
 
     const upgradeUrl = hotelId
-      ? `${frontendBaseUrl}/hotel-billing-system/plan-upgrade?hotelId=${hotelId}`
-      : `${frontendBaseUrl}/hotel-billing-system/plan-upgrade`;
+      ? `${frontendBaseUrl}/plan-upgrade?hotelId=${hotelId}`
+      : `${frontendBaseUrl}/plan-upgrade`;
+
+    // Resolve planId and billingCycle for 1-click renewal token
+    let resolvedPlanId = planId;
+    let resolvedBillingCycle = billingCycle || "monthly";
+    if (!resolvedPlanId && hotelId) {
+      const latestSub = await Subscription.findOne({ hotelId })
+        .sort({ createdAt: -1 })
+        .select("planId billingCycle")
+        .lean();
+      if (latestSub?.planId) {
+        resolvedPlanId = latestSub.planId;
+        resolvedBillingCycle = latestSub.billingCycle || "monthly";
+      }
+    }
+
+    if (!resolvedPlanId) {
+      const defaultPlan = await Plans.findOne().sort({ price: 1 }).lean();
+      if (defaultPlan?._id) {
+        resolvedPlanId = defaultPlan._id;
+      }
+    }
+
+    let quickRenewUrl = upgradeUrl;
+    if (hotelId && resolvedPlanId) {
+      const renewToken = generateRenewalToken({
+        hotelId: String(hotelId),
+        planId: String(resolvedPlanId),
+        billingCycle: resolvedBillingCycle,
+        expiresInDays: 7,
+      });
+      quickRenewUrl = `${getBackendApiUrl()}/payments/quick-renew?token=${renewToken}`;
+    }
 
     await transporter.sendMail({
       from: `"StayLio" <${process.env.SMTP_USER}>`,
@@ -1124,7 +1239,8 @@ Expired On: ${formattedDate}
 
 Your account features are currently paused. Please renew or upgrade your plan now to continue using all hotel features.
 
-Upgrade or renew here: ${upgradeUrl}
+Restart Service & Pay Now: ${quickRenewUrl}
+Or choose another plan: ${upgradeUrl}
 
 Thank you,
 StayLio Team`,
@@ -1408,22 +1524,34 @@ StayLio Team`,
 
 <!-- BUTTON -->
 <tr>
-<td style="padding-top:26px;">
-
-  <a
-    href="${upgradeUrl}"
-    target="_blank"
-    style="
-      color:#0875D1;
-      text-decoration:underline;
-      font-size:14px;
-      line-height:20px;
-      font-weight:600;
-    "
-  >
-    Renew or choose a plan &rarr;
-  </a>
-
+<td align="center" style="padding-top:28px;padding-bottom:12px;">
+  <table border="0" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+    <tr>
+      <td align="center" bgcolor="#DC2626" style="border-radius:10px;">
+        <a
+          href="${quickRenewUrl}"
+          target="_blank"
+          style="
+            display:inline-block;
+            padding:14px 38px;
+            font-family:Arial,Helvetica,sans-serif;
+            font-size:15px;
+            font-weight:700;
+            color:#FFFFFF;
+            text-decoration:none;
+            background-color:#DC2626;
+            border-radius:10px;
+            letter-spacing:0.3px;
+          "
+        >
+          ⚡ Pay &amp; Renew Subscription &rarr;
+        </a>
+      </td>
+    </tr>
+  </table>
+  <div style="margin-top:10px;font-size:12px;color:#9CA3AF;text-align:center;">
+    Instant account reactivation powered by Cashfree (UPI, Cards &amp; NetBanking)
+  </div>
 </td>
 </tr>
 
@@ -1503,8 +1631,40 @@ const sendSubscriptionCancelledNotification = async ({
       getFrontendUrl();
 
     const upgradeUrl = hotelId
-      ? `${frontendBaseUrl}/hotel-billing-system/plan-upgrade?hotelId=${hotelId}`
-      : `${frontendBaseUrl}/hotel-billing-system/plan-upgrade`;
+      ? `${frontendBaseUrl}/plan-upgrade?hotelId=${hotelId}`
+      : `${frontendBaseUrl}/plan-upgrade`;
+
+    // Resolve planId and billingCycle for 1-click renewal token
+    let resolvedPlanId = planId;
+    let resolvedBillingCycle = billingCycle || "monthly";
+    if (!resolvedPlanId && hotelId) {
+      const latestSub = await Subscription.findOne({ hotelId })
+        .sort({ createdAt: -1 })
+        .select("planId billingCycle")
+        .lean();
+      if (latestSub?.planId) {
+        resolvedPlanId = latestSub.planId;
+        resolvedBillingCycle = latestSub.billingCycle || "monthly";
+      }
+    }
+
+    if (!resolvedPlanId) {
+      const defaultPlan = await Plans.findOne().sort({ price: 1 }).lean();
+      if (defaultPlan?._id) {
+        resolvedPlanId = defaultPlan._id;
+      }
+    }
+
+    let quickRenewUrl = upgradeUrl;
+    if (hotelId && resolvedPlanId) {
+      const renewToken = generateRenewalToken({
+        hotelId: String(hotelId),
+        planId: String(resolvedPlanId),
+        billingCycle: resolvedBillingCycle,
+        expiresInDays: 7,
+      });
+      quickRenewUrl = `${getBackendApiUrl()}/payments/quick-renew?token=${renewToken}`;
+    }
 
     const isSuspended =
       status === "suspended";
@@ -1520,10 +1680,9 @@ const sendSubscriptionCancelledNotification = async ({
         : "cancelled";
 
     const subject =
-      `Subscription ${
-        isSuspended
-          ? "Suspended"
-          : "Cancelled"
+      `Subscription ${isSuspended
+        ? "Suspended"
+        : "Cancelled"
       } for ${resolvedHotelName}`;
 
     const defaultReason =
@@ -1874,22 +2033,34 @@ StayLio Team`,
 
 <!-- BUTTON -->
 <tr>
-<td style="padding-top:26px;">
-
-  <a
-    href="${upgradeUrl}"
-    target="_blank"
-    style="
-      color:#0875D1;
-      text-decoration:underline;
-      font-size:14px;
-      line-height:20px;
-      font-weight:600;
-    "
-  >
-    Choose a plan &amp; reactivate &rarr;
-  </a>
-
+<td align="center" style="padding-top:28px;padding-bottom:12px;">
+  <table border="0" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+    <tr>
+      <td align="center" bgcolor="#2563EB" style="border-radius:10px;">
+        <a
+          href="${quickRenewUrl}"
+          target="_blank"
+          style="
+            display:inline-block;
+            padding:14px 38px;
+            font-family:Arial,Helvetica,sans-serif;
+            font-size:15px;
+            font-weight:700;
+            color:#FFFFFF;
+            text-decoration:none;
+            background-color:#2563EB;
+            border-radius:10px;
+            letter-spacing:0.3px;
+          "
+        >
+          ⚡ Pay &amp; Reactivate Subscription &rarr;
+        </a>
+      </td>
+    </tr>
+  </table>
+  <div style="margin-top:10px;font-size:12px;color:#9CA3AF;text-align:center;">
+    Instant account reactivation powered by Cashfree (UPI, Cards &amp; NetBanking)
+  </div>
 </td>
 </tr>
 
@@ -1947,6 +2118,317 @@ StayLio Team`,
   }
 };
 
+// ============================================================
+// 6. ADMIN FREE TRIAL NOTIFICATION EMAIL
+// ============================================================
+const sendAdminFreeTrialNotificationEmail = async ({
+  hotel,
+  trialDays = 14,
+  startDate = new Date(),
+  endDate,
+}) => {
+  try {
+    // 1. Fetch Admin Emails
+    const adminUsers = await User.find({ role: "admin" })
+      .select("email name")
+      .lean();
+
+    const recipientEmails = adminUsers
+      .map((u) => u.email)
+      .filter(Boolean);
+
+    // If no admin in DB, fallback to environment or default
+    if (recipientEmails.length === 0) {
+      if (process.env.ADMIN_EMAIL) {
+        recipientEmails.push(process.env.ADMIN_EMAIL);
+      } else if (process.env.SMTP_USER) {
+        recipientEmails.push(process.env.SMTP_USER);
+      }
+    }
+
+    if (recipientEmails.length === 0) {
+      log.warn("[EMAIL] No admin recipient email found for free trial notification.");
+      return;
+    }
+
+    const formatDate = (val) => {
+      if (!val) return "";
+      const d = new Date(val);
+      if (Number.isNaN(d.getTime())) return "";
+      return d.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    };
+
+    const startFormatted = formatDate(startDate);
+    const endFormatted = formatDate(endDate);
+    const adminHotelsUrl = `${getFrontendUrl()}/saas-admin/hotels`;
+
+    const subject = `New Free Trial Activated: ${hotel.hotelName} (${trialDays} Days)`;
+
+    for (const adminEmail of recipientEmails) {
+      await transporter.sendMail({
+        from: `"StayLio System" <${process.env.SMTP_USER}>`,
+        to: adminEmail,
+        subject,
+        text: `Hello Admin,
+
+A new hotel has just activated a ${trialDays}-day Free Trial plan on StayLio.
+
+Hotel Details:
+- Hotel Name: ${hotel.hotelName}
+- Owner Name: ${hotel.ownerName}
+- Email: ${hotel.email}
+- Phone: ${hotel.phone}
+- Trial Duration: ${trialDays} Days
+- Start Date: ${startFormatted}
+- Expiry Date: ${endFormatted}
+- Status: Active (Instantly Enabled - No Manual Approval Required)
+
+Unlocked Features:
+- Room Booking Management
+- Food Service Management
+- Room Service Management
+- Invoice & Billing Management
+
+View Hotel in SaaS Admin: ${adminHotelsUrl}
+
+Best regards,
+StayLio Automated System`,
+        html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${subject}</title>
+</head>
+<body style="margin:0;padding:0;background:#F8FAFC;font-family:Arial,Helvetica,sans-serif;color:#1E293B;-webkit-font-smoothing:antialiased;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F8FAFC;padding:40px 15px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:580px;background:#ffffff;border-radius:16px;border:1px solid #E2E8F0;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.04);">
+          <!-- HEADER -->
+          <tr>
+            <td style="padding:32px 32px 24px;background:linear-gradient(135deg, #0B2447 0%, #19376D 100%);color:#ffffff;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td>
+                    <span style="display:inline-block;padding:4px 10px;background:rgba(16,185,129,0.25);border:1px solid rgba(16,185,129,0.4);border-radius:20px;font-size:11px;font-weight:700;color:#6EE7B7;text-transform:uppercase;letter-spacing:0.5px;">
+                      Free Trial Plan
+                    </span>
+                    <h1 style="margin:12px 0 6px;font-size:22px;font-weight:800;color:#ffffff;line-height:28px;">
+                      New Free Trial Activated
+                    </h1>
+                    <p style="margin:0;font-size:13px;color:#94A3B8;">
+                      A new hotel partner just signed up for a ${trialDays}-day free trial.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- CONTENT -->
+          <tr>
+            <td style="padding:28px 32px;">
+              <!-- HOTEL DETAILS CARD -->
+              <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:20px;margin-bottom:24px;">
+                <h3 style="margin:0 0 14px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:#475569;">
+                  Hotel Information
+                </h3>
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:13px;line-height:22px;">
+                  <tr>
+                    <td style="color:#64748B;padding:4px 0;width:130px;">Hotel Name:</td>
+                    <td style="font-weight:700;color:#0F172A;padding:4px 0;">${hotel.hotelName}</td>
+                  </tr>
+                  <tr>
+                    <td style="color:#64748B;padding:4px 0;">Owner Name:</td>
+                    <td style="font-weight:600;color:#0F172A;padding:4px 0;">${hotel.ownerName}</td>
+                  </tr>
+                  <tr>
+                    <td style="color:#64748B;padding:4px 0;">Email:</td>
+                    <td style="font-weight:600;color:#0F172A;padding:4px 0;">
+                      <a href="mailto:${hotel.email}" style="color:#2563EB;text-decoration:none;">${hotel.email}</a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="color:#64748B;padding:4px 0;">Phone:</td>
+                    <td style="font-weight:600;color:#0F172A;padding:4px 0;">${hotel.phone}</td>
+                  </tr>
+                  ${hotel.address?.city
+            ? `<tr>
+                    <td style="color:#64748B;padding:4px 0;">Location:</td>
+                    <td style="font-weight:600;color:#0F172A;padding:4px 0;">${[hotel.address.city, hotel.address.state].filter(Boolean).join(", ")}</td>
+                  </tr>`
+            : ""
+          }
+                </table>
+              </div>
+
+              <!-- TRIAL TIMELINE CARD -->
+              <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:12px;padding:20px;margin-bottom:24px;">
+                <h3 style="margin:0 0 14px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:#065F46;">
+                  Trial Period & Status
+                </h3>
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:13px;line-height:22px;">
+                  <tr>
+                    <td style="color:#047857;padding:4px 0;width:130px;">Duration:</td>
+                    <td style="font-weight:800;color:#065F46;padding:4px 0;">${trialDays} Days</td>
+                  </tr>
+                  <tr>
+                    <td style="color:#047857;padding:4px 0;">Start Date:</td>
+                    <td style="font-weight:700;color:#065F46;padding:4px 0;">${startFormatted}</td>
+                  </tr>
+                  <tr>
+                    <td style="color:#047857;padding:4px 0;">Expiry Date:</td>
+                    <td style="font-weight:700;color:#065F46;padding:4px 0;">${endFormatted}</td>
+                  </tr>
+                  <tr>
+                    <td style="color:#047857;padding:4px 0;">Activation:</td>
+                    <td style="font-weight:700;color:#059669;padding:4px 0;">Instant (No Admin Review Required)</td>
+                  </tr>
+                </table>
+              </div>
+
+              <!-- UNLOCKED FEATURES NOTE -->
+              <p style="margin:0 0 24px;font-size:12px;line-height:18px;color:#64748B;">
+                <strong>Features Unlocked:</strong> Food Service, Room Service, Room Booking & Management, Billing & Invoicing.
+              </p>
+
+              <!-- ACTION BUTTON -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center">
+                    <a href="${adminHotelsUrl}" target="_blank" style="display:inline-block;padding:12px 28px;background:#2563EB;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;border-radius:10px;box-shadow:0 4px 12px rgba(37,99,235,0.25);">
+                      View in SaaS Admin Hotels &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="padding:20px 32px;background:#F1F5F9;border-top:1px solid #E2E8F0;font-size:11px;color:#64748B;text-align:center;">
+              StayLio Hotel SaaS System · Automated Admin Notification
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`,
+      });
+
+      log.info(`[EMAIL] Free trial notification email successfully sent to admin ${adminEmail} for hotel ${hotel.hotelName}.`);
+    }
+  } catch (error) {
+    log.error(`[EMAIL] Failed to send admin free trial notification email: ${error.message}`);
+  }
+};
+
+// ============================================================
+// 8. HOTEL BLOCKED / CANCELLED BY ADMIN EMAIL (NO REFUND)
+// ============================================================
+const sendHotelBlockedEmail = async ({
+  to,
+  hotelName,
+  ownerName,
+  reason = "",
+  details = "",
+}) => {
+  try {
+    await transporter.sendMail({
+      from: `"StayLio Administration" <${process.env.SMTP_USER}>`,
+      to,
+      subject: `Account Notice: Hotel Account Suspended - ${hotelName}`,
+      html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Hotel Account Suspended</title>
+</head>
+<body style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background-color:#F8FAFC;margin:0;padding:24px 12px;color:#0F172A;">
+  <table width="100%" border="0" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center">
+        <table width="600" border="0" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);border:1px solid #E2E8F0;">
+          <!-- HEADER -->
+          <tr>
+            <td style="padding:28px 32px;background:linear-gradient(135deg,#0F172A 0%,#334155 100%);color:#ffffff;">
+              <h1 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.5px;">StayLio Platform Administration</h1>
+              <p style="margin:6px 0 0;font-size:13px;color:#CBD5E1;font-weight:500;">Account Status Notice</p>
+            </td>
+          </tr>
+          <!-- BODY -->
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0 0 16px;font-size:15px;line-height:24px;color:#1E293B;">
+                Dear <strong>${ownerName || "Hotel Owner"}</strong>,
+              </p>
+              <p style="margin:0 0 20px;font-size:14px;line-height:22px;color:#475569;">
+                This email is to notify you that your hotel account for <strong>${hotelName}</strong> has been <strong>suspended / blocked</strong> by the platform administrator.
+              </p>
+
+              <!-- NOTICE CARD -->
+              <div style="background:#F1F5F9;border:1px solid #CBD5E1;border-radius:12px;padding:20px;margin-bottom:24px;">
+                <h3 style="margin:0 0 14px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#334155;">
+                  Suspension Summary
+                </h3>
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:13px;line-height:22px;">
+                  <tr>
+                    <td style="color:#64748B;padding:4px 0;width:140px;">Hotel Name:</td>
+                    <td style="font-weight:600;color:#0F172A;padding:4px 0;">${hotelName}</td>
+                  </tr>
+                  <tr>
+                    <td style="color:#64748B;padding:4px 0;">Status:</td>
+                    <td style="font-weight:700;color:#DC2626;padding:4px 0;">Blocked by Administrator</td>
+                  </tr>
+                  ${reason ? `<tr>
+                    <td style="color:#64748B;padding:4px 0;">Reason:</td>
+                    <td style="font-weight:600;color:#0F172A;padding:4px 0;">${reason}</td>
+                  </tr>` : ""}
+                  ${details ? `<tr>
+                    <td style="color:#64748B;padding:4px 0;">Details:</td>
+                    <td style="font-weight:600;color:#0F172A;padding:4px 0;">${details}</td>
+                  </tr>` : ""}
+                </table>
+              </div>
+
+              <p style="margin:0 0 12px;font-size:13px;line-height:20px;color:#475569;">
+                All active user sessions for this hotel have been terminated. Future login attempts to the hotel management portal will remain blocked until further notice.
+              </p>
+              <p style="margin:0;font-size:13px;line-height:20px;color:#64748B;">
+                If you believe this suspension was made in error or wish to appeal, please contact the StayLio administration team.
+              </p>
+            </td>
+          </tr>
+          <!-- FOOTER -->
+          <tr>
+            <td style="padding:20px 32px;background:#F8FAFC;border-top:1px solid #E2E8F0;font-size:11px;color:#64748B;text-align:center;">
+              StayLio Hotel Operations · Platform Administration
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`,
+    });
+    log.info(`[EMAIL] Hotel blocked notification email successfully sent to ${to} for hotel ${hotelName}.`);
+  } catch (err) {
+    log.error(`[EMAIL] Failed to send hotel blocked email: ${err.message}`);
+  }
+};
 
 // ============================================================
 // EXPORTS
@@ -1957,4 +2439,6 @@ export {
   sendSubscriptionExpiredNotification,
   sendSubscriptionCancelledNotification,
   sendAdminEmail,
+  sendAdminFreeTrialNotificationEmail,
+  sendHotelBlockedEmail,
 };

@@ -86,6 +86,7 @@ const hotelRegistrationSchema = new mongoose.Schema(
     billingCycle: {
       type: String,
       enum: [
+        "trial",
         "monthly",
         "quarterly",
         "halfYearly",
@@ -132,13 +133,18 @@ const hotelRegistrationSchema = new mongoose.Schema(
         "pending",
         "paid",
         "failed",
-        "refunded",
         "partially_paid",
       ],
       default: "pending",
     },
 
     paymentTransactionId: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    paymentOrderId: {
       type: String,
       trim: true,
       default: "",

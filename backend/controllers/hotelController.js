@@ -1,4 +1,6 @@
 import Hotels from "../models/hotels.js";
+import User from "../models/users.js";
+import { sendHotelBlockedEmail } from "../util/email.js";
 import { log } from "../util/logger.js";
 
 // ============================================================
@@ -447,17 +449,40 @@ export const updateHotel = async (req, res) => {
         "inactive",
         "suspended",
         "cancelled",
+        "blocked",
       ];
 
       if (!allowedStatuses.includes(status)) {
         return res.status(400).json({
           success: false,
           message:
-            "Invalid hotel status. Please use active, inactive, suspended, or cancelled.",
+            "Invalid hotel status. Please use active, inactive, suspended, cancelled, or blocked.",
         });
       }
 
+      const previousStatus = existingHotel.status;
       existingHotel.status = status;
+
+      // If status changed to inactive/blocked/suspended/cancelled, invalidate users and send notice
+      if (
+        ["inactive", "suspended", "cancelled", "blocked"].includes(status) &&
+        previousStatus !== status
+      ) {
+        await User.updateMany(
+          { hotelId: existingHotel._id },
+          { $set: { status: "inactive" } }
+        );
+
+        if (existingHotel.email) {
+          await sendHotelBlockedEmail({
+            to: existingHotel.email,
+            hotelName: existingHotel.hotelName,
+            ownerName: existingHotel.ownerName,
+            reason: `Account status updated to ${status} by administrator.`,
+            details: "Please contact administration support for further details.",
+          });
+        }
+      }
     }
 
     // --------------------------------------------------------

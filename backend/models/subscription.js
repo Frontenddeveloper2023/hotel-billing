@@ -18,6 +18,7 @@ const subscriptionSchema = new mongoose.Schema(
     billingCycle: {
       type: String,
       enum: [
+        "trial",
         "monthly",
         "quarterly",
         "halfYearly",
@@ -84,7 +85,6 @@ status: {
         "pending",
         "paid",
         "failed",
-        "refunded",
         "partially_paid",
       ],
       default: "pending",
@@ -169,6 +169,12 @@ status: {
     },
 
     paymentTransactionId: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    paymentOrderId: {
       type: String,
       trim: true,
       default: "",

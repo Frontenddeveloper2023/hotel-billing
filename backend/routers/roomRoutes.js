@@ -14,6 +14,7 @@ import {
     permissionVerifyAny,
 } from "../middleware/userVerify.js";
 import { roomLimitVerify } from "../middleware/roomLimitVerify.js";
+import { subscriptionVerify } from "../middleware/subscriptionVerify.js";
 
 const router = express.Router();
 
@@ -63,6 +64,7 @@ router.put(
     "/:id",
     authVerify,
     permissionVerify("roomsBooking"),
+    subscriptionVerify,
     updateRoom
 );
 
@@ -75,6 +77,7 @@ router.delete(
     "/:id",
     authVerify,
     permissionVerify("roomsBooking"),
+    subscriptionVerify,
     deleteRoom
 );
 

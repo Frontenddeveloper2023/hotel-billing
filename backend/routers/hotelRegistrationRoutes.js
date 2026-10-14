@@ -8,6 +8,7 @@ import {
   approveRegistration,
   rejectRegistration,
   confirmDummyPayment,
+  registerFreeTrial,
 } from "../controllers/hotelRegistrationController.js";
 
 import {
@@ -24,6 +25,12 @@ const router = express.Router();
 router.post(
   "/register",
   createRegistration
+);
+
+// Free Trial Registration (Instant Activation, No Admin Approval Required)
+router.post(
+  "/free-trial",
+  registerFreeTrial
 );
 
 // ==========================================

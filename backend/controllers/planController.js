@@ -1,4 +1,5 @@
 import Plans from "../models/plans.js";
+import FreeTrialSettings from "../models/freeTrialSettings.js";
 import { log } from "../util/logger.js";
 
 // ============================================================
@@ -723,3 +724,81 @@ export const deletePlan = async (req, res) => {
     });
   }
 };
+
+// ============================================================
+// GET FREE TRIAL CONFIG
+// ============================================================
+export const getFreeTrialConfig = async (req, res) => {
+  try {
+    let settings = await FreeTrialSettings.findOne();
+    if (!settings) {
+      settings = await FreeTrialSettings.create({
+        isEnabled: true,
+        trialDays: 14,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        isEnabled: settings.isEnabled,
+        trialDays: settings.trialDays,
+      },
+    });
+  } catch (error) {
+    log.error(`[getFreeTrialConfig] Error: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to load free trial configuration.",
+    });
+  }
+};
+
+// ============================================================
+// UPDATE FREE TRIAL CONFIG
+// ============================================================
+export const updateFreeTrialConfig = async (req, res) => {
+  try {
+    const { isEnabled, trialDays } = req.body;
+
+    let settings = await FreeTrialSettings.findOne();
+    if (!settings) {
+      settings = new FreeTrialSettings();
+    }
+
+    if (typeof isEnabled === "boolean") {
+      settings.isEnabled = isEnabled;
+    }
+
+    if (trialDays !== undefined) {
+      const parsedDays = Number(trialDays);
+      if (!Number.isInteger(parsedDays) || parsedDays < 1 || parsedDays > 365) {
+        return res.status(400).json({
+          success: false,
+          message: "Free trial days must be a valid number between 1 and 365 days.",
+        });
+      }
+      settings.trialDays = parsedDays;
+    }
+
+    settings.updatedBy = req.user?._id || null;
+    await settings.save();
+
+    log.info(`[updateFreeTrialConfig] Updated: isEnabled=${settings.isEnabled}, trialDays=${settings.trialDays}`);
+
+    return res.status(200).json({
+      success: true,
+      message: "Free trial configuration updated successfully.",
+      data: {
+        isEnabled: settings.isEnabled,
+        trialDays: settings.trialDays,
+      },
+    });
+  } catch (error) {
+    log.error(`[updateFreeTrialConfig] Error: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to update free trial configuration.",
+    });
+  }
+};
