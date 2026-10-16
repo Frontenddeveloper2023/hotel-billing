@@ -1,4 +1,5 @@
 import React, { memo, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 
 import { useAuth } from "../../Context/AuthContext";
 
@@ -13,6 +14,7 @@ import {
 import {
   createSubscriptionUpgradeOrder,
   verifySubscriptionUpgradePayment,
+  getSubscriptionUpgradePreview,
 } from "../../service/paymentApi";
 import { openCashfreeCheckoutModal } from "../../util/cashfreeCheckout";
 import api from "../../service/api";
@@ -31,6 +33,10 @@ import {
   Sparkles,
   CalendarDays,
   X,
+  Tag,
+  Info,
+  ArrowRight,
+  Lock,
 } from "lucide-react";
 
 const BILLING_CYCLES = [
@@ -458,7 +464,7 @@ const PlanCard = memo(
 );
 
 export default function PlanUpgrade() {
-  const { hotelUser: userData } = useAuth();
+  const { hotelUser: userData, isAuthenticated } = useAuth();
 
   const toast = useToast();
 
@@ -467,12 +473,34 @@ export default function PlanUpgrade() {
 
   const [plans, setPlans] = useState([]);
   const [currentSub, setCurrentSub] = useState(null);
+  const [publicHotel, setPublicHotel] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [processing, setProcessing] = useState(false);
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [loadingSub, setLoadingSub] = useState(true);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [prorationPreview, setProrationPreview] = useState(null);
+  const [loadingProration, setLoadingProration] = useState(false);
+
+  // Load public hotel info if hotelId is passed via query params (e.g. from reminder email)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hotelIdParam = params.get("hotelId");
+    if (hotelIdParam && /^[0-9a-fA-F]{24}$/.test(hotelIdParam)) {
+      api
+        .get(`/hotels/public/${hotelIdParam}`)
+        .then((res) => {
+          if (res.data?.success && res.data?.data) {
+            setPublicHotel(res.data.data);
+          }
+        })
+        .catch((err) => {
+          console.warn("[PlanUpgrade] Could not load public hotel info:", err?.message);
+        });
+    }
+  }, []);
 
   // Fetch active plans from DB
   useEffect(() => {
@@ -559,7 +587,7 @@ export default function PlanUpgrade() {
         try {
           const res = await api.get(`/payments/verify-renewal?orderId=${encodeURIComponent(orderId)}`);
           if (res.data?.success) {
-            toastRef.current.success("Subscription successfully renewed! Thank you.");
+            toastRef.current.success("Subscription successfully upgraded & activated!");
             if (res.data.data) {
               setCurrentSub(res.data.data);
             }
@@ -590,7 +618,14 @@ export default function PlanUpgrade() {
     currentSub?.status === "cancelled" ||
     (currentSub?.endDate && new Date() >= new Date(currentSub.endDate));
 
-  const handleSelectPlan = (plan) => {
+  const handleSelectPlan = async (plan) => {
+    // If not authenticated, prompt user to log in with their hotel account
+    if (!isAuthenticated) {
+      setSelectedPlan(plan);
+      setShowLoginModal(true);
+      return;
+    }
+
     // Block only if the subscription is currently ACTIVE and BOTH planId AND billingCycle match
     if (
       !isSubExpired &&
@@ -606,6 +641,23 @@ export default function PlanUpgrade() {
 
     setSelectedPlan(plan);
     setShowPaymentModal(true);
+    setProrationPreview(null);
+
+    // Fetch authoritative proration calculation from backend
+    try {
+      setLoadingProration(true);
+      const prevRes = await getSubscriptionUpgradePreview({
+        planId: plan._id,
+        billingCycle,
+      });
+      if (prevRes?.success && prevRes?.data) {
+        setProrationPreview(prevRes.data);
+      }
+    } catch (err) {
+      console.warn("[getSubscriptionUpgradePreview] Fallback to standard price:", err?.message);
+    } finally {
+      setLoadingProration(false);
+    }
   };
 
   const handleUpgrade = async () => {
@@ -614,13 +666,34 @@ export default function PlanUpgrade() {
     setProcessing(true);
 
     try {
-      // 1. Create Cashfree Order for Upgrade
+      // 1. Create Cashfree / Backend Order for Upgrade
       const orderRes = await createSubscriptionUpgradeOrder({
         planId: selectedPlan._id,
         billingCycle,
       });
 
-      if (!orderRes?.success || !orderRes?.data?.paymentSessionId) {
+      if (!orderRes?.success) {
+        throw new Error(orderRes?.message || "Failed to initiate upgrade order.");
+      }
+
+      // If fully covered by credit (zero amount to pay)
+      if (orderRes?.data?.zeroAmount) {
+        setShowPaymentModal(false);
+        toastRef.current.success("Plan upgraded successfully using your credit!");
+        if (orderRes.data.subscription) {
+          setCurrentSub(orderRes.data.subscription);
+        } else {
+          try {
+            const subRes = await getMySubscription();
+            if (subRes?.success && subRes?.data) setCurrentSub(subRes.data);
+          } catch (_) {}
+        }
+        setSelectedPlan(null);
+        window.dispatchEvent(new CustomEvent("subscriptionUpdated"));
+        return;
+      }
+
+      if (!orderRes?.data?.paymentSessionId) {
         throw new Error(orderRes?.message || "Failed to initiate payment with Cashfree.");
       }
 
@@ -655,7 +728,14 @@ export default function PlanUpgrade() {
         verifyRes.message || "Plan upgraded successfully!"
       );
 
-      setCurrentSub(verifyRes.data);
+      if (verifyRes.data) {
+        setCurrentSub(verifyRes.data);
+      } else {
+        try {
+          const subRes = await getMySubscription();
+          if (subRes?.success && subRes?.data) setCurrentSub(subRes.data);
+        } catch (_) {}
+      }
       setSelectedPlan(null);
 
       // Notify other components (e.g. SubscriptionAlertBanner) immediately
@@ -704,7 +784,8 @@ export default function PlanUpgrade() {
       : null) ||
     userData?.hotelName ||
     userData?.name ||
-    "Your Hotel";
+    publicHotel?.hotelName ||
+    "";
 
   const daysLeft = currentSub?.endDate
     ? Math.max(
@@ -746,88 +827,139 @@ export default function PlanUpgrade() {
 
   return (
     <div
-      className="
-        mx-auto
+      className={`
         w-full
-        max-w-[1200px]
-        min-w-0
-        overflow-x-hidden
-        px-3
         font-['Inter']
-        sm:px-4
-        md:px-5
-        lg:px-6
-        xl:px-0
-      "
+        antialiased
+        staylio-scrollbar
+        text-white
+        bg-[radial-gradient(ellipse_at_top,#2a5288_0%,#16345e_45%,#0f2447_100%)]
+        ${!isAuthenticated ? "min-h-screen flex flex-col" : "min-h-full py-2"}
+      `}
     >
       <style>{styles}</style>
 
       {/* =====================================================
-          HEADER
+          STANDALONE PUBLIC HEADER (when not inside dashboard)
       ===================================================== */}
+      {!isAuthenticated && (
+        <header className="w-full border-b border-white/10 bg-white/[0.04] backdrop-blur-xl shrink-0">
+          <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-4 sm:px-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#5b9bf5] to-[#2568e0] shadow-md shadow-blue-500/25">
+                <Building2 className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <span className="text-base sm:text-lg font-extrabold tracking-tight text-white">
+                  StayLio
+                </span>
+                <p className="text-[10px] sm:text-[11px] text-blue-200/70 leading-none">
+                  Hotel Management Platform
+                </p>
+              </div>
+            </div>
 
-      <div className="pu-in mb-5 min-w-0 sm:mb-6">
-        <div
-          className="
-            flex
-            min-w-0
-            flex-col
-            gap-3
-            sm:gap-4
-          "
-        >
-          <h1
+            <Link
+              to={`/hotel-login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`}
+              className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-white/20 hover:border-white/30 active:scale-95"
+            >
+              <span>Hotel Login</span>
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </header>
+      )}
+
+      {/* =====================================================
+          MAIN CONTENT CONTAINER
+      ===================================================== */}
+      <div
+        className="
+          mx-auto
+          w-full
+          max-w-[1200px]
+          min-w-0
+          flex-1
+          overflow-x-hidden
+          px-3
+          py-6
+          sm:px-4
+          sm:py-8
+          md:px-5
+          lg:px-6
+        "
+      >
+        {/* =====================================================
+            HEADER
+        ===================================================== */}
+        <div className="pu-in mb-5 min-w-0 sm:mb-6">
+          <div
             className="
               flex
               min-w-0
-              items-center
-              gap-2.5
-              text-[clamp(1.35rem,5vw,2rem)]
-              font-extrabold
-              tracking-[-0.02em]
-              text-white
-              sm:gap-3
+              flex-col
+              gap-3
+              sm:gap-4
             "
           >
-            <span
+            <h1
               className="
                 flex
-                h-9
-                w-9
-                shrink-0
+                min-w-0
                 items-center
-                justify-center
-                rounded-xl
-                border
-                border-white/20
-                bg-white/15
-                sm:h-10
-                sm:w-10
-                sm:rounded-2xl
+                gap-2.5
+                text-[clamp(1.35rem,5vw,2rem)]
+                font-extrabold
+                tracking-[-0.02em]
+                text-white
+                sm:gap-3
               "
             >
-              <ArrowUpCircle className="h-5 w-5 sm:h-6 sm:w-6" />
-            </span>
+              <span
+                className="
+                  flex
+                  h-9
+                  w-9
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-xl
+                  border
+                  border-white/20
+                  bg-white/15
+                  text-white
+                  shadow-inner
+                  sm:h-10
+                  sm:w-10
+                  sm:rounded-2xl
+                "
+              >
+                <ArrowUpCircle className="h-5 w-5 sm:h-6 sm:w-6" />
+              </span>
 
-            <span className="min-w-0">
-              Upgrade Your Plan
-            </span>
-          </h1>
+              <span className="min-w-0">
+                Upgrade Your Plan
+              </span>
+            </h1>
 
-          <p
-            className="
-              min-w-0
-              break-words
-              text-xs
-              leading-relaxed
-              text-blue-100/80
-              sm:text-sm
-            "
-          >
-            Hotel:{" "}
-            <strong className="text-white">
-              {hotelName}
-            </strong>
+            <p
+              className="
+                min-w-0
+                break-words
+                text-xs
+                leading-relaxed
+                text-blue-100/90
+                sm:text-sm
+              "
+            >
+              {hotelName && (
+                <>
+                  Hotel:{" "}
+                  <strong className="text-white font-bold">
+                    {hotelName}
+                  </strong>
+                </>
+              )}
 
             {currentPlanObj && (
               <>
@@ -915,27 +1047,39 @@ export default function PlanUpgrade() {
           {isSubExpired && (
             <div
               className="
-                mt-2
+                mt-3
                 flex
                 items-center
-                gap-2.5
+                gap-3
                 rounded-2xl
                 border
-                border-amber-300/40
-                bg-amber-500/20
+                border-amber-400/40
+                bg-gradient-to-r
+                from-amber-500/20
+                via-amber-500/15
+                to-amber-500/10
                 px-4
-                py-3
+                py-3.5
                 text-xs
-                font-semibold
+                font-medium
                 text-amber-100
-                backdrop-blur
+                backdrop-blur-md
+                shadow-lg
+                shadow-amber-950/20
                 sm:text-sm
               "
             >
-              <Sparkles size={18} className="shrink-0 text-amber-300" />
-              <span>
-                Your subscription has expired. You can choose and activate any plan below to restore your hotel service immediately.
-              </span>
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-400/20 border border-amber-400/30 text-amber-300">
+                <Sparkles size={18} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <strong className="block text-amber-200 font-bold mb-0.5">
+                  Subscription Expired
+                </strong>
+                <span className="text-amber-100/90 leading-relaxed">
+                  Your subscription has expired. You can choose and activate any plan below to restore your hotel service immediately.
+                </span>
+              </div>
             </div>
           )}
         </div>
@@ -960,38 +1104,41 @@ export default function PlanUpgrade() {
           sm:mb-6
         "
       >
-        {BILLING_CYCLES.map((c) => (
-          <button
-            key={c.key}
-            type="button"
-            onClick={() => setBillingCycle(c.key)}
-            className={`
-              inline-flex
-              min-h-10
-              shrink-0
-              cursor-pointer
-              items-center
-              justify-center
-              rounded-xl
-              px-4
-              py-2.5
-              text-xs
-              font-bold
-              transition-all
-              duration-200
-              active:scale-[0.98]
-              sm:px-5
-              sm:text-sm
-              ${
-                billingCycle === c.key
-                  ? "bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] text-white shadow-md shadow-blue-500/25"
-                  : "border border-white/20 bg-white/10 text-blue-100 hover:bg-white/15"
-              }
-            `}
-          >
-            {c.label}
-          </button>
-        ))}
+        {BILLING_CYCLES.map((c) => {
+          const isActive = billingCycle === c.key;
+          return (
+            <button
+              key={c.key}
+              type="button"
+              onClick={() => setBillingCycle(c.key)}
+              className={`
+                inline-flex
+                min-h-10
+                shrink-0
+                cursor-pointer
+                items-center
+                justify-center
+                rounded-xl
+                px-4
+                py-2.5
+                text-xs
+                font-bold
+                transition-all
+                duration-200
+                active:scale-[0.98]
+                sm:px-5
+                sm:text-sm
+                ${
+                  isActive
+                    ? "bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] text-white shadow-md shadow-blue-500/30 ring-2 ring-white/30"
+                    : "border border-white/20 bg-white/10 text-white/90 hover:bg-white/20 hover:text-white"
+                }
+              `}
+            >
+              {c.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* =====================================================
@@ -1193,157 +1340,178 @@ export default function PlanUpgrade() {
                 </strong>{" "}
                 billing.
               </p>
-
               {/* DETAILS */}
-              <div
-                className="
-                  space-y-3
-                  rounded-2xl
-                  border
-                  border-[#e7eff8]
-                  bg-[#f4f8fd]
-                  p-3
-                  sm:p-4
-                "
-              >
-                {[
-                  ["Plan", selectedPlan.planName],
-                  ["Billing Cycle", billingCycle],
-                  ["Hotel", hotelName],
-                ].map(([l, v]) => (
+              {(() => {
+                const currentPlanName =
+                  prorationPreview?.currentPlanName ||
+                  currentPlanObj?.planName ||
+                  "Current Plan";
+
+                const currentPlanPrice = Number(
+                  prorationPreview?.currentPlanPrice ??
+                  (currentSub?.amount || currentSub?.finalAmount || 0)
+                );
+
+                const currentPlanValidity = Number(
+                  prorationPreview?.totalDays ??
+                  (currentSub?.customDurationDays || cycleDays[currentSub?.billingCycle] || 30)
+                );
+
+                const remainingUnusedDays = Number(
+                  prorationPreview?.remainingDays ??
+                  (isSubExpired ? 0 : (daysLeft ?? 0))
+                );
+
+                const newPlanPrice = Number(
+                  prorationPreview?.originalPrice ??
+                  getPrice(selectedPlan, billingCycle)
+                );
+
+                const unusedCredit = Number(prorationPreview?.unusedCredit ?? 0);
+
+                const finalPayable = Number(
+                  prorationPreview?.payableAmount ??
+                  Math.max(0, newPlanPrice - unusedCredit)
+                );
+
+                const newPlanStart = prorationPreview?.newPlanStartDate
+                  ? new Date(prorationPreview.newPlanStartDate)
+                  : previewStart;
+
+                const newPlanEnd = prorationPreview?.newPlanEndDate
+                  ? new Date(prorationPreview.newPlanEndDate)
+                  : previewEnd;
+
+                return (
                   <div
-                    key={l}
                     className="
-                      flex
-                      min-w-0
-                      flex-col
-                      gap-1
-                      text-xs
-                      sm:flex-row
-                      sm:items-center
-                      sm:justify-between
-                      sm:gap-3
-                      sm:text-sm
+                      space-y-3
+                      rounded-2xl
+                      border
+                      border-[#e7eff8]
+                      bg-[#f4f8fd]
+                      p-3
+                      sm:p-4
                     "
                   >
-                    <span className="shrink-0 text-[#6b7f99]">
-                      {l}
-                    </span>
+                    {/* CURRENT SUBSCRIPTION SECTION */}
+                    <div className="border-b border-[#e2ebf7] pb-3">
+                      <div className="mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        <span>Current Subscription</span>
+                        {remainingUnusedDays > 0 ? (
+                          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                            Active ({remainingUnusedDays}d left)
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
+                            Expired / 0d left
+                          </span>
+                        )}
+                      </div>
+                      <div className="space-y-1.5 text-xs sm:text-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[#6b7f99]">Current Plan Name</span>
+                          <strong className="text-[#0e2a4a]">{currentPlanName}</strong>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[#6b7f99]">Current Plan Price</span>
+                          <span className="font-semibold text-slate-800">
+                            ₹{currentPlanPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[#6b7f99]">Original Plan Validity</span>
+                          <span className="font-semibold text-slate-800">{currentPlanValidity} days</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[#6b7f99]">Remaining Unused Days</span>
+                          <span className={`font-semibold ${remainingUnusedDays > 0 ? "text-emerald-700" : "text-slate-500"}`}>
+                            {remainingUnusedDays} days
+                          </span>
+                        </div>
+                      </div>
+                    </div>
 
-                    <span
-                      className="
-                        min-w-0
-                        break-words
-                        font-semibold
-                        text-[#0e2a4a]
-                        sm:text-right
-                      "
-                    >
-                      {v}
-                    </span>
+                    {/* NEW SUBSCRIPTION SECTION */}
+                    <div className="border-b border-[#e2ebf7] pb-3">
+                      <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        New Subscription
+                      </div>
+                      <div className="space-y-1.5 text-xs sm:text-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[#6b7f99]">New Plan Name</span>
+                          <strong className="text-[#2568e0]">{selectedPlan.planName}</strong>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[#6b7f99]">Billing Cycle</span>
+                          <span className="font-semibold text-amber-700 capitalize">{billingCycle}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[#6b7f99]">New Plan Price</span>
+                          <span className="font-semibold text-slate-800">
+                            ₹{newPlanPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-1.5 text-[#6b7f99]">
+                            <CalendarDays size={13} />
+                            New Plan Starts
+                          </span>
+                          <span className="font-semibold text-emerald-600">{fmtDate(newPlanStart)}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[#6b7f99]">New Plan Expires</span>
+                          <span className="font-semibold text-red-600">{fmtDate(newPlanEnd)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* PRORATION / CREDIT BREAKDOWN */}
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 space-y-2">
+                      <div className="flex items-center justify-between text-xs sm:text-sm text-slate-700">
+                        <span className="flex items-center gap-1.5 text-slate-600">
+                          <Tag size={12} className="text-emerald-600" />
+                          New Plan Price
+                        </span>
+                        <span className="font-bold text-slate-800">
+                          ₹{newPlanPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs sm:text-sm text-emerald-700">
+                        <div className="flex flex-col">
+                          <span>Current Plan Credit</span>
+                          {remainingUnusedDays > 0 && prorationPreview?.perDayCost !== undefined && (
+                            <span className="text-[11px] text-emerald-600">
+                              ({remainingUnusedDays} days unused @ ₹{prorationPreview.perDayCost}/day)
+                            </span>
+                          )}
+                        </div>
+                        <span className="font-bold text-emerald-700">
+                          - ₹{unusedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between border-t border-emerald-200/60 pt-2 text-xs sm:text-sm">
+                        <div>
+                          <span className="block font-bold text-slate-900">Final Amount to Pay</span>
+                          {unusedCredit > 0 && (
+                            <span className="block text-[11px] font-medium text-emerald-600">
+                              Includes ₹{unusedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} early upgrade credit
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-base font-extrabold text-[#2568e0] sm:text-xl">
+                          ₹{finalPayable.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                ))}
-
-                <div
-                  className="
-                    flex
-                    min-w-0
-                    flex-col
-                    gap-1
-                    text-xs
-                    sm:flex-row
-                    sm:items-center
-                    sm:justify-between
-                    sm:gap-3
-                    sm:text-sm
-                  "
-                >
-                  <span className="flex shrink-0 items-center gap-1.5 text-[#6b7f99]">
-                    <CalendarDays size={13} />
-                    New Plan Starts
-                  </span>
-
-                  <span className="font-semibold text-emerald-600 sm:text-right">
-                    {fmtDate(previewStart)}
-                  </span>
-                </div>
-
-                <div
-                  className="
-                    flex
-                    min-w-0
-                    flex-col
-                    gap-1
-                    text-xs
-                    sm:flex-row
-                    sm:items-center
-                    sm:justify-between
-                    sm:gap-3
-                    sm:text-sm
-                  "
-                >
-                  <span className="text-[#6b7f99]">
-                    New Plan Expires
-                  </span>
-
-                  <span className="font-semibold text-red-600 sm:text-right">
-                    {fmtDate(previewEnd)}
-                  </span>
-                </div>
-
-                <div
-                  className="
-                    flex
-                    min-w-0
-                    flex-col
-                    gap-1
-                    text-xs
-                    sm:flex-row
-                    sm:items-center
-                    sm:justify-between
-                    sm:gap-3
-                    sm:text-sm
-                  "
-                >
-                  <span className="text-[#6b7f99]">
-                    Validity
-                  </span>
-
-                  <span className="font-semibold text-[#2568e0] sm:text-right">
-                    {previewDays} days
-                  </span>
-                </div>
-
-                {/* TOTAL */}
-                <div
-                  className="
-                    mt-1
-                    flex
-                    items-center
-                    justify-between
-                    gap-3
-                    border-t
-                    border-[#e2ebf7]
-                    pt-3
-                  "
-                >
-                  <span className="text-sm font-bold text-[#0e2a4a] sm:text-base">
-                    Total
-                  </span>
-
-                  <span className="text-lg font-extrabold text-[#2568e0] sm:text-xl">
-                    ₹
-                    {getPrice(
-                      selectedPlan,
-                      billingCycle
-                    ).toLocaleString("en-IN")}
-                  </span>
-                </div>
-              </div>
+                );
+              })()}
 
               <p className="mt-4 text-center text-[10px] leading-relaxed text-[#9aabc0] sm:text-xs">
-                This is a dummy payment. Your subscription
-                will be upgraded immediately.
+                Instant activation powered by Cashfree. Your upgraded plan features will take effect immediately.
               </p>
 
               {/* ACTION BUTTONS */}
@@ -1427,6 +1595,120 @@ export default function PlanUpgrade() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* =====================================================
+          LOGIN REQUIRED MODAL (for unauthenticated users)
+      ===================================================== */}
+      {showLoginModal && (
+        <div
+          className="
+            pu-fade
+            fixed
+            inset-0
+            z-50
+            flex
+            items-center
+            justify-center
+            bg-[#0b1d3d]/75
+            p-4
+            backdrop-blur-sm
+          "
+          onClick={() => setShowLoginModal(false)}
+        >
+          <div
+            className="
+              pu-pop
+              w-full
+              max-w-md
+              overflow-hidden
+              rounded-3xl
+              bg-[#132f57]
+              border
+              border-white/15
+              p-6
+              text-white
+              shadow-2xl
+            "
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="h-10 w-10 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-300">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Hotel Login Required</h3>
+                  <p className="text-xs text-blue-200/70">
+                    {hotelName ? `To upgrade ${hotelName}` : "Sign in to your account"}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowLoginModal(false)}
+                className="rounded-lg p-1.5 text-blue-200/70 hover:bg-white/10 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="mt-4 text-xs sm:text-sm text-blue-100/90 leading-relaxed">
+              Please log in with your registered hotel email address to upgrade or reactivate your subscription with your saved hotel settings.
+            </p>
+
+            {selectedPlan && (
+              <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3 flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] text-blue-200/70 block">Selected Plan</span>
+                  <span className="text-sm font-bold text-white">{selectedPlan.planName}</span>
+                </div>
+                <span className="text-sm font-extrabold text-blue-300">
+                  ₹{getPrice(selectedPlan, billingCycle).toLocaleString("en-IN")}/{billingCycle}
+                </span>
+              </div>
+            )}
+
+            <div className="mt-6 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setShowLoginModal(false)}
+                className="flex-1 rounded-xl border border-white/20 bg-white/10 py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-white/15"
+              >
+                Cancel
+              </button>
+              <Link
+                to={`/hotel-login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`}
+                className="flex-1 rounded-xl bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] py-2.5 text-center text-xs sm:text-sm font-bold text-white shadow-md shadow-blue-500/30 hover:brightness-110"
+              >
+                Log In Now →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main content container closing div */}
+      </div>
+
+      {/* =====================================================
+          STANDALONE PUBLIC FOOTER
+      ===================================================== */}
+      {!isAuthenticated && (
+        <footer className="mt-auto border-t border-white/10 bg-white/[0.02] py-4 text-center text-xs text-blue-200/60 shrink-0">
+          <p>
+            © {new Date().getFullYear()} StayLio · Developed by{" "}
+            <a
+              href="https://jayamwebsolutions.com/"
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-blue-200 hover:text-white hover:underline transition-colors"
+            >
+              Jayam Web Solutions
+            </a>
+            . All rights reserved.
+          </p>
+        </footer>
       )}
     </div>
   );

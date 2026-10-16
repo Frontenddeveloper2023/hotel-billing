@@ -37,6 +37,38 @@ const HotelLogin = () => {
       setError(logoutMsg);
       sessionStorage.removeItem("hotelLogoutToast");
     }
+
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get("payment");
+    const orderId = params.get("order_id");
+    const upgraded = params.get("upgraded");
+    const err = params.get("error");
+
+    if (err) {
+      setError(decodeURIComponent(err));
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (upgraded === "true") {
+      setSuccess("Your plan has been upgraded successfully! Please log in with your email to continue.");
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (payment === "success" && orderId) {
+      setSuccess("Payment successful! Verifying subscription activation...");
+      // Auto verify renewal order with backend
+      import("../../service/api").then(({ default: api }) => {
+        api.get(`/payments/verify-renewal?orderId=${encodeURIComponent(orderId)}`)
+          .then((res) => {
+            if (res.data?.success) {
+              setSuccess("Subscription upgrade confirmed & active! Please enter your hotel email to log in.");
+            }
+          })
+          .catch((e) => {
+            console.warn("[HotelLogin] verify-renewal:", e?.message);
+            setSuccess("Payment completed! Please log in to your hotel portal.");
+          })
+          .finally(() => {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          });
+      });
+    }
   }, []);
 
   const handleSendOTP = async (e) => {

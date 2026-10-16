@@ -22,6 +22,16 @@ export const verifyRegistrationPayment = async ({ registrationId, orderId }) => 
 };
 
 /**
+ * Calculates upgrade proration preview (remaining credit, final payable)
+ */
+export const getSubscriptionUpgradePreview = async ({ planId, billingCycle }) => {
+  const response = await api.get("/payments/subscription-upgrade/preview", {
+    params: { planId, billingCycle },
+  });
+  return response.data;
+};
+
+/**
  * Creates Cashfree order for Hotel Subscription Upgrade / Renewal
  */
 export const createSubscriptionUpgradeOrder = async ({ planId, billingCycle }) => {
@@ -47,3 +57,4 @@ export const verifySubscriptionUpgradePayment = async ({
   });
   return response.data;
 };
+
