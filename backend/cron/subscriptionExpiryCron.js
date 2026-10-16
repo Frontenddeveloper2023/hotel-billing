@@ -94,7 +94,7 @@ const checkSubscriptionExpiry = async () => {
       $or: [
         {
           status: {
-            $in: ["active", "expiring_soon"],
+            $in: ["active", "expiring_soon", "trial"],
           },
         },
         {
@@ -449,38 +449,53 @@ const recipientEmail = String(
 
 
 // ============================================================
-// RUN EVERY MINUTE
+// RUN EVERY MINUTE (When not in test environment)
 // ============================================================
 
-cron.schedule(
-  "* * * * *",
-  async () => {
-    log.info(
-      "[SUBSCRIPTION] Expiry cron triggered"
-    );
+const isRunningInTest =
+  process.env.NODE_ENV === "test" ||
+  Boolean(process.env.NODE_TEST_CONTEXT) ||
+  process.execArgv.some((arg) => /test/i.test(arg)) ||
+  process.argv.some((arg) => /test/i.test(arg)) ||
+  process.env.npm_lifecycle_event === "test";
 
-    await checkSubscriptionExpiry();
-  },
-  {
-    timezone: INDIA_TIME_ZONE,
-  }
-);
+if (!isRunningInTest) {
+  cron.schedule(
+    "* * * * *",
+    async () => {
+      log.info(
+        "[SUBSCRIPTION] Expiry cron triggered"
+      );
 
+      await checkSubscriptionExpiry();
+    },
+    {
+      timezone: INDIA_TIME_ZONE,
+    }
+  );
 
-// ============================================================
-// RUN ON SERVER START
-// ============================================================
+  // ============================================================
+  // RUN ON SERVER START
+  // ============================================================
 
-log.info(
-  "[SUBSCRIPTION] Subscription expiry cron initialized successfully"
-);
+  log.info(
+    "[SUBSCRIPTION] Subscription expiry cron initialized successfully"
+  );
 
-log.info(
-  "[SUBSCRIPTION] Cron schedule: Every minute"
-);
+  log.info(
+    "[SUBSCRIPTION] Cron schedule: Every minute"
+  );
 
-log.info(
-  `[SUBSCRIPTION] Cron timezone: ${INDIA_TIME_ZONE}`
-);
+  log.info(
+    `[SUBSCRIPTION] Cron timezone: ${INDIA_TIME_ZONE}`
+  );
 
-checkSubscriptionExpiry();
+  checkSubscriptionExpiry();
+}
+
+export {
+  checkSubscriptionExpiry,
+  getDaysDifference,
+  getDateKey,
+  getIndiaDate,
+};

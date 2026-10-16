@@ -1,3 +1,4 @@
+import "dotenv/config";
 import nodemailer from "nodemailer";
 import { log } from "./logger.js";
 import Settings from "../models/settings.js";
@@ -7,15 +8,28 @@ import Subscription from "../models/subscription.js";
 import Plans from "../models/plans.js";
 import { generateRenewalToken } from "./renewalToken.js";
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
-  secure: process.env.SMTP_SECURE === "true",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+const getTransporter = () => {
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST || "webscape.co.in",
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: process.env.SMTP_SECURE === "true",
+    auth: {
+      user: process.env.SMTP_USER ,
+      pass: process.env.SMTP_PASS 
+    },
+  });
+};
+
+const transporter = new Proxy(
+  {},
+  {
+    get(_target, prop) {
+      const activeTransporter = getTransporter();
+      const val = activeTransporter[prop];
+      return typeof val === "function" ? val.bind(activeTransporter) : val;
+    },
+  }
+);
 
 const getBaseUrl = () => {
   return String(process.env.VITE_API_BASE_URL || "http://localhost:5000").trim().replace(/\/+$/, "");
@@ -39,6 +53,7 @@ const getBackendApiUrl = () => {
   const baseName = process.env.BASE_NAME || "hotel-billing-system-backend";
   return `${base}/${baseName}/api`;
 };
+
 
 
 
@@ -671,6 +686,9 @@ const sendSubscriptionExpiryReminder = async ({
     // Resolve planId and billingCycle for 1-click renewal token
     let resolvedPlanId = planId;
     let resolvedBillingCycle = billingCycle || "monthly";
+    if (resolvedBillingCycle === "trial") {
+      resolvedBillingCycle = "monthly";
+    }
     if (!resolvedPlanId && hotelId) {
       const latestSub = await Subscription.findOne({ hotelId })
         .sort({ createdAt: -1 })
@@ -679,6 +697,9 @@ const sendSubscriptionExpiryReminder = async ({
       if (latestSub?.planId) {
         resolvedPlanId = latestSub.planId;
         resolvedBillingCycle = latestSub.billingCycle || "monthly";
+        if (resolvedBillingCycle === "trial") {
+          resolvedBillingCycle = "monthly";
+        }
       }
     }
 
@@ -754,8 +775,8 @@ Days Left: ${daysRemaining} day${daysRemaining > 1 ? "s" : ""
 
 Please renew or upgrade your plan now so all hotel rooms and billing keep working without interruption.
 
-Renew & Pay Now: ${quickRenewUrl}
-Or choose another plan: ${upgradeUrl}
+Pay & Renew Now: ${quickRenewUrl}
+Upgrade Plan: ${upgradeUrl}
 
 Thank you,
 StayLio Team`,
@@ -1065,35 +1086,74 @@ StayLio Team`,
 </tr>
 
 
-<!-- BUTTON -->
+<!-- BUTTONS SECTION -->
 <tr>
 <td align="center" style="padding-top:28px;padding-bottom:12px;">
-  <table border="0" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+
+  <!-- Primary CTA: 1-Click Direct Cashfree Pay & Renew -->
+  <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto 14px auto;width:100%;max-width:420px;">
     <tr>
-      <td align="center" bgcolor="#4F46E5" style="border-radius:10px;">
+      <td align="center" bgcolor="#2563EB" style="border-radius:10px;background-color:#2563EB;box-shadow:0 4px 14px rgba(37,99,235,0.30);">
         <a
           href="${quickRenewUrl}"
           target="_blank"
           style="
-            display:inline-block;
-            padding:14px 38px;
+            display:block;
+            padding:16px 28px;
             font-family:Arial,Helvetica,sans-serif;
-            font-size:15px;
+            font-size:16px;
             font-weight:700;
-            color:#FFFFFF;
+            color:#FFFFFF !important;
             text-decoration:none;
-            background-color:#4F46E5;
+            background-color:#2563EB;
             border-radius:10px;
             letter-spacing:0.3px;
+            text-align:center;
+            -webkit-text-size-adjust:none;
           "
         >
-          💳 Pay &amp; Renew Subscription &rarr;
+          💳 Pay &amp; Renew Now (${planName || "Current Plan"}) &rarr;
         </a>
       </td>
     </tr>
   </table>
-  <div style="margin-top:10px;font-size:12px;color:#9CA3AF;text-align:center;">
-    Instant 1-click checkout powered by Cashfree (UPI, Cards &amp; NetBanking)
+
+  <!-- Secondary CTA: Upgrade / Choose Higher Plan with Unused Days Discount -->
+  <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;width:100%;max-width:420px;">
+    <tr>
+      <td align="center" bgcolor="#0D9488" style="border-radius:10px;background-color:#0D9488;box-shadow:0 3px 10px rgba(13,148,136,0.25);">
+        <a
+          href="${upgradeUrl}"
+          target="_blank"
+          style="
+            display:block;
+            padding:14px 28px;
+            font-family:Arial,Helvetica,sans-serif;
+            font-size:15px;
+            font-weight:700;
+            color:#FFFFFF !important;
+            text-decoration:none;
+            background-color:#0D9488;
+            border-radius:10px;
+            letter-spacing:0.3px;
+            text-align:center;
+            -webkit-text-size-adjust:none;
+          "
+        >
+          🚀 Upgrade Plan (Get Unused Days Discount) &rarr;
+        </a>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Trust & Security Details Note -->
+  <div style="margin-top:16px;padding:12px 16px;background:#F9FAFB;border-radius:8px;border:1px solid #E5E7EB;max-width:420px;text-align:center;">
+    <div style="font-size:12px;font-weight:600;color:#1F2937;margin-bottom:4px;">
+      🔒 100% Secure Checkout powered by Cashfree Payments
+    </div>
+    <div style="font-size:11px;color:#6B7280;line-height:16px;">
+      Directly pre-filled for <strong>${resolvedHotelName}</strong>. Supports UPI (GPay, PhonePe, Paytm), Cards &amp; NetBanking. After payment, you are instantly returned to your <strong>Hotel Login</strong> portal.
+    </div>
   </div>
 </td>
 </tr>
@@ -1194,6 +1254,9 @@ const sendSubscriptionExpiredNotification = async ({
     // Resolve planId and billingCycle for 1-click renewal token
     let resolvedPlanId = planId;
     let resolvedBillingCycle = billingCycle || "monthly";
+    if (resolvedBillingCycle === "trial") {
+      resolvedBillingCycle = "monthly";
+    }
     if (!resolvedPlanId && hotelId) {
       const latestSub = await Subscription.findOne({ hotelId })
         .sort({ createdAt: -1 })
@@ -1202,6 +1265,9 @@ const sendSubscriptionExpiredNotification = async ({
       if (latestSub?.planId) {
         resolvedPlanId = latestSub.planId;
         resolvedBillingCycle = latestSub.billingCycle || "monthly";
+        if (resolvedBillingCycle === "trial") {
+          resolvedBillingCycle = "monthly";
+        }
       }
     }
 
@@ -1239,8 +1305,8 @@ Expired On: ${formattedDate}
 
 Your account features are currently paused. Please renew or upgrade your plan now to continue using all hotel features.
 
-Restart Service & Pay Now: ${quickRenewUrl}
-Or choose another plan: ${upgradeUrl}
+Pay & Reactivate Now: ${quickRenewUrl}
+Choose / Upgrade Different Plan: ${upgradeUrl}
 
 Thank you,
 StayLio Team`,
@@ -1522,35 +1588,74 @@ StayLio Team`,
 </tr>
 
 
-<!-- BUTTON -->
+<!-- BUTTONS SECTION -->
 <tr>
 <td align="center" style="padding-top:28px;padding-bottom:12px;">
-  <table border="0" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+
+  <!-- Primary CTA: 1-Click Pay & Renew to reactivate immediately -->
+  <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto 14px auto;width:100%;max-width:420px;">
     <tr>
-      <td align="center" bgcolor="#DC2626" style="border-radius:10px;">
+      <td align="center" bgcolor="#DC2626" style="border-radius:10px;background-color:#DC2626;box-shadow:0 4px 14px rgba(220,38,38,0.30);">
         <a
           href="${quickRenewUrl}"
           target="_blank"
           style="
-            display:inline-block;
-            padding:14px 38px;
+            display:block;
+            padding:16px 28px;
             font-family:Arial,Helvetica,sans-serif;
-            font-size:15px;
+            font-size:16px;
             font-weight:700;
-            color:#FFFFFF;
+            color:#FFFFFF !important;
             text-decoration:none;
             background-color:#DC2626;
             border-radius:10px;
             letter-spacing:0.3px;
+            text-align:center;
+            -webkit-text-size-adjust:none;
           "
         >
-          ⚡ Pay &amp; Renew Subscription &rarr;
+          ⚡ Pay &amp; Reactivate Now (${planName || "Current Plan"}) &rarr;
         </a>
       </td>
     </tr>
   </table>
-  <div style="margin-top:10px;font-size:12px;color:#9CA3AF;text-align:center;">
-    Instant account reactivation powered by Cashfree (UPI, Cards &amp; NetBanking)
+
+  <!-- Secondary CTA: Choose / Upgrade Plan -->
+  <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;width:100%;max-width:420px;">
+    <tr>
+      <td align="center" bgcolor="#2563EB" style="border-radius:10px;background-color:#2563EB;box-shadow:0 3px 10px rgba(37,99,235,0.25);">
+        <a
+          href="${upgradeUrl}"
+          target="_blank"
+          style="
+            display:block;
+            padding:14px 28px;
+            font-family:Arial,Helvetica,sans-serif;
+            font-size:15px;
+            font-weight:700;
+            color:#FFFFFF !important;
+            text-decoration:none;
+            background-color:#2563EB;
+            border-radius:10px;
+            letter-spacing:0.3px;
+            text-align:center;
+            -webkit-text-size-adjust:none;
+          "
+        >
+          🚀 Choose / Upgrade Different Plan &rarr;
+        </a>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Trust & Security Details Note -->
+  <div style="margin-top:16px;padding:12px 16px;background:#F9FAFB;border-radius:8px;border:1px solid #E5E7EB;max-width:420px;text-align:center;">
+    <div style="font-size:12px;font-weight:600;color:#1F2937;margin-bottom:4px;">
+      🔒 100% Secure Checkout powered by Cashfree Payments
+    </div>
+    <div style="font-size:11px;color:#6B7280;line-height:16px;">
+      Directly configured for <strong>${resolvedHotelName}</strong>. Supports UPI, Cards &amp; NetBanking. Instantly returns to your <strong>Hotel Login</strong> portal.
+    </div>
   </div>
 </td>
 </tr>
@@ -1619,6 +1724,8 @@ const sendSubscriptionCancelledNotification = async ({
   reason,
   status = "cancelled",
   hotelId,
+  planId,
+  billingCycle,
 }) => {
   try {
     const resolvedHotelName =
@@ -1637,6 +1744,9 @@ const sendSubscriptionCancelledNotification = async ({
     // Resolve planId and billingCycle for 1-click renewal token
     let resolvedPlanId = planId;
     let resolvedBillingCycle = billingCycle || "monthly";
+    if (resolvedBillingCycle === "trial") {
+      resolvedBillingCycle = "monthly";
+    }
     if (!resolvedPlanId && hotelId) {
       const latestSub = await Subscription.findOne({ hotelId })
         .sort({ createdAt: -1 })
@@ -1645,6 +1755,9 @@ const sendSubscriptionCancelledNotification = async ({
       if (latestSub?.planId) {
         resolvedPlanId = latestSub.planId;
         resolvedBillingCycle = latestSub.billingCycle || "monthly";
+        if (resolvedBillingCycle === "trial") {
+          resolvedBillingCycle = "monthly";
+        }
       }
     }
 
@@ -2441,4 +2554,7 @@ export {
   sendAdminEmail,
   sendAdminFreeTrialNotificationEmail,
   sendHotelBlockedEmail,
+  getBaseUrl,
+  getFrontendUrl,
+  getBackendApiUrl,
 };

@@ -18,25 +18,200 @@ import { verifyRenewalToken } from "../util/renewalToken.js";
 import { log } from "../util/logger.js";
 
 // Helper: Calculate end date for subscription cycle
-const calculateEndDate = (startDate, billingCycle) => {
+export const calculateEndDate = (startDate, billingCycle, customDays) => {
   const date = new Date(startDate);
+  if (customDays && Number(customDays) > 0) {
+    date.setDate(date.getDate() + Number(customDays));
+    return date;
+  }
+  let days = 30;
   switch (billingCycle) {
-    case "monthly":
-      date.setMonth(date.getMonth() + 1);
-      break;
     case "quarterly":
-      date.setMonth(date.getMonth() + 3);
+      days = 90;
       break;
     case "halfYearly":
-      date.setMonth(date.getMonth() + 6);
+      days = 180;
       break;
     case "yearly":
-      date.setFullYear(date.getFullYear() + 1);
+      days = 365;
       break;
+    case "monthly":
     default:
-      date.setMonth(date.getMonth() + 1);
+      days = 30;
+      break;
   }
+  date.setDate(date.getDate() + days);
   return date;
+};
+
+/**
+ * Prorated Upgrade Calculation Helper:
+ * If customer has an existing subscription and wants to upgrade to a new subscription:
+ * 1. Current plan daily price = Current plan price / Current plan total validity days
+ * 2. Unused plan credit = Current plan daily price * Remaining unused days
+ * 3. Final upgrade amount = New plan price - Unused plan credit (minimum 0)
+ *
+ * Rules:
+ * - Uses the actual current plan price and original validity duration
+ * - Uses integer paise for currency arithmetic to avoid floating-point errors
+ * - Rounds unused credit to 2 decimal places (standard half-up rounding)
+ * - Rounds payable amount to 2 decimal places
+ * - Handles expired subscriptions and 0 remaining days with 0 credit
+ * - Does not produce negative payable amounts or negative remaining days
+ * - Caps credit at newPlanPrice to prevent negative payable amount
+ */
+export const calculateUpgradeProration = ({
+  currentSub,
+  newPlanPrice = 0,
+  currentPlanPrice: explicitCurrentPrice,
+  totalDays: explicitTotalDays,
+  remainingDays: explicitRemainingDays,
+  asOfDate,
+}) => {
+  const price = Math.max(0, Number(newPlanPrice) || 0);
+  const newPricePaise = Math.round(price * 100);
+
+  // If no subscription and no explicit current price, no credit
+  if (!currentSub && explicitCurrentPrice === undefined) {
+    return {
+      unusedCredit: 0,
+      rawCredit: 0,
+      excessCredit: 0,
+      payableAmount: Number((newPricePaise / 100).toFixed(2)),
+      remainingDays: 0,
+      totalDays: 30,
+      perDayCost: 0,
+      currentPlanName: null,
+      currentPlanPrice: 0,
+    };
+  }
+
+  // 1. Determine actual Current Plan Price (from planId pricing, subscription base amount, or explicit)
+  let currentPlanPrice = 0;
+  if (explicitCurrentPrice !== undefined) {
+    currentPlanPrice = Math.max(0, Number(explicitCurrentPrice) || 0);
+  } else if (currentSub) {
+    const cycle = currentSub.billingCycle || "monthly";
+    if (currentSub.planId && typeof currentSub.planId === "object" && currentSub.planId.pricing) {
+      currentPlanPrice = Number(currentSub.planId.pricing[cycle] ?? currentSub.planId.price ?? 0);
+    }
+    if (!currentPlanPrice && currentSub.amount !== undefined && currentSub.amount !== null) {
+      currentPlanPrice = Number(currentSub.amount || 0);
+    }
+    if (!currentPlanPrice && currentSub.finalAmount !== undefined && currentSub.finalAmount !== null) {
+      currentPlanPrice = Number(currentSub.finalAmount || 0);
+    }
+  }
+  currentPlanPrice = Math.max(0, currentPlanPrice);
+  const currentPricePaise = Math.round(currentPlanPrice * 100);
+
+  // 2. Determine original Plan Validity Days
+  let totalDays = 30;
+  if (explicitTotalDays !== undefined) {
+    totalDays = Math.max(1, Math.round(Number(explicitTotalDays) || 30));
+  } else if (currentSub?.customDurationDays) {
+    totalDays = Math.max(1, Math.round(Number(currentSub.customDurationDays)));
+  } else if (currentSub?.billingCycle === "quarterly") {
+    totalDays = 90;
+  } else if (currentSub?.billingCycle === "halfYearly") {
+    totalDays = 180;
+  } else if (currentSub?.billingCycle === "yearly") {
+    totalDays = 365;
+  } else if (currentSub?.planId?.validityDays) {
+    totalDays = Math.max(1, Math.round(Number(currentSub.planId.validityDays)));
+  } else if (currentSub?.startDate && currentSub?.endDate) {
+    const start = new Date(currentSub.startDate);
+    const end = new Date(currentSub.endDate);
+    if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end > start) {
+      totalDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    } else {
+      totalDays = 30;
+    }
+  } else {
+    totalDays = 30;
+  }
+
+  // 3. Determine Remaining Unused Days
+  let remainingDays = 0;
+  if (explicitRemainingDays !== undefined) {
+    remainingDays = Math.max(0, Math.min(totalDays, Math.round(Number(explicitRemainingDays) || 0)));
+  } else if (currentSub) {
+    const isInactiveStatus =
+      currentSub.status === "expired" ||
+      currentSub.status === "cancelled" ||
+      currentSub.status === "suspended";
+
+    if (isInactiveStatus || !currentSub.endDate) {
+      remainingDays = 0;
+    } else {
+      const now = asOfDate ? new Date(asOfDate) : new Date();
+      const endDate = new Date(currentSub.endDate);
+
+      if (isNaN(endDate.getTime())) {
+        remainingDays = 0;
+      } else {
+        const remainingMs = endDate.getTime() - now.getTime();
+        if (remainingMs <= 0) {
+          remainingDays = 0;
+        } else {
+          const calcDays = Math.ceil(remainingMs / (1000 * 60 * 60 * 24));
+          remainingDays = Math.max(0, Math.min(totalDays, calcDays));
+        }
+      }
+    }
+  }
+
+  const currentPlanName =
+    (typeof currentSub?.planId === "object" ? currentSub?.planId?.planName : null) ||
+    currentSub?.planName ||
+    "Current Plan";
+
+  // Per day cost in paise and rounded for display
+  const perDayPaise = totalDays > 0 ? currentPricePaise / totalDays : 0;
+  const perDayCost = Number((perDayPaise / 100).toFixed(2));
+
+  // If expired or 0 remaining days or 0 plan price -> no credit
+  if (remainingDays <= 0 || currentPricePaise <= 0) {
+    return {
+      unusedCredit: 0,
+      rawCredit: 0,
+      excessCredit: 0,
+      payableAmount: Number((newPricePaise / 100).toFixed(2)),
+      remainingDays: 0,
+      totalDays,
+      perDayCost,
+      currentPlanName,
+      currentPlanPrice: Number((currentPricePaise / 100).toFixed(2)),
+    };
+  }
+
+  // Raw credit in paise with high precision integer division: (currentPricePaise * remainingDays) / totalDays
+  const rawCreditPaise = Math.round((currentPricePaise * remainingDays) / totalDays);
+  const rawCredit = Number((rawCreditPaise / 100).toFixed(2));
+
+  // Credit applied to this upgrade is capped at the new plan's price
+  const appliedCreditPaise = Math.min(newPricePaise, rawCreditPaise);
+  const unusedCredit = Number((appliedCreditPaise / 100).toFixed(2));
+
+  // Excess credit if credit > new plan price
+  const excessCreditPaise = Math.max(0, rawCreditPaise - newPricePaise);
+  const excessCredit = Number((excessCreditPaise / 100).toFixed(2));
+
+  // Final amount to pay = New plan price - unused credit (minimum 0)
+  const payablePaise = Math.max(0, newPricePaise - appliedCreditPaise);
+  const payableAmount = Number((payablePaise / 100).toFixed(2));
+
+  return {
+    unusedCredit,
+    rawCredit,
+    excessCredit,
+    payableAmount,
+    remainingDays,
+    totalDays,
+    perDayCost,
+    currentPlanName,
+    currentPlanPrice: Number((currentPricePaise / 100).toFixed(2)),
+  };
 };
 
 // ============================================================
@@ -266,6 +441,101 @@ export const verifyRegistrationPayment = async (req, res) => {
 };
 
 // ============================================================
+// 2.5. SUBSCRIPTION UPGRADE: PREVIEW PRORATION
+// ============================================================
+// Authenticated Hotel User or Public Token
+// GET /payments/subscription-upgrade/preview?planId=...&billingCycle=...
+// ============================================================
+export const getSubscriptionUpgradePreview = async (req, res) => {
+  try {
+    const { planId, billingCycle = "monthly" } = req.query;
+    const hotelId = req.user?.hotelId;
+
+    if (!hotelId) {
+      return res.status(403).json({
+        success: false,
+        message: "Hotel context missing from authenticated session.",
+      });
+    }
+
+    if (!planId) {
+      return res.status(400).json({
+        success: false,
+        message: "planId is required for upgrade preview.",
+      });
+    }
+
+    const [hotel, plan] = await Promise.all([
+      Hotels.findById(hotelId),
+      Plans.findById(planId),
+    ]);
+
+    if (!hotel) {
+      return res.status(404).json({ success: false, message: "Hotel not found." });
+    }
+
+    if (!plan || !plan.isActive) {
+      return res.status(404).json({ success: false, message: "Plan not found or inactive." });
+    }
+
+    const price = Math.max(0, Number(plan.pricing?.[billingCycle] ?? plan.price ?? 0));
+
+    // Fetch current active subscription or latest subscription for this hotel
+    const now = new Date();
+    let currentSub = await Subscription.findOne({
+      hotelId,
+      status: { $in: ["active", "expiring_soon", "trial"] },
+      endDate: { $gt: now },
+    })
+      .populate("planId", "planName pricing validityDays trialDays")
+      .sort({ endDate: -1 });
+
+    if (!currentSub) {
+      currentSub = await Subscription.findOne({
+        hotelId,
+      })
+        .populate("planId", "planName pricing validityDays trialDays")
+        .sort({ endDate: -1, createdAt: -1 });
+    }
+
+    const proration = calculateUpgradeProration({ currentSub, newPlanPrice: price });
+
+    const startDate = new Date();
+    const endDate = calculateEndDate(startDate, billingCycle, plan.validityDays);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        planId: plan._id,
+        planName: plan.planName,
+        billingCycle,
+        originalPrice: price,
+        newPlanPrice: price,
+        unusedCredit: proration.unusedCredit,
+        rawCredit: proration.rawCredit,
+        excessCredit: proration.excessCredit,
+        payableAmount: proration.payableAmount,
+        remainingDays: proration.remainingDays,
+        totalDays: proration.totalDays,
+        perDayCost: proration.perDayCost,
+        currentPlanName: proration.currentPlanName,
+        currentPlanPrice: proration.currentPlanPrice,
+        newPlanStartDate: startDate.toISOString(),
+        newPlanEndDate: endDate.toISOString(),
+        newPlanValidityDays: Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)),
+        currency: "INR",
+      },
+    });
+  } catch (error) {
+    log.error(`[getSubscriptionUpgradePreview] Error: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to calculate upgrade preview.",
+    });
+  }
+};
+
+// ============================================================
 // 3. SUBSCRIPTION UPGRADE: CREATE CASHFREE ORDER
 // ============================================================
 // Authenticated Hotel User
@@ -309,11 +579,82 @@ export const createSubscriptionUpgradeOrder = async (req, res) => {
       });
     }
 
-    const price = plan.pricing?.[billingCycle] ?? 0;
-    if (price <= 0) {
+    const originalPrice = Math.max(0, Number(plan.pricing?.[billingCycle] ?? 0));
+    if (originalPrice <= 0) {
       return res.status(400).json({
         success: false,
         message: `No price configured for ${billingCycle} billing cycle on plan "${plan.planName}".`,
+      });
+    }
+
+    // Check if there are remaining days on current active subscription for proration discount
+    const now = new Date();
+    const currentSub = await Subscription.findOne({
+      hotelId,
+      status: { $in: ["active", "expiring_soon", "trial"] },
+      endDate: { $gt: now },
+    })
+      .populate("planId", "planName pricing validityDays trialDays")
+      .sort({ endDate: -1 });
+
+    const proration = calculateUpgradeProration({ currentSub, newPlanPrice: originalPrice });
+    const finalChargeAmount = proration.payableAmount;
+
+    // Handle full credit coverage (zero payable amount) without external gateway order
+    if (finalChargeAmount <= 0) {
+      const startDate = new Date();
+      const endDate = calculateEndDate(startDate, billingCycle, plan.validityDays);
+
+      await Subscription.updateMany(
+        { hotelId, status: { $in: ["active", "trial", "expiring_soon"] } },
+        { $set: { status: "expired" } }
+      );
+
+      const orderId = `UPG_CREDIT_${hotel._id.toString().slice(-6)}_${Date.now()}`;
+      const newSubscription = await Subscription.create({
+        hotelId,
+        planId: plan._id,
+        billingCycle,
+        startDate,
+        endDate,
+        status: "active",
+        paymentStatus: "paid",
+        paymentTransactionId: `CREDIT-${orderId}`,
+        paymentOrderId: orderId,
+        autoRenewal: false,
+        trialStatus: "not_started",
+        limits: {
+          rooms: plan.limits?.rooms || 50,
+          branches: plan.limits?.branches || 5,
+          receptionists: plan.limits?.receptionists || 10,
+        },
+        features: {
+          foodService: plan.features?.foodService ?? true,
+          roomService: plan.features?.roomService ?? true,
+        },
+        amount: originalPrice,
+        discount: proration.unusedCredit,
+        tax: 0,
+        finalAmount: 0,
+      });
+
+      if (hotel.status !== "active") {
+        hotel.status = "active";
+        await hotel.save();
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          zeroAmount: true,
+          orderId,
+          originalPrice,
+          discount: proration.unusedCredit,
+          amount: 0,
+          remainingDays: proration.remainingDays,
+          currency: "INR",
+          subscription: newSubscription,
+        },
       });
     }
 
@@ -332,7 +673,7 @@ export const createSubscriptionUpgradeOrder = async (req, res) => {
 
     const cashfreeOrder = await createCashfreeOrder({
       orderId,
-      orderAmount: price,
+      orderAmount: finalChargeAmount,
       customerDetails: {
         customer_id: String(hotel._id),
         customer_name: hotel.ownerName || hotel.hotelName,
@@ -340,7 +681,9 @@ export const createSubscriptionUpgradeOrder = async (req, res) => {
         customer_phone: hotel.phone,
       },
       returnUrl,
-      orderNote: `Upgrade to ${plan.planName} (${billingCycle}) for ${hotel.hotelName}`,
+      orderNote: `Upgrade to ${plan.planName} (${billingCycle}) for ${hotel.hotelName}${
+        proration.unusedCredit > 0 ? ` [Early upgrade ₹${proration.unusedCredit} credit applied for ${proration.remainingDays} remaining days]` : ""
+      }`,
     });
 
     const { env } = getCashfreeConfig();
@@ -351,7 +694,10 @@ export const createSubscriptionUpgradeOrder = async (req, res) => {
         orderId,
         paymentSessionId: cashfreeOrder.paymentSessionId,
         cfOrderId: cashfreeOrder.cfOrderId,
-        amount: price,
+        originalPrice,
+        discount: proration.unusedCredit,
+        amount: finalChargeAmount,
+        remainingDays: proration.remainingDays,
         currency: "INR",
         env,
       },
@@ -380,6 +726,16 @@ export const verifySubscriptionUpgradePayment = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "orderId, planId, and billingCycle are required.",
+      });
+    }
+
+    // Idempotency: Prevent duplicate upgrade processing for the same order
+    const existingSubscription = await Subscription.findOne({ paymentOrderId: orderId });
+    if (existingSubscription) {
+      return res.status(200).json({
+        success: true,
+        message: "Payment already verified and subscription activated.",
+        data: existingSubscription,
       });
     }
 
@@ -415,7 +771,7 @@ export const verifySubscriptionUpgradePayment = async (req, res) => {
 
     // 3. Calculate start & end dates
     const startDate = new Date();
-    const endDate = calculateEndDate(startDate, billingCycle);
+    const endDate = calculateEndDate(startDate, billingCycle, plan.validityDays);
 
     // 4. Expire/cancel any existing active subscriptions for this hotel
     await Subscription.updateMany(
@@ -424,6 +780,9 @@ export const verifySubscriptionUpgradePayment = async (req, res) => {
     );
 
     // 5. Create fresh active subscription
+    const basePlanPrice = plan.pricing?.[billingCycle] ?? plan.price ?? orderDetails.order_amount;
+    const upgradeDiscount = Math.max(0, Number((basePlanPrice - orderDetails.order_amount).toFixed(2)));
+
     const newSubscription = await Subscription.create({
       hotelId,
       planId: plan._id,
@@ -445,8 +804,8 @@ export const verifySubscriptionUpgradePayment = async (req, res) => {
         foodService: plan.features?.foodService ?? true,
         roomService: plan.features?.roomService ?? true,
       },
-      amount: orderDetails.order_amount,
-      discount: 0,
+      amount: basePlanPrice,
+      discount: upgradeDiscount,
       tax: 0,
       finalAmount: orderDetails.order_amount,
     });
@@ -566,24 +925,36 @@ export const processRenewalActivation = async ({
     }
 
     // 2. Calculate Start & End Date
+    // 2. Calculate Start & End Date
+    // If upgrading to a different plan or if early upgrade discount was applied, start immediately
     const now = new Date();
     const currentSub = await Subscription.findOne({
       hotelId,
-      status: { $in: ["active", "expiring_soon"] },
+      status: { $in: ["active", "expiring_soon", "trial"] },
       endDate: { $gt: now },
     }).sort({ endDate: -1 });
 
-    const startDate = currentSub ? new Date(currentSub.endDate) : new Date();
+    const isDifferentPlan = currentSub && String(currentSub.planId) !== String(plan._id);
+    const hasProrationDiscount = Number(notes?.discount || 0) > 0;
+
+    // Upgrades start immediately from today so new features/limits take effect instantly
+    const startDate = (isDifferentPlan || hasProrationDiscount || !currentSub)
+      ? new Date()
+      : new Date(currentSub.endDate);
+
     const endDate = calculateEndDate(startDate, billingCycle);
 
-    // 3. Mark older expired/cancelled subscriptions
+    // 3. Mark older subscriptions as expired so the upgraded one is primary
     await Subscription.updateMany(
-      { hotelId, _id: { $ne: currentSub?._id }, status: { $in: ["active", "trial", "expiring_soon"] } },
+      { hotelId, status: { $in: ["active", "trial", "expiring_soon"] } },
       { $set: { status: "expired" } }
     );
 
-    // 4. Create active renewed subscription
+    // 4. Create active renewed/upgraded subscription
     const finalPrice = amount || (plan.pricing?.[billingCycle] ?? plan.price ?? 0);
+    const recordedDiscount = Number(notes?.discount || 0);
+    const recordedOriginalPrice = Number(notes?.originalPrice || finalPrice);
+
     const newSubscription = await Subscription.create({
       hotelId,
       planId: plan._id,
@@ -605,8 +976,8 @@ export const processRenewalActivation = async ({
         foodService: plan.features?.foodService ?? true,
         roomService: plan.features?.roomService ?? true,
       },
-      amount: finalPrice,
-      discount: 0,
+      amount: recordedOriginalPrice,
+      discount: recordedDiscount,
       tax: 0,
       finalAmount: finalPrice,
     });
@@ -697,15 +1068,29 @@ export const handleQuickRenewalRedirect = async (req, res) => {
       return res.redirect(`${frontendBaseUrl}/plan-upgrade?error=plan_not_found`);
     }
 
-    // Calculate renewal price
+    // Calculate renewal / upgrade price with early upgrade proration discount
     const cycle = billingCycle || "monthly";
     let basePrice = plan.pricing?.[cycle] ?? plan.price ?? 0;
     if (basePrice <= 0) {
       basePrice = plan.pricing?.monthly || 999;
     }
+
+    // Check if hotel has an active subscription with remaining days to apply Indian-style proration discount
+    const now = new Date();
+    const currentSub = await Subscription.findOne({
+      hotelId: hotel._id,
+      status: { $in: ["active", "expiring_soon", "trial"] },
+      endDate: { $gt: now },
+    })
+      .populate("planId", "planName pricing validityDays trialDays")
+      .sort({ endDate: -1 });
+
+    const proration = calculateUpgradeProration({ currentSub, newPlanPrice: basePrice });
+    const discountedBasePrice = proration.payableAmount;
+
     const taxRate = hotel.taxEnabled ? 0.18 : 0;
-    const taxAmount = Number((basePrice * taxRate).toFixed(2));
-    const finalAmount = Number((basePrice + taxAmount).toFixed(2));
+    const taxAmount = Number((discountedBasePrice * taxRate).toFixed(2));
+    const finalAmount = Number((discountedBasePrice + taxAmount).toFixed(2));
 
     if (finalAmount <= 0) {
       return res.redirect(`${frontendBaseUrl}/plan-upgrade?error=invalid_plan_price`);
@@ -713,6 +1098,7 @@ export const handleQuickRenewalRedirect = async (req, res) => {
 
     // Unique order ID (prefix REN_)
     const linkId = `REN_${hotel._id.toString().slice(-6)}_${Date.now()}`;
+    // Redirect to plan-upgrade page on successful payment
     const returnUrl = `${frontendBaseUrl}/plan-upgrade?payment=success&order_id=${linkId}`;
 
     // Create Cashfree Payment Link
@@ -720,7 +1106,9 @@ export const handleQuickRenewalRedirect = async (req, res) => {
       linkId,
       linkAmount: finalAmount,
       linkCurrency: "INR",
-      linkPurpose: `Renewal: ${plan.planName} (${hotel.hotelName})`,
+      linkPurpose: `Upgrade/Renewal: ${plan.planName} (${hotel.hotelName})${
+        proration.unusedCredit > 0 ? ` [₹${proration.unusedCredit} credit for ${proration.remainingDays} remaining days]` : ""
+      }`,
       customerDetails: {
         customer_name: hotel.ownerName || hotel.hotelName || "Hotel Owner",
         customer_email: hotel.email || "billing@hotel.com",
@@ -730,20 +1118,22 @@ export const handleQuickRenewalRedirect = async (req, res) => {
         hotelId: hotel._id.toString(),
         planId: plan._id.toString(),
         billingCycle: cycle,
+        discount: String(proration.unusedCredit || 0),
+        originalPrice: String(basePrice),
       },
       returnUrl,
       expiryDays: 7,
     });
 
     if (paymentLink && paymentLink.link_url) {
-      log.info(`[handleQuickRenewalRedirect] Redirecting ${hotel.hotelName} to Cashfree checkout: ${paymentLink.link_url}`);
+      log.info(`[handleQuickRenewalRedirect] Redirecting ${hotel.hotelName} to Cashfree checkout: ${paymentLink.link_url} (Amount: ₹${finalAmount})`);
       return res.redirect(paymentLink.link_url);
     }
 
-    return res.redirect(`${frontendBaseUrl}/plan-upgrade?error=failed_to_generate_link`);
+    return res.redirect(`${frontendBaseUrl}/hotel-login?error=failed_to_generate_link`);
   } catch (error) {
     log.error(`[handleQuickRenewalRedirect] Error: ${error.message}`);
-    return res.redirect(`${getFrontendUrl()}/plan-upgrade?error=${encodeURIComponent(error.message)}`);
+    return res.redirect(`${getFrontendUrl()}/hotel-login?error=${encodeURIComponent(error.message)}`);
   }
 };
 

@@ -12,6 +12,10 @@ import {
 import SaasHotelRegistration from "../models/saasHotelRegistration.js";
 
 import { log } from "../util/logger.js";
+import {
+  calculateUpgradeProration,
+  calculateEndDate,
+} from "./paymentController.js";
 
 // ============================================================
 // CREATE SUBSCRIPTION
@@ -1492,14 +1496,7 @@ export const upgradeHotelSubscription = async (req, res) => {
 
     // 1. Calculate validity dates
     const startDate = new Date();
-    let validityDays = 30;
-    if (cycle === "quarterly") validityDays = 90;
-    else if (cycle === "halfYearly") validityDays = 180;
-    else if (cycle === "yearly") validityDays = 365;
-    else if (plan.validityDays) validityDays = Number(plan.validityDays);
-
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + validityDays);
+    const endDate = calculateEndDate(startDate, cycle, plan.validityDays);
 
     // 2. Calculate amount
     let amount = 0;
@@ -1509,7 +1506,21 @@ export const upgradeHotelSubscription = async (req, res) => {
       amount = Number(plan.pricing.monthly || 0);
     }
 
-    // 3. Discontinue previous active subscriptions
+    // 3. Find current subscription to compute upgrade credit
+    const now = new Date();
+    const currentSub = await Subscription.findOne({
+      hotelId: hotel._id,
+      status: {
+        $in: ["trial", "active", "expiring_soon", "grace_period"],
+      },
+      endDate: { $gt: now },
+    })
+      .populate("planId", "planName pricing validityDays trialDays")
+      .sort({ endDate: -1 });
+
+    const proration = calculateUpgradeProration({ currentSub, newPlanPrice: amount });
+
+    // 4. Discontinue previous active subscriptions
     await Subscription.updateMany(
       {
         hotelId: hotel._id,
@@ -1525,7 +1536,7 @@ export const upgradeHotelSubscription = async (req, res) => {
       }
     );
 
-    // 4. Create newly upgraded subscription (Instantly active!)
+    // 5. Create newly upgraded subscription (Instantly active!)
     const transactionId = `UPG-${Date.now()}-${Math.floor(100000 + Math.random() * 900000)}`;
 
     const newSubscription = await Subscription.create({
@@ -1548,9 +1559,9 @@ export const upgradeHotelSubscription = async (req, res) => {
         roomService: plan.features?.roomService === true,
       },
       amount,
-      discount: 0,
+      discount: proration.unusedCredit,
       tax: 0,
-      finalAmount: amount,
+      finalAmount: proration.payableAmount,
       paymentTransactionId: transactionId,
     });
 

@@ -2,6 +2,7 @@ import express from "express";
 import {
   createRegistrationOrder,
   verifyRegistrationPayment,
+  getSubscriptionUpgradePreview,
   createSubscriptionUpgradeOrder,
   verifySubscriptionUpgradePayment,
   handleQuickRenewalRedirect,
@@ -21,6 +22,11 @@ router.post("/registration/verify-payment", verifyRegistrationPayment);
 // ------------------------------------------------------------
 // 2. SUBSCRIPTION UPGRADE PAYMENTS (Authenticated Hotel User)
 // ------------------------------------------------------------
+router.get(
+  "/subscription-upgrade/preview",
+  authVerify,
+  getSubscriptionUpgradePreview
+);
 router.post(
   "/subscription-upgrade/create-order",
   authVerify,
