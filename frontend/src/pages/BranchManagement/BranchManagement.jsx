@@ -329,6 +329,7 @@ const BranchCard = memo(function BranchCard({
             </span>
           </div> */}
 
+
           <div className="flex items-start gap-2.5">
             <MapPin className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
             <span className="text-xs text-slate-500 line-clamp-2">

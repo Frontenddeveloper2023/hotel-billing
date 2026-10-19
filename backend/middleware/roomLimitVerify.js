@@ -75,6 +75,7 @@ export const roomLimitVerify = async (req, res, next) => {
     })
       .populate("planId")
       .sort({
+        createdAt: -1,
         endDate: -1,
       })
       .lean();

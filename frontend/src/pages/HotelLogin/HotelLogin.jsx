@@ -11,17 +11,21 @@ import {
   CheckCircle2,
   AlertCircle,
   MapPin,
-  Calendar
+  Calendar,
+  Clock,
+  Info
 } from "lucide-react";
 import {
   sendHotelOTP,
   verifyHotelOTP,
 } from "../../service/usersService";
 import { useAuth } from "../../Context/AuthContext";
+import { useToast } from "../../Context/ToastContext";
 
 const HotelLogin = () => {
   const navigate = useNavigate();
   const { loginUser } = useAuth();
+  const toast = useToast();
 
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -30,6 +34,7 @@ const HotelLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [paymentNotice, setPaymentNotice] = useState(null);
 
   useEffect(() => {
     const logoutMsg = sessionStorage.getItem("hotelLogoutToast");
@@ -40,34 +45,168 @@ const HotelLogin = () => {
 
     const params = new URLSearchParams(window.location.search);
     const payment = params.get("payment");
-    const orderId = params.get("order_id");
-    const upgraded = params.get("upgraded");
-    const err = params.get("error");
+    const rawOrderId = params.get("order_id") || params.get("link_id") || params.get("orderId") || params.get("cf_link_id");
+    const orderId = rawOrderId ? rawOrderId.split("?")[0].split("&")[0].trim() : null;
+    const status = params.get("status");
+    const rawError = params.get("error");
+    const paymentStatus = params.get("payment_status");
+    const linkStatus = params.get("link_status");
+    const emailParam = params.get("email");
 
-    if (err) {
-      setError(decodeURIComponent(err));
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (upgraded === "true") {
-      setSuccess("Your plan has been upgraded successfully! Please log in with your email to continue.");
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (payment === "success" && orderId) {
-      setSuccess("Payment successful! Verifying subscription activation...");
-      // Auto verify renewal order with backend
-      import("../../service/api").then(({ default: api }) => {
-        api.get(`/payments/verify-renewal?orderId=${encodeURIComponent(orderId)}`)
-          .then((res) => {
-            if (res.data?.success) {
-              setSuccess("Subscription upgrade confirmed & active! Please enter your hotel email to log in.");
-            }
-          })
-          .catch((e) => {
-            console.warn("[HotelLogin] verify-renewal:", e?.message);
-            setSuccess("Payment completed! Please log in to your hotel portal.");
-          })
-          .finally(() => {
-            window.history.replaceState({}, document.title, window.location.pathname);
-          });
+    // Auto-populate registered email if returned from renewal flow
+    if (emailParam && typeof emailParam === "string") {
+      try {
+        setEmail(decodeURIComponent(emailParam).trim());
+      } catch {
+        setEmail(emailParam.trim());
+      }
+    }
+
+    // Case 1: Subscription Already Active
+    if (status === "already_active") {
+      setPaymentNotice({
+        type: "info",
+        title: "Subscription Active",
+        message: "Your hotel subscription is already active and up to date! Please sign in with your email to continue.",
       });
+      toast.info("Your subscription is already active! Please sign in to continue.");
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    // Case 2: Link Expired or Used
+    if (status === "invalid_link" || status === "missing_token" || status === "invalid_token" || rawError === "missing_token") {
+      setPaymentNotice({
+        type: "info",
+        title: "Renewal Link Notice",
+        message: "This renewal link has already been used or has expired. Please check your latest email from StayLio or log in to manage your hotel.",
+      });
+      toast.info("This renewal link has expired or was already used.");
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    // Case 3: Payment Cancelled by User
+    if (
+      status === "cancelled" ||
+      payment === "cancelled" ||
+      paymentStatus === "CANCELLED" ||
+      paymentStatus === "USER_DROPPED" ||
+      linkStatus === "USER_DROPPED" ||
+      linkStatus === "CANCELLED"
+    ) {
+      setPaymentNotice({
+        type: "info",
+        title: "Payment Cancelled",
+        message: "The payment process was cancelled and no amount was deducted from your account. You can click the renewal link in your email anytime to complete your payment.",
+      });
+      toast.info("Payment was cancelled. No amount was deducted.");
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    // Case 4: Payment Failed or Declined
+    if (
+      status === "failed" ||
+      payment === "failed" ||
+      paymentStatus === "FAILED" ||
+      linkStatus === "FAILED"
+    ) {
+      setPaymentNotice({
+        type: "warning",
+        title: "Payment Unsuccessful",
+        message: "Your bank was unable to complete this transaction. If any amount was deducted, your bank will automatically refund it within 3 to 5 business days. Please try again using another UPI app or card.",
+      });
+      toast.warn("Payment was unsuccessful. Please try again with another UPI app or card.");
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    // Case 5: Returned from Cashfree with Success & Order ID
+    const isPaymentSuccess =
+      payment === "success" ||
+      status === "success" ||
+      status === "PAID" ||
+      linkStatus === "PAID" ||
+      paymentStatus === "SUCCESS" ||
+      params.get("txStatus") === "SUCCESS";
+
+    if (isPaymentSuccess) {
+      if (orderId) {
+        setPaymentNotice({
+          type: "pending",
+          title: "Verifying Renewal",
+          message: "Payment received! Verifying your subscription activation...",
+        });
+
+        // Auto-verify renewal with backend
+        import("../../service/api").then(({ default: api }) => {
+          api.get(`/payments/verify-renewal?orderId=${encodeURIComponent(orderId)}`)
+            .then((res) => {
+              if (res.data?.success) {
+                setPaymentNotice({
+                  type: "success",
+                  title: "Payment Successful",
+                  message: "Payment was success! Plan was activated, login to continue your access.",
+                });
+                toast.success("Payment was success! Plan was activated, login to continue your access.");
+              } else if (res.data?.pending) {
+                setPaymentNotice({
+                  type: "pending",
+                  title: "Payment Under Bank Processing",
+                  message: res.data?.message || "Your payment is currently being confirmed by your bank. Your subscription will activate automatically once confirmed. You can log in shortly.",
+                });
+                toast.info("Payment is being confirmed by your bank. Your plan will activate shortly.");
+              } else if (res.data?.cancelled) {
+                setPaymentNotice({
+                  type: "info",
+                  title: "Payment Cancelled",
+                  message: "The payment was cancelled and no amount was deducted from your account. You can click the renewal link in your email anytime to complete your payment.",
+                });
+                toast.info("Payment was cancelled. No amount was deducted.");
+              } else {
+                setPaymentNotice({
+                  type: "warning",
+                  title: "Payment Notice",
+                  message: res.data?.message || "Your payment has been received. If confirmation takes a few moments, your plan will activate automatically.",
+                });
+                toast.warn("Payment verification in progress. Please check back shortly.");
+              }
+            })
+            .catch((e) => {
+              console.warn("[HotelLogin] verify-renewal:", e?.message);
+              setPaymentNotice({
+                type: "success",
+                title: "Payment Successful",
+                message: "Payment was success! Plan was activated, login to continue your access.",
+              });
+              toast.success("Payment was success! Plan was activated, login to continue your access.");
+            })
+            .finally(() => {
+              window.history.replaceState({}, document.title, window.location.pathname);
+            });
+        });
+      } else {
+        setPaymentNotice({
+          type: "success",
+          title: "Payment Successful",
+          message: "Payment was success! Plan was activated, login to continue your access.",
+        });
+        toast.success("Payment was success! Plan was activated, login to continue your access.");
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+      return;
+    }
+
+    // Case 6: Generic Notice
+    if (rawError || status) {
+      setPaymentNotice({
+        type: "info",
+        title: "Notice",
+        message: "Unable to process the renewal link right now. Please sign in directly with your registered email.",
+      });
+      toast.info("Please sign in directly with your registered email.");
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
@@ -221,6 +360,42 @@ const HotelLogin = () => {
                   : `We've sent a 6-digit confirmation code to ${email}`}
               </p>
             </div>
+
+            {/* Friendly Payment / Renewal Status Banner */}
+            {paymentNotice && (
+              <div
+                className={`mb-6 flex items-start gap-3 rounded-2xl p-4 text-sm animate-fadeIn transition-all border ${
+                  paymentNotice.type === "success"
+                    ? "bg-emerald-50/90 border-emerald-100 text-emerald-800"
+                    : paymentNotice.type === "pending"
+                    ? "bg-amber-50/90 border-amber-100 text-amber-800"
+                    : paymentNotice.type === "warning"
+                    ? "bg-rose-50/90 border-rose-100 text-rose-800"
+                    : "bg-blue-50/90 border-blue-100 text-blue-800"
+                }`}
+              >
+                {paymentNotice.type === "success" && (
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                )}
+                {paymentNotice.type === "pending" && (
+                  <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                )}
+                {paymentNotice.type === "warning" && (
+                  <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                )}
+                {paymentNotice.type === "info" && (
+                  <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                )}
+                <div className="flex-1 leading-relaxed">
+                  {paymentNotice.title && (
+                    <div className="font-semibold mb-0.5 text-slate-900">
+                      {paymentNotice.title}
+                    </div>
+                  )}
+                  <div className="font-normal opacity-90">{paymentNotice.message}</div>
+                </div>
+              </div>
+            )}
 
             {/* Error Notification Banner */}
             {error && (

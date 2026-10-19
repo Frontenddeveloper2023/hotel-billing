@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import mongoose from "mongoose";
 import SaasHotelRegistration from "../models/saasHotelRegistration.js";
 import Plans from "../models/plans.js";
@@ -20,7 +21,8 @@ import { log } from "../util/logger.js";
 // Helper: Calculate end date for subscription cycle
 export const calculateEndDate = (startDate, billingCycle, customDays) => {
   const date = new Date(startDate);
-  if (customDays && Number(customDays) > 0) {
+  // If explicitly custom billing cycle or trial with custom days
+  if ((billingCycle === "custom" || billingCycle === "trial") && customDays && Number(customDays) > 0) {
     date.setDate(date.getDate() + Number(customDays));
     return date;
   }
@@ -36,8 +38,10 @@ export const calculateEndDate = (startDate, billingCycle, customDays) => {
       days = 365;
       break;
     case "monthly":
-    default:
       days = 30;
+      break;
+    default:
+      days = (customDays && Number(customDays) > 0) ? Number(customDays) : 30;
       break;
   }
   date.setDate(date.getDate() + days);
@@ -277,12 +281,20 @@ export const createRegistrationOrder = async (req, res) => {
       req.get("origin") ||
       (req.get("referer") ? new URL(req.get("referer")).origin : null) ||
       process.env.CLIENT_URL ||
-      process.env.VITE_API_BASE_URL ||
+      process.env.FRONTEND_URL ||
+      process.env.BACKEND_URL ||
       "";
+
+    let checkoutBase = getFrontendUrl() || clientOrigin;
+    if (checkoutBase.endsWith("/hotel-billing-system")) {
+      checkoutBase = checkoutBase.replace(/\/+$/, "");
+    } else if (checkoutBase) {
+      checkoutBase = `${checkoutBase.replace(/\/+$/, "")}/hotel-billing-system`;
+    }
 
     const returnUrl =
       process.env.CASHFREE_RETURN_URL ||
-      (clientOrigin ? `${clientOrigin}/hotel-billing-system/saas-user/checkout?order_id={order_id}` : undefined);
+      (checkoutBase ? `${checkoutBase}/saas-user/checkout?order_id={order_id}` : undefined);
 
     const cashfreeOrder = await createCashfreeOrder({
       orderId,
@@ -484,21 +496,29 @@ export const getSubscriptionUpgradePreview = async (req, res) => {
     const now = new Date();
     let currentSub = await Subscription.findOne({
       hotelId,
-      status: { $in: ["active", "expiring_soon", "trial"] },
+      status: { $in: ["active", "expiring_soon", "trial", "grace_period"] },
       endDate: { $gt: now },
     })
       .populate("planId", "planName pricing validityDays trialDays")
-      .sort({ endDate: -1 });
+      .sort({ createdAt: -1, endDate: -1 });
 
     if (!currentSub) {
       currentSub = await Subscription.findOne({
         hotelId,
       })
         .populate("planId", "planName pricing validityDays trialDays")
-        .sort({ endDate: -1, createdAt: -1 });
+        .sort({ createdAt: -1, endDate: -1 });
     }
 
     const proration = calculateUpgradeProration({ currentSub, newPlanPrice: price });
+
+    // Proration credit applies to all plan changes based on remaining unused days
+    const effectiveUnusedCredit = proration.unusedCredit;
+    const effectivePayableAmount = proration.payableAmount;
+    const effectiveExcessCredit = proration.excessCredit;
+    const isFreeSwitch = effectivePayableAmount === 0;
+    const isHigherTierUpgrade = price > proration.currentPlanPrice;
+    const isLowerTierSwitch = proration.currentPlanPrice > 0 && price < proration.currentPlanPrice;
 
     const startDate = new Date();
     const endDate = calculateEndDate(startDate, billingCycle, plan.validityDays);
@@ -511,15 +531,18 @@ export const getSubscriptionUpgradePreview = async (req, res) => {
         billingCycle,
         originalPrice: price,
         newPlanPrice: price,
-        unusedCredit: proration.unusedCredit,
+        unusedCredit: effectiveUnusedCredit,
         rawCredit: proration.rawCredit,
-        excessCredit: proration.excessCredit,
-        payableAmount: proration.payableAmount,
+        excessCredit: effectiveExcessCredit,
+        payableAmount: effectivePayableAmount,
         remainingDays: proration.remainingDays,
         totalDays: proration.totalDays,
         perDayCost: proration.perDayCost,
         currentPlanName: proration.currentPlanName,
         currentPlanPrice: proration.currentPlanPrice,
+        isFreeSwitch,
+        isLowerTierSwitch,
+        isHigherTierUpgrade,
         newPlanStartDate: startDate.toISOString(),
         newPlanEndDate: endDate.toISOString(),
         newPlanValidityDays: Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)),
@@ -531,6 +554,162 @@ export const getSubscriptionUpgradePreview = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || "Failed to calculate upgrade preview.",
+    });
+  }
+};
+
+// ============================================================
+// 2b. SUBSCRIPTION PLAN SWITCH: DIRECT SWITCH (WHEN PAYABLE IS 0)
+// ============================================================
+// Authenticated Hotel User
+// POST /payments/subscription-upgrade/direct-switch
+// ============================================================
+export const switchSubscriptionPlanDirect = async (req, res) => {
+  try {
+    const { planId, billingCycle } = req.body;
+    const hotelId = req.user?.hotelId;
+
+    if (!hotelId) {
+      return res.status(403).json({
+        success: false,
+        message: "Hotel context missing from authenticated session.",
+      });
+    }
+
+    if (!planId || !billingCycle) {
+      return res.status(400).json({
+        success: false,
+        message: "planId and billingCycle are required.",
+      });
+    }
+
+    const [hotel, plan] = await Promise.all([
+      Hotels.findById(hotelId),
+      Plans.findById(planId),
+    ]);
+
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: "Hotel record not found.",
+      });
+    }
+
+    if (!plan || !plan.isActive) {
+      return res.status(404).json({
+        success: false,
+        message: "Selected plan is inactive or not found.",
+      });
+    }
+
+    const newPlanPrice = Math.max(0, Number(plan.pricing?.[billingCycle] ?? plan.price ?? 0));
+
+    // Fetch current active subscription
+    const now = new Date();
+    const currentSub = await Subscription.findOne({
+      hotelId,
+      status: { $in: ["active", "expiring_soon", "trial", "grace_period"] },
+      endDate: { $gt: now },
+    })
+      .populate("planId", "planName pricing validityDays trialDays")
+      .sort({ createdAt: -1, endDate: -1 });
+
+    const proration = calculateUpgradeProration({ currentSub, newPlanPrice });
+
+    // Security check: Must be fully covered (payableAmount must be 0)
+    if (proration.payableAmount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Payment of ₹${proration.payableAmount} is required for this plan change. Please complete payment via Cashfree.`,
+        payableAmount: proration.payableAmount,
+      });
+    }
+
+    const startDate = new Date();
+    const endDate = calculateEndDate(startDate, billingCycle, plan.validityDays);
+
+    // Expire existing active subscriptions
+    await Subscription.updateMany(
+      {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        status: { $in: ["active", "trial", "expiring_soon", "grace_period"] },
+      },
+      { $set: { status: "expired" } }
+    );
+
+    const orderId = `FREE_SWITCH_${hotel._id.toString().slice(-6)}_${Date.now()}`;
+    const transactionId = `CREDIT_${Date.now()}`;
+
+    // Create fresh active subscription with 0 finalAmount
+    const newSubscription = await Subscription.create({
+      hotelId,
+      planId: plan._id,
+      billingCycle,
+      startDate,
+      endDate,
+      status: "active",
+      paymentStatus: "paid",
+      paymentTransactionId: transactionId,
+      paymentOrderId: orderId,
+      autoRenewal: false,
+      trialStatus: "not_started",
+      limits: {
+        rooms: plan.limits?.rooms || 50,
+        branches: plan.limits?.branches || 5,
+        receptionists: plan.limits?.receptionists || 10,
+      },
+      features: {
+        foodService: plan.features?.foodService ?? true,
+        roomService: plan.features?.roomService ?? true,
+      },
+      amount: newPlanPrice,
+      discount: proration.unusedCredit,
+      tax: 0,
+      finalAmount: 0,
+    });
+
+    if (hotel.status !== "active") {
+      hotel.status = "active";
+      await hotel.save();
+    }
+
+    // Notify SaaS Admin
+    try {
+      await SaasNotification.create({
+        type: "plan_switched",
+        title: "Hotel Plan Switched with Unused Credit",
+        message: `${hotel.hotelName} switched to the "${plan.planName}" plan (${billingCycle}) fully covered by ₹${proration.unusedCredit} unused credit from their previous plan. Payment: ₹0.`,
+        hotelId: hotel._id,
+        isRead: false,
+        metadata: {
+          hotelName: hotel.hotelName,
+          ownerName: hotel.ownerName,
+          email: hotel.email,
+          phone: hotel.phone,
+          planName: plan.planName,
+          billingCycle,
+          amount: 0,
+          discount: proration.unusedCredit,
+          transactionId,
+          orderId,
+          startDate,
+          endDate,
+        },
+      });
+    } catch (notifErr) {
+      log.error(`[switchSubscriptionPlanDirect] Notification error: ${notifErr.message}`);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Your plan has been successfully switched to ${plan.planName}!`,
+      data: newSubscription,
+    });
+  } catch (error) {
+    log.error(`[switchSubscriptionPlanDirect] Error: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to switch plan.",
     });
   }
 };
@@ -591,70 +770,22 @@ export const createSubscriptionUpgradeOrder = async (req, res) => {
     const now = new Date();
     const currentSub = await Subscription.findOne({
       hotelId,
-      status: { $in: ["active", "expiring_soon", "trial"] },
+      status: { $in: ["active", "expiring_soon", "trial", "grace_period"] },
       endDate: { $gt: now },
     })
       .populate("planId", "planName pricing validityDays trialDays")
-      .sort({ endDate: -1 });
+      .sort({ createdAt: -1, endDate: -1 });
 
     const proration = calculateUpgradeProration({ currentSub, newPlanPrice: originalPrice });
+
     const finalChargeAmount = proration.payableAmount;
+    const appliedDiscount = proration.unusedCredit;
 
-    // Handle full credit coverage (zero payable amount) without external gateway order
     if (finalChargeAmount <= 0) {
-      const startDate = new Date();
-      const endDate = calculateEndDate(startDate, billingCycle, plan.validityDays);
-
-      await Subscription.updateMany(
-        { hotelId, status: { $in: ["active", "trial", "expiring_soon"] } },
-        { $set: { status: "expired" } }
-      );
-
-      const orderId = `UPG_CREDIT_${hotel._id.toString().slice(-6)}_${Date.now()}`;
-      const newSubscription = await Subscription.create({
-        hotelId,
-        planId: plan._id,
-        billingCycle,
-        startDate,
-        endDate,
-        status: "active",
-        paymentStatus: "paid",
-        paymentTransactionId: `CREDIT-${orderId}`,
-        paymentOrderId: orderId,
-        autoRenewal: false,
-        trialStatus: "not_started",
-        limits: {
-          rooms: plan.limits?.rooms || 50,
-          branches: plan.limits?.branches || 5,
-          receptionists: plan.limits?.receptionists || 10,
-        },
-        features: {
-          foodService: plan.features?.foodService ?? true,
-          roomService: plan.features?.roomService ?? true,
-        },
-        amount: originalPrice,
-        discount: proration.unusedCredit,
-        tax: 0,
-        finalAmount: 0,
-      });
-
-      if (hotel.status !== "active") {
-        hotel.status = "active";
-        await hotel.save();
-      }
-
-      return res.status(200).json({
-        success: true,
-        data: {
-          zeroAmount: true,
-          orderId,
-          originalPrice,
-          discount: proration.unusedCredit,
-          amount: 0,
-          remainingDays: proration.remainingDays,
-          currency: "INR",
-          subscription: newSubscription,
-        },
+      return res.status(400).json({
+        success: false,
+        isFreeSwitch: true,
+        message: "This plan switch is fully covered by your unused credit. Please confirm without payment.",
       });
     }
 
@@ -664,12 +795,20 @@ export const createSubscriptionUpgradeOrder = async (req, res) => {
       req.get("origin") ||
       (req.get("referer") ? new URL(req.get("referer")).origin : null) ||
       process.env.CLIENT_URL ||
-      process.env.VITE_API_BASE_URL ||
+      process.env.FRONTEND_URL ||
+      process.env.BACKEND_URL ||
       "";
+
+    let subscriptionBase = getFrontendUrl() || clientOrigin;
+    if (subscriptionBase.endsWith("/hotel-billing-system")) {
+      subscriptionBase = subscriptionBase.replace(/\/+$/, "");
+    } else if (subscriptionBase) {
+      subscriptionBase = `${subscriptionBase.replace(/\/+$/, "")}/hotel-billing-system`;
+    }
 
     const returnUrl =
       process.env.CASHFREE_RETURN_URL ||
-      (clientOrigin ? `${clientOrigin}/hotel-billing-system/hotel-management/subscription?order_id={order_id}` : undefined);
+      (subscriptionBase ? `${subscriptionBase}/plan-upgrade?payment=success&order_id={order_id}` : undefined);
 
     const cashfreeOrder = await createCashfreeOrder({
       orderId,
@@ -681,8 +820,8 @@ export const createSubscriptionUpgradeOrder = async (req, res) => {
         customer_phone: hotel.phone,
       },
       returnUrl,
-      orderNote: `Upgrade to ${plan.planName} (${billingCycle}) for ${hotel.hotelName}${
-        proration.unusedCredit > 0 ? ` [Early upgrade ₹${proration.unusedCredit} credit applied for ${proration.remainingDays} remaining days]` : ""
+      orderNote: `Plan change to ${plan.planName} (${billingCycle}) for ${hotel.hotelName}${
+        appliedDiscount > 0 ? ` [₹${appliedDiscount} credit applied for ${proration.remainingDays} remaining days]` : ""
       }`,
     });
 
@@ -695,7 +834,7 @@ export const createSubscriptionUpgradeOrder = async (req, res) => {
         paymentSessionId: cashfreeOrder.paymentSessionId,
         cfOrderId: cashfreeOrder.cfOrderId,
         originalPrice,
-        discount: proration.unusedCredit,
+        discount: appliedDiscount,
         amount: finalChargeAmount,
         remainingDays: proration.remainingDays,
         currency: "INR",
@@ -775,7 +914,10 @@ export const verifySubscriptionUpgradePayment = async (req, res) => {
 
     // 4. Expire/cancel any existing active subscriptions for this hotel
     await Subscription.updateMany(
-      { hotelId, status: { $in: ["active", "trial"] } },
+      {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        status: { $in: ["active", "trial", "expiring_soon", "grace_period"] },
+      },
       { $set: { status: "expired" } }
     );
 
@@ -860,18 +1002,53 @@ export const verifySubscriptionUpgradePayment = async (req, res) => {
   }
 };
 
-// Helper: Get frontend URL dynamically based on .env
-const getFrontendUrl = () => {
-  if (process.env.CLIENT_URL) {
-    return String(process.env.CLIENT_URL).trim().replace(/\/+$/, "");
+// Helper: Get frontend URL dynamically based on .env and request host
+export const getFrontendUrl = (req) => {
+  // 1. If request is coming from a live production domain, prioritize that domain
+  if (req) {
+    const host = req.get("x-forwarded-host") || req.get("host");
+    const proto = req.get("x-forwarded-proto") || req.protocol || "https";
+    if (host && !host.includes("localhost") && !host.includes("127.0.0.1")) {
+      return `${proto}://${host}/hotel-billing-system`;
+    }
   }
-  const base = String(process.env.VITE_API_BASE_URL || "http://localhost:5000").trim().replace(/\/+$/, "");
-  // Local development fallback to vite dev server port 5173
-  if (base.includes("localhost:5000") || base.includes("127.0.0.1:5000")) {
-    return "http://localhost:5173/hotel-billing-system";
+
+  // 2. Always take URL from .env first (CLIENT_URL or FRONTEND_URL)
+  const envFrontend =
+    process.env.CLIENT_URL ||
+    process.env.FRONTEND_URL ||
+    process.env.VITE_CLIENT_URL ||
+    process.env.VITE_FRONTEND_URL;
+
+  if (envFrontend && envFrontend.trim()) {
+    // Safety check: if req is from live domain but .env still points to localhost, ignore localhost!
+    if (req && (envFrontend.includes("localhost") || envFrontend.includes("127.0.0.1"))) {
+      const host = req.get("x-forwarded-host") || req.get("host");
+      if (host && !host.includes("localhost") && !host.includes("127.0.0.1")) {
+        const proto = req.get("x-forwarded-proto") || req.protocol || "https";
+        return `${proto}://${host}/hotel-billing-system`;
+      }
+    }
+    return envFrontend.trim().replace(/\/+$/, "");
   }
-  // Custom / live domain directly from .env (e.g. VITE_API_BASE_URL)
-  return `${base}/hotel-billing-system`;
+
+  // 3. Fallback: derive from backend base URL configured in .env
+  const base =
+    process.env.BACKEND_URL ||
+    process.env.API_BASE_URL ||
+    process.env.SERVER_URL;
+
+  if (base && base.trim()) {
+    return `${base.trim().replace(/\/+$/, "")}/hotel-billing-system`;
+  }
+
+  if (req) {
+    const host = req.get("x-forwarded-host") || req.get("host");
+    const proto = req.get("x-forwarded-proto") || req.protocol || "http";
+    if (host) return `${proto}://${host}/hotel-billing-system`;
+  }
+
+  return "";
 };
 
 /**
@@ -930,9 +1107,9 @@ export const processRenewalActivation = async ({
     const now = new Date();
     const currentSub = await Subscription.findOne({
       hotelId,
-      status: { $in: ["active", "expiring_soon", "trial"] },
+      status: { $in: ["active", "expiring_soon", "trial", "grace_period"] },
       endDate: { $gt: now },
-    }).sort({ endDate: -1 });
+    }).sort({ createdAt: -1, endDate: -1 });
 
     const isDifferentPlan = currentSub && String(currentSub.planId) !== String(plan._id);
     const hasProrationDiscount = Number(notes?.discount || 0) > 0;
@@ -946,7 +1123,10 @@ export const processRenewalActivation = async ({
 
     // 3. Mark older subscriptions as expired so the upgraded one is primary
     await Subscription.updateMany(
-      { hotelId, status: { $in: ["active", "trial", "expiring_soon"] } },
+      {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        status: { $in: ["active", "trial", "expiring_soon", "grace_period"] },
+      },
       { $set: { status: "expired" } }
     );
 
@@ -1028,17 +1208,15 @@ export const processRenewalActivation = async ({
 export const handleQuickRenewalRedirect = async (req, res) => {
   try {
     const { token } = req.query;
-    const frontendBaseUrl = getFrontendUrl();
+    const frontendBaseUrl = getFrontendUrl(req);
 
     if (!token) {
-      return res.redirect(`${frontendBaseUrl}/plan-upgrade?error=missing_token`);
+      return res.redirect(`${frontendBaseUrl}/hotel-login?status=invalid_link`);
     }
 
     const verification = verifyRenewalToken(token);
     if (!verification.valid) {
-      return res.redirect(
-        `${frontendBaseUrl}/plan-upgrade?error=${encodeURIComponent(verification.message || "Invalid renewal token")}`
-      );
+      return res.redirect(`${frontendBaseUrl}/hotel-login?status=invalid_link`);
     }
 
     const { hotelId, planId, billingCycle } = verification;
@@ -1049,7 +1227,7 @@ export const handleQuickRenewalRedirect = async (req, res) => {
 
     if (!hotel) {
       log.error(`[handleQuickRenewalRedirect] Hotel not found: ${hotelId}`);
-      return res.redirect(`${frontendBaseUrl}/plan-upgrade?error=hotel_not_found`);
+      return res.redirect(`${frontendBaseUrl}/hotel-login?status=hotel_not_found`);
     }
 
     // If plan not found by ID, fall back to hotel's latest subscription plan or default plan
@@ -1065,60 +1243,90 @@ export const handleQuickRenewalRedirect = async (req, res) => {
 
     if (!plan) {
       log.error(`[handleQuickRenewalRedirect] Plan not found for renewal: ${planId}`);
-      return res.redirect(`${frontendBaseUrl}/plan-upgrade?error=plan_not_found`);
+      return res.redirect(`${frontendBaseUrl}/hotel-login?status=plan_not_found`);
     }
 
-    // Calculate renewal / upgrade price with early upgrade proration discount
-    const cycle = billingCycle || "monthly";
-    let basePrice = plan.pricing?.[cycle] ?? plan.price ?? 0;
+    // Calculate renewal price for the hotel's current plan
+    let cycle = billingCycle || "monthly";
+    if (cycle === "trial" || cycle === "custom") {
+      cycle = "monthly";
+    }
+
+    let basePrice = plan.pricing?.[cycle] ?? plan.pricing?.monthly ?? plan.price ?? 0;
     if (basePrice <= 0) {
-      basePrice = plan.pricing?.monthly || 999;
+      basePrice = 999;
     }
 
-    // Check if hotel has an active subscription with remaining days to apply Indian-style proration discount
+    // Check if hotel has an active subscription with remaining days to apply credit
     const now = new Date();
     const currentSub = await Subscription.findOne({
       hotelId: hotel._id,
-      status: { $in: ["active", "expiring_soon", "trial"] },
+      status: { $in: ["active", "expiring_soon", "trial", "grace_period"] },
       endDate: { $gt: now },
     })
       .populate("planId", "planName pricing validityDays trialDays")
-      .sort({ endDate: -1 });
+      .sort({ createdAt: -1, endDate: -1 });
 
-    const proration = calculateUpgradeProration({ currentSub, newPlanPrice: basePrice });
-    const discountedBasePrice = proration.payableAmount;
+    let unusedCredit = 0;
+    let remainingDays = 0;
+    let discountedBasePrice = basePrice;
+    let linkPurpose = `Renewal: ${plan.planName} Plan (${hotel.hotelName})`;
+
+    // SCENARIO A: Remainder flow - Current plan still has unused days remaining
+    if (currentSub && currentSub.endDate > now) {
+      const proration = calculateUpgradeProration({
+        currentSub,
+        newPlanPrice: basePrice,
+      });
+      unusedCredit = proration.unusedCredit || 0;
+      remainingDays = proration.remainingDays || 0;
+      discountedBasePrice = Math.max(1, proration.payableAmount);
+      if (unusedCredit > 0) {
+        linkPurpose = `Renewal: ${plan.planName} Plan (${hotel.hotelName}) [₹${unusedCredit} credit for ${remainingDays} remaining days applied]`;
+      }
+    } else {
+      // SCENARIO B: Expired flow - Plan is fully expired, charge 100% full amount
+      discountedBasePrice = basePrice;
+      linkPurpose = `Renewal: ${plan.planName} Plan (${hotel.hotelName}) [Full Amount - Plan Expired]`;
+    }
 
     const taxRate = hotel.taxEnabled ? 0.18 : 0;
     const taxAmount = Number((discountedBasePrice * taxRate).toFixed(2));
     const finalAmount = Number((discountedBasePrice + taxAmount).toFixed(2));
 
-    if (finalAmount <= 0) {
-      return res.redirect(`${frontendBaseUrl}/plan-upgrade?error=invalid_plan_price`);
-    }
+    // Resolve owner user details for Cashfree customer info
+    const ownerUser = await User.findOne({
+      hotelId: hotel._id,
+      role: "hotelOwner",
+    }).lean();
 
-    // Unique order ID (prefix REN_)
-    const linkId = `REN_${hotel._id.toString().slice(-6)}_${Date.now()}`;
-    // Redirect to plan-upgrade page on successful payment
-    const returnUrl = `${frontendBaseUrl}/plan-upgrade?payment=success&order_id=${linkId}`;
+    const customerEmail = (ownerUser?.email || hotel.email || "billing@hotel.com").trim().toLowerCase();
+    const customerPhone = ownerUser?.phone || hotel.phone || "9999999999";
+    const customerName = ownerUser?.name || hotel.ownerName || hotel.hotelName || "Hotel Owner";
 
-    // Create Cashfree Payment Link
+    // Collision-Proof Order ID for High-Concurrency Multi-User Safety
+    const randomSuffix = crypto.randomBytes(3).toString("hex");
+    const linkId = `REN_${hotel._id.toString().slice(-6)}_${Date.now()}_${randomSuffix}`;
+
+    // Return to Hotel Login with success & order_id query parameters and pre-filled email
+    const returnUrl = `${frontendBaseUrl}/hotel-login?payment=success&order_id=${linkId}&email=${encodeURIComponent(customerEmail)}`;
+
+    // Create Cashfree Payment Link (with prorated amount if unused days remain, or full amount if expired)
     const paymentLink = await createCashfreePaymentLink({
       linkId,
       linkAmount: finalAmount,
       linkCurrency: "INR",
-      linkPurpose: `Upgrade/Renewal: ${plan.planName} (${hotel.hotelName})${
-        proration.unusedCredit > 0 ? ` [₹${proration.unusedCredit} credit for ${proration.remainingDays} remaining days]` : ""
-      }`,
+      linkPurpose,
       customerDetails: {
-        customer_name: hotel.ownerName || hotel.hotelName || "Hotel Owner",
-        customer_email: hotel.email || "billing@hotel.com",
-        customer_phone: hotel.phone || "9999999999",
+        customer_name: customerName,
+        customer_email: customerEmail,
+        customer_phone: customerPhone,
       },
       linkNotes: {
         hotelId: hotel._id.toString(),
         planId: plan._id.toString(),
         billingCycle: cycle,
-        discount: String(proration.unusedCredit || 0),
+        discount: String(unusedCredit || 0),
         originalPrice: String(basePrice),
       },
       returnUrl,
@@ -1130,10 +1338,10 @@ export const handleQuickRenewalRedirect = async (req, res) => {
       return res.redirect(paymentLink.link_url);
     }
 
-    return res.redirect(`${frontendBaseUrl}/hotel-login?error=failed_to_generate_link`);
+    return res.redirect(`${frontendBaseUrl}/hotel-login?status=failed_to_generate_link`);
   } catch (error) {
     log.error(`[handleQuickRenewalRedirect] Error: ${error.message}`);
-    return res.redirect(`${getFrontendUrl()}/hotel-login?error=${encodeURIComponent(error.message)}`);
+    return res.redirect(`${getFrontendUrl(req)}/hotel-login?status=failed`);
   }
 };
 
@@ -1149,7 +1357,7 @@ export const verifyRenewalPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: "Order ID is required." });
     }
 
-    // 1. Check if already activated in DB
+    // 1. Check if already activated in DB (Idempotency)
     const existingSub = await Subscription.findOne({
       paymentOrderId: orderId,
       paymentStatus: "paid",
@@ -1177,10 +1385,25 @@ export const verifyRenewalPayment = async (req, res) => {
       Number(linkDetails.link_amount_paid || 0) >= Number(linkDetails.link_amount || 0);
 
     if (!isPaid) {
-      return res.status(400).json({
+      const isPending =
+        linkDetails.link_status === "ACTIVE" ||
+        linkDetails.link_status === "PENDING" ||
+        linkDetails.link_status === "PROCESSING";
+
+      const isCancelled =
+        linkDetails.link_status === "USER_DROPPED" ||
+        linkDetails.link_status === "CANCELLED";
+
+      return res.status(200).json({
         success: false,
-        message: `Payment has not completed yet. Status: ${linkDetails.link_status}`,
+        pending: isPending,
+        cancelled: isCancelled,
         linkStatus: linkDetails.link_status,
+        message: isPending
+          ? "Your payment is currently being confirmed by your bank. Your subscription will activate automatically once confirmed."
+          : isCancelled
+          ? "The payment was cancelled and no amount was deducted."
+          : "Payment was not completed. You can try again anytime from your renewal email.",
       });
     }
 

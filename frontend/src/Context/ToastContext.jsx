@@ -202,10 +202,10 @@ export const ToastProvider = ({ children }) => {
   // TOAST API (unchanged)
   // =========================================================
   const toast = {
-    success: (msg, dur) => showToast(msg, "success", dur),
-    error: (msg, dur) => showToast(msg, "error", dur),
-    warn: (msg, dur) => showToast(msg, "warning", dur),
-    info: (msg, dur) => showToast(msg, "info", dur),
+    success: (msg, dur, title) => showToast(msg, "success", dur, title),
+    error: (msg, dur, title) => showToast(msg, "error", dur, title),
+    warn: (msg, dur, title) => showToast(msg, "warning", dur, title),
+    info: (msg, dur, title) => showToast(msg, "info", dur, title),
     confirm: (message, onConfirm, options) =>
       showConfirm(message, onConfirm, options),
   };

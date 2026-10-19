@@ -32,26 +32,53 @@ const transporter = new Proxy(
 );
 
 const getBaseUrl = () => {
-  return String(process.env.VITE_API_BASE_URL || "http://localhost:5000").trim().replace(/\/+$/, "");
+  const envUrl =
+    process.env.BACKEND_URL ||
+    process.env.API_BASE_URL ||
+    process.env.SERVER_URL;
+
+  if (envUrl && envUrl.trim()) {
+    return envUrl.trim().replace(/\/+$/, "");
+  }
+
+  // Derive origin from CLIENT_URL or FRONTEND_URL if backend URL is not explicitly configured
+  const envFrontend = process.env.CLIENT_URL || process.env.FRONTEND_URL;
+  if (envFrontend && envFrontend.trim()) {
+    try {
+      return new URL(envFrontend.trim()).origin;
+    } catch {
+      // ignore
+    }
+  }
+
+  return "";
 };
 
 const getFrontendUrl = () => {
-  if (process.env.CLIENT_URL) {
-    return String(process.env.CLIENT_URL).trim().replace(/\/+$/, "");
+  // Always take URL from .env first (CLIENT_URL or FRONTEND_URL)
+  const envFrontend =
+    process.env.CLIENT_URL ||
+    process.env.FRONTEND_URL ||
+    process.env.VITE_CLIENT_URL ||
+    process.env.VITE_FRONTEND_URL;
+
+  if (envFrontend && envFrontend.trim()) {
+    return envFrontend.trim().replace(/\/+$/, "");
   }
+
+  // Fallback: derive from backend / domain base URL configured in .env
   const base = getBaseUrl();
-  // Local development fallback to vite dev server port 5173
-  if (base.includes("localhost:5000") || base.includes("127.0.0.1:5000")) {
-    return "http://localhost:5173/hotel-billing-system";
+  if (base) {
+    return `${base}/hotel-billing-system`;
   }
-  // Custom / live domain directly from .env (e.g. VITE_API_BASE_URL)
-  return `${base}/hotel-billing-system`;
+
+  return "";
 };
 
 const getBackendApiUrl = () => {
   const base = getBaseUrl();
   const baseName = process.env.BASE_NAME || "hotel-billing-system-backend";
-  return `${base}/${baseName}/api`;
+  return base ? `${base}/${baseName}/api` : `/${baseName}/api`;
 };
 
 
@@ -679,14 +706,12 @@ const sendSubscriptionExpiryReminder = async ({
     const frontendBaseUrl =
       getFrontendUrl();
 
-    const upgradeUrl = hotelId
-      ? `${frontendBaseUrl}/plan-upgrade?hotelId=${hotelId}`
-      : `${frontendBaseUrl}/plan-upgrade`;
+    const loginUrl = `${frontendBaseUrl}/hotel-login`;
 
     // Resolve planId and billingCycle for 1-click renewal token
     let resolvedPlanId = planId;
     let resolvedBillingCycle = billingCycle || "monthly";
-    if (resolvedBillingCycle === "trial") {
+    if (resolvedBillingCycle === "trial" || resolvedBillingCycle === "custom") {
       resolvedBillingCycle = "monthly";
     }
     if (!resolvedPlanId && hotelId) {
@@ -696,21 +721,62 @@ const sendSubscriptionExpiryReminder = async ({
         .lean();
       if (latestSub?.planId) {
         resolvedPlanId = latestSub.planId;
-        resolvedBillingCycle = latestSub.billingCycle || "monthly";
-        if (resolvedBillingCycle === "trial") {
-          resolvedBillingCycle = "monthly";
+        if (latestSub.billingCycle && latestSub.billingCycle !== "trial" && latestSub.billingCycle !== "custom") {
+          resolvedBillingCycle = latestSub.billingCycle;
         }
       }
     }
 
-    if (!resolvedPlanId) {
-      const defaultPlan = await Plans.findOne().sort({ price: 1 }).lean();
-      if (defaultPlan?._id) {
-        resolvedPlanId = defaultPlan._id;
+    let planDoc = null;
+    if (resolvedPlanId) {
+      planDoc = await Plans.findById(resolvedPlanId).lean();
+    }
+    if (!planDoc) {
+      planDoc = await Plans.findOne().sort({ price: 1 }).lean();
+      if (planDoc?._id) {
+        resolvedPlanId = planDoc._id;
       }
     }
 
-    let quickRenewUrl = upgradeUrl;
+    const resolvedPlanName = planDoc?.planName || planName || "Subscription Plan";
+    const cycle = resolvedBillingCycle || "monthly";
+    const cycleLabel = cycle.charAt(0).toUpperCase() + cycle.slice(1);
+
+    // Calculate plan amount
+    let basePrice =
+      planDoc?.pricing?.[cycle] ??
+      planDoc?.pricing?.monthly ??
+      planDoc?.price ??
+      999;
+    if (basePrice <= 0) {
+      basePrice = 999;
+    }
+
+    // Determine cycle duration days
+    let totalDays = 30;
+    if (cycle === "quarterly") totalDays = 90;
+    else if (cycle === "halfYearly") totalDays = 180;
+    else if (cycle === "yearly") totalDays = 365;
+    else if (planDoc?.validityDays) totalDays = planDoc.validityDays;
+
+    const remainingDays = Math.max(0, Number(daysRemaining) || 0);
+    const perDayCost = Number((basePrice / totalDays).toFixed(2));
+    const unusedCredit = Number(Math.min(basePrice, perDayCost * remainingDays).toFixed(2));
+    const discountedPrice = Math.max(1, Number((basePrice - unusedCredit).toFixed(2)));
+
+    let taxEnabled = false;
+    if (hotelId) {
+      const hotelDoc = await Hotels.findById(hotelId).select("taxEnabled").lean();
+      taxEnabled = Boolean(hotelDoc?.taxEnabled);
+    }
+    const taxRate = taxEnabled ? 0.18 : 0;
+    const taxAmount = Number((discountedPrice * taxRate).toFixed(2));
+    const totalPayableAmount = Number((discountedPrice + taxAmount).toFixed(2));
+    const formattedAmount = `₹${totalPayableAmount.toLocaleString("en-IN")}`;
+    const formattedBasePrice = `₹${basePrice.toLocaleString("en-IN")}`;
+    const formattedCredit = `₹${unusedCredit.toLocaleString("en-IN")}`;
+
+    let quickRenewUrl = loginUrl;
     if (hotelId && resolvedPlanId) {
       const renewToken = generateRenewalToken({
         hotelId: String(hotelId),
@@ -768,15 +834,16 @@ const sendSubscriptionExpiryReminder = async ({
 ${urgencyText}
 
 Hotel Name: ${resolvedHotelName}
-Plan: ${planName || "Current Plan"}
+Plan: ${resolvedPlanName} (${cycleLabel})
+Plan Price: ${formattedBasePrice}
 Expiry Date: ${formattedDate}
-Days Left: ${daysRemaining} day${daysRemaining > 1 ? "s" : ""
-        }
+Days Left: ${daysRemaining} day${daysRemaining > 1 ? "s" : ""}
+Unused Days Credit: -${formattedCredit}
+Adjusted Amount to Pay: ${formattedAmount}${taxAmount > 0 ? " (incl. 18% GST)" : ""}
 
-Please renew or upgrade your plan now so all hotel rooms and billing keep working without interruption.
+Please renew your plan now so all hotel rooms and billing keep working without interruption.
 
 Pay & Renew Now: ${quickRenewUrl}
-Upgrade Plan: ${upgradeUrl}
 
 Thank you,
 StayLio Team`,
@@ -991,7 +1058,36 @@ StayLio Team`,
           padding:10px 0 7px;
         "
       >
-        ${planName || "Active Plan"}
+        ${resolvedPlanName} (${cycleLabel})
+      </td>
+
+    </tr>
+
+
+    <tr>
+
+      <td
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:13px;
+          color:#6B7280;
+          padding:10px 0 7px;
+        "
+      >
+        Plan Price
+      </td>
+
+      <td
+        align="right"
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:14px;
+          font-weight:600;
+          color:#111827;
+          padding:10px 0 7px;
+        "
+      >
+        ${formattedBasePrice}
       </td>
 
     </tr>
@@ -1055,6 +1151,66 @@ StayLio Team`,
 
     </tr>
 
+
+    <tr>
+
+      <td
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:13px;
+          color:#059669;
+          padding:10px 0 7px;
+        "
+      >
+        Unused Days Credit (${remainingDays} days)
+      </td>
+
+      <td
+        align="right"
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:14px;
+          font-weight:700;
+          color:#059669;
+          padding:10px 0 7px;
+        "
+      >
+        -${formattedCredit}
+      </td>
+
+    </tr>
+
+
+    <tr>
+
+      <td
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:13px;
+          color:#111827;
+          font-weight:600;
+          padding:10px 0 7px;
+        "
+      >
+        Adjusted Amount to Pay
+      </td>
+
+      <td
+        align="right"
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:16px;
+          font-weight:700;
+          color:#16A34A;
+          padding:10px 0 7px;
+        "
+      >
+        ${formattedAmount}
+        ${taxAmount > 0 ? '<div style="font-size:11px;font-weight:normal;color:#6B7280;">(incl. 18% GST)</div>' : ''}
+      </td>
+
+    </tr>
+
   </table>
 
 </td>
@@ -1079,7 +1235,7 @@ StayLio Team`,
   >
     To keep your room bookings, check-in,
     and billing working without interruption,
-    please renew or upgrade your plan.
+    please renew your plan.
   </div>
 
 </td>
@@ -1091,7 +1247,7 @@ StayLio Team`,
 <td align="center" style="padding-top:28px;padding-bottom:12px;">
 
   <!-- Primary CTA: 1-Click Direct Cashfree Pay & Renew -->
-  <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto 14px auto;width:100%;max-width:420px;">
+  <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;width:100%;max-width:420px;">
     <tr>
       <td align="center" bgcolor="#2563EB" style="border-radius:10px;background-color:#2563EB;box-shadow:0 4px 14px rgba(37,99,235,0.30);">
         <a
@@ -1112,35 +1268,7 @@ StayLio Team`,
             -webkit-text-size-adjust:none;
           "
         >
-          💳 Pay &amp; Renew Now (${planName || "Current Plan"}) &rarr;
-        </a>
-      </td>
-    </tr>
-  </table>
-
-  <!-- Secondary CTA: Upgrade / Choose Higher Plan with Unused Days Discount -->
-  <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;width:100%;max-width:420px;">
-    <tr>
-      <td align="center" bgcolor="#0D9488" style="border-radius:10px;background-color:#0D9488;box-shadow:0 3px 10px rgba(13,148,136,0.25);">
-        <a
-          href="${upgradeUrl}"
-          target="_blank"
-          style="
-            display:block;
-            padding:14px 28px;
-            font-family:Arial,Helvetica,sans-serif;
-            font-size:15px;
-            font-weight:700;
-            color:#FFFFFF !important;
-            text-decoration:none;
-            background-color:#0D9488;
-            border-radius:10px;
-            letter-spacing:0.3px;
-            text-align:center;
-            -webkit-text-size-adjust:none;
-          "
-        >
-          🚀 Upgrade Plan (Get Unused Days Discount) &rarr;
+          💳 Pay &amp; Renew Now (${formattedAmount} - ${resolvedPlanName}) &rarr;
         </a>
       </td>
     </tr>
@@ -1152,7 +1280,7 @@ StayLio Team`,
       🔒 100% Secure Checkout powered by Cashfree Payments
     </div>
     <div style="font-size:11px;color:#6B7280;line-height:16px;">
-      Directly pre-filled for <strong>${resolvedHotelName}</strong>. Supports UPI (GPay, PhonePe, Paytm), Cards &amp; NetBanking. After payment, you are instantly returned to your <strong>Hotel Login</strong> portal.
+      Pay <strong>${formattedAmount}</strong> (${formattedBasePrice} - ${formattedCredit} credit for ${remainingDays} remaining days) securely via UPI (GPay, PhonePe, Paytm), Cards &amp; NetBanking. Instantly returns to your <strong>Hotel Login</strong> portal.
     </div>
   </div>
 </td>
@@ -1247,14 +1375,12 @@ const sendSubscriptionExpiredNotification = async ({
     const frontendBaseUrl =
       getFrontendUrl();
 
-    const upgradeUrl = hotelId
-      ? `${frontendBaseUrl}/plan-upgrade?hotelId=${hotelId}`
-      : `${frontendBaseUrl}/plan-upgrade`;
+    const loginUrl = `${frontendBaseUrl}/hotel-login`;
 
     // Resolve planId and billingCycle for 1-click renewal token
     let resolvedPlanId = planId;
     let resolvedBillingCycle = billingCycle || "monthly";
-    if (resolvedBillingCycle === "trial") {
+    if (resolvedBillingCycle === "trial" || resolvedBillingCycle === "custom") {
       resolvedBillingCycle = "monthly";
     }
     if (!resolvedPlanId && hotelId) {
@@ -1264,21 +1390,48 @@ const sendSubscriptionExpiredNotification = async ({
         .lean();
       if (latestSub?.planId) {
         resolvedPlanId = latestSub.planId;
-        resolvedBillingCycle = latestSub.billingCycle || "monthly";
-        if (resolvedBillingCycle === "trial") {
-          resolvedBillingCycle = "monthly";
+        if (latestSub.billingCycle && latestSub.billingCycle !== "trial" && latestSub.billingCycle !== "custom") {
+          resolvedBillingCycle = latestSub.billingCycle;
         }
       }
     }
 
-    if (!resolvedPlanId) {
-      const defaultPlan = await Plans.findOne().sort({ price: 1 }).lean();
-      if (defaultPlan?._id) {
-        resolvedPlanId = defaultPlan._id;
+    let planDoc = null;
+    if (resolvedPlanId) {
+      planDoc = await Plans.findById(resolvedPlanId).lean();
+    }
+    if (!planDoc) {
+      planDoc = await Plans.findOne().sort({ price: 1 }).lean();
+      if (planDoc?._id) {
+        resolvedPlanId = planDoc._id;
       }
     }
 
-    let quickRenewUrl = upgradeUrl;
+    const resolvedPlanName = planDoc?.planName || planName || "Subscription Plan";
+    const cycle = resolvedBillingCycle || "monthly";
+    const cycleLabel = cycle.charAt(0).toUpperCase() + cycle.slice(1);
+
+    // Calculate plan amount
+    let basePrice =
+      planDoc?.pricing?.[cycle] ??
+      planDoc?.pricing?.monthly ??
+      planDoc?.price ??
+      999;
+    if (basePrice <= 0) {
+      basePrice = 999;
+    }
+
+    let taxEnabled = false;
+    if (hotelId) {
+      const hotelDoc = await Hotels.findById(hotelId).select("taxEnabled").lean();
+      taxEnabled = Boolean(hotelDoc?.taxEnabled);
+    }
+    const taxRate = taxEnabled ? 0.18 : 0;
+    const taxAmount = Number((basePrice * taxRate).toFixed(2));
+    const totalPayableAmount = Number((basePrice + taxAmount).toFixed(2));
+    const formattedAmount = `₹${totalPayableAmount.toLocaleString("en-IN")}`;
+
+    let quickRenewUrl = loginUrl;
     if (hotelId && resolvedPlanId) {
       const renewToken = generateRenewalToken({
         hotelId: String(hotelId),
@@ -1300,13 +1453,13 @@ const sendSubscriptionExpiredNotification = async ({
 Your hotel subscription plan expired on ${formattedDate}.
 
 Hotel Name: ${resolvedHotelName}
-Plan: ${planName || "Current Plan"}
+Plan: ${resolvedPlanName} (${cycleLabel})
 Expired On: ${formattedDate}
+Plan Amount to Pay: ${formattedAmount}${taxAmount > 0 ? " (incl. 18% GST)" : ""}
 
-Your account features are currently paused. Please renew or upgrade your plan now to continue using all hotel features.
+Your account features are currently paused. Please renew your plan now to continue using all hotel features.
 
-Pay & Reactivate Now: ${quickRenewUrl}
-Choose / Upgrade Different Plan: ${upgradeUrl}
+Pay & Renew Now: ${quickRenewUrl}
 
 Thank you,
 StayLio Team`,
@@ -1523,7 +1676,7 @@ StayLio Team`,
           padding:10px 0 7px;
         "
       >
-        ${planName || "Subscription Plan"}
+        ${resolvedPlanName} (${cycleLabel})
       </td>
 
     </tr>
@@ -1557,6 +1710,36 @@ StayLio Team`,
 
     </tr>
 
+
+    <tr>
+
+      <td
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:13px;
+          color:#6B7280;
+          padding:10px 0 7px;
+        "
+      >
+        Plan Amount to Pay
+      </td>
+
+      <td
+        align="right"
+        style="
+          border-top:1px solid #F0F0F0;
+          font-size:16px;
+          font-weight:700;
+          color:#16A34A;
+          padding:10px 0 7px;
+        "
+      >
+        ${formattedAmount}
+        ${taxAmount > 0 ? '<div style="font-size:11px;font-weight:normal;color:#6B7280;">(incl. 18% GST)</div>' : ''}
+      </td>
+
+    </tr>
+
   </table>
 
 </td>
@@ -1580,7 +1763,7 @@ StayLio Team`,
     "
   >
     Your hotel data, guest records, and invoices
-    remain safely stored. Choose a plan to restart
+    remain safely stored. Renew your plan now to restart
     your hotel service.
   </div>
 
@@ -1592,10 +1775,10 @@ StayLio Team`,
 <tr>
 <td align="center" style="padding-top:28px;padding-bottom:12px;">
 
-  <!-- Primary CTA: 1-Click Pay & Renew to reactivate immediately -->
-  <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto 14px auto;width:100%;max-width:420px;">
+  <!-- Primary CTA: 1-Click Direct Cashfree Pay & Renew -->
+  <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;width:100%;max-width:420px;">
     <tr>
-      <td align="center" bgcolor="#DC2626" style="border-radius:10px;background-color:#DC2626;box-shadow:0 4px 14px rgba(220,38,38,0.30);">
+      <td align="center" bgcolor="#2563EB" style="border-radius:10px;background-color:#2563EB;box-shadow:0 4px 14px rgba(37,99,235,0.30);">
         <a
           href="${quickRenewUrl}"
           target="_blank"
@@ -1607,34 +1790,6 @@ StayLio Team`,
             font-weight:700;
             color:#FFFFFF !important;
             text-decoration:none;
-            background-color:#DC2626;
-            border-radius:10px;
-            letter-spacing:0.3px;
-            text-align:center;
-            -webkit-text-size-adjust:none;
-          "
-        >
-          ⚡ Pay &amp; Reactivate Now (${planName || "Current Plan"}) &rarr;
-        </a>
-      </td>
-    </tr>
-  </table>
-
-  <!-- Secondary CTA: Choose / Upgrade Plan -->
-  <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;width:100%;max-width:420px;">
-    <tr>
-      <td align="center" bgcolor="#2563EB" style="border-radius:10px;background-color:#2563EB;box-shadow:0 3px 10px rgba(37,99,235,0.25);">
-        <a
-          href="${upgradeUrl}"
-          target="_blank"
-          style="
-            display:block;
-            padding:14px 28px;
-            font-family:Arial,Helvetica,sans-serif;
-            font-size:15px;
-            font-weight:700;
-            color:#FFFFFF !important;
-            text-decoration:none;
             background-color:#2563EB;
             border-radius:10px;
             letter-spacing:0.3px;
@@ -1642,7 +1797,7 @@ StayLio Team`,
             -webkit-text-size-adjust:none;
           "
         >
-          🚀 Choose / Upgrade Different Plan &rarr;
+          💳 Pay &amp; Renew Now (${formattedAmount} - ${resolvedPlanName}) &rarr;
         </a>
       </td>
     </tr>
@@ -1654,7 +1809,7 @@ StayLio Team`,
       🔒 100% Secure Checkout powered by Cashfree Payments
     </div>
     <div style="font-size:11px;color:#6B7280;line-height:16px;">
-      Directly configured for <strong>${resolvedHotelName}</strong>. Supports UPI, Cards &amp; NetBanking. Instantly returns to your <strong>Hotel Login</strong> portal.
+      Pay <strong>${formattedAmount}</strong> securely via UPI (GPay, PhonePe, Paytm), Cards &amp; NetBanking. Instantly returns to your <strong>Hotel Login</strong> upon payment.
     </div>
   </div>
 </td>
@@ -1737,9 +1892,7 @@ const sendSubscriptionCancelledNotification = async ({
     const frontendBaseUrl =
       getFrontendUrl();
 
-    const upgradeUrl = hotelId
-      ? `${frontendBaseUrl}/plan-upgrade?hotelId=${hotelId}`
-      : `${frontendBaseUrl}/plan-upgrade`;
+    const loginUrl = `${frontendBaseUrl}/hotel-login`;
 
     // Resolve planId and billingCycle for 1-click renewal token
     let resolvedPlanId = planId;
@@ -1768,7 +1921,7 @@ const sendSubscriptionCancelledNotification = async ({
       }
     }
 
-    let quickRenewUrl = upgradeUrl;
+    let quickRenewUrl = loginUrl;
     if (hotelId && resolvedPlanId) {
       const renewToken = generateRenewalToken({
         hotelId: String(hotelId),
@@ -1822,9 +1975,9 @@ Plan: ${planName || "Current Plan"}
 Status: ${statusWord}
 Reason: ${formattedReason}
 
-To restore your hotel operations, please choose a plan to restart your subscription.
+To restore your hotel operations, please renew and reactivate your subscription.
 
-Choose a plan here: ${upgradeUrl}
+Pay & Reactivate Now: ${quickRenewUrl}
 
 Thank you,
 StayLio Team`,
@@ -2136,7 +2289,7 @@ StayLio Team`,
     "
   >
     You can reactivate your account at any time
-    by selecting a plan. Your records and data
+    by renewing your plan. Your records and data
     remain safely saved.
   </div>
 

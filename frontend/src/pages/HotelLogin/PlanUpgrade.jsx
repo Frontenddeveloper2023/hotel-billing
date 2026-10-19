@@ -15,8 +15,12 @@ import {
   createSubscriptionUpgradeOrder,
   verifySubscriptionUpgradePayment,
   getSubscriptionUpgradePreview,
+  switchSubscriptionPlanDirect,
 } from "../../service/paymentApi";
-import { openCashfreeCheckoutModal } from "../../util/cashfreeCheckout";
+import {
+  openCashfreeCheckoutModal,
+  isPaymentCancellation,
+} from "../../util/cashfreeCheckout";
 import api from "../../service/api";
 
 import {
@@ -582,7 +586,7 @@ export default function PlanUpgrade() {
       return;
     }
 
-    if (payment === "success" && orderId?.startsWith("REN_")) {
+    if (payment === "success" && (orderId?.startsWith("REN_") || orderId?.startsWith("FREE_"))) {
       const verifyRenewal = async () => {
         try {
           const res = await api.get(`/payments/verify-renewal?orderId=${encodeURIComponent(orderId)}`);
@@ -666,22 +670,24 @@ export default function PlanUpgrade() {
     setProcessing(true);
 
     try {
-      // 1. Create Cashfree / Backend Order for Upgrade
-      const orderRes = await createSubscriptionUpgradeOrder({
-        planId: selectedPlan._id,
-        billingCycle,
-      });
+      // 1. Direct 1-Click switch if 100% covered by unused credit (NO Cashfree needed)
+      if (finalPayable === 0) {
+        const switchRes = await switchSubscriptionPlanDirect({
+          planId: selectedPlan._id,
+          billingCycle,
+        });
 
-      if (!orderRes?.success) {
-        throw new Error(orderRes?.message || "Failed to initiate upgrade order.");
-      }
+        if (!switchRes?.success) {
+          throw new Error(switchRes?.message || "Failed to switch plan.");
+        }
 
-      // If fully covered by credit (zero amount to pay)
-      if (orderRes?.data?.zeroAmount) {
+        toastRef.current.success(
+          switchRes.message || "Plan switched successfully with unused credit!"
+        );
+
         setShowPaymentModal(false);
-        toastRef.current.success("Plan upgraded successfully using your credit!");
-        if (orderRes.data.subscription) {
-          setCurrentSub(orderRes.data.subscription);
+        if (switchRes.data) {
+          setCurrentSub(switchRes.data);
         } else {
           try {
             const subRes = await getMySubscription();
@@ -691,6 +697,16 @@ export default function PlanUpgrade() {
         setSelectedPlan(null);
         window.dispatchEvent(new CustomEvent("subscriptionUpdated"));
         return;
+      }
+
+      // 2. Create Cashfree / Backend Order for Upgrade / Partial Payment
+      const orderRes = await createSubscriptionUpgradeOrder({
+        planId: selectedPlan._id,
+        billingCycle,
+      });
+
+      if (!orderRes?.success) {
+        throw new Error(orderRes?.message || "Failed to initiate upgrade order.");
       }
 
       if (!orderRes?.data?.paymentSessionId) {
@@ -709,7 +725,16 @@ export default function PlanUpgrade() {
       });
 
       if (checkoutResult?.error) {
-        throw new Error(checkoutResult.error.message || "Payment was cancelled or failed.");
+        if (isPaymentCancellation(checkoutResult.error)) {
+          toastRef.current.info(
+            "Payment was cancelled. You have not been charged. You can upgrade anytime.",
+            4500,
+            "Payment Cancelled"
+          );
+          setProcessing(false);
+          return;
+        }
+        throw new Error(checkoutResult.error.message || "Payment could not be completed.");
       }
 
       // 3. Double-check with backend to activate upgraded subscription
@@ -741,9 +766,17 @@ export default function PlanUpgrade() {
       // Notify other components (e.g. SubscriptionAlertBanner) immediately
       window.dispatchEvent(new CustomEvent("subscriptionUpdated"));
     } catch (err) {
-      toastRef.current.error(
-        err.message || "Upgrade failed. Please try again."
-      );
+      if (isPaymentCancellation(err)) {
+        toastRef.current.info(
+          "Payment was cancelled. You have not been charged. You can upgrade anytime.",
+          4500,
+          "Payment Cancelled"
+        );
+      } else {
+        toastRef.current.error(
+          err.message || "Upgrade payment could not be completed. Please try again."
+        );
+      }
     } finally {
       setProcessing(false);
     }
@@ -824,6 +857,58 @@ export default function PlanUpgrade() {
   previewEnd.setDate(
     previewEnd.getDate() + previewDays
   );
+
+  const currentPlanName =
+    prorationPreview?.currentPlanName ||
+    currentPlanObj?.planName ||
+    "Current Plan";
+
+  const currentPlanPrice = Number(
+    prorationPreview?.currentPlanPrice ??
+      (currentSub?.amount || currentSub?.finalAmount || 0)
+  );
+
+  const currentPlanValidity = Number(
+    prorationPreview?.totalDays ??
+      (currentSub?.customDurationDays || cycleDays[currentSub?.billingCycle] || 30)
+  );
+
+  const remainingUnusedDays = Number(
+    prorationPreview?.remainingDays ??
+      (isSubExpired ? 0 : (daysLeft ?? 0))
+  );
+
+  const newPlanPrice = Number(
+    prorationPreview?.originalPrice ??
+      getPrice(selectedPlan, billingCycle)
+  );
+
+  const unusedCredit = Number(prorationPreview?.unusedCredit ?? 0);
+
+  const rawCredit = Number(
+    prorationPreview?.rawCredit ??
+      (currentPlanPrice && currentPlanValidity
+        ? Math.round(((currentPlanPrice * remainingUnusedDays) / currentPlanValidity) * 100) / 100
+        : 0)
+  );
+
+  const excessCredit = Number(
+    prorationPreview?.excessCredit ??
+      Math.max(0, rawCredit - unusedCredit)
+  );
+
+  const finalPayable = Number(
+    prorationPreview?.payableAmount ??
+      Math.max(0, newPlanPrice - unusedCredit)
+  );
+
+  const newPlanStart = prorationPreview?.newPlanStartDate
+    ? new Date(prorationPreview.newPlanStartDate)
+    : previewStart;
+
+  const newPlanEnd = prorationPreview?.newPlanEndDate
+    ? new Date(prorationPreview.newPlanEndDate)
+    : previewEnd;
 
   return (
     <div
@@ -1273,19 +1358,28 @@ export default function PlanUpgrade() {
                     sm:w-10
                   "
                 >
-                  <CreditCard
-                    size={18}
-                    className="sm:h-5 sm:w-5"
-                  />
+                  {finalPayable === 0 ? (
+                    <Sparkles
+                      size={18}
+                      className="sm:h-5 sm:w-5"
+                    />
+                  ) : (
+                    <CreditCard
+                      size={18}
+                      className="sm:h-5 sm:w-5"
+                    />
+                  )}
                 </div>
 
                 <div className="min-w-0">
                   <h3 className="truncate text-base font-bold sm:text-lg">
-                    Confirm Plan Upgrade
+                    {finalPayable === 0 ? "Confirm Plan Switch" : "Confirm Plan Upgrade"}
                   </h3>
 
                   <p className="mt-0.5 truncate text-[10px] text-blue-100 sm:text-xs">
-                    Review the details before you confirm.
+                    {finalPayable === 0
+                      ? "100% covered by unused credit • ₹0 to pay"
+                      : "Review the details before you confirm."}
                   </p>
                 </div>
               </div>
@@ -1330,7 +1424,7 @@ export default function PlanUpgrade() {
               "
             >
               <p className="mb-4 text-xs leading-relaxed text-[#6b7f99] sm:text-sm">
-                You are upgrading to{" "}
+                You are {finalPayable === 0 ? "switching" : "upgrading"} to{" "}
                 <strong className="text-[#2568e0]">
                   {selectedPlan.planName}
                 </strong>{" "}
@@ -1340,50 +1434,22 @@ export default function PlanUpgrade() {
                 </strong>{" "}
                 billing.
               </p>
+
+              {finalPayable === 0 && unusedCredit > 0 && (
+                <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-emerald-300 bg-emerald-500/10 p-3 text-xs sm:text-sm text-emerald-800">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                  <div>
+                    <strong className="block font-bold text-emerald-900">
+                      This Switch is 100% Free!
+                    </strong>
+                    <span>
+                      You have ₹{unusedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} left from your current plan, so you don't need to pay anything!
+                    </span>
+                  </div>
+                </div>
+              )}
               {/* DETAILS */}
-              {(() => {
-                const currentPlanName =
-                  prorationPreview?.currentPlanName ||
-                  currentPlanObj?.planName ||
-                  "Current Plan";
-
-                const currentPlanPrice = Number(
-                  prorationPreview?.currentPlanPrice ??
-                  (currentSub?.amount || currentSub?.finalAmount || 0)
-                );
-
-                const currentPlanValidity = Number(
-                  prorationPreview?.totalDays ??
-                  (currentSub?.customDurationDays || cycleDays[currentSub?.billingCycle] || 30)
-                );
-
-                const remainingUnusedDays = Number(
-                  prorationPreview?.remainingDays ??
-                  (isSubExpired ? 0 : (daysLeft ?? 0))
-                );
-
-                const newPlanPrice = Number(
-                  prorationPreview?.originalPrice ??
-                  getPrice(selectedPlan, billingCycle)
-                );
-
-                const unusedCredit = Number(prorationPreview?.unusedCredit ?? 0);
-
-                const finalPayable = Number(
-                  prorationPreview?.payableAmount ??
-                  Math.max(0, newPlanPrice - unusedCredit)
-                );
-
-                const newPlanStart = prorationPreview?.newPlanStartDate
-                  ? new Date(prorationPreview.newPlanStartDate)
-                  : previewStart;
-
-                const newPlanEnd = prorationPreview?.newPlanEndDate
-                  ? new Date(prorationPreview.newPlanEndDate)
-                  : previewEnd;
-
-                return (
-                  <div
+              <div
                     className="
                       space-y-3
                       rounded-2xl
@@ -1429,6 +1495,14 @@ export default function PlanUpgrade() {
                             {remainingUnusedDays} days
                           </span>
                         </div>
+                        {rawCredit > 0 && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-[#6b7f99]">Current Plan Remaining Amount</span>
+                            <span className="font-bold text-emerald-700">
+                              ₹{rawCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -1467,10 +1541,10 @@ export default function PlanUpgrade() {
                     </div>
 
                     {/* PRORATION / CREDIT BREAKDOWN */}
-                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 space-y-2">
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3.5 space-y-2.5">
                       <div className="flex items-center justify-between text-xs sm:text-sm text-slate-700">
-                        <span className="flex items-center gap-1.5 text-slate-600">
-                          <Tag size={12} className="text-emerald-600" />
+                        <span className="flex items-center gap-1.5 text-slate-600 font-medium">
+                          <Tag size={13} className="text-emerald-600" />
                           New Plan Price
                         </span>
                         <span className="font-bold text-slate-800">
@@ -1478,40 +1552,44 @@ export default function PlanUpgrade() {
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between text-xs sm:text-sm text-emerald-700">
-                        <div className="flex flex-col">
-                          <span>Current Plan Credit</span>
-                          {remainingUnusedDays > 0 && prorationPreview?.perDayCost !== undefined && (
+                      {unusedCredit > 0 && (
+                        <div className="flex items-center justify-between text-xs sm:text-sm text-emerald-700">
+                          <div className="flex flex-col">
+                            <span className="font-medium text-emerald-700">
+                              Current Plan Balance Discount
+                            </span>
                             <span className="text-[11px] text-emerald-600">
-                              ({remainingUnusedDays} days unused @ ₹{prorationPreview.perDayCost}/day)
+                              {rawCredit > unusedCredit
+                                ? `Using ₹${unusedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} from your ₹${rawCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} balance (${remainingUnusedDays}d left)`
+                                : `Credit for ${remainingUnusedDays} unused days @ ₹${prorationPreview?.perDayCost || 0}/day`}
                             </span>
-                          )}
+                          </div>
+                          <span className="font-bold text-emerald-700">
+                            - ₹{unusedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
                         </div>
-                        <span className="font-bold text-emerald-700">
-                          - ₹{unusedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
-                      </div>
+                      )}
 
-                      <div className="flex items-center justify-between border-t border-emerald-200/60 pt-2 text-xs sm:text-sm">
-                        <div>
-                          <span className="block font-bold text-slate-900">Final Amount to Pay</span>
-                          {unusedCredit > 0 && (
-                            <span className="block text-[11px] font-medium text-emerald-600">
-                              Includes ₹{unusedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} early upgrade credit
+                      <div className="flex items-center justify-between border-t border-emerald-200/80 pt-2 text-xs sm:text-sm">
+                        <span className="font-bold text-slate-900">Total to Pay</span>
+                        <div className="flex items-center gap-2">
+                          {finalPayable === 0 && (
+                            <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white">
+                              Free
                             </span>
                           )}
+                          <span className="text-base font-extrabold text-[#2568e0] sm:text-xl">
+                            ₹{finalPayable.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
                         </div>
-                        <span className="text-base font-extrabold text-[#2568e0] sm:text-xl">
-                          ₹{finalPayable.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
                       </div>
                     </div>
                   </div>
-                );
-              })()}
 
               <p className="mt-4 text-center text-[10px] leading-relaxed text-[#9aabc0] sm:text-xs">
-                Instant activation powered by Cashfree. Your upgraded plan features will take effect immediately.
+                {finalPayable === 0
+                  ? "Instant 1-click activation. No payment gateway needed. Your updated plan features will take effect immediately."
+                  : "Instant activation powered by Cashfree. Your upgraded plan features will take effect immediately."}
               </p>
 
               {/* ACTION BUTTONS */}
@@ -1555,39 +1633,54 @@ export default function PlanUpgrade() {
                 <button
                   type="button"
                   onClick={handleUpgrade}
-                  disabled={processing}
-                  className="
+                  disabled={processing || loadingProration}
+                  className={`
                     inline-flex
                     min-h-11
                     items-center
                     justify-center
                     gap-2
                     rounded-xl
-                    bg-gradient-to-r
-                    from-emerald-500
-                    to-emerald-600
                     px-4
                     py-2.5
                     text-sm
                     font-bold
                     text-white
                     shadow-md
-                    shadow-emerald-500/25
                     transition
                     hover:brightness-110
                     disabled:cursor-not-allowed
                     disabled:opacity-60
-                  "
+                    ${
+                      finalPayable === 0
+                        ? "bg-gradient-to-r from-emerald-500 to-teal-600 shadow-emerald-500/25"
+                        : "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-emerald-500/25"
+                    }
+                  `}
                 >
                   {processing ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Processing...
+                      {finalPayable === 0 ? "Activating..." : "Processing..."}
+                    </>
+                  ) : loadingProration ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Calculating...
+                    </>
+                  ) : finalPayable === 0 ? (
+                    <>
+                      <CheckCircle2 className="h-4 cursor-pointer w-4" />
+                      Confirm & Switch Plan 
                     </>
                   ) : (
                     <>
                       <CreditCard className="h-4 w-4" />
-                      {isSubExpired ? "Pay & Reactivate" : "Pay & Upgrade"}
+                      {isSubExpired
+                        ? "Pay & Reactivate"
+                        : unusedCredit > 0
+                        ? `Pay & Upgrade (₹${finalPayable.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`
+                        : "Pay & Switch Plan"}
                     </>
                   )}
                 </button>

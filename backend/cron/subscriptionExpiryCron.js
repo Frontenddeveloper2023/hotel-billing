@@ -103,7 +103,7 @@ const checkSubscriptionExpiry = async () => {
         },
       ],
     })
-      .sort({ endDate: -1, createdAt: -1 })
+      .sort({ createdAt: -1, endDate: -1 })
       .populate("planId", "planName");
 
     // Deduplicate by hotelId: only evaluate the single latest subscription per hotel

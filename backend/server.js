@@ -65,11 +65,24 @@ const app = express();
 // CORS
 // ----------------------------------
 
+const originFromUrl = (urlStr) => {
+    if (!urlStr) return null;
+    try {
+        return new URL(urlStr).origin;
+    } catch {
+        return urlStr;
+    }
+};
+
 const allowedOrigins = [
     "http://localhost:5173",
     "http://localhost:4173",
-    process.env.VITE_API_BASE_URL,
+    process.env.BACKEND_URL,
     process.env.CLIENT_URL,
+    process.env.FRONTEND_URL,
+    originFromUrl(process.env.CLIENT_URL),
+    originFromUrl(process.env.FRONTEND_URL),
+    originFromUrl(process.env.BACKEND_URL),
 ].filter(Boolean);
 
 app.use(

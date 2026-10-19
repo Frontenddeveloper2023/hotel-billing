@@ -32,6 +32,17 @@ export const getSubscriptionUpgradePreview = async ({ planId, billingCycle }) =>
 };
 
 /**
+ * Directly switches plan when 100% covered by unused credit (no Cashfree payment required)
+ */
+export const switchSubscriptionPlanDirect = async ({ planId, billingCycle }) => {
+  const response = await api.post("/payments/subscription-upgrade/direct-switch", {
+    planId,
+    billingCycle,
+  });
+  return response.data;
+};
+
+/**
  * Creates Cashfree order for Hotel Subscription Upgrade / Renewal
  */
 export const createSubscriptionUpgradeOrder = async ({ planId, billingCycle }) => {

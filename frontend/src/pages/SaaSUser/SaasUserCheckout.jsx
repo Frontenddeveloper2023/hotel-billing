@@ -33,7 +33,10 @@ import {
   createRegistrationOrder,
   verifyRegistrationPayment,
 } from "../../service/paymentApi";
-import { openCashfreeCheckoutModal } from "../../util/cashfreeCheckout";
+import {
+  openCashfreeCheckoutModal,
+  isPaymentCancellation,
+} from "../../util/cashfreeCheckout";
 
 // ============================================================
 // DESIGN: dark hotel-inspired hero, blue featured plan, white cards
@@ -294,6 +297,11 @@ const handlePayNow = () => {
       });
 
       if (checkoutResult?.error) {
+        if (isPaymentCancellation(checkoutResult.error)) {
+          setError("Payment was cancelled. You have not been charged. Click 'Pay & Submit Registration' whenever you are ready to continue.");
+          setIsPaying(false);
+          return;
+        }
         throw new Error(checkoutResult.error.message || "Payment was cancelled or failed.");
       }
 
@@ -317,11 +325,15 @@ const handlePayNow = () => {
       sessionStorage.setItem("saasRegistrationId", registrationId);
       sessionStorage.setItem("saasPaymentStatus", "paid");
     } catch (error) {
-      setError(
-        error?.message ||
-          error?.data?.message ||
-          "Unable to complete payment."
-      );
+      if (isPaymentCancellation(error)) {
+        setError("Payment was cancelled. You have not been charged. Click 'Pay & Submit Registration' whenever you are ready to continue.");
+      } else {
+        setError(
+          error?.message ||
+            error?.data?.message ||
+            "Unable to complete payment."
+        );
+      }
     } finally {
       setIsPaying(false);
     }

@@ -65,7 +65,7 @@ export const createCashfreeOrder = async ({
       return_url:
         returnUrl ||
         process.env.CASHFREE_RETURN_URL ||
-        `${process.env.CLIENT_URL || process.env.VITE_API_BASE_URL || "https://sandbox.cashfree.com"}/hotel-billing-system/payment-return?order_id={order_id}`,
+        `${(process.env.CLIENT_URL || process.env.FRONTEND_URL || process.env.BACKEND_URL || "").trim().replace(/\/+$/, "")}/hotel-billing-system/payment-return?order_id={order_id}`.replace("/hotel-billing-system/hotel-billing-system", "/hotel-billing-system"),
     },
     order_note: orderNote || "Hotel Billing SaaS Plan Subscription",
   };

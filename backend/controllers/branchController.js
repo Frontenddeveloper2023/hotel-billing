@@ -26,6 +26,7 @@ const getActiveSubscription = async (hotelId) => {
   })
     .populate("planId", "planName")
     .sort({
+      createdAt: -1,
       endDate: -1,
     })
     .lean();

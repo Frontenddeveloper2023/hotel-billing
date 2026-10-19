@@ -74,6 +74,7 @@ export const branchLimitVerify = async (req, res, next) => {
       },
     })
       .sort({
+        createdAt: -1,
         endDate: -1,
       })
       .lean();

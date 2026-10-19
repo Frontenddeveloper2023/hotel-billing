@@ -103,7 +103,7 @@ if (user.role !== "admin") {
             // Check parent hotel's subscription (allow login even if expired so owner/branch can view status & upgrade)
             const subscription = await Subscription.findOne({
                 hotelId: branch.hotelId,
-            }).sort({ endDate: -1, createdAt: -1 });
+            }).sort({ createdAt: -1, endDate: -1 });
 
             // Ensure a User account exists for this branch with subscription-synced permissions
             const branchPermissions = buildBranchPermissions(subscription);
@@ -173,7 +173,7 @@ if (user.role !== "admin") {
             // Hotel owners MUST be allowed to login so they can click the Upgrade Plan button.
             const subscription = await Subscription.findOne({
                 hotelId: user.hotelId,
-            }).sort({ endDate: -1, createdAt: -1 });
+            }).sort({ createdAt: -1, endDate: -1 });
 
             if (subscription) {
                 const now = new Date();
@@ -307,7 +307,7 @@ if (user.role !== "admin") {
 
             const subscription = await Subscription.findOne({
                 hotelId: branch.hotelId,
-            }).sort({ endDate: -1, createdAt: -1 });
+            }).sort({ createdAt: -1, endDate: -1 });
 
             user = await User.create({
                 name: branch.branchName,
@@ -350,7 +350,7 @@ if (user.role !== "admin") {
             // Hotel owners must be allowed to log in so they can click the Upgrade Plan button.
             const subscription = await Subscription.findOne({
                 hotelId: user.hotelId,
-            }).sort({ endDate: -1, createdAt: -1 });
+            }).sort({ createdAt: -1, endDate: -1 });
 
             if (subscription) {
                 const now = new Date();

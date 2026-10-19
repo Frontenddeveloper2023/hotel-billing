@@ -3,6 +3,7 @@ import {
   createRegistrationOrder,
   verifyRegistrationPayment,
   getSubscriptionUpgradePreview,
+  switchSubscriptionPlanDirect,
   createSubscriptionUpgradeOrder,
   verifySubscriptionUpgradePayment,
   handleQuickRenewalRedirect,
@@ -26,6 +27,11 @@ router.get(
   "/subscription-upgrade/preview",
   authVerify,
   getSubscriptionUpgradePreview
+);
+router.post(
+  "/subscription-upgrade/direct-switch",
+  authVerify,
+  switchSubscriptionPlanDirect
 );
 router.post(
   "/subscription-upgrade/create-order",

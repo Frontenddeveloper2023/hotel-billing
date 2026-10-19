@@ -727,6 +727,7 @@ export const getMySubscription = async (req, res) => {
                     "hotelName ownerName email phone address gstNumber status"
                 )
                 .sort({
+                    createdAt: -1,
                     endDate: -1,
                 })
                 .lean();
@@ -743,8 +744,8 @@ export const getMySubscription = async (req, res) => {
                     "hotelName ownerName email phone address gstNumber status"
                 )
                 .sort({
-                    endDate: -1,
                     createdAt: -1,
+                    endDate: -1,
                 })
                 .lean();
         }
@@ -1516,7 +1517,7 @@ export const upgradeHotelSubscription = async (req, res) => {
       endDate: { $gt: now },
     })
       .populate("planId", "planName pricing validityDays trialDays")
-      .sort({ endDate: -1 });
+      .sort({ createdAt: -1, endDate: -1 });
 
     const proration = calculateUpgradeProration({ currentSub, newPlanPrice: amount });
 

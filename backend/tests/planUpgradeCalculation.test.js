@@ -316,4 +316,44 @@ describe("Plan Upgrade Proration Calculation Tests", () => {
     assert.equal(recordedDiscount, 532.80);
     assert.equal(Number((recordedFinalAmount + recordedDiscount).toFixed(2)), newPlanPrice);
   });
+
+  // 11. Plan switch to lower-priced plan:
+  // - If unused credit >= new plan price: payable is ₹0, Cashfree bypassed (1-click direct switch)
+  // - If unused credit < new plan price: payable is difference, paid via Cashfree
+  test("Requirement 11: Switching to lower-priced plan calculates unused credit and allows free switch if fully covered", () => {
+    // Scenario 1: Current Premium ₹1,999, 0 days used (all 30 days remaining), switching to Basic ₹999
+    const currentSubFullCredit = {
+      planId: { planName: "Premium Plan", pricing: { monthly: 1999 }, validityDays: 30 },
+      amount: 1999,
+      billingCycle: "monthly",
+      startDate: new Date("2026-04-01T00:00:00Z"),
+      endDate: new Date("2026-05-01T00:00:00Z"),
+    };
+    const asOfStart = new Date("2026-04-01T00:00:00Z"); // 0 days used, 30 days remaining
+
+    const fullCreditResult = calculateUpgradeProration({
+      currentSub: currentSubFullCredit,
+      newPlanPrice: 999,
+      asOfDate: asOfStart,
+    });
+
+    // Credit covers the ₹999 basic plan completely
+    assert.equal(fullCreditResult.unusedCredit, 999.00); // capped at newPlanPrice
+    assert.equal(fullCreditResult.excessCredit, 1000.00);
+    assert.equal(fullCreditResult.payableAmount, 0.00); // Free switch: ₹0 to pay, no Cashfree needed!
+
+    // Scenario 2: Current Premium ₹1,999, 25 days used (5 days remaining), switching to Basic ₹999
+    const asOfPartial = new Date("2026-04-26T00:00:00Z"); // 5 days remaining (credit = 5/30 * 1999 = 333.17)
+    const partialCreditResult = calculateUpgradeProration({
+      currentSub: currentSubFullCredit,
+      newPlanPrice: 999,
+      asOfDate: asOfPartial,
+    });
+
+    assert.equal(partialCreditResult.remainingDays, 5);
+    assert.equal(partialCreditResult.unusedCredit, 333.17);
+    assert.equal(partialCreditResult.payableAmount, 665.83); // Difference paid via Cashfree
+    assert.ok(partialCreditResult.payableAmount >= 1.00, "Cashfree requires order amount >= 1 INR");
+  });
 });
+

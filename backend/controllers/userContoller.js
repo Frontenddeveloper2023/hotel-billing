@@ -158,6 +158,7 @@ const getActiveSubscription = async (
       },
     })
       .sort({
+        createdAt: -1,
         endDate: -1,
       })
       .lean();
