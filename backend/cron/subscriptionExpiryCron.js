@@ -100,6 +100,7 @@ const checkSubscriptionExpiry = async () => {
         {
           status: "expired",
           expiryNotificationSentAt: null,
+          endDate: { $lte: now },
         },
       ],
     })
@@ -131,6 +132,29 @@ const checkSubscriptionExpiry = async () => {
     for (const subscription of deduplicatedSubscriptions) {
       try {
         if (!subscription.endDate) {
+          continue;
+        }
+
+        // ----------------------------------------------------
+        // CHECK IF SUPERSEDED BY A NEWER SUBSCRIPTION
+        // ----------------------------------------------------
+        const targetHotelId = subscription.hotelId?._id || subscription.hotelId;
+        const newerSub = await Subscription.findOne({
+          hotelId: targetHotelId,
+          _id: { $ne: subscription._id },
+          createdAt: { $gt: subscription.createdAt },
+        });
+
+        if (newerSub) {
+          log.warn(
+            `[SUBSCRIPTION] Cancelling superseded older subscription ${subscription._id} for hotelId ${targetHotelId} because newer subscription ${newerSub._id} exists.`
+          );
+          if (["active", "expiring_soon", "trial"].includes(subscription.status)) {
+            subscription.status = "cancelled";
+            subscription.autoRenewal = false;
+            subscription.cancellationReason = "Superseded by newer subscription";
+            await subscription.save();
+          }
           continue;
         }
 
@@ -219,7 +243,7 @@ const recipientEmail = String(
             if (!lockedSub) continue;
 
             log.info(
-              `[SUBSCRIPTION] ${hotel.hotelName} subscription has expired.`
+              `[CRON-DISPATCH] Subscription expired -> invoking sendSubscriptionExpiredNotification (Template: subscription-expired) | Hotel: ${hotel.hotelName} (${hotel._id}) | Sub: ${subscription._id}`
             );
 
             try {
@@ -277,7 +301,7 @@ const recipientEmail = String(
           if (!lockedSub) continue;
 
           log.info(
-            `[SUBSCRIPTION] ${hotel.hotelName} has ${daysRemaining} days remaining (7-day window).`
+            `[CRON-DISPATCH] 7-day window (${daysRemaining} days remaining) -> invoking sendSubscriptionExpiryReminder (Template: reminder-7d) | Hotel: ${hotel.hotelName} (${hotel._id}) | Sub: ${subscription._id}`
           );
 
           try {
@@ -331,7 +355,7 @@ const recipientEmail = String(
           if (!lockedSub) continue;
 
           log.info(
-            `[SUBSCRIPTION] ${hotel.hotelName} has ${daysRemaining} days remaining (3-day window).`
+            `[CRON-DISPATCH] 3-day window (${daysRemaining} days remaining) -> invoking sendSubscriptionExpiryReminder (Template: reminder-3d) | Hotel: ${hotel.hotelName} (${hotel._id}) | Sub: ${subscription._id}`
           );
 
           try {
@@ -385,7 +409,7 @@ const recipientEmail = String(
           if (!lockedSub) continue;
 
           log.info(
-            `[SUBSCRIPTION] ${hotel.hotelName} has 1 day remaining.`
+            `[CRON-DISPATCH] 1-day window (${daysRemaining} day remaining) -> invoking sendSubscriptionExpiryReminder (Template: reminder-1d) | Hotel: ${hotel.hotelName} (${hotel._id}) | Sub: ${subscription._id}`
           );
 
           try {
@@ -414,11 +438,14 @@ const recipientEmail = String(
 
         // ====================================================
         // STILL ACTIVE (> 7 DAYS)
+        // If an active subscription was temporarily marked 'expiring_soon'
+        // but its validity was extended, restore status to 'active'.
+        // NEVER restore 'expired', 'cancelled', or other inactive statuses!
         // ====================================================
 
         if (
           daysRemaining > 7 &&
-          subscription.status !== "active"
+          subscription.status === "expiring_soon"
         ) {
           subscription.status = "active";
 

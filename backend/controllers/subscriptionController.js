@@ -1242,6 +1242,9 @@ export const updateSubscription = async (req, res) => {
 
         if (recipientEmail) {
           if (status === "cancelled" || status === "suspended") {
+            log.info(
+              `[SUBSCRIPTION-CONTROLLER] Admin set status to ${status} -> invoking sendSubscriptionCancelledNotification (Template: subscription-${status}) | Hotel: ${hotel?.hotelName} (${hotel?._id}) | Sub: ${subscription._id}`
+            );
             await sendSubscriptionCancelledNotification({
               to: recipientEmail,
               hotelName: hotel?.hotelName || "Valued Hotel",
@@ -1258,6 +1261,9 @@ export const updateSubscription = async (req, res) => {
               `[updateSubscription] Status notification sent to ${recipientEmail} (${status})`
             );
           } else if (status === "expired") {
+            log.info(
+              `[SUBSCRIPTION-CONTROLLER] Admin set status to expired -> invoking sendSubscriptionExpiredNotification (Template: subscription-expired) | Hotel: ${hotel?.hotelName} (${hotel?._id}) | Sub: ${subscription._id}`
+            );
             await sendSubscriptionExpiredNotification({
               to: recipientEmail,
               hotelName: hotel?.hotelName || "Valued Hotel",

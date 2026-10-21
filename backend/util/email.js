@@ -51,33 +51,33 @@ const getBaseUrl = () => {
     }
   }
 
-  return "";
+  return "https://jayam.co.in";
 };
 
 const getFrontendUrl = () => {
-  // Always take URL from .env first (CLIENT_URL or FRONTEND_URL)
-  const envFrontend =
+  // Always take URL safely from backend .env (CLIENT_URL or FRONTEND_URL)
+  let envFrontend = (
     process.env.CLIENT_URL ||
     process.env.FRONTEND_URL ||
     process.env.VITE_CLIENT_URL ||
-    process.env.VITE_FRONTEND_URL;
+    process.env.VITE_FRONTEND_URL ||
+    ""
+  ).trim().replace(/\/+$/, "");
 
-  if (envFrontend && envFrontend.trim()) {
-    return envFrontend.trim().replace(/\/+$/, "");
+  if (envFrontend) {
+    return envFrontend.replace(/\/hotel-billing-system\/hotel-billing-system/g, "/hotel-billing-system");
   }
 
   // Fallback: derive from backend / domain base URL configured in .env
   const base = getBaseUrl();
-  if (base) {
-    return `${base}/hotel-billing-system`;
-  }
-
-  return "";
+  const fallback = base ? `${base}/hotel-billing-system` : "https://jayam.co.in/hotel-billing-system";
+  return fallback.replace(/\/hotel-billing-system\/hotel-billing-system/g, "/hotel-billing-system");
 };
+
 
 const getBackendApiUrl = () => {
   const base = getBaseUrl();
-  const baseName = process.env.BASE_NAME || "hotel-billing-system-backend";
+  const baseName = (process.env.BASE_NAME || "hotel-billing-system-backend").trim().replace(/^\/+|\/+$/g, "");
   return base ? `${base}/${baseName}/api` : `/${baseName}/api`;
 };
 
@@ -706,6 +706,10 @@ const sendSubscriptionExpiryReminder = async ({
     const frontendBaseUrl =
       getFrontendUrl();
 
+    const upgradeUrl = hotelId
+      ? `${frontendBaseUrl}/plan-upgrade?hotelId=${hotelId}`
+      : `${frontendBaseUrl}/plan-upgrade`;
+
     const loginUrl = `${frontendBaseUrl}/hotel-login`;
 
     // Resolve planId and billingCycle for 1-click renewal token
@@ -776,7 +780,7 @@ const sendSubscriptionExpiryReminder = async ({
     const formattedBasePrice = `₹${basePrice.toLocaleString("en-IN")}`;
     const formattedCredit = `₹${unusedCredit.toLocaleString("en-IN")}`;
 
-    let quickRenewUrl = loginUrl;
+    let quickRenewUrl = upgradeUrl;
     if (hotelId && resolvedPlanId) {
       const renewToken = generateRenewalToken({
         hotelId: String(hotelId),
@@ -823,6 +827,11 @@ const sendSubscriptionExpiryReminder = async ({
       urgencyText =
         `Your subscription will expire in ${daysRemaining} days.`;
     }
+
+    const templateIdentifier = `reminder-${daysRemaining}d`;
+    log.info(
+      `[EMAIL-DISPATCH] Starting reminder email dispatch | Function: sendSubscriptionExpiryReminder | Template: ${templateIdentifier} | Recipient: ${to} | Hotel: ${resolvedHotelName} (hotelId: ${hotelId || "N/A"}) | Plan: ${resolvedPlanName} (${cycleLabel}) | DaysLeft: ${daysRemaining} | Payable: ${formattedAmount} | QuickRenewUrl: ${quickRenewUrl}`
+    );
 
     await transporter.sendMail({
       from: `"StayLio" <${process.env.SMTP_USER}>`,
@@ -1222,6 +1231,7 @@ StayLio Team`,
 </tr>
 
 
+
 <!-- MESSAGE -->
 <tr>
 <td style="padding-top:24px;">
@@ -1274,6 +1284,43 @@ StayLio Team`,
     </tr>
   </table>
 
+  <!-- Direct Plain-Text Renewal Link -->
+  <div style="margin-top:14px;margin-bottom:6px;font-size:12px;line-height:18px;color:#6B7280;text-align:center;">
+    Can't click the button? Copy and paste this renewal link into your browser:<br>
+    <a href="${quickRenewUrl}" target="_blank" style="color:#2563EB;word-break:break-all;font-size:12px;text-decoration:underline;font-weight:600;">${quickRenewUrl}</a>
+  </div>
+
+  
+
+  <!-- Optional Secondary CTA: Choose / Upgrade Different Plan (Uncomment to enable in future)
+  <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:14px auto 0 auto;width:100%;max-width:420px;">
+    <tr>
+      <td align="center" bgcolor="#0D9488" style="border-radius:10px;background-color:#0D9488;box-shadow:0 3px 10px rgba(13,148,136,0.25);">
+        <a
+          href="${upgradeUrl}"
+          target="_blank"
+          style="
+            display:block;
+            padding:14px 28px;
+            font-family:Arial,Helvetica,sans-serif;
+            font-size:15px;
+            font-weight:700;
+            color:#FFFFFF !important;
+            text-decoration:none;
+            background-color:#0D9488;
+            border-radius:10px;
+            letter-spacing:0.3px;
+            text-align:center;
+            -webkit-text-size-adjust:none;
+          "
+        >
+          🚀 Choose / Upgrade Different Plan &rarr;
+        </a>
+      </td>
+    </tr>
+  </table>
+  -->
+
   <!-- Trust & Security Details Note -->
   <div style="margin-top:16px;padding:12px 16px;background:#F9FAFB;border-radius:8px;border:1px solid #E5E7EB;max-width:420px;text-align:center;">
     <div style="font-size:12px;font-weight:600;color:#1F2937;margin-bottom:4px;">
@@ -1325,7 +1372,7 @@ StayLio Team`,
     });
 
     log.info(
-      `[EMAIL] Expiry reminder sent to ${to} for ${resolvedHotelName}. Days remaining: ${daysRemaining}`
+      `[EMAIL-DISPATCH-SUCCESS] Expiry reminder sent | Function: sendSubscriptionExpiryReminder | Template: ${templateIdentifier} | Recipient: ${to} | Hotel: ${resolvedHotelName} (hotelId: ${hotelId || "N/A"}) | DaysLeft: ${daysRemaining}`
     );
   } catch (error) {
     console.error(
@@ -1334,7 +1381,7 @@ StayLio Team`,
     );
 
     log.error(
-      `[EMAIL] Failed to send expiry reminder to ${to}: ${error.message}`
+      `[EMAIL-DISPATCH-FAILED] Failed to send expiry reminder | Function: sendSubscriptionExpiryReminder | Template: ${templateIdentifier || "reminder-unknown"} | Recipient: ${to}: ${error.message}`
     );
 
     throw error;
@@ -1374,6 +1421,10 @@ const sendSubscriptionExpiredNotification = async ({
 
     const frontendBaseUrl =
       getFrontendUrl();
+
+    const upgradeUrl = hotelId
+      ? `${frontendBaseUrl}/plan-upgrade?hotelId=${hotelId}`
+      : `${frontendBaseUrl}/plan-upgrade`;
 
     const loginUrl = `${frontendBaseUrl}/hotel-login`;
 
@@ -1431,7 +1482,7 @@ const sendSubscriptionExpiredNotification = async ({
     const totalPayableAmount = Number((basePrice + taxAmount).toFixed(2));
     const formattedAmount = `₹${totalPayableAmount.toLocaleString("en-IN")}`;
 
-    let quickRenewUrl = loginUrl;
+    let quickRenewUrl = upgradeUrl;
     if (hotelId && resolvedPlanId) {
       const renewToken = generateRenewalToken({
         hotelId: String(hotelId),
@@ -1441,6 +1492,11 @@ const sendSubscriptionExpiredNotification = async ({
       });
       quickRenewUrl = `${getBackendApiUrl()}/payments/quick-renew?token=${renewToken}`;
     }
+
+    const templateIdentifier = "subscription-expired";
+    log.info(
+      `[EMAIL-DISPATCH] Starting expired email dispatch | Function: sendSubscriptionExpiredNotification | Template: ${templateIdentifier} | Recipient: ${to} | Hotel: ${resolvedHotelName} (hotelId: ${hotelId || "N/A"}) | Plan: ${resolvedPlanName} (${cycleLabel}) | QuickRenewUrl: ${quickRenewUrl}`
+    );
 
     await transporter.sendMail({
       from: `"StayLio" <${process.env.SMTP_USER}>`,
@@ -1803,6 +1859,41 @@ StayLio Team`,
     </tr>
   </table>
 
+  <!-- Direct Plain-Text Renewal Link -->
+  <div style="margin-top:14px;margin-bottom:6px;font-size:12px;line-height:18px;color:#6B7280;text-align:center;">
+    Can't click the button? Copy and paste this renewal link into your browser:<br>
+    <a href="${quickRenewUrl}" target="_blank" style="color:#2563EB;word-break:break-all;font-size:12px;text-decoration:underline;font-weight:600;">${quickRenewUrl}</a>
+  </div>
+
+  <!-- Optional Secondary CTA: Choose / Upgrade Plan (Uncomment to enable in future)
+  <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:14px auto 0 auto;width:100%;max-width:420px;">
+    <tr>
+      <td align="center" bgcolor="#0D9488" style="border-radius:10px;background-color:#0D9488;box-shadow:0 3px 10px rgba(13,148,136,0.25);">
+        <a
+          href="${upgradeUrl}"
+          target="_blank"
+          style="
+            display:block;
+            padding:14px 28px;
+            font-family:Arial,Helvetica,sans-serif;
+            font-size:15px;
+            font-weight:700;
+            color:#FFFFFF !important;
+            text-decoration:none;
+            background-color:#0D9488;
+            border-radius:10px;
+            letter-spacing:0.3px;
+            text-align:center;
+            -webkit-text-size-adjust:none;
+          "
+        >
+          🚀 Choose / Upgrade Different Plan &rarr;
+        </a>
+      </td>
+    </tr>
+  </table>
+  -->
+
   <!-- Trust & Security Details Note -->
   <div style="margin-top:16px;padding:12px 16px;background:#F9FAFB;border-radius:8px;border:1px solid #E5E7EB;max-width:420px;text-align:center;">
     <div style="font-size:12px;font-weight:600;color:#1F2937;margin-bottom:4px;">
@@ -1852,7 +1943,7 @@ StayLio Team`,
     });
 
     log.info(
-      `[EMAIL] Subscription expired notification sent to ${to} for ${resolvedHotelName}`
+      `[EMAIL-DISPATCH-SUCCESS] Subscription expired notification sent | Function: sendSubscriptionExpiredNotification | Template: ${templateIdentifier} | Recipient: ${to} | Hotel: ${resolvedHotelName} (hotelId: ${hotelId || "N/A"})`
     );
   } catch (error) {
     console.error(
@@ -1861,7 +1952,7 @@ StayLio Team`,
     );
 
     log.error(
-      `[EMAIL] Failed to send expiry notification to ${to}: ${error.message}`
+      `[EMAIL-DISPATCH-FAILED] Failed to send expiry notification | Function: sendSubscriptionExpiredNotification | Template: ${templateIdentifier || "subscription-expired"} | Recipient: ${to}: ${error.message}`
     );
 
     throw error;
@@ -1892,6 +1983,10 @@ const sendSubscriptionCancelledNotification = async ({
     const frontendBaseUrl =
       getFrontendUrl();
 
+    const upgradeUrl = hotelId
+      ? `${frontendBaseUrl}/plan-upgrade?hotelId=${hotelId}`
+      : `${frontendBaseUrl}/plan-upgrade`;
+
     const loginUrl = `${frontendBaseUrl}/hotel-login`;
 
     // Resolve planId and billingCycle for 1-click renewal token
@@ -1921,7 +2016,7 @@ const sendSubscriptionCancelledNotification = async ({
       }
     }
 
-    let quickRenewUrl = loginUrl;
+    let quickRenewUrl = upgradeUrl;
     if (hotelId && resolvedPlanId) {
       const renewToken = generateRenewalToken({
         hotelId: String(hotelId),
@@ -1960,6 +2055,11 @@ const sendSubscriptionCancelledNotification = async ({
       reason?.trim()
         ? reason.trim()
         : defaultReason;
+
+    const templateIdentifier = `subscription-${status || "cancelled"}`;
+    log.info(
+      `[EMAIL-DISPATCH] Starting status email dispatch | Function: sendSubscriptionCancelledNotification | Template: ${templateIdentifier} | Recipient: ${to} | Hotel: ${resolvedHotelName} (hotelId: ${hotelId || "N/A"}) | Status: ${status} | QuickRenewUrl: ${quickRenewUrl}`
+    );
 
     await transporter.sendMail({
       from: `"StayLio" <${process.env.SMTP_USER}>`,
@@ -2297,6 +2397,7 @@ StayLio Team`,
 </tr>
 
 
+
 <!-- BUTTON -->
 <tr>
 <td align="center" style="padding-top:28px;padding-bottom:12px;">
@@ -2324,6 +2425,41 @@ StayLio Team`,
       </td>
     </tr>
   </table>
+
+  <!-- Direct Plain-Text Renewal Link -->
+  <div style="margin-top:14px;margin-bottom:6px;font-size:12px;line-height:18px;color:#6B7280;text-align:center;">
+    Can't click the button? Copy and paste this reactivation link into your browser:<br>
+    <a href="${quickRenewUrl}" target="_blank" style="color:#2563EB;word-break:break-all;font-size:12px;text-decoration:underline;font-weight:600;">${quickRenewUrl}</a>
+  </div>
+
+  <!-- Optional Secondary CTA: Choose / Upgrade Plan (Uncomment to enable in future)
+  <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:14px auto 0 auto;width:100%;max-width:420px;">
+    <tr>
+      <td align="center" bgcolor="#0D9488" style="border-radius:10px;background-color:#0D9488;box-shadow:0 3px 10px rgba(13,148,136,0.25);">
+        <a
+          href="${upgradeUrl}"
+          target="_blank"
+          style="
+            display:block;
+            padding:14px 28px;
+            font-family:Arial,Helvetica,sans-serif;
+            font-size:15px;
+            font-weight:700;
+            color:#FFFFFF !important;
+            text-decoration:none;
+            background-color:#0D9488;
+            border-radius:10px;
+            letter-spacing:0.3px;
+            text-align:center;
+            -webkit-text-size-adjust:none;
+          "
+        >
+          🚀 Choose / Upgrade Different Plan &rarr;
+        </a>
+      </td>
+    </tr>
+  </table>
+  -->
   <div style="margin-top:10px;font-size:12px;color:#9CA3AF;text-align:center;">
     Instant account reactivation powered by Cashfree (UPI, Cards &amp; NetBanking)
   </div>
@@ -2368,7 +2504,7 @@ StayLio Team`,
     });
 
     log.info(
-      `[EMAIL] Subscription cancelled notification sent to ${to} for ${resolvedHotelName}. Reason: ${formattedReason}`
+      `[EMAIL-DISPATCH-SUCCESS] Subscription ${status} notification sent | Function: sendSubscriptionCancelledNotification | Template: ${templateIdentifier} | Recipient: ${to} | Hotel: ${resolvedHotelName} (hotelId: ${hotelId || "N/A"})`
     );
   } catch (error) {
     console.error(
@@ -2377,7 +2513,7 @@ StayLio Team`,
     );
 
     log.error(
-      `[EMAIL] Failed to send subscription cancelled notification to ${to}: ${error.message}`
+      `[EMAIL-DISPATCH-FAILED] Failed to send subscription cancelled notification | Function: sendSubscriptionCancelledNotification | Template: ${templateIdentifier || "subscription-status"} | Recipient: ${to}: ${error.message}`
     );
 
     throw error;

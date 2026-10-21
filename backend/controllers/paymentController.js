@@ -628,13 +628,19 @@ export const switchSubscriptionPlanDirect = async (req, res) => {
     const startDate = new Date();
     const endDate = calculateEndDate(startDate, billingCycle, plan.validityDays);
 
-    // Expire existing active subscriptions
+    // Cancel existing active subscriptions
     await Subscription.updateMany(
       {
         hotelId: new mongoose.Types.ObjectId(hotelId),
         status: { $in: ["active", "trial", "expiring_soon", "grace_period"] },
       },
-      { $set: { status: "expired" } }
+      {
+        $set: {
+          status: "cancelled",
+          autoRenewal: false,
+          cancellationReason: "Replaced by plan switch",
+        },
+      }
     );
 
     const orderId = `FREE_SWITCH_${hotel._id.toString().slice(-6)}_${Date.now()}`;
@@ -912,13 +918,19 @@ export const verifySubscriptionUpgradePayment = async (req, res) => {
     const startDate = new Date();
     const endDate = calculateEndDate(startDate, billingCycle, plan.validityDays);
 
-    // 4. Expire/cancel any existing active subscriptions for this hotel
+    // 4. Cancel any existing active subscriptions for this hotel
     await Subscription.updateMany(
       {
         hotelId: new mongoose.Types.ObjectId(hotelId),
         status: { $in: ["active", "trial", "expiring_soon", "grace_period"] },
       },
-      { $set: { status: "expired" } }
+      {
+        $set: {
+          status: "cancelled",
+          autoRenewal: false,
+          cancellationReason: "Replaced by upgraded plan",
+        },
+      }
     );
 
     // 5. Create fresh active subscription
@@ -1004,51 +1016,33 @@ export const verifySubscriptionUpgradePayment = async (req, res) => {
 
 // Helper: Get frontend URL dynamically based on .env and request host
 export const getFrontendUrl = (req) => {
-  // 1. If request is coming from a live production domain, prioritize that domain
-  if (req) {
-    const host = req.get("x-forwarded-host") || req.get("host");
-    const proto = req.get("x-forwarded-proto") || req.protocol || "https";
-    if (host && !host.includes("localhost") && !host.includes("127.0.0.1")) {
-      return `${proto}://${host}/hotel-billing-system`;
-    }
-  }
-
-  // 2. Always take URL from .env first (CLIENT_URL or FRONTEND_URL)
-  const envFrontend =
+  // 1. Always prioritize URL configured safely in backend .env (CLIENT_URL or FRONTEND_URL)
+  const envFrontend = (
     process.env.CLIENT_URL ||
     process.env.FRONTEND_URL ||
     process.env.VITE_CLIENT_URL ||
-    process.env.VITE_FRONTEND_URL;
+    process.env.VITE_FRONTEND_URL ||
+    ""
+  ).trim().replace(/\/+$/, "");
 
-  if (envFrontend && envFrontend.trim()) {
-    // Safety check: if req is from live domain but .env still points to localhost, ignore localhost!
-    if (req && (envFrontend.includes("localhost") || envFrontend.includes("127.0.0.1"))) {
-      const host = req.get("x-forwarded-host") || req.get("host");
-      if (host && !host.includes("localhost") && !host.includes("127.0.0.1")) {
-        const proto = req.get("x-forwarded-proto") || req.protocol || "https";
-        return `${proto}://${host}/hotel-billing-system`;
-      }
-    }
-    return envFrontend.trim().replace(/\/+$/, "");
+  if (envFrontend) {
+    return envFrontend.replace(/\/hotel-billing-system\/hotel-billing-system/g, "/hotel-billing-system");
   }
 
-  // 3. Fallback: derive from backend base URL configured in .env
-  const base =
+  // 2. Fallback: derive from backend base URL configured in .env
+  const base = (
     process.env.BACKEND_URL ||
     process.env.API_BASE_URL ||
-    process.env.SERVER_URL;
+    process.env.SERVER_URL ||
+    ""
+  ).trim().replace(/\/+$/, "");
 
-  if (base && base.trim()) {
-    return `${base.trim().replace(/\/+$/, "")}/hotel-billing-system`;
+  if (base) {
+    const fallback = `${base}/hotel-billing-system`;
+    return fallback.replace(/\/hotel-billing-system\/hotel-billing-system/g, "/hotel-billing-system");
   }
 
-  if (req) {
-    const host = req.get("x-forwarded-host") || req.get("host");
-    const proto = req.get("x-forwarded-proto") || req.protocol || "http";
-    if (host) return `${proto}://${host}/hotel-billing-system`;
-  }
-
-  return "";
+  return "https://jayam.co.in/hotel-billing-system";
 };
 
 /**
@@ -1121,13 +1115,19 @@ export const processRenewalActivation = async ({
 
     const endDate = calculateEndDate(startDate, billingCycle);
 
-    // 3. Mark older subscriptions as expired so the upgraded one is primary
+    // 3. Mark older subscriptions as cancelled so the upgraded/renewed one is primary
     await Subscription.updateMany(
       {
         hotelId: new mongoose.Types.ObjectId(hotelId),
         status: { $in: ["active", "trial", "expiring_soon", "grace_period"] },
       },
-      { $set: { status: "expired" } }
+      {
+        $set: {
+          status: "cancelled",
+          autoRenewal: false,
+          cancellationReason: "Replaced by renewed/upgraded plan",
+        },
+      }
     );
 
     // 4. Create active renewed/upgraded subscription
@@ -1206,20 +1206,22 @@ export const processRenewalActivation = async ({
 // GET /payments/quick-renew?token=...
 // ============================================================
 export const handleQuickRenewalRedirect = async (req, res) => {
+  let fallbackHotelId = "";
   try {
     const { token } = req.query;
     const frontendBaseUrl = getFrontendUrl(req);
 
     if (!token) {
-      return res.redirect(`${frontendBaseUrl}/hotel-login?status=invalid_link`);
+      return res.redirect(`${frontendBaseUrl}/plan-upgrade`);
     }
 
     const verification = verifyRenewalToken(token);
     if (!verification.valid) {
-      return res.redirect(`${frontendBaseUrl}/hotel-login?status=invalid_link`);
+      return res.redirect(`${frontendBaseUrl}/plan-upgrade`);
     }
 
     const { hotelId, planId, billingCycle } = verification;
+    fallbackHotelId = hotelId;
     let [hotel, plan] = await Promise.all([
       Hotels.findById(hotelId),
       Plans.findById(planId),
@@ -1227,7 +1229,7 @@ export const handleQuickRenewalRedirect = async (req, res) => {
 
     if (!hotel) {
       log.error(`[handleQuickRenewalRedirect] Hotel not found: ${hotelId}`);
-      return res.redirect(`${frontendBaseUrl}/hotel-login?status=hotel_not_found`);
+      return res.redirect(`${frontendBaseUrl}/plan-upgrade`);
     }
 
     // If plan not found by ID, fall back to hotel's latest subscription plan or default plan
@@ -1243,7 +1245,7 @@ export const handleQuickRenewalRedirect = async (req, res) => {
 
     if (!plan) {
       log.error(`[handleQuickRenewalRedirect] Plan not found for renewal: ${planId}`);
-      return res.redirect(`${frontendBaseUrl}/hotel-login?status=plan_not_found`);
+      return res.redirect(`${frontendBaseUrl}/plan-upgrade?hotelId=${hotel._id}`);
     }
 
     // Calculate renewal price for the hotel's current plan
@@ -1338,10 +1340,14 @@ export const handleQuickRenewalRedirect = async (req, res) => {
       return res.redirect(paymentLink.link_url);
     }
 
-    return res.redirect(`${frontendBaseUrl}/hotel-login?status=failed_to_generate_link`);
+    return res.redirect(`${frontendBaseUrl}/plan-upgrade?hotelId=${hotel._id}`);
   } catch (error) {
     log.error(`[handleQuickRenewalRedirect] Error: ${error.message}`);
-    return res.redirect(`${getFrontendUrl(req)}/hotel-login?status=failed`);
+    const frontendBaseUrl = getFrontendUrl(req);
+    const fallback = fallbackHotelId
+      ? `${frontendBaseUrl}/plan-upgrade?hotelId=${fallbackHotelId}`
+      : `${frontendBaseUrl}/plan-upgrade`;
+    return res.redirect(fallback);
   }
 };
 
@@ -1370,6 +1376,9 @@ export const verifyRenewalPayment = async (req, res) => {
         data: existingSub,
       });
     }
+
+
+    
 
     // 2. Query Cashfree Link status
     const linkDetails = await fetchCashfreePaymentLink(orderId);
