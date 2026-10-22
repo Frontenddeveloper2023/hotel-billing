@@ -9,6 +9,8 @@ import {
   deletePlan,
   getFreeTrialConfig,
   updateFreeTrialConfig,
+  getBillingCycleConfig,
+  updateBillingCycleConfig,
 } from "../controllers/planController.js";
 
 import {
@@ -35,6 +37,12 @@ router.get(
   getFreeTrialConfig
 );
 
+// Public route to get global active billing cycles (Monthly, Quarterly, Half-Yearly, Yearly)
+router.get(
+  "/public/billing-cycles",
+  getBillingCycleConfig
+);
+
 
 // ==========================================
 // ADMIN PLAN ROUTES
@@ -46,6 +54,21 @@ router.get(
   authVerify,
   permissionVerify("plans"),
   getAllPlans
+);
+
+// Global Billing Cycles - Admin
+router.get(
+  "/billing-cycles",
+  authVerify,
+  permissionVerify("plans"),
+  getBillingCycleConfig
+);
+
+router.put(
+  "/billing-cycles",
+  authVerify,
+  permissionVerify("plans"),
+  updateBillingCycleConfig
 );
 
 // Get active plans - Admin

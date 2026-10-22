@@ -3,20 +3,20 @@ import api from "./api";
 /**
  * Creates Cashfree order for Hotel Registration Checkout
  */
-export const createRegistrationOrder = async (registrationId) => {
-  const response = await api.post("/payments/registration/create-order", {
-    registrationId,
-  });
+export const createRegistrationOrder = async (payload) => {
+  const body = typeof payload === "string" ? { registrationId: payload } : payload;
+  const response = await api.post("/payments/registration/create-order", body);
   return response.data;
 };
 
 /**
  * Verifies payment for Hotel Registration with backend
  */
-export const verifyRegistrationPayment = async ({ registrationId, orderId }) => {
+export const verifyRegistrationPayment = async ({ registrationId, orderId, registrationData }) => {
   const response = await api.post("/payments/registration/verify-payment", {
     registrationId,
     orderId,
+    registrationData,
   });
   return response.data;
 };

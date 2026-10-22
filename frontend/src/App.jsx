@@ -93,6 +93,10 @@ const PlanUpgrade = lazy(() =>
 // SaaS USER PAGES
 // =====================================================
 
+const SaaSUserVerifyEmail = lazy(() =>
+  import("./pages/SaaSUser/SaasUserVerifyEmail")
+);
+
 const SaaSUserChoosePlan = lazy(() =>
   import(
     "./pages/SaaSUser/SaaSUserChoosePlan"
@@ -136,7 +140,7 @@ const SaaSAdminHotels = lazy(() =>
 
 const SaaSAdminPlans = lazy(() =>
   import(
-    "./pages/SaaSAdmin/SaaSAdminPlans"
+    "./pages/SaaSAdmin/SaasAdminPlans"
   )
 );
 
@@ -432,9 +436,18 @@ element={
             PUBLIC SaaS USER FLOW
         ================================================= */}
 
+        {/* -----------------------------------------------
+            STEP 1: EMAIL VERIFICATION PRE-CHECK
+        ------------------------------------------------ */}
+        <Route
+          path="/saas-user/verify-email"
+          element={
+            <SaaSUserVerifyEmail />
+          }
+        />
 
         {/* -----------------------------------------------
-            CHOOSE PLAN
+            STEP 2: CHOOSE PLAN
         ------------------------------------------------ */}
 
         <Route

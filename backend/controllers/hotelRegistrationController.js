@@ -12,10 +12,180 @@ import FreeTrialUsage from "../models/freeTrialUsage.js";
 import {
   sendAdminFreeTrialNotificationEmail,
   sendHotelBlockedEmail,
+  sendOTP,
 } from "../util/email.js";
+import RegistrationOTP from "../models/registrationOtp.js";
 
 import { log } from "../util/logger.js";
 
+// ============================================================
+// SEND REGISTRATION OTP (WITH ALREADY REGISTERED CHECK)
+// ============================================================
+export const sendRegistrationOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email || !email.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Email address is required.",
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid email address.",
+      });
+    }
+
+    // 1. Check if email is already in Hotels
+    const existingHotel = await Hotels.findOne({ email: normalizedEmail });
+    if (existingHotel) {
+      return res.status(409).json({
+        success: false,
+        isRegistered: true,
+        message: "This email address is already registered with a hotel account. Please log in directly.",
+      });
+    }
+
+    // 2. Check if email is already in BranchHotels
+    const existingBranch = await BranchHotels.findOne({ email: normalizedEmail });
+    if (existingBranch) {
+      return res.status(409).json({
+        success: false,
+        isRegistered: true,
+        message: "This email address is already registered with a hotel branch. Please log in directly.",
+      });
+    }
+
+    // 3. Check if email is already in User collection
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        isRegistered: true,
+        message: "An account already exists with this email address. Please log in to your account.",
+      });
+    }
+
+    // 4. Check if registration is already pending or approved
+    const existingRegistration = await SaasHotelRegistration.findOne({
+      email: normalizedEmail,
+      status: { $in: ["pending", "approved"] },
+    });
+
+    if (existingRegistration) {
+      if (existingRegistration.status === "approved") {
+        return res.status(409).json({
+          success: false,
+          isRegistered: true,
+          message: "This email address is already registered with an approved hotel account. Please log in.",
+        });
+      }
+      // Only block if subscription payment was completed and is awaiting admin approval
+      if (existingRegistration.paymentStatus === "paid") {
+        return res.status(409).json({
+          success: false,
+          isRegistered: true,
+          message: "A hotel registration with this email address is already under review. Please wait for admin approval.",
+        });
+      }
+      // Clean up previous unpaid/abandoned registration attempt
+      await SaasHotelRegistration.deleteOne({ _id: existingRegistration._id });
+    }
+
+    // 5. Generate secure 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    // 6. Save or update OTP in RegistrationOTP
+    await RegistrationOTP.deleteMany({ email: normalizedEmail });
+    await RegistrationOTP.create({
+      email: normalizedEmail,
+      otp,
+      expiresAt,
+      verified: false,
+    });
+
+    // 7. Send OTP via email
+    await sendOTP(normalizedEmail, otp);
+
+    log.info(`[HOTEL REGISTRATION] OTP sent successfully to ${normalizedEmail}`);
+
+    return res.status(200).json({
+      success: true,
+      message: "Verification code sent successfully to your email.",
+    });
+  } catch (error) {
+    console.error("[Send Registration OTP] Error:", error);
+    log.error(`[Send Registration OTP] Error: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to send verification OTP right now. Please try again later.",
+    });
+  }
+};
+
+// ============================================================
+// VERIFY REGISTRATION OTP
+// ============================================================
+export const verifyRegistrationOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and verification code are required.",
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const cleanOtp = otp.toString().trim();
+
+    const record = await RegistrationOTP.findOne({
+      email: normalizedEmail,
+      otp: cleanOtp,
+    });
+
+    if (!record) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid verification code. Please check and try again.",
+      });
+    }
+
+    if (new Date() > record.expiresAt) {
+      return res.status(400).json({
+        success: false,
+        message: "Verification code has expired. Please request a new code.",
+      });
+    }
+
+    record.verified = true;
+    record.verifiedAt = new Date();
+    await record.save();
+
+    log.info(`[HOTEL REGISTRATION] Email verified successfully: ${normalizedEmail}`);
+
+    return res.status(200).json({
+      success: true,
+      verifiedEmail: normalizedEmail,
+      message: "Email verified successfully.",
+    });
+  } catch (error) {
+    console.error("[Verify Registration OTP] Error:", error);
+    log.error(`[Verify Registration OTP] Error: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to verify code right now. Please try again later.",
+    });
+  }
+};
 
 // ============================================================
 // CREATE HOTEL REGISTRATION
@@ -218,19 +388,25 @@ export const createRegistration = async (req, res) => {
       });
 
     if (existingRegistration) {
-      if (existingRegistration.status === "pending") {
+      if (existingRegistration.status === "approved") {
         return res.status(409).json({
           success: false,
           message:
-            "A hotel registration with this email is already under review.",
+            "A hotel account already exists with this email address.",
         });
       }
 
-      return res.status(409).json({
-        success: false,
-        message:
-          "A hotel account already exists with this email address.",
-      });
+      // Only block if previous registration was paid and is under admin review
+      if (existingRegistration.paymentStatus === "paid") {
+        return res.status(409).json({
+          success: false,
+          message:
+            "A hotel registration with this email is already under review. Please wait for admin approval.",
+        });
+      }
+
+      // Clean up previous unpaid/abandoned attempt
+      await SaasHotelRegistration.deleteOne({ _id: existingRegistration._id });
     }
 
 
@@ -247,6 +423,30 @@ export const createRegistration = async (req, res) => {
         success: false,
         message:
           "A hotel account already exists with this email address.",
+      });
+    }
+
+    const existingBranch = await BranchHotels.findOne({
+      email: normalizedEmail,
+    });
+
+    if (existingBranch) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "A branch hotel already exists with this email address.",
+      });
+    }
+
+    const existingUser = await User.findOne({
+      email: normalizedEmail,
+    });
+
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "An active user account already exists with this email address.",
       });
     }
 
@@ -366,7 +566,7 @@ export const getAllRegistrations = async (req, res) => {
   try {
 
     const registrations =
-      await SaasHotelRegistration.find()
+      await SaasHotelRegistration.find({ paymentStatus: "paid" })
         .populate(
           "planId",
           "planName pricing limits features validityDays"
@@ -1680,6 +1880,22 @@ export const registerFreeTrial = async (req, res) => {
       return res.status(409).json({
         success: false,
         message: "A user account with this email address already exists. Please login instead.",
+      });
+    }
+
+    const existingBranchWithEmail = await BranchHotels.findOne({ email: normalizedEmail });
+    if (existingBranchWithEmail) {
+      return res.status(409).json({
+        success: false,
+        message: "A branch hotel already exists with this email address. Please login instead.",
+      });
+    }
+
+    const existingBranchWithPhone = await BranchHotels.findOne({ phone: normalizedPhone });
+    if (existingBranchWithPhone) {
+      return res.status(409).json({
+        success: false,
+        message: "A branch hotel already exists with this phone number. Please login or contact support.",
       });
     }
 

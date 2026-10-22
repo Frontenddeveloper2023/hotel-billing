@@ -6,6 +6,7 @@ import Hotels from "../models/hotels.js";
 import Subscription from "../models/subscription.js";
 import SaasNotification from "../models/saasNotification.js";
 import User from "../models/users.js";
+import BillingCycleSettings from "../models/billingCycleSettings.js";
 import {
   createCashfreeOrder,
   fetchCashfreeOrder,
@@ -226,44 +227,87 @@ export const calculateUpgradeProration = ({
 // ============================================================
 export const createRegistrationOrder = async (req, res) => {
   try {
-    const { registrationId } = req.body;
+    const { registrationId, registrationData } = req.body;
 
-    if (!registrationId || !mongoose.Types.ObjectId.isValid(registrationId)) {
+    let plan = null;
+    let hotelName = "";
+    let ownerName = "";
+    let email = "";
+    let phone = "";
+    let cycle = "monthly";
+    let taxEnabled = false;
+    let customerId = "";
+
+    // Flow 1: If registrationData is provided (Hotel details NOT yet stored in DB)
+    if (registrationData && registrationData.planId) {
+      const planId = registrationData.planId;
+      if (!mongoose.Types.ObjectId.isValid(planId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Selected plan ID is invalid.",
+        });
+      }
+
+      plan = await Plans.findById(planId);
+      if (!plan) {
+        return res.status(404).json({
+          success: false,
+          message: "Selected subscription plan not found.",
+        });
+      }
+
+      hotelName = (registrationData.hotelName || "").trim();
+      ownerName = (registrationData.ownerName || "").trim();
+      email = (registrationData.email || "").trim().toLowerCase();
+      phone = (registrationData.phone || "").trim();
+      cycle = registrationData.billingCycle || "monthly";
+      taxEnabled = Boolean(registrationData.taxEnabled);
+      customerId = `CUST_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
+    }
+    // Flow 2: If legacy/existing registrationId is provided
+    else if (registrationId && mongoose.Types.ObjectId.isValid(registrationId)) {
+      const registration = await SaasHotelRegistration.findById(registrationId).populate("planId");
+
+      if (!registration) {
+        return res.status(404).json({
+          success: false,
+          message: "Hotel registration record not found.",
+        });
+      }
+
+      if (registration.paymentStatus === "paid") {
+        return res.status(400).json({
+          success: false,
+          message: "Payment for this hotel registration has already been completed.",
+        });
+      }
+
+      plan = registration.planId;
+      if (!plan) {
+        return res.status(400).json({
+          success: false,
+          message: "Selected plan details could not be found.",
+        });
+      }
+
+      hotelName = registration.hotelName;
+      ownerName = registration.ownerName;
+      email = registration.email;
+      phone = registration.phone;
+      cycle = registration.billingCycle || "monthly";
+      taxEnabled = Boolean(registration.taxEnabled);
+      customerId = String(registration._id);
+    } else {
       return res.status(400).json({
         success: false,
-        message: "Valid registration ID is required.",
+        message: "Valid registration data or registration ID is required.",
       });
     }
 
-    const registration = await SaasHotelRegistration.findById(registrationId).populate("planId");
-
-    if (!registration) {
-      return res.status(404).json({
-        success: false,
-        message: "Hotel registration record not found.",
-      });
-    }
-
-    if (registration.paymentStatus === "paid") {
-      return res.status(400).json({
-        success: false,
-        message: "Payment for this hotel registration has already been completed.",
-      });
-    }
-
-    const plan = registration.planId;
-    if (!plan) {
-      return res.status(400).json({
-        success: false,
-        message: "Selected plan details could not be found.",
-      });
-    }
-
-    const cycle = registration.billingCycle || "monthly";
     const basePrice = plan.pricing?.[cycle] ?? plan.price ?? 0;
 
     // Apply 18% GST only if tax is enabled
-    const taxRate = registration.taxEnabled ? 0.18 : 0;
+    const taxRate = taxEnabled ? 0.18 : 0;
     const taxAmount = Number((basePrice * taxRate).toFixed(2));
     const finalAmount = Number((basePrice + taxAmount).toFixed(2));
 
@@ -275,7 +319,7 @@ export const createRegistrationOrder = async (req, res) => {
     }
 
     // Unique order ID (prefix REG_)
-    const orderId = `REG_${registration._id.toString().slice(-6)}_${Date.now()}`;
+    const orderId = `REG_${Date.now().toString().slice(-6)}_${Math.floor(1000 + Math.random() * 9000)}`;
 
     const clientOrigin =
       req.get("origin") ||
@@ -283,9 +327,9 @@ export const createRegistrationOrder = async (req, res) => {
       process.env.CLIENT_URL ||
       process.env.FRONTEND_URL ||
       process.env.BACKEND_URL ||
-      "";
+      "http://localhost:5173";
 
-    let checkoutBase = getFrontendUrl() || clientOrigin;
+    let checkoutBase = clientOrigin;
     if (checkoutBase.endsWith("/hotel-billing-system")) {
       checkoutBase = checkoutBase.replace(/\/+$/, "");
     } else if (checkoutBase) {
@@ -300,18 +344,19 @@ export const createRegistrationOrder = async (req, res) => {
       orderId,
       orderAmount: finalAmount,
       customerDetails: {
-        customer_id: String(registration._id),
-        customer_name: registration.ownerName || registration.hotelName,
-        customer_email: registration.email,
-        customer_phone: registration.phone,
+        customer_id: customerId,
+        customer_name: ownerName || hotelName,
+        customer_email: email,
+        customer_phone: phone,
       },
       returnUrl,
-      orderNote: `StayLio - ${plan.planName} (${cycle}) for ${registration.hotelName}`,
+      orderNote: `StayLio - ${plan.planName} (${cycle}) for ${hotelName}`,
     });
 
-    // Save order ID to registration record
-    registration.paymentOrderId = orderId;
-    await registration.save();
+    // If registration record exists in DB, save order ID
+    if (registrationId && mongoose.Types.ObjectId.isValid(registrationId)) {
+      await SaasHotelRegistration.findByIdAndUpdate(registrationId, { paymentOrderId: orderId });
+    }
 
     const { env } = getCashfreeConfig();
 
@@ -343,41 +388,13 @@ export const createRegistrationOrder = async (req, res) => {
 // ============================================================
 export const verifyRegistrationPayment = async (req, res) => {
   try {
-    const { registrationId, orderId } = req.body;
+    const { registrationId, orderId, registrationData } = req.body;
 
-    if (!registrationId || !mongoose.Types.ObjectId.isValid(registrationId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Valid registration ID is required.",
-      });
-    }
-
-    const registration = await SaasHotelRegistration.findById(registrationId).populate("planId");
-
-    if (!registration) {
-      return res.status(404).json({
-        success: false,
-        message: "Hotel registration record not found.",
-      });
-    }
-
-    // Idempotent return if already paid
-    if (registration.paymentStatus === "paid") {
-      return res.status(200).json({
-        success: true,
-        message: "Payment has already been verified and recorded.",
-        data: {
-          paymentStatus: "paid",
-          transactionId: registration.paymentTransactionId,
-        },
-      });
-    }
-
-    const targetOrderId = orderId || registration.paymentOrderId;
+    const targetOrderId = orderId;
     if (!targetOrderId) {
       return res.status(400).json({
         success: false,
-        message: "Cashfree order ID is missing.",
+        message: "Cashfree order ID is required for verification.",
       });
     }
 
@@ -399,13 +416,80 @@ export const verifyRegistrationPayment = async (req, res) => {
       ? String(successfulPayment.cf_payment_id)
       : `CF-${targetOrderId}`;
 
-    // 3. Mark Registration as paid
-    registration.paymentStatus = "paid";
-    registration.paymentTransactionId = transactionId;
-    registration.paymentOrderId = targetOrderId;
-    await registration.save();
+    let registration = null;
 
-    // 4. Send Admin In-App Notification
+    // Flow 1: If registrationData was passed, STORE IN DB ONLY NOW!
+    if (registrationData && registrationData.hotelName && registrationData.email) {
+      const normalizedEmail = registrationData.email.trim().toLowerCase();
+      const normalizedPhone = (registrationData.phone || "").trim().replace(/\D/g, "");
+
+      // Clean up any lingering unpaid registrations for this email
+      await SaasHotelRegistration.deleteMany({
+        email: normalizedEmail,
+        paymentStatus: { $ne: "paid" },
+      });
+
+      // CREATE REGISTRATION ONLY AFTER SUCCESSFUL PAYMENT
+      registration = await SaasHotelRegistration.create({
+        hotelName: registrationData.hotelName.trim(),
+        ownerName: registrationData.ownerName.trim(),
+        email: normalizedEmail,
+        phone: normalizedPhone,
+        address: {
+          street: registrationData.address?.street?.trim() || "",
+          city: registrationData.address?.city?.trim() || "",
+          state: registrationData.address?.state?.trim() || "",
+          country: registrationData.address?.country?.trim() || "India",
+          pincode: registrationData.address?.pincode?.trim() || "",
+        },
+        gstNumber: registrationData.gstNumber?.trim() || "",
+        taxEnabled: Boolean(registrationData.taxEnabled),
+        planId: registrationData.planId,
+        billingCycle: registrationData.billingCycle || "monthly",
+        status: "pending",
+        paymentStatus: "paid",
+        paymentTransactionId: transactionId,
+        paymentOrderId: targetOrderId,
+      });
+
+      registration = await SaasHotelRegistration.findById(registration._id).populate("planId");
+    }
+    // Flow 2: If legacy/existing registrationId was passed
+    else if (registrationId && mongoose.Types.ObjectId.isValid(registrationId)) {
+      registration = await SaasHotelRegistration.findById(registrationId).populate("planId");
+
+      if (!registration) {
+        return res.status(404).json({
+          success: false,
+          message: "Hotel registration record not found.",
+        });
+      }
+
+      // Idempotent return if already paid
+      if (registration.paymentStatus === "paid") {
+        return res.status(200).json({
+          success: true,
+          message: "Payment has already been verified and recorded.",
+          data: {
+            registrationId: registration._id,
+            paymentStatus: "paid",
+            transactionId: registration.paymentTransactionId,
+          },
+        });
+      }
+
+      registration.paymentStatus = "paid";
+      registration.paymentTransactionId = transactionId;
+      registration.paymentOrderId = targetOrderId;
+      await registration.save();
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Registration data or registration ID is required to complete registration.",
+      });
+    }
+
+    // 4. Send Admin In-App Notification (Now that payment is guaranteed and record is stored)
     try {
       await SaasNotification.create({
         type: "registration_submitted",
@@ -431,13 +515,15 @@ export const verifyRegistrationPayment = async (req, res) => {
     }
 
     log.info(
-      `[verifyRegistrationPayment] Successfully verified payment for ${registration.hotelName}. CF Payment ID: ${transactionId}`
+      `[verifyRegistrationPayment] Successfully verified payment and stored registration for ${registration.hotelName}. CF Payment ID: ${transactionId}`
     );
 
     return res.status(200).json({
       success: true,
-      message: "Payment verified successfully!",
+      message: "Payment verified and hotel registration submitted successfully for admin review!",
       data: {
+        registrationId: registration._id,
+        registration,
         paymentStatus: "paid",
         paymentTransactionId: transactionId,
         orderId: targetOrderId,
@@ -1217,10 +1303,11 @@ export const handleQuickRenewalRedirect = async (req, res) => {
 
     const verification = verifyRenewalToken(token);
     if (!verification.valid) {
-      return res.redirect(`${frontendBaseUrl}/plan-upgrade`);
+      log.warn(`[handleQuickRenewalRedirect] Renewal token invalid or expired: ${verification.message}`);
+      return res.redirect(`${frontendBaseUrl}/hotel-login?status=invalid_link`);
     }
 
-    const { hotelId, planId, billingCycle } = verification;
+    const { hotelId, planId, billingCycle, reminderStage, expiresAt } = verification;
     fallbackHotelId = hotelId;
     let [hotel, plan] = await Promise.all([
       Hotels.findById(hotelId),
@@ -1230,6 +1317,65 @@ export const handleQuickRenewalRedirect = async (req, res) => {
     if (!hotel) {
       log.error(`[handleQuickRenewalRedirect] Hotel not found: ${hotelId}`);
       return res.redirect(`${frontendBaseUrl}/plan-upgrade`);
+    }
+
+    const now = new Date();
+
+    // -------------------------------------------------------------
+    // GUARD 1A: Superseded Older Reminder Link Invalidation
+    // 7-day link expires immediately when 3-day reminder is sent.
+    // 3-day link expires immediately when 1-day reminder is sent.
+    // 1-day link expires immediately when plan expires.
+    // -------------------------------------------------------------
+    const checkSub = await Subscription.findOne({ hotelId: hotel._id }).sort({ createdAt: -1 });
+    if (checkSub) {
+      // 1. Check by explicit stage tag
+      if (reminderStage === "7d") {
+        if (checkSub.expiryReminder3DaysSentAt || checkSub.expiryReminder1DaySentAt || checkSub.expiryNotificationSentAt) {
+          log.info(`[handleQuickRenewalRedirect] 7-day reminder token superseded by a newer reminder for hotel ${hotel.hotelName}`);
+          return res.redirect(`${frontendBaseUrl}/hotel-login?status=invalid_link`);
+        }
+      } else if (reminderStage === "3d") {
+        if (checkSub.expiryReminder1DaySentAt || checkSub.expiryNotificationSentAt) {
+          log.info(`[handleQuickRenewalRedirect] 3-day reminder token superseded by a newer reminder for hotel ${hotel.hotelName}`);
+          return res.redirect(`${frontendBaseUrl}/hotel-login?status=invalid_link`);
+        }
+      } else if (reminderStage === "1d") {
+        if (checkSub.expiryNotificationSentAt || checkSub.status === "expired" || new Date(checkSub.endDate) <= now) {
+          log.info(`[handleQuickRenewalRedirect] 1-day reminder token superseded by plan expiration for hotel ${hotel.hotelName}`);
+          return res.redirect(`${frontendBaseUrl}/hotel-login?status=invalid_link`);
+        }
+      }
+
+      // 2. Backward compatibility for tokens generated without stage: compare creation timestamp
+      if (expiresAt && reminderStage === "standard") {
+        const tokenCreationApprox = expiresAt - 7 * 24 * 60 * 60 * 1000;
+        if (checkSub.expiryReminder1DaySentAt && tokenCreationApprox < (new Date(checkSub.expiryReminder1DaySentAt).getTime() - 15000)) {
+          log.info(`[handleQuickRenewalRedirect] Older reminder token superseded by 1-day reminder for hotel ${hotel.hotelName}`);
+          return res.redirect(`${frontendBaseUrl}/hotel-login?status=invalid_link`);
+        }
+        if (checkSub.expiryReminder3DaysSentAt && tokenCreationApprox < (new Date(checkSub.expiryReminder3DaysSentAt).getTime() - 15000)) {
+          log.info(`[handleQuickRenewalRedirect] Older reminder token superseded by 3-day reminder for hotel ${hotel.hotelName}`);
+          return res.redirect(`${frontendBaseUrl}/hotel-login?status=invalid_link`);
+        }
+      }
+    }
+    const alreadyRenewedSub = await Subscription.findOne({
+      hotelId: hotel._id,
+      status: "active",
+      paymentStatus: "paid",
+      endDate: { $gt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) },
+    }).sort({ endDate: -1 });
+
+    if (alreadyRenewedSub) {
+      log.info(`[handleQuickRenewalRedirect] Hotel ${hotel.hotelName} (${hotel._id}) already has an active paid subscription until ${alreadyRenewedSub.endDate.toISOString()}. Preventing duplicate payment.`);
+      const ownerUser = await User.findOne({
+        hotelId: hotel._id,
+        role: "hotelOwner",
+      }).lean();
+      const customerEmail = (ownerUser?.email || hotel.email || "").trim().toLowerCase();
+      const emailQuery = customerEmail ? `&email=${encodeURIComponent(customerEmail)}` : "";
+      return res.redirect(`${frontendBaseUrl}/hotel-login?status=already_active${emailQuery}`);
     }
 
     // If plan not found by ID, fall back to hotel's latest subscription plan or default plan
@@ -1248,10 +1394,24 @@ export const handleQuickRenewalRedirect = async (req, res) => {
       return res.redirect(`${frontendBaseUrl}/plan-upgrade?hotelId=${hotel._id}`);
     }
 
+    // -------------------------------------------------------------
+    // GUARD 2: Inactive Plan or Disabled Billing Cycle Check
+    // -------------------------------------------------------------
+    if (!plan.isActive) {
+      log.warn(`[handleQuickRenewalRedirect] Plan ${plan.planName} is inactive. Redirecting to plan-upgrade.`);
+      return res.redirect(`${frontendBaseUrl}/plan-upgrade?hotelId=${hotel._id}`);
+    }
+
     // Calculate renewal price for the hotel's current plan
     let cycle = billingCycle || "monthly";
     if (cycle === "trial" || cycle === "custom") {
       cycle = "monthly";
+    }
+
+    const cycleSettings = await BillingCycleSettings.findOne().lean();
+    if (cycleSettings && cycleSettings[cycle] === false) {
+      log.warn(`[handleQuickRenewalRedirect] Billing cycle ${cycle} is globally disabled. Redirecting to plan-upgrade.`);
+      return res.redirect(`${frontendBaseUrl}/plan-upgrade?hotelId=${hotel._id}`);
     }
 
     let basePrice = plan.pricing?.[cycle] ?? plan.pricing?.monthly ?? plan.price ?? 0;
@@ -1260,7 +1420,6 @@ export const handleQuickRenewalRedirect = async (req, res) => {
     }
 
     // Check if hotel has an active subscription with remaining days to apply credit
-    const now = new Date();
     const currentSub = await Subscription.findOne({
       hotelId: hotel._id,
       status: { $in: ["active", "expiring_soon", "trial", "grace_period"] },

@@ -22,9 +22,38 @@ const planSchema = new mongoose.Schema(
     },
 
     // ============================================================
-    // PRICING
+    // PRICING (OFFER / SELLING PRICE)
     // ============================================================
     pricing: {
+      monthly: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+
+      quarterly: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+
+      halfYearly: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+
+      yearly: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+    },
+
+    // ============================================================
+    // ACTUAL PRICING (MRP / REGULAR PRICE FOR STRIKETHROUGH)
+    // ============================================================
+    actualPricing: {
       monthly: {
         type: Number,
         default: 0,

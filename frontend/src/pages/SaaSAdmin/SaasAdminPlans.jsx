@@ -12,6 +12,8 @@ import {
   deletePlan,
   getAdminFreeTrialConfig,
   updateAdminFreeTrialConfig,
+  getAdminBillingCycleConfig,
+  updateAdminBillingCycleConfig,
 } from "../../service/planApi";
 
 // ======================================================
@@ -22,6 +24,7 @@ const initialForm = {
   planName: "",
   description: "",
   pricing: { monthly: "", quarterly: "", halfYearly: "", yearly: "" },
+  actualPricing: { monthly: "", quarterly: "", halfYearly: "", yearly: "" },
   limits: { rooms: 0, branches: 0, receptionists: 0 },
   features: { foodService: false, roomService: false },
   validityDays: 30,
@@ -33,6 +36,7 @@ const initialForm = {
 const getFreshForm = () => ({
   ...initialForm,
   pricing: { ...initialForm.pricing },
+  actualPricing: { ...initialForm.actualPricing },
   limits: { ...initialForm.limits },
   features: { ...initialForm.features },
 });
@@ -144,7 +148,7 @@ const StatCard = memo(({ title, value, icon: Icon, cls, valueCls, loading, index
   </div>
 ));
 
-const PlanCard = memo(({ plan, index, onEdit, onDelete, deleting }) => {
+const PlanCard = memo(({ plan, index, onEdit, onDelete, deleting, billingCycles }) => {
   const { grad, Icon } = tiers[index % tiers.length];
   return (
     <div style={delay(index + 4)} className={`sp-in sp-card ${card} overflow-hidden flex flex-col hover:-translate-y-1.5 hover:shadow-[0_26px_60px_rgba(6,20,52,0.4)] transition-all duration-300`}>
@@ -165,7 +169,12 @@ const PlanCard = memo(({ plan, index, onEdit, onDelete, deleting }) => {
             {plan.isActive ? "Active" : "Inactive"}
           </span>
         </div>
-        <div className="relative mt-4 flex items-end gap-1.5">
+        <div className="relative mt-4 flex items-end gap-2 flex-wrap">
+          {numberValue(plan.actualPricing?.monthly) > numberValue(plan.pricing?.monthly) && (
+            <span className="text-base line-through text-blue-200/80 font-semibold pb-0.5">
+              {formatCurrency(plan.actualPricing?.monthly)}
+            </span>
+          )}
           <span className="text-3xl font-extrabold tracking-tight">{formatCurrency(plan.pricing?.monthly)}</span>
           <span className="pb-1 text-xs text-blue-100">/ month</span>
         </div>
@@ -173,14 +182,51 @@ const PlanCard = memo(({ plan, index, onEdit, onDelete, deleting }) => {
 
       {/* Pricing */}
       <div className="p-5 pb-4">
-        <p className="flex items-center gap-1.5 text-[11px] font-bold text-[#6b7f99] uppercase tracking-[0.12em] mb-3"><Wallet size={13} /> Pricing</p>
+        <p className="flex items-center gap-1.5 text-[11px] font-bold text-[#6b7f99] uppercase tracking-[0.12em] mb-3"><Wallet size={13} /> Pricing (Offer vs Actual)</p>
         <div className="grid grid-cols-2 gap-2.5">
-          {[["Monthly", "monthly"], ["Quarterly", "quarterly"], ["Half Yearly", "halfYearly"], ["Yearly", "yearly"]].map(([l, k]) => (
-            <div key={k} className="bg-[#f4f8fd] hover:bg-[#eaf3ff] transition-colors rounded-xl p-3">
-              <p className="text-[11px] text-[#6b7f99]">{l}</p>
-              <p className="mt-1 font-bold text-[#0e2a4a]">{formatCurrency(plan.pricing?.[k])}</p>
-            </div>
-          ))}
+          {[
+            ["Monthly", "monthly", 1],
+            ["Quarterly", "quarterly", 3],
+            ["Half Yearly", "halfYearly", 6],
+            ["Yearly", "yearly", 12]
+          ].map(([l, k, months]) => {
+            const offer = numberValue(plan.pricing?.[k]);
+            const actual = numberValue(plan.actualPricing?.[k]);
+            const perMonth = months > 1 && offer > 0 ? Math.round(offer / months) : null;
+            const isOff = billingCycles && billingCycles[k] === false;
+            return (
+              <div key={k} className={`transition-colors rounded-xl p-3 flex flex-col justify-between ${isOff ? "bg-slate-50/80 border border-slate-200/60 opacity-60" : "bg-[#f4f8fd] hover:bg-[#eaf3ff]"}`}>
+                <div>
+                  <div className="flex items-center justify-between gap-1 flex-wrap">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-[11px] font-semibold text-[#6b7f99]">{l}</p>
+                      {isOff && (
+                        <span className="text-[9px] font-bold text-amber-700 bg-amber-100 px-1 py-0.5 rounded">
+                          Off
+                        </span>
+                      )}
+                    </div>
+                    {actual > offer && (
+                      <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1 py-0.5 rounded">
+                        {Math.round(((actual - offer) / actual) * 100)}% OFF
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1 flex items-baseline gap-1.5 flex-wrap">
+                    <span className="font-extrabold text-[#0e2a4a] text-base">{formatCurrency(offer)}</span>
+                    {actual > offer && (
+                      <span className="text-xs line-through text-[#8fa2be] font-medium">{formatCurrency(actual)}</span>
+                    )}
+                  </div>
+                </div>
+                {perMonth && (
+                  <p className="text-[10px] font-bold text-[#2568e0] mt-1.5 bg-blue-50/90 border border-blue-100/60 px-1.5 py-0.5 rounded w-fit">
+                    {formatCurrency(perMonth)} / mo
+                  </p>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -275,6 +321,18 @@ const SaaSAdminPlans = () => {
   const [trialSaving, setTrialSaving] = useState(false);
   const [trialSuccess, setTrialSuccess] = useState("");
 
+  // GLOBAL BILLING CYCLES STATE
+  const [billingCycles, setBillingCycles] = useState({
+    monthly: true,
+    quarterly: true,
+    halfYearly: true,
+    yearly: true,
+  });
+  const [cyclesLoading, setCyclesLoading] = useState(true);
+  const [cyclesSaving, setCyclesSaving] = useState(false);
+  const [cyclesSuccess, setCyclesSuccess] = useState("");
+  const [cyclesError, setCyclesError] = useState("");
+
   // FETCH PLANS
   const fetchPlans = useCallback(async (isRefresh = false) => {
     try {
@@ -311,10 +369,31 @@ const SaaSAdminPlans = () => {
     }
   }, []);
 
+  // FETCH GLOBAL BILLING CYCLES
+  const fetchBillingCycleConfig = useCallback(async () => {
+    try {
+      setCyclesLoading(true);
+      const res = await getAdminBillingCycleConfig();
+      if (res?.success && res?.data) {
+        setBillingCycles({
+          monthly: res.data.monthly ?? true,
+          quarterly: res.data.quarterly ?? true,
+          halfYearly: res.data.halfYearly ?? true,
+          yearly: res.data.yearly ?? true,
+        });
+      }
+    } catch (err) {
+      console.error("Get billing cycles error:", err);
+    } finally {
+      setCyclesLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchPlans();
     fetchTrialConfig();
-  }, [fetchPlans, fetchTrialConfig]);
+    fetchBillingCycleConfig();
+  }, [fetchPlans, fetchTrialConfig, fetchBillingCycleConfig]);
 
   const handleSaveTrialConfig = async (e) => {
     e.preventDefault();
@@ -331,6 +410,30 @@ const SaaSAdminPlans = () => {
       setError(err?.message || "Failed to update free trial configuration.");
     } finally {
       setTrialSaving(false);
+    }
+  };
+
+  const handleSaveBillingCycles = async (e) => {
+    if (e) e.preventDefault();
+    if (!billingCycles.monthly && !billingCycles.quarterly && !billingCycles.halfYearly && !billingCycles.yearly) {
+      setCyclesError("At least one billing cycle must remain enabled.");
+      return;
+    }
+
+    try {
+      setCyclesSaving(true);
+      setCyclesError("");
+      setCyclesSuccess("");
+      const res = await updateAdminBillingCycleConfig(billingCycles);
+      if (res?.success) {
+        setCyclesSuccess("Global billing cycles updated successfully");
+        setTimeout(() => setCyclesSuccess(""), 4000);
+      }
+    } catch (err) {
+      console.error("Save billing cycles error:", err);
+      setCyclesError(err?.message || "Failed to update billing cycles.");
+    } finally {
+      setCyclesSaving(false);
     }
   };
 
@@ -371,6 +474,12 @@ const SaaSAdminPlans = () => {
         halfYearly: plan.pricing?.halfYearly ?? "",
         yearly: plan.pricing?.yearly ?? "",
       },
+      actualPricing: {
+        monthly: plan.actualPricing?.monthly ?? "",
+        quarterly: plan.actualPricing?.quarterly ?? "",
+        halfYearly: plan.actualPricing?.halfYearly ?? "",
+        yearly: plan.actualPricing?.yearly ?? "",
+      },
       limits: {
         rooms: plan.limits?.rooms ?? 0,
         branches: plan.limits?.branches ?? 0,
@@ -410,6 +519,11 @@ const SaaSAdminPlans = () => {
     const { name, value } = e.target;
     setForm((previous) => ({ ...previous, pricing: { ...previous.pricing, [name]: value } }));
     setFormErrors((previous) => ({ ...previous, pricing: "" }));
+  };
+
+  const handleActualPricingChange = (e) => {
+    const { name, value } = e.target;
+    setForm((previous) => ({ ...previous, actualPricing: { ...previous.actualPricing, [name]: value } }));
   };
 
   const handleLimitChange = (e) => {
@@ -464,6 +578,12 @@ const SaaSAdminPlans = () => {
           quarterly: numberValue(form.pricing.quarterly),
           halfYearly: numberValue(form.pricing.halfYearly),
           yearly: numberValue(form.pricing.yearly),
+        },
+        actualPricing: {
+          monthly: numberValue(form.actualPricing.monthly),
+          quarterly: numberValue(form.actualPricing.quarterly),
+          halfYearly: numberValue(form.actualPricing.halfYearly),
+          yearly: numberValue(form.actualPricing.yearly),
         },
         limits: {
           rooms: numberValue(form.limits.rooms),
@@ -676,6 +796,107 @@ Choose how many days new hotel owners get free trial access.        </p>
   )}
 </div>
 
+{/* GLOBAL BILLING CYCLES CARD */}
+<div
+  style={delay(3.5)}
+  className={`sp-in ${card} mb-6 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm transition-all hover:shadow-md`}
+>
+  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+    {/* Left Info Group */}
+    <div className="flex items-start gap-3.5">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#2568e0] border border-blue-100">
+        <CalendarDays size={20} />
+      </div>
+
+      <div className="space-y-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="text-base sm:text-lg font-semibold tracking-tight text-slate-900">
+            Global Billing Cycles
+          </h3>
+          <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-600/20">
+            {[billingCycles.monthly, billingCycles.quarterly, billingCycles.halfYearly, billingCycles.yearly].filter(Boolean).length} of 4 Active
+          </span>
+        </div>
+
+        <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-xl">
+          Enable or disable billing cycle options globally across all plans. Disabled cycles will be completely hidden from the user UI.
+        </p>
+      </div>
+    </div>
+
+    {/* Right Controls */}
+    <form
+      onSubmit={handleSaveBillingCycles}
+      className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100 flex-wrap"
+    >
+      {/* Cycle Toggle Pills */}
+      <div className="flex flex-wrap items-center gap-2">
+        {[
+          { key: "monthly", label: "Monthly" },
+          { key: "quarterly", label: "Quarterly" },
+          { key: "halfYearly", label: "Half Yearly" },
+          { key: "yearly", label: "Yearly" },
+        ].map(({ key, label }) => {
+          const isChecked = Boolean(billingCycles[key]);
+          return (
+            <label
+              key={key}
+              className={`inline-flex cursor-pointer select-none items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-all ${
+                isChecked
+                  ? "border-blue-300 bg-blue-50 text-blue-800 shadow-xs"
+                  : "border-slate-200 bg-slate-50 text-slate-400 hover:bg-slate-100"
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={isChecked}
+                onChange={(e) =>
+                  setBillingCycles((prev) => ({
+                    ...prev,
+                    [key]: e.target.checked,
+                  }))
+                }
+                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+              />
+              <span>{label}</span>
+            </label>
+          );
+        })}
+      </div>
+
+      {/* Save Button */}
+      <button
+        type="submit"
+        disabled={cyclesSaving || cyclesLoading}
+        className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs sm:text-sm font-medium text-white shadow-sm transition-all hover:bg-slate-800 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {cyclesSaving ? (
+          <RefreshCw size={15} className="animate-spin text-slate-300" />
+        ) : (
+          <Check size={15} />
+        )}
+        <span>{cyclesSaving ? "Saving..." : "Save Cycles"}</span>
+      </button>
+    </form>
+  </div>
+
+  {/* Success Banner */}
+  {cyclesSuccess && (
+    <div className="mt-4 flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200/80 p-3 text-xs font-medium text-emerald-800">
+      <Check size={15} className="text-emerald-600 shrink-0" />
+      <span>{cyclesSuccess}</span>
+    </div>
+  )}
+
+  {/* Error Banner */}
+  {cyclesError && (
+    <div className="mt-4 flex items-center gap-2 rounded-xl bg-red-50 border border-red-200/80 p-3 text-xs font-medium text-red-800">
+      <AlertCircle size={15} className="text-red-600 shrink-0" />
+      <span>{cyclesError}</span>
+    </div>
+  )}
+</div>
+
         {/* SEARCH */}
         <div style={delay(4)} className="sp-in relative mb-6">
           <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-100" />
@@ -718,6 +939,7 @@ Choose how many days new hotel owners get free trial access.        </p>
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 deleting={String(deletingId) === String(plan._id)}
+                billingCycles={billingCycles}
               />
             ))}
           </div>
@@ -784,19 +1006,103 @@ Choose how many days new hotel owners get free trial access.        </p>
                 </div>
               </Section>
 
-              <Section icon={IndianRupee} title="Pricing">
+              <Section icon={IndianRupee} title="Pricing (Actual Price & Offer Price)">
                 {formErrors.pricing && (
                   <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex items-center gap-2">
                     <AlertCircle size={15} /> {formErrors.pricing}
                   </div>
                 )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <InputField label="Monthly *" name="monthly" value={form.pricing.monthly} onChange={handlePricingChange} type="number" min="0" placeholder="999" error={formErrors.pricing} />
-                  <InputField label="Quarterly" name="quarterly" value={form.pricing.quarterly} onChange={handlePricingChange} type="number" min="0" placeholder="2499" />
-                  <InputField label="Half Yearly" name="halfYearly" value={form.pricing.halfYearly} onChange={handlePricingChange} type="number" min="0" placeholder="4499" />
-                  <InputField label="Yearly" name="yearly" value={form.pricing.yearly} onChange={handlePricingChange} type="number" min="0" placeholder="7999" />
+
+                <p className="text-xs text-[#6b7f99] mb-4">
+                  Set the <strong>Actual Price (MRP)</strong> to be shown struck-through, and the <strong>Offer Price</strong> that the customer will actually pay. For multi-month plans, the per-month breakdown is calculated automatically.
+                </p>
+
+                <div className="space-y-3.5">
+                  {[
+                    { label: "Monthly", key: "monthly", months: 1, required: true },
+                    { label: "Quarterly", key: "quarterly", months: 3 },
+                    { label: "Half Yearly", key: "halfYearly", months: 6 },
+                    { label: "Yearly", key: "yearly", months: 12 },
+                  ].map(({ label, key, months, required }) => {
+                    const actualVal = numberValue(form.actualPricing[key]);
+                    const offerVal = numberValue(form.pricing[key]);
+                    const perMonth = months > 1 && offerVal > 0 ? Math.round(offerVal / months) : null;
+                    const discount = actualVal > offerVal && offerVal > 0
+                      ? Math.round(((actualVal - offerVal) / actualVal) * 100)
+                      : null;
+
+                    return (
+                      <div key={key} className="p-3.5 rounded-2xl border border-[#e2ecf8] bg-[#f9fbfe]">
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                          <span className="text-xs font-bold uppercase tracking-wider text-[#1e3a63]">
+                            {label} {months > 1 ? `(${months} Months)` : ""} {required && <span className="text-red-500">*</span>}
+                          </span>
+
+                          <div className="flex items-center gap-2">
+                            {billingCycles && billingCycles[key] === false && (
+                              <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                                Globally Disabled
+                              </span>
+                            )}
+                            {discount !== null && (
+                              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                                {discount}% OFF
+                              </span>
+                            )}
+                            {perMonth && (
+                              <span className="text-[11px] font-bold text-[#2568e0] bg-blue-100/70 px-2 py-0.5 rounded-full">
+                                {formatCurrency(perMonth)} / mo
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <InputField
+                            label="Actual Price (MRP ₹)"
+                            name={key}
+                            value={form.actualPricing[key]}
+                            onChange={handleActualPricingChange}
+                            type="number"
+                            min="0"
+                            placeholder="e.g. 1499"
+                          />
+                          <InputField
+                            label={`Offer Price (Payable ₹)${required ? " *" : ""}`}
+                            name={key}
+                            value={form.pricing[key]}
+                            onChange={handlePricingChange}
+                            type="number"
+                            min="0"
+                            placeholder="e.g. 999"
+                            error={key === "monthly" ? formErrors.pricing : undefined}
+                          />
+                        </div>
+
+                        {(offerVal > 0 || actualVal > 0) && (
+                          <div className="mt-2.5 pt-2 border-t border-[#e5eef8] flex items-center justify-between text-xs text-[#5a718f]">
+                            <span>Customer Preview:</span>
+                            <div className="flex items-baseline gap-2">
+                              {actualVal > offerVal && (
+                                <span className="line-through text-slate-400 font-medium">
+                                  {formatCurrency(actualVal)}
+                                </span>
+                              )}
+                              <span className="font-extrabold text-[#0e2a4a] text-sm">
+                                {formatCurrency(offerVal)}
+                              </span>
+                              {perMonth && (
+                                <span className="text-[#2568e0] font-semibold">
+                                  ({formatCurrency(perMonth)}/mo)
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-               
               </Section>
 
               <Section icon={Gauge} title="Limits">

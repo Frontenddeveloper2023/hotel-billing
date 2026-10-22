@@ -5,7 +5,10 @@ import { useAuth } from "../../Context/AuthContext";
 
 import { useToast } from "../../Context/ToastContext";
 
-import { getPublicActivePlans } from "../../service/planApi";
+import {
+  getPublicActivePlans,
+  getPublicBillingCycleConfig,
+} from "../../service/planApi";
 
 import {
   getMySubscription,
@@ -166,8 +169,18 @@ const tiers = [
 ];
 
 const PlanCard = memo(
-  ({ plan, index, isCurrent, price, billingCycle, onSelect }) => {
+  ({ plan, index, isCurrent, price, actualPrice = 0, billingCycle, onSelect }) => {
     const grad = tiers[index % tiers.length];
+
+    const cycleMonths =
+      billingCycle === "quarterly" ? 3 :
+      billingCycle === "halfYearly" ? 6 :
+      billingCycle === "yearly" ? 12 : 1;
+
+    const perMonthPrice = price > 0 ? Math.round(price / cycleMonths) : 0;
+    const actualPerMonth = actualPrice > 0 ? Math.round(actualPrice / cycleMonths) : 0;
+    const hasDiscount = actualPrice > price && price > 0;
+    const discountPercent = hasDiscount ? Math.round(((actualPrice - price) / actualPrice) * 100) : 0;
 
     return (
       <div
@@ -249,30 +262,37 @@ const PlanCard = memo(
               </h2>
             </div>
 
-            {isCurrent && (
-              <span
-                className="
-                  inline-flex
-                  w-fit
-                  shrink-0
-                  items-center
-                  gap-1
-                  rounded-full
-                  border
-                  border-emerald-200/40
-                  bg-emerald-400/25
-                  px-2.5
-                  py-1
-                  text-[10px]
-                  font-bold
-                  text-emerald-50
-                  sm:text-[11px]
-                "
-              >
-                <CheckCircle2 size={12} />
-                Current
-              </span>
-            )}
+            <div className="flex items-center gap-1.5 flex-wrap justify-end">
+              {hasDiscount && (
+                <span className="inline-flex items-center rounded-full bg-emerald-400/30 border border-emerald-200/50 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-100">
+                  {discountPercent}% OFF
+                </span>
+              )}
+              {isCurrent && (
+                <span
+                  className="
+                    inline-flex
+                    w-fit
+                    shrink-0
+                    items-center
+                    gap-1
+                    rounded-full
+                    border
+                    border-emerald-200/40
+                    bg-emerald-400/25
+                    px-2.5
+                    py-1
+                    text-[10px]
+                    font-bold
+                    text-emerald-50
+                    sm:text-[11px]
+                  "
+                >
+                  <CheckCircle2 size={12} />
+                  Current
+                </span>
+              )}
+            </div>
           </div>
 
           {plan.description && (
@@ -291,33 +311,57 @@ const PlanCard = memo(
             </p>
           )}
 
-          <div
-            className="
-              relative
-              mt-4
-              flex
-              min-w-0
-              flex-wrap
-              items-end
-              gap-x-1.5
-              gap-y-1
-            "
-          >
-            <span
+          <div className="relative mt-4">
+            {hasDiscount && (
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs sm:text-sm font-semibold text-blue-200/80 line-through">
+                  ₹{actualPerMonth.toLocaleString("en-IN")}
+                </span>
+                <span className="text-[10px] font-bold text-emerald-200 bg-emerald-500/20 border border-emerald-300/30 px-1.5 py-0.5 rounded">
+                  Save ₹{(actualPrice - price).toLocaleString("en-IN")}
+                </span>
+              </div>
+            )}
+
+            {/* 1. Show per-month first */}
+            <div
               className="
-                break-all
-                text-2xl
-                font-extrabold
-                tracking-tight
-                sm:text-3xl
+                flex
+                min-w-0
+                flex-wrap
+                items-end
+                gap-x-1.5
+                gap-y-1
               "
             >
-              ₹{price.toLocaleString("en-IN")}
-            </span>
+              <span
+                className="
+                  break-all
+                  text-2xl
+                  font-extrabold
+                  tracking-tight
+                  sm:text-3xl
+                "
+              >
+                ₹{perMonthPrice.toLocaleString("en-IN")}
+              </span>
 
-            <span className="pb-0.5 text-[10px] text-blue-100 sm:pb-1 sm:text-xs">
-              / {billingCycle}
-            </span>
+              <span className="pb-0.5 text-[10px] text-blue-100 sm:pb-1 sm:text-xs">
+                / month
+              </span>
+            </div>
+
+            {/* 2. Down show full amount for multi-month */}
+            {cycleMonths > 1 ? (
+              <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-white/15 border border-white/20 px-2.5 py-1 text-xs font-bold text-white backdrop-blur">
+                <span>₹{price.toLocaleString("en-IN")} / {billingCycle}</span>
+                <span className="text-blue-100/70 font-normal text-[11px]">({cycleMonths} mo)</span>
+              </div>
+            ) : (
+              <div className="mt-1 text-[11px] text-blue-100/70">
+                Billed monthly
+              </div>
+            )}
           </div>
         </div>
 
@@ -480,6 +524,12 @@ export default function PlanUpgrade() {
   const [publicHotel, setPublicHotel] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [billingCycle, setBillingCycle] = useState("monthly");
+  const [billingCycleConfig, setBillingCycleConfig] = useState({
+    monthly: true,
+    quarterly: true,
+    halfYearly: true,
+    yearly: true,
+  });
   const [processing, setProcessing] = useState(false);
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [loadingSub, setLoadingSub] = useState(true);
@@ -487,6 +537,41 @@ export default function PlanUpgrade() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [prorationPreview, setProrationPreview] = useState(null);
   const [loadingProration, setLoadingProration] = useState(false);
+
+  // Fetch active billing cycle config
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchCycles = async () => {
+      try {
+        const res = await getPublicBillingCycleConfig();
+        if (!cancelled && res?.success && res?.data) {
+          const cfg = res.data;
+          const newCycles = {
+            monthly: cfg.monthly ?? true,
+            quarterly: cfg.quarterly ?? true,
+            halfYearly: cfg.halfYearly ?? true,
+            yearly: cfg.yearly ?? true,
+          };
+          setBillingCycleConfig(newCycles);
+          setBillingCycle((current) => {
+            if (newCycles[current]) return current;
+            const order = ["monthly", "quarterly", "halfYearly", "yearly"];
+            const firstActive = order.find((c) => newCycles[c]);
+            return firstActive || "monthly";
+          });
+        }
+      } catch (err) {
+        console.warn("[PlanUpgrade] Could not load billing cycle config:", err?.message);
+      }
+    };
+
+    fetchCycles();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Load public hotel info if hotelId is passed via query params (e.g. from reminder email)
   useEffect(() => {
@@ -609,6 +694,9 @@ export default function PlanUpgrade() {
 
   const getPrice = (plan, cycle) =>
     plan?.pricing?.[cycle] ?? 0;
+
+  const getActualPrice = (plan, cycle) =>
+    plan?.actualPricing?.[cycle] ?? 0;
 
   const currentPlanId =
     typeof currentSub?.planId === "object"
@@ -918,8 +1006,7 @@ export default function PlanUpgrade() {
         antialiased
         staylio-scrollbar
         text-white
-        bg-[radial-gradient(ellipse_at_top,#2a5288_0%,#16345e_45%,#0f2447_100%)]
-        ${!isAuthenticated ? "min-h-screen flex flex-col" : "min-h-full py-2"}
+        ${!isAuthenticated ? "min-h-screen flex flex-col" : "min-h-full "}
       `}
     >
       <style>{styles}</style>
@@ -966,12 +1053,7 @@ export default function PlanUpgrade() {
           min-w-0
           flex-1
           overflow-x-hidden
-          px-3
-          py-6
-          sm:px-4
-          sm:py-8
-          md:px-5
-          lg:px-6
+        
         "
       >
         {/* =====================================================
@@ -1189,7 +1271,7 @@ export default function PlanUpgrade() {
           sm:mb-6
         "
       >
-        {BILLING_CYCLES.map((c) => {
+        {BILLING_CYCLES.filter((c) => billingCycleConfig[c.key]).map((c) => {
           const isActive = billingCycle === c.key;
           return (
             <button
@@ -1274,6 +1356,7 @@ export default function PlanUpgrade() {
                 billingCycle === currentSub?.billingCycle
               }
               price={getPrice(plan, billingCycle)}
+              actualPrice={getActualPrice(plan, billingCycle)}
               billingCycle={billingCycle}
               onSelect={handleSelectPlan}
             />

@@ -9,35 +9,42 @@ import {
   ShieldCheck,
   ClipboardCheck,
   ArrowRight,
+  Mail,
 } from "lucide-react";
 
 const registrationSteps = [
   {
     number: "01",
+    title: "Verify Email",
+    subtitle: "Security confirmation code",
+    icon: Mail,
+  },
+  {
+    number: "02",
     title: "Choose Plan",
     subtitle: "Select your subscription plan",
     icon: Check,
   },
   {
-    number: "02",
+    number: "03",
     title: "Hotel Details",
     subtitle: "Add properties & rooms",
     icon: Building2,
   },
   {
-    number: "03",
+    number: "04",
     title: "Checkout",
     subtitle: "Review your order",
     icon: CreditCard,
   },
   {
-    number: "04",
+    number: "05",
     title: "Payment",
     subtitle: "Complete escrow payment",
     icon: ShieldCheck,
   },
   {
-    number: "05",
+    number: "06",
     title: "Application Status",
     subtitle: "Track your registration",
     icon: ClipboardCheck,
@@ -48,7 +55,7 @@ const SaaSHome = () => {
   const navigate = useNavigate();
 
   const handleRegisterHotel = () => {
-    navigate("/saas-user/choose-plan");
+    navigate("/saas-user/verify-email");
   };
 
   const HoverText = ({ children, className = "" }) => {
@@ -141,101 +148,98 @@ const SaaSHome = () => {
           </div>
 
           {/* HEADER BUTTONS */}
-          <div
-            className="
-              flex
-              min-w-0
-              items-center
-              gap-1.5
-              sm:gap-2
-              md:gap-3
-            "
-          >
-            <button
-              type="button"
-              onClick={() =>
-                navigate("/saas-user/application-status")
-              }
-              className="
-                inline-flex
-                min-h-[36px]
-                max-w-[170px]
-                cursor-pointer
-                items-center
-                justify-center
-                rounded-lg
-                border
-                border-[#CFE2FF]
-                bg-[#EAF3FF]
-                px-2.5
-                py-2
-                text-[10px]
-                font-bold
-                leading-tight
-                text-[#1877F2]
-                transition-all
-                duration-200
-                hover:-translate-y-0.5
-                hover:border-[#B9D5FF]
-                hover:bg-[#DCEBFF]
-                hover:shadow-[0_6px_16px_rgba(24,119,242,0.12)]
-                sm:max-w-none
-                sm:px-4
-                sm:text-xs
-                md:px-5
-                md:py-2.5
-                md:text-sm
-              "
-            >
-              <span className="hidden xs:inline">
-                View Application Status
-              </span>
+        <div
+  className="
+    flex
+    w-full
+    flex-nowrap
+    items-center
+    justify-end
+    gap-2
+    sm:gap-3
+  "
+>
+  {/* VIEW APPLICATION STATUS BUTTON */}
+  <button
+    type="button"
+    onClick={() =>
+      navigate("/saas-user/application-status")
+    }
+    className="
+      inline-flex
+      shrink-0
+      min-h-[36px]
+      cursor-pointer
+      items-center
+      justify-center
+      rounded-lg
+      border
+      border-[#CFE2FF]
+      bg-[#EAF3FF]
+      px-2.5
+      py-2
+      text-[10px]
+      font-bold
+      leading-tight
+      text-[#1877F2]
+      transition-all
+      duration-200
+      hover:-translate-y-0.5
+      hover:border-[#B9D5FF]
+      hover:bg-[#DCEBFF]
+      sm:px-3.5
+      sm:text-xs
+      md:px-4
+      md:py-2.5
+      md:text-sm
+    "
+  >
+    <span className="hidden sm:inline">
+      View Application Status
+    </span>
+    <span className="sm:hidden">
+      Status
+    </span>
+  </button>
 
-              <span className="xs:hidden">
-                Application Status
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleRegisterHotel}
-              className="
-                inline-flex
-                min-h-[36px]
-                max-w-[145px]
-                cursor-pointer
-                items-center
-                justify-center
-                rounded-lg
-                bg-[#0B2447]
-                px-2.5
-                py-2
-                text-[10px]
-                font-bold
-                leading-tight
-                text-white
-                transition-all
-                duration-200
-                hover:-translate-y-0.5
-                hover:bg-[#12345F]
-                hover:shadow-md
-                sm:max-w-none
-                sm:px-4
-                sm:text-xs
-                md:px-5
-                md:py-2.5
-                md:text-sm
-              "
-            >
-              <span className="hidden sm:inline">
-                Register Your Hotel
-              </span>
-
-              <span className="sm:hidden">
-                Register Hotel
-              </span>
-            </button>
-          </div>
+  {/* REGISTER HOTEL BUTTON */}
+  <button
+    type="button"
+    onClick={handleRegisterHotel}
+    className="
+      inline-flex
+      shrink-0
+      min-h-[36px]
+      cursor-pointer
+      items-center
+      justify-center
+      rounded-lg
+      bg-[#0B2447]
+      px-2.5
+      py-2
+      text-[10px]
+      font-bold
+      leading-tight
+      text-white
+      transition-all
+      duration-200
+      hover:-translate-y-0.5
+      hover:bg-[#12345F]
+      sm:px-3.5
+      sm:text-xs
+      md:px-4
+      md:py-2.5
+      md:text-sm
+    "
+  >
+    <span className="hidden sm:inline">
+      Register Your Hotel
+    </span>
+    <span className="sm:hidden">
+      Register
+    </span>
+  </button>
+</div>
         </div>
       </header>
 
@@ -443,168 +447,160 @@ const SaaSHome = () => {
               {/* ===================================================
                   STEPS
               =================================================== */}
+<div className="px-0 py-4 sm:px-2 sm:px-6">
+  <div className="relative">
+    {/* FLOW CONNECTOR - DESKTOP */}
+    <div
+      className="
+        pointer-events-none
+        absolute
+        left-[8%]
+        right-[8%]
+        top-[36px]
+        hidden
+        h-[2px]
+        bg-[#DCDCDC]
+        lg:block
+      "
+    />
 
-              <div className="px-0 py-4 sm:px-2 sm:py-6 md:py-7">
-                <div className="relative">
-                  {/* FLOW CONNECTOR - DESKTOP */}
-                  <div
-                    className="
-                      pointer-events-none
-                      absolute
-                      left-[10%]
-                      right-[10%]
-                      top-[31px]
-                      hidden
-                      h-[2px]
-                      bg-[#DCDCDC]
-                      lg:block
-                    "
+    <div
+      className="
+        relative
+        grid
+        grid-cols-1
+        gap-3
+        sm:grid-cols-2
+        lg:grid-cols-6
+      "
+    >
+      {registrationSteps.map(
+        (step, index) => {
+          const StepIcon = step.icon;
+          const isFirst = index === 0;
+
+          return (
+            <div
+              key={step.number}
+              className={`
+                group
+                relative
+                flex
+                flex-col
+                items-center
+                text-center
+                rounded-xl
+                border
+                bg-white
+                p-4
+                transition-all
+                duration-200
+                hover:-translate-y-0.5
+                hover:shadow-[0_6px_18px_rgba(0,0,0,0.08)]
+                sm:rounded-[14px]
+                sm:p-4
+                ${
+                  isFirst
+                    ? "border-[#12345F] shadow-[0_4px_14px_rgba(18,52,95,0.12)]"
+                    : "border-[#DCDCDC] hover:border-[#BDBDBD]"
+                }
+              `}
+            >
+              {/* STEP NUMBER / ICON - TOP */}
+              <div
+                className={`
+                  relative
+                  z-10
+                  flex
+                  h-10
+                  w-10
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-full
+                  border-2
+                  font-bold
+                  mb-2.5
+                  sm:h-11
+                  sm:w-11
+                  ${
+                    isFirst
+                      ? "border-[#0B2447] bg-[#0B2447] text-orange-500"
+                      : "border-[#E1E1E1] bg-[#F3F3F3] text-orange-500"
+                  }
+                `}
+              >
+                {isFirst ? (
+                  <StepIcon
+                    size={18}
+                    strokeWidth={2.8}
+                    className="sm:h-[20px] sm:w-[20px]"
                   />
-
-                  <div
-                    className="
-                      relative
-                      grid
-                      grid-cols-1
-                      gap-2.5
-                      sm:grid-cols-2
-                      sm:gap-3
-                      lg:grid-cols-5
-                    "
-                  >
-                    {registrationSteps.map(
-                      (step, index) => {
-                        const StepIcon = step.icon;
-                        const isFirst = index === 0;
-
-                        return (
-                          <div
-                            key={step.number}
-                            className={`
-                              group
-                              relative
-                              flex
-                              min-h-[96px]
-                              min-w-0
-                              items-center
-                              gap-3
-                              rounded-xl
-                              border
-                              bg-white
-                              px-3
-                              py-3
-                              transition-all
-                              duration-200
-                              hover:-translate-y-0.5
-                              hover:shadow-[0_6px_18px_rgba(0,0,0,0.08)]
-                              sm:min-h-[112px]
-                              sm:rounded-[14px]
-                              sm:px-4
-                              sm:py-4
-                              ${
-                                isFirst
-                                  ? "border-[#12345F] shadow-[0_4px_14px_rgba(184,245,47,0.18)]"
-                                  : "border-[#DCDCDC] hover:border-[#BDBDBD]"
-                              }
-                            `}
-                          >
-                            {/* STEP NUMBER / ICON */}
-                            <div
-                              className={`
-                                relative
-                                z-10
-                                flex
-                                h-10
-                                w-10
-                                shrink-0
-                                items-center
-                                justify-center
-                                rounded-full
-                                border-2
-                                font-bold
-                                sm:h-11
-                                sm:w-11
-                                ${
-                                  isFirst
-                                    ? "border-[#0B2447] bg-[#0B2447] text-orange-500"
-                                    : "border-[#E1E1E1] bg-[#F3F3F3] text-orange-500"
-                                }
-                              `}
-                            >
-                              {isFirst ? (
-                                <StepIcon
-                                  size={17}
-                                  strokeWidth={2.8}
-                                  className="sm:h-[19px] sm:w-[19px]"
-                                />
-                              ) : (
-                                <span className="text-[11px] text-orange-500 sm:text-[12px]">
-                                  {step.number}
-                                </span>
-                              )}
-                            </div>
-
-                            {/* TEXT */}
-                            <div className="min-w-0 flex-1">
-                              <p
-                                className={`
-                                  break-words
-                                  text-[13px]
-                                  font-bold
-                                  leading-5
-                                  tracking-[-0.01em]
-                                  sm:text-[15px]
-                                  ${
-                                    isFirst
-                                      ? "text-[#111111]"
-                                      : "text-[#171717]"
-                                  }
-                                `}
-                              >
-                                {step.title}
-                              </p>
-
-                              <p
-                                className="
-                                  mt-1
-                                  text-[10px]
-                                  font-medium
-                                  leading-4
-                                  text-[#555555]
-                                  sm:mt-1.5
-                                  sm:text-[12px]
-                                  sm:leading-5
-                                "
-                              >
-                                {step.subtitle}
-                              </p>
-                            </div>
-
-                            {/* ACTIVE INDICATOR */}
-                            {isFirst && (
-                              <span
-                                className="
-                                  absolute
-                                  right-2.5
-                                  top-2.5
-                                  h-2
-                                  w-2
-                                  rounded-full
-                                  bg-[#0B2447]
-                                  sm:right-3
-                                  sm:top-3
-                                  sm:h-2.5
-                                  sm:w-2.5
-                                "
-                              />
-                            )}
-                          </div>
-                        );
-                      }
-                    )}
-                  </div>
-                </div>
+                ) : (
+                  <span className="text-[12px] text-orange-500 sm:text-[13px]">
+                    {step.number}
+                  </span>
+                )}
               </div>
+
+              {/* TEXT - DOWN */}
+              <div className="min-w-0 w-full">
+                <p
+                  className={`
+                    break-words
+                    text-[13px]
+                    font-bold
+                    leading-5
+                    tracking-[-0.01em]
+                    sm:text-[14px]
+                    ${
+                      isFirst
+                        ? "text-[#111111]"
+                        : "text-[#171717]"
+                    }
+                  `}
+                >
+                  {step.title}
+                </p>
+
+                <p
+                  className="
+                    mt-1
+                    text-[11px]
+                    font-medium
+                    leading-4
+                    text-[#555555]
+                    sm:text-[12px]
+                    sm:leading-4.5
+                  "
+                >
+                  {step.subtitle}
+                </p>
+              </div>
+
+              {/* ACTIVE INDICATOR */}
+              {isFirst && (
+                <span
+                  className="
+                    absolute
+                    right-3
+                    top-3
+                    h-2
+                    w-2
+                    rounded-full
+                    bg-[#0B2447]
+                    sm:h-2.5
+                    sm:w-2.5
+                  "
+                />
+              )}
+            </div>
+          );
+        }
+      )}
+    </div>
+  </div>
+</div>
 
               {/* ===================================================
                   FLOW DESCRIPTION

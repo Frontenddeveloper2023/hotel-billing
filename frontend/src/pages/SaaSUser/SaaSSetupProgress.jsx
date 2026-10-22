@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  Mail,
   Check,
   Building2,
   CreditCard,
@@ -12,30 +13,36 @@ import {
 const defaultSteps = [
   {
     number: "01",
+    title: "Verify Email",
+    subtitle: "Security Check",
+    icon: Mail,
+  },
+  {
+    number: "02",
     title: "Choose Plan",
     subtitle: "Active Step",
     icon: Check,
   },
   {
-    number: "02",
+    number: "03",
     title: "Hotel Details",
     subtitle: "Properties & Rooms",
     icon: Building2,
   },
   {
-    number: "03",
+    number: "04",
     title: "Checkout",
     subtitle: "Review Order",
     icon: CreditCard,
   },
   {
-    number: "04",
+    number: "05",
     title: "Payment",
     subtitle: "Escrow Guarantee",
     icon: ShieldCheck,
   },
   {
-    number: "05",
+    number: "06",
     title: "Application Status",
     subtitle: "Provisioning",
     icon: ClipboardCheck,

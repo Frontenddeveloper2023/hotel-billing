@@ -673,172 +673,26 @@ StayLio Team`,
 
 
 // ============================================================
-// 3. SUBSCRIPTION EXPIRY REMINDER
+// 3A. RENDER SUBSCRIPTION EXPIRY REMINDER TEMPLATE
 // ============================================================
-const sendSubscriptionExpiryReminder = async ({
-  to,
-  hotelName,
-  planName,
-  endDate,
+const renderSubscriptionReminderTemplate = ({
+  resolvedHotelName,
+  resolvedPlanName,
+  cycleLabel = "Monthly",
+  formattedDate,
   daysRemaining,
-  hotelId,
-  planId,
-  billingCycle,
+  formattedBasePrice,
+  formattedCredit,
+  remainingDays,
+  formattedAmount,
+  taxAmount = 0,
+  quickRenewUrl,
+  upgradeUrl = "",
+  urgencyText,
+  urgencyColor = "#0875D1",
+  subject,
 }) => {
-  try {
-    const resolvedHotelName =
-      await getHotelNameFromSettings({
-        hotelId,
-        hotelName,
-      });
-
-    const formattedDate =
-      new Date(endDate).toLocaleDateString(
-        "en-IN",
-        {
-          day: "2-digit",
-          month: "long",
-          year: "numeric",
-          timeZone: "Asia/Kolkata",
-        }
-      );
-
-    const frontendBaseUrl =
-      getFrontendUrl();
-
-    const upgradeUrl = hotelId
-      ? `${frontendBaseUrl}/plan-upgrade?hotelId=${hotelId}`
-      : `${frontendBaseUrl}/plan-upgrade`;
-
-    const loginUrl = `${frontendBaseUrl}/hotel-login`;
-
-    // Resolve planId and billingCycle for 1-click renewal token
-    let resolvedPlanId = planId;
-    let resolvedBillingCycle = billingCycle || "monthly";
-    if (resolvedBillingCycle === "trial" || resolvedBillingCycle === "custom") {
-      resolvedBillingCycle = "monthly";
-    }
-    if (!resolvedPlanId && hotelId) {
-      const latestSub = await Subscription.findOne({ hotelId })
-        .sort({ createdAt: -1 })
-        .select("planId billingCycle")
-        .lean();
-      if (latestSub?.planId) {
-        resolvedPlanId = latestSub.planId;
-        if (latestSub.billingCycle && latestSub.billingCycle !== "trial" && latestSub.billingCycle !== "custom") {
-          resolvedBillingCycle = latestSub.billingCycle;
-        }
-      }
-    }
-
-    let planDoc = null;
-    if (resolvedPlanId) {
-      planDoc = await Plans.findById(resolvedPlanId).lean();
-    }
-    if (!planDoc) {
-      planDoc = await Plans.findOne().sort({ price: 1 }).lean();
-      if (planDoc?._id) {
-        resolvedPlanId = planDoc._id;
-      }
-    }
-
-    const resolvedPlanName = planDoc?.planName || planName || "Subscription Plan";
-    const cycle = resolvedBillingCycle || "monthly";
-    const cycleLabel = cycle.charAt(0).toUpperCase() + cycle.slice(1);
-
-    // Calculate plan amount
-    let basePrice =
-      planDoc?.pricing?.[cycle] ??
-      planDoc?.pricing?.monthly ??
-      planDoc?.price ??
-      999;
-    if (basePrice <= 0) {
-      basePrice = 999;
-    }
-
-    // Determine cycle duration days
-    let totalDays = 30;
-    if (cycle === "quarterly") totalDays = 90;
-    else if (cycle === "halfYearly") totalDays = 180;
-    else if (cycle === "yearly") totalDays = 365;
-    else if (planDoc?.validityDays) totalDays = planDoc.validityDays;
-
-    const remainingDays = Math.max(0, Number(daysRemaining) || 0);
-    const perDayCost = Number((basePrice / totalDays).toFixed(2));
-    const unusedCredit = Number(Math.min(basePrice, perDayCost * remainingDays).toFixed(2));
-    const discountedPrice = Math.max(1, Number((basePrice - unusedCredit).toFixed(2)));
-
-    let taxEnabled = false;
-    if (hotelId) {
-      const hotelDoc = await Hotels.findById(hotelId).select("taxEnabled").lean();
-      taxEnabled = Boolean(hotelDoc?.taxEnabled);
-    }
-    const taxRate = taxEnabled ? 0.18 : 0;
-    const taxAmount = Number((discountedPrice * taxRate).toFixed(2));
-    const totalPayableAmount = Number((discountedPrice + taxAmount).toFixed(2));
-    const formattedAmount = `₹${totalPayableAmount.toLocaleString("en-IN")}`;
-    const formattedBasePrice = `₹${basePrice.toLocaleString("en-IN")}`;
-    const formattedCredit = `₹${unusedCredit.toLocaleString("en-IN")}`;
-
-    let quickRenewUrl = upgradeUrl;
-    if (hotelId && resolvedPlanId) {
-      const renewToken = generateRenewalToken({
-        hotelId: String(hotelId),
-        planId: String(resolvedPlanId),
-        billingCycle: resolvedBillingCycle,
-        expiresInDays: 7,
-      });
-      quickRenewUrl = `${getBackendApiUrl()}/payments/quick-renew?token=${renewToken}`;
-    }
-
-    let subject =
-      `Subscription Reminder: Plan expiring soon for ${resolvedHotelName}`;
-
-    let urgencyColor = "#D97706";
-
-    let urgencyText =
-      `Your subscription will expire in ${daysRemaining} day${daysRemaining > 1 ? "s" : ""
-      }.`;
-
-    if (daysRemaining <= 1) {
-      subject =
-        `Subscription Reminder: 1 day left for ${resolvedHotelName}`;
-
-      urgencyColor = "#B42318";
-
-      urgencyText =
-        "Your subscription expires tomorrow. Please renew today to keep your hotel system running smoothly.";
-
-    } else if (daysRemaining <= 3) {
-      subject =
-        `Subscription Reminder: ${daysRemaining} days left for ${resolvedHotelName}`;
-
-      urgencyColor = "#C2410C";
-
-      urgencyText =
-        `Your subscription will expire in ${daysRemaining} days. Please renew soon to avoid any stoppage.`;
-
-    } else if (daysRemaining <= 7) {
-      subject =
-        `Subscription Reminder: ${daysRemaining} days left for ${resolvedHotelName}`;
-
-      urgencyColor = "#0875D1";
-
-      urgencyText =
-        `Your subscription will expire in ${daysRemaining} days.`;
-    }
-
-    const templateIdentifier = `reminder-${daysRemaining}d`;
-    log.info(
-      `[EMAIL-DISPATCH] Starting reminder email dispatch | Function: sendSubscriptionExpiryReminder | Template: ${templateIdentifier} | Recipient: ${to} | Hotel: ${resolvedHotelName} (hotelId: ${hotelId || "N/A"}) | Plan: ${resolvedPlanName} (${cycleLabel}) | DaysLeft: ${daysRemaining} | Payable: ${formattedAmount} | QuickRenewUrl: ${quickRenewUrl}`
-    );
-
-    await transporter.sendMail({
-      from: `"StayLio" <${process.env.SMTP_USER}>`,
-      to,
-      subject,
-
-      text: `Hello ${resolvedHotelName},
+  const text = `Hello ${resolvedHotelName},
 
 ${urgencyText}
 
@@ -855,9 +709,9 @@ Please renew your plan now so all hotel rooms and billing keep working without i
 Pay & Renew Now: ${quickRenewUrl}
 
 Thank you,
-StayLio Team`,
+StayLio Team`;
 
-      html: `
+  const html = `
 <!DOCTYPE html>
 <html lang="en">
 
@@ -920,7 +774,6 @@ StayLio Team`,
     style="
       margin-top:4px;
       font-size:12px;
-      line-height:18px;
       color:#6B7280;
     "
   >
@@ -931,7 +784,7 @@ StayLio Team`,
 </tr>
 
 
-<!-- CONTENT -->
+<!-- TITLE -->
 <tr>
 <td>
 
@@ -958,7 +811,8 @@ StayLio Team`,
     Hello
     <strong style="color:#111827;">
       ${resolvedHotelName}
-    </strong>,
+    </strong>
+    ,
   </div>
 
   <div
@@ -969,8 +823,7 @@ StayLio Team`,
       margin-bottom:26px;
     "
   >
-    ${urgencyText}
-    Here are your current plan details.
+    ${urgencyText} Here are your current plan details.
   </div>
 
 </td>
@@ -1120,8 +973,8 @@ StayLio Team`,
         style="
           border-top:1px solid #F0F0F0;
           font-size:14px;
-          font-weight:700;
-          color:${urgencyColor};
+          font-weight:600;
+          color:#0875D1;
           padding:10px 0 7px;
         "
       >
@@ -1368,7 +1221,214 @@ StayLio Team`,
 
 </body>
 </html>
-`,
+`;
+
+  return { subject, text, html };
+};
+
+// ============================================================
+// 3B. SUBSCRIPTION EXPIRY REMINDER
+// ============================================================
+const sendSubscriptionExpiryReminder = async ({
+  to,
+  hotelName,
+  planName,
+  endDate,
+  daysRemaining,
+  hotelId,
+  planId,
+  billingCycle,
+}) => {
+  try {
+    const resolvedHotelName =
+      await getHotelNameFromSettings({
+        hotelId,
+        hotelName,
+      });
+
+    const formattedDate =
+      new Date(endDate).toLocaleDateString(
+        "en-IN",
+        {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+          timeZone: "Asia/Kolkata",
+        }
+      );
+
+    const frontendBaseUrl =
+      getFrontendUrl();
+
+    const upgradeUrl = hotelId
+      ? `${frontendBaseUrl}/plan-upgrade?hotelId=${hotelId}`
+      : `${frontendBaseUrl}/plan-upgrade`;
+
+    const loginUrl = `${frontendBaseUrl}/hotel-login`;
+
+    // Resolve planId and billingCycle for 1-click renewal token
+    let resolvedPlanId = planId;
+    let resolvedBillingCycle = billingCycle || "monthly";
+    if (resolvedBillingCycle === "trial" || resolvedBillingCycle === "custom") {
+      resolvedBillingCycle = "monthly";
+    }
+    if (!resolvedPlanId && hotelId) {
+      const latestSub = await Subscription.findOne({ hotelId })
+        .sort({ createdAt: -1 })
+        .select("planId billingCycle")
+        .lean();
+      if (latestSub?.planId) {
+        resolvedPlanId = latestSub.planId;
+        if (latestSub.billingCycle && latestSub.billingCycle !== "trial" && latestSub.billingCycle !== "custom") {
+          resolvedBillingCycle = latestSub.billingCycle;
+        }
+      }
+    }
+
+    let planDoc = null;
+    if (resolvedPlanId) {
+      planDoc = await Plans.findById(resolvedPlanId).lean();
+    }
+    if (!planDoc) {
+      planDoc = await Plans.findOne().sort({ price: 1 }).lean();
+      if (planDoc?._id) {
+        resolvedPlanId = planDoc._id;
+      }
+    }
+
+    const resolvedPlanName = planDoc?.planName || planName || "Subscription Plan";
+    const cycle = resolvedBillingCycle || "monthly";
+    const cycleLabel = cycle.charAt(0).toUpperCase() + cycle.slice(1);
+
+    // Calculate plan amount
+    let basePrice =
+      planDoc?.pricing?.[cycle] ??
+      planDoc?.pricing?.monthly ??
+      planDoc?.price ??
+      999;
+    if (basePrice <= 0) {
+      basePrice = 999;
+    }
+
+    // Determine cycle duration days
+    let totalDays = 30;
+    if (cycle === "quarterly") totalDays = 90;
+    else if (cycle === "halfYearly") totalDays = 180;
+    else if (cycle === "yearly") totalDays = 365;
+    else if (planDoc?.validityDays) totalDays = planDoc.validityDays;
+
+    const remainingDays = Math.max(0, Number(daysRemaining) || 0);
+    const perDayCost = Number((basePrice / totalDays).toFixed(2));
+    const unusedCredit = Number(Math.min(basePrice, perDayCost * remainingDays).toFixed(2));
+    const discountedPrice = Math.max(1, Number((basePrice - unusedCredit).toFixed(2)));
+
+    let taxEnabled = false;
+    if (hotelId) {
+      const hotelDoc = await Hotels.findById(hotelId).select("taxEnabled").lean();
+      taxEnabled = Boolean(hotelDoc?.taxEnabled);
+    }
+    const taxRate = taxEnabled ? 0.18 : 0;
+    const taxAmount = Number((discountedPrice * taxRate).toFixed(2));
+    const totalPayableAmount = Number((discountedPrice + taxAmount).toFixed(2));
+    const formattedAmount = `₹${totalPayableAmount.toLocaleString("en-IN")}`;
+    const formattedBasePrice = `₹${basePrice.toLocaleString("en-IN")}`;
+    const formattedCredit = `₹${unusedCredit.toLocaleString("en-IN")}`;
+
+    let quickRenewUrl = upgradeUrl;
+    if (hotelId && resolvedPlanId) {
+      // Cascading validity:
+      // - 7-day reminder valid for 4 days (until 3-day reminder is sent)
+      // - 3-day reminder valid for 2 days (until 1-day reminder is sent)
+      // - 1-day reminder valid for 1 day (until expiry)
+      let reminderStage = "7d";
+      let expiresInDays = 4;
+      if (daysRemaining <= 1) {
+        reminderStage = "1d";
+        expiresInDays = 1;
+      } else if (daysRemaining <= 3) {
+        reminderStage = "3d";
+        expiresInDays = 2;
+      } else {
+        reminderStage = "7d";
+        expiresInDays = Math.max(1, daysRemaining - 3);
+      }
+
+      const renewToken = generateRenewalToken({
+        hotelId: String(hotelId),
+        planId: String(resolvedPlanId),
+        billingCycle: resolvedBillingCycle,
+        reminderStage,
+        expiresInDays,
+      });
+      quickRenewUrl = `${getBackendApiUrl()}/payments/quick-renew?token=${renewToken}`;
+    }
+
+    let subject =
+      `Subscription Reminder: Plan expiring soon for ${resolvedHotelName}`;
+
+    let urgencyColor = "#D97706";
+
+    let urgencyText =
+      `Your subscription will expire in ${daysRemaining} day${daysRemaining > 1 ? "s" : ""
+      }.`;
+
+    if (daysRemaining <= 1) {
+      subject =
+        `Subscription Reminder: 1 day left for ${resolvedHotelName}`;
+
+      urgencyColor = "#B42318";
+
+      urgencyText =
+        "Your subscription expires tomorrow. Please renew today to keep your hotel system running smoothly.";
+
+    } else if (daysRemaining <= 3) {
+      subject =
+        `Subscription Reminder: ${daysRemaining} days left for ${resolvedHotelName}`;
+
+      urgencyColor = "#C2410C";
+
+      urgencyText =
+        `Your subscription will expire in ${daysRemaining} days. Please renew soon to avoid any stoppage.`;
+
+    } else if (daysRemaining <= 7) {
+      subject =
+        `Subscription Reminder: ${daysRemaining} days left for ${resolvedHotelName}`;
+
+      urgencyColor = "#0875D1";
+
+      urgencyText =
+        `Your subscription will expire in ${daysRemaining} days.`;
+    }
+
+    const templateIdentifier = `reminder-${daysRemaining}d`;
+    log.info(
+      `[EMAIL-DISPATCH] Starting reminder email dispatch | Function: sendSubscriptionExpiryReminder | Template: ${templateIdentifier} | Recipient: ${to} | Hotel: ${resolvedHotelName} (hotelId: ${hotelId || "N/A"}) | Plan: ${resolvedPlanName} (${cycleLabel}) | DaysLeft: ${daysRemaining} | Payable: ${formattedAmount} | QuickRenewUrl: ${quickRenewUrl}`
+    );
+
+    const emailContent = renderSubscriptionReminderTemplate({
+      resolvedHotelName,
+      resolvedPlanName,
+      cycleLabel,
+      formattedDate,
+      daysRemaining,
+      formattedBasePrice,
+      formattedCredit,
+      remainingDays,
+      formattedAmount,
+      taxAmount,
+      quickRenewUrl,
+      upgradeUrl,
+      urgencyText,
+      urgencyColor,
+      subject,
+    });
+
+    await transporter.sendMail({
+      from: `"StayLio" <${process.env.SMTP_USER}>`,
+      to,
+      subject: emailContent.subject,
+      text: emailContent.text,
+      html: emailContent.html,
     });
 
     log.info(
@@ -1488,7 +1548,8 @@ const sendSubscriptionExpiredNotification = async ({
         hotelId: String(hotelId),
         planId: String(resolvedPlanId),
         billingCycle: resolvedBillingCycle,
-        expiresInDays: 7,
+        reminderStage: "expired",
+        expiresInDays: 10,
       });
       quickRenewUrl = `${getBackendApiUrl()}/payments/quick-renew?token=${renewToken}`;
     }
@@ -2022,7 +2083,7 @@ const sendSubscriptionCancelledNotification = async ({
         hotelId: String(hotelId),
         planId: String(resolvedPlanId),
         billingCycle: resolvedBillingCycle,
-        expiresInDays: 7,
+        expiresInDays: 10,
       });
       quickRenewUrl = `${getBackendApiUrl()}/payments/quick-renew?token=${renewToken}`;
     }
@@ -2838,6 +2899,7 @@ const sendHotelBlockedEmail = async ({
 export {
   sendOTP,
   sendSubscriptionExpiryReminder,
+  renderSubscriptionReminderTemplate,
   sendSubscriptionExpiredNotification,
   sendSubscriptionCancelledNotification,
   sendAdminEmail,

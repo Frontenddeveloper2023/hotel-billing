@@ -1,5 +1,6 @@
 import Plans from "../models/plans.js";
 import FreeTrialSettings from "../models/freeTrialSettings.js";
+import BillingCycleSettings from "../models/billingCycleSettings.js";
 import { log } from "../util/logger.js";
 
 // ============================================================
@@ -11,6 +12,7 @@ export const createPlan = async (req, res) => {
       planName,
       description,
       pricing,
+      actualPricing,
       trialDays,
       setupFee,
       limits,
@@ -53,7 +55,7 @@ export const createPlan = async (req, res) => {
     }
 
     // --------------------------------------------------------
-    // 3. Validate pricing
+    // 3. Validate pricing (Offer Price & Actual Price)
     // --------------------------------------------------------
     const priceFields = [
       "monthly",
@@ -72,6 +74,21 @@ export const createPlan = async (req, res) => {
           return res.status(400).json({
             success: false,
             message: `${field} plan price must be a valid amount greater than or equal to 0.`,
+          });
+        }
+      }
+    }
+
+    if (actualPricing !== undefined) {
+      for (const field of priceFields) {
+        if (
+          actualPricing[field] !== undefined &&
+          (typeof actualPricing[field] !== "number" ||
+            actualPricing[field] < 0)
+        ) {
+          return res.status(400).json({
+            success: false,
+            message: `${field} actual price must be a valid amount greater than or equal to 0.`,
           });
         }
       }
@@ -205,6 +222,13 @@ export const createPlan = async (req, res) => {
         quarterly: pricing?.quarterly ?? 0,
         halfYearly: pricing?.halfYearly ?? 0,
         yearly: pricing?.yearly ?? 0,
+      },
+
+      actualPricing: {
+        monthly: actualPricing?.monthly ?? 0,
+        quarterly: actualPricing?.quarterly ?? 0,
+        halfYearly: actualPricing?.halfYearly ?? 0,
+        yearly: actualPricing?.yearly ?? 0,
       },
 
       trialDays: trialDays ?? 0,
@@ -371,6 +395,7 @@ export const updatePlan = async (req, res) => {
       planName,
       description,
       pricing,
+      actualPricing,
       trialDays,
       setupFee,
       limits,
@@ -447,16 +472,16 @@ export const updatePlan = async (req, res) => {
     }
 
     // --------------------------------------------------------
-    // 5. Validate and update pricing
+    // 5. Validate and update pricing (Offer Price)
     // --------------------------------------------------------
-    if (pricing !== undefined) {
-      const priceFields = [
-        "monthly",
-        "quarterly",
-        "halfYearly",
-        "yearly",
-      ];
+    const priceFields = [
+      "monthly",
+      "quarterly",
+      "halfYearly",
+      "yearly",
+    ];
 
+    if (pricing !== undefined) {
       for (const field of priceFields) {
         if (
           pricing[field] !== undefined &&
@@ -482,6 +507,41 @@ export const updatePlan = async (req, res) => {
 
       plan.pricing.yearly =
         pricing.yearly ?? plan.pricing.yearly;
+    }
+
+    // --------------------------------------------------------
+    // 5b. Validate and update actual pricing (MRP / Strikethrough Price)
+    // --------------------------------------------------------
+    if (actualPricing !== undefined) {
+      for (const field of priceFields) {
+        if (
+          actualPricing[field] !== undefined &&
+          (typeof actualPricing[field] !== "number" ||
+            actualPricing[field] < 0)
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              `${field} actual price must be a valid amount greater than or equal to 0.`,
+          });
+        }
+      }
+
+      if (!plan.actualPricing) {
+        plan.actualPricing = { monthly: 0, quarterly: 0, halfYearly: 0, yearly: 0 };
+      }
+
+      plan.actualPricing.monthly =
+        actualPricing.monthly ?? plan.actualPricing.monthly ?? 0;
+
+      plan.actualPricing.quarterly =
+        actualPricing.quarterly ?? plan.actualPricing.quarterly ?? 0;
+
+      plan.actualPricing.halfYearly =
+        actualPricing.halfYearly ?? plan.actualPricing.halfYearly ?? 0;
+
+      plan.actualPricing.yearly =
+        actualPricing.yearly ?? plan.actualPricing.yearly ?? 0;
     }
 
     // --------------------------------------------------------
@@ -799,6 +859,93 @@ export const updateFreeTrialConfig = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Unable to update free trial configuration.",
+    });
+  }
+};
+
+// ============================================================
+// GET GLOBAL BILLING CYCLE CONFIG
+// ============================================================
+export const getBillingCycleConfig = async (req, res) => {
+  try {
+    let settings = await BillingCycleSettings.findOne();
+    if (!settings) {
+      settings = await BillingCycleSettings.create({
+        monthly: true,
+        quarterly: true,
+        halfYearly: true,
+        yearly: true,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        monthly: settings.monthly ?? true,
+        quarterly: settings.quarterly ?? true,
+        halfYearly: settings.halfYearly ?? true,
+        yearly: settings.yearly ?? true,
+      },
+    });
+  } catch (error) {
+    log.error(`[getBillingCycleConfig] Error: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to load billing cycle configuration.",
+    });
+  }
+};
+
+// ============================================================
+// UPDATE GLOBAL BILLING CYCLE CONFIG
+// ============================================================
+export const updateBillingCycleConfig = async (req, res) => {
+  try {
+    const { monthly, quarterly, halfYearly, yearly } = req.body;
+
+    let settings = await BillingCycleSettings.findOne();
+    if (!settings) {
+      settings = new BillingCycleSettings();
+    }
+
+    const nextMonthly = typeof monthly === "boolean" ? monthly : settings.monthly;
+    const nextQuarterly = typeof quarterly === "boolean" ? quarterly : settings.quarterly;
+    const nextHalfYearly = typeof halfYearly === "boolean" ? halfYearly : settings.halfYearly;
+    const nextYearly = typeof yearly === "boolean" ? yearly : settings.yearly;
+
+    // Ensure at least one cycle is active
+    if (!nextMonthly && !nextQuarterly && !nextHalfYearly && !nextYearly) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one billing cycle must remain enabled.",
+      });
+    }
+
+    settings.monthly = nextMonthly;
+    settings.quarterly = nextQuarterly;
+    settings.halfYearly = nextHalfYearly;
+    settings.yearly = nextYearly;
+    settings.updatedBy = req.user?._id || null;
+
+    await settings.save();
+
+    log.info(`[updateBillingCycleConfig] Updated: monthly=${settings.monthly}, quarterly=${settings.quarterly}, halfYearly=${settings.halfYearly}, yearly=${settings.yearly}`);
+
+    return res.status(200).json({
+      success: true,
+      message: "Billing cycle configuration updated successfully.",
+      data: {
+        monthly: settings.monthly,
+        quarterly: settings.quarterly,
+        halfYearly: settings.halfYearly,
+        yearly: settings.yearly,
+      },
+    });
+  } catch (error) {
+    log.error(`[updateBillingCycleConfig] Error: ${error.message}`);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to update billing cycle configuration.",
     });
   }
 };

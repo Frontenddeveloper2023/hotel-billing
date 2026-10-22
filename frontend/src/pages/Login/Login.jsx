@@ -1507,6 +1507,7 @@ const Login = () => {
                 active:scale-[0.99]
                 disabled:cursor-not-allowed
                 disabled:opacity-70
+                cursor-pointer
             "
         >
             {loadingSend ? (
@@ -1706,6 +1707,7 @@ const Login = () => {
                 active:scale-[0.99]
                 disabled:cursor-not-allowed
                 disabled:opacity-70
+                cursor-pointer
             "
         >
             {loadingVerify ? (

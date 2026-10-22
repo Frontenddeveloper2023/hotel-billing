@@ -421,7 +421,7 @@ const SaaSUserApplicationStatus = () => {
         "
       >
         <div className="mx-auto w-full max-w-[1180px]">
-          <SaaSSetupProgress activeStep={5} />
+          <SaaSSetupProgress activeStep={6} />
         </div>
       </div>
 

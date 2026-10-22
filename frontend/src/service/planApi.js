@@ -193,4 +193,50 @@ export const updateAdminFreeTrialConfig = async (configData) => {
       }
     );
   }
+};
+
+// ==========================================
+// GLOBAL BILLING CYCLES CONFIG API
+// ==========================================
+
+export const getPublicBillingCycleConfig = async () => {
+  try {
+    const response = await api.get("/plans/public/billing-cycles");
+    return response.data;
+  } catch (error) {
+    throw (
+      error.response?.data || {
+        success: false,
+        message: error.message,
+      }
+    );
+  }
+};
+
+export const getAdminBillingCycleConfig = async () => {
+  try {
+    const response = await api.get("/plans/billing-cycles");
+    return response.data;
+  } catch (error) {
+    throw (
+      error.response?.data || {
+        success: false,
+        message: error.message,
+      }
+    );
+  }
+};
+
+export const updateAdminBillingCycleConfig = async (configData) => {
+  try {
+    const response = await api.put("/plans/billing-cycles", configData);
+    return response.data;
+  } catch (error) {
+    throw (
+      error.response?.data || {
+        success: false,
+        message: error.message,
+      }
+    );
+  }
 };

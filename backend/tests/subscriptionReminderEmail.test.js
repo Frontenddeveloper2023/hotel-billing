@@ -19,6 +19,7 @@ import {
   getFrontendUrl,
   getBackendApiUrl,
   getBaseUrl,
+  renderSubscriptionReminderTemplate,
 } from "../util/email.js";
 
 describe("Subscription Reminder Email Flow & Scheduler Tests", () => {
@@ -236,24 +237,50 @@ Pay & Renew Now: ${quickRenewUrl}`;
       });
       const quickRenewUrl = `${backendApiUrl}/payments/quick-renew?token=${renewToken}`;
 
-      const sampleHtmlButtonWithFallback = `
-        <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 auto;width:100%;max-width:420px;">
-          <tr>
-            <td align="center" bgcolor="#2563EB" style="border-radius:10px;background-color:#2563EB;">
-              <a href="${quickRenewUrl}" target="_blank">💳 Pay &amp; Renew Now</a>
-            </td>
-          </tr>
-        </table>
-        <div style="margin-top:14px;font-size:12px;line-height:18px;color:#6B7280;text-align:center;">
-          Can't click the button? Copy and paste this renewal link into your browser:<br>
-          <a href="${quickRenewUrl}" target="_blank">${quickRenewUrl}</a>
-        </div>
-      `;
+      const { subject, text, html } = renderSubscriptionReminderTemplate({
+        resolvedHotelName: "Jayam Hotel",
+        resolvedPlanName: "Premium Plan",
+        cycleLabel: "Monthly",
+        formattedDate: "22 October 2026",
+        daysRemaining: 1,
+        formattedBasePrice: "₹999",
+        formattedCredit: "₹0",
+        remainingDays: 1,
+        formattedAmount: "₹999",
+        taxAmount: 0,
+        quickRenewUrl,
+        upgradeUrl: `${frontendBaseUrl}/plan-upgrade`,
+        urgencyText: "Your subscription expires tomorrow. Please renew today to keep your hotel system running smoothly.",
+        urgencyColor: "#B42318",
+        subject: "Subscription Reminder: 1 day left for Jayam Hotel",
+      });
 
-      // Both button and plain-text fallback link are present
-      assert.ok(sampleHtmlButtonWithFallback.includes("💳 Pay &amp; Renew Now"));
-      assert.ok(sampleHtmlButtonWithFallback.includes("Can't click the button? Copy and paste this renewal link into your browser:"));
-      assert.ok(sampleHtmlButtonWithFallback.includes(quickRenewUrl));
+      // Verify subject
+      assert.equal(subject, "Subscription Reminder: 1 day left for Jayam Hotel");
+
+      // Verify HTML Pay & Renew Now button
+      assert.ok(html.includes("💳 Pay &amp; Renew Now"));
+      assert.ok(html.includes("background-color:#2563EB"));
+      assert.ok(html.includes(`href="${quickRenewUrl}"`));
+
+      // Verify HTML plain-text fallback link
+      assert.ok(
+        html.includes(
+          "Can't click the button? Copy and paste this renewal link into your browser:"
+        )
+      );
+      assert.ok(html.includes(quickRenewUrl));
+
+      // Verify Cashfree security guarantee note
+      assert.ok(
+        html.includes("100% Secure Checkout powered by Cashfree Payments")
+      );
+
+      // Regression checks: verify NO empty button comments or obsolete text
+      assert.ok(!html.includes("<!-- BUTTON -->\n\n\n<!-- FOOTER -->"));
+      assert.ok(!html.includes("<!-- BUTTON -->\r\n\r\n\r\n<!-- FOOTER -->"));
+      assert.ok(!text.includes("Renew or Upgrade here:"));
+      assert.ok(text.includes(`Pay & Renew Now: ${quickRenewUrl}`));
     });
 
     test("Scenario 8: Template identifiers and dispatch logging tags are consistent across reminders and expired notifications", () => {
@@ -273,6 +300,53 @@ Pay & Renew Now: ${quickRenewUrl}`;
       assert.ok(logTagDispatch.startsWith("[EMAIL-DISPATCH]"));
       assert.ok(logTagSuccess.startsWith("[EMAIL-DISPATCH-SUCCESS]"));
       assert.ok(logTagCron.startsWith("[CRON-DISPATCH]"));
+    });
+
+    test("Scenario 9: Regression test across 1-day, 3-day, and 7-day reminders confirms consistent button and fallback link", () => {
+      const daysList = [1, 3, 7];
+      daysList.forEach((days) => {
+        const renewToken = generateRenewalToken({
+          hotelId: sampleHotelId,
+          planId: samplePlanId,
+          billingCycle: sampleCycle,
+        });
+        const quickRenewUrl = `${backendApiUrl}/payments/quick-renew?token=${renewToken}`;
+
+        const { html, text } = renderSubscriptionReminderTemplate({
+          resolvedHotelName: "Jayam Hotel",
+          resolvedPlanName: "Standard Plan",
+          cycleLabel: "Monthly",
+          formattedDate: "28 October 2026",
+          daysRemaining: days,
+          formattedBasePrice: "₹1,499",
+          formattedCredit: "₹100",
+          remainingDays: days,
+          formattedAmount: "₹1,399",
+          taxAmount: 0,
+          quickRenewUrl,
+          upgradeUrl: `${frontendBaseUrl}/plan-upgrade`,
+          urgencyText: `Your subscription will expire in ${days} day(s).`,
+          urgencyColor: days === 1 ? "#B42318" : days === 3 ? "#C2410C" : "#0875D1",
+          subject: `Subscription Reminder: ${days} day${days > 1 ? "s" : ""} left for Jayam Hotel`,
+        });
+
+        // Button assertions
+        assert.ok(html.includes("💳 Pay &amp; Renew Now"));
+        assert.ok(html.includes(`href="${quickRenewUrl}"`));
+        assert.ok(html.includes("background-color:#2563EB"));
+
+        // Fallback link assertions
+        assert.ok(
+          html.includes(
+            "Can't click the button? Copy and paste this renewal link into your browser:"
+          )
+        );
+        assert.ok(html.includes(quickRenewUrl));
+
+        // Plain text assertions
+        assert.ok(text.includes(`Pay & Renew Now: ${quickRenewUrl}`));
+        assert.ok(!text.includes("Renew or Upgrade here:"));
+      });
     });
   });
 
@@ -383,4 +457,94 @@ Pay & Renew Now: ${quickRenewUrl}`;
       assert.equal(isSuperseded(subscriptions[1], subscriptions), false);
     });
   });
+
+  // ============================================================
+  // 5. CASCADING RENEWAL TOKEN VALIDITY & DOUBLE-RENEWAL PREVENTION
+  // ============================================================
+  describe("Cascading Expiry Windows & Security Guards", () => {
+    test("Cascading expiry duration algorithm assigns 4d (7d), 2d (3d), 1d (1d), and 10d (expired)", () => {
+      const getExpiryInDays = (daysRemaining, isExpired = false) => {
+        if (isExpired) return 10;
+        if (daysRemaining <= 1) return 1;
+        if (daysRemaining <= 3) return 2;
+        return Math.max(1, daysRemaining - 3);
+      };
+
+      assert.equal(getExpiryInDays(7), 4);
+      assert.equal(getExpiryInDays(3), 2);
+      assert.equal(getExpiryInDays(1), 1);
+      assert.equal(getExpiryInDays(0, true), 10);
+    });
+
+    test("Generates 1-day, 2-day, 4-day, and 10-day cryptographic tokens successfully", () => {
+      const token1d = generateRenewalToken({
+        hotelId: sampleHotelId,
+        planId: samplePlanId,
+        billingCycle: sampleCycle,
+        expiresInDays: 1,
+      });
+      const token2d = generateRenewalToken({
+        hotelId: sampleHotelId,
+        planId: samplePlanId,
+        billingCycle: sampleCycle,
+        expiresInDays: 2,
+      });
+      const token4d = generateRenewalToken({
+        hotelId: sampleHotelId,
+        planId: samplePlanId,
+        billingCycle: sampleCycle,
+        expiresInDays: 4,
+      });
+      const token10d = generateRenewalToken({
+        hotelId: sampleHotelId,
+        planId: samplePlanId,
+        billingCycle: sampleCycle,
+        expiresInDays: 10,
+      });
+
+      assert.equal(verifyRenewalToken(token1d).valid, true);
+      assert.equal(verifyRenewalToken(token2d).valid, true);
+      assert.equal(verifyRenewalToken(token4d).valid, true);
+      assert.equal(verifyRenewalToken(token10d).valid, true);
+    });
+
+    test("Double-renewal prevention logic accurately flags already renewed active paid subscriptions", () => {
+      const now = new Date("2026-10-22T12:00:00Z");
+
+      const isAlreadyRenewed = (sub) => {
+        if (!sub) return false;
+        const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+        return (
+          sub.status === "active" &&
+          sub.paymentStatus === "paid" &&
+          sub.endDate.getTime() - now.getTime() > sevenDaysMs
+        );
+      };
+
+      // Case A: Hotel just renewed for 30 days -> already renewed = true
+      const justRenewedSub = {
+        status: "active",
+        paymentStatus: "paid",
+        endDate: new Date("2026-11-22T12:00:00Z"), // 31 days ahead
+      };
+      assert.equal(isAlreadyRenewed(justRenewedSub), true);
+
+      // Case B: Hotel still expiring in 2 days -> already renewed = false (allow renewal)
+      const expiringSub = {
+        status: "active",
+        paymentStatus: "paid",
+        endDate: new Date("2026-10-24T12:00:00Z"), // 2 days ahead
+      };
+      assert.equal(isAlreadyRenewed(expiringSub), false);
+
+      // Case C: Expired subscription -> already renewed = false
+      const expiredSub = {
+        status: "expired",
+        paymentStatus: "paid",
+        endDate: new Date("2026-10-21T12:00:00Z"),
+      };
+      assert.equal(isAlreadyRenewed(expiredSub), false);
+    });
+  });
 });
+

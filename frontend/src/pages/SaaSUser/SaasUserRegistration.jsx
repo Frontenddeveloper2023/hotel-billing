@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import SaaSSetupProgress from "./SaaSSetupProgress";
 
@@ -174,136 +174,187 @@ const SaaSUserRegistration = () => {
   const [trialSuccessModal, setTrialSuccessModal] = useState(null);
 
   // ==========================================================
-  // FORM
+  // VERIFIED EMAIL CHECK & FORM STATE
   // ==========================================================
+  const verifiedEmail = sessionStorage.getItem("hotelRegistrationEmail");
 
-const [form, setForm] = useState({
-  hotelName: "",
-  ownerName: "",
-  email: "",
-  phone: "",
+  let savedHotelDetails = null;
+  try {
+    const raw = sessionStorage.getItem("saasHotelDetails") || sessionStorage.getItem("saasRegistration");
+    if (raw) savedHotelDetails = JSON.parse(raw);
+  } catch (e) {
+    console.error(e);
+  }
 
-  country: "India",
-  state: "Tamil Nadu",
-  city: "Chennai",
+  const [form, setForm] = useState({
+    hotelName: savedHotelDetails?.hotelName || "",
+    ownerName: savedHotelDetails?.ownerName || "",
+    email: verifiedEmail || "",
+    phone: savedHotelDetails?.phone || "",
+    country: savedHotelDetails?.address?.country || "India",
+    state: savedHotelDetails?.address?.state || "Tamil Nadu",
+    city: savedHotelDetails?.address?.city || "Chennai",
+    pincode: savedHotelDetails?.address?.pincode || "",
+    street: savedHotelDetails?.address?.street || "",
+    gstNumber: savedHotelDetails?.gstNumber || "",
+    taxEnabled: Boolean(savedHotelDetails?.taxEnabled),
+    billingCycle: isFreeTrial ? "trial" : selectedBillingCycle,
+  });
 
-  pincode: "",
-  street: "",
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
-  gstNumber: "",
-  taxEnabled: false,
-  billingCycle: isFreeTrial ? "trial" : selectedBillingCycle,
-});
-
+  useEffect(() => {
+    if (!verifiedEmail) {
+      toast.warn("Please verify your email address before entering hotel details.");
+      navigate("/saas-user/verify-email", { replace: true });
+      return;
+    }
+    // Always keep form.email strictly locked to verifiedEmail
+    if (form.email !== verifiedEmail) {
+      setForm((prev) => ({ ...prev, email: verifiedEmail }));
+    }
+  }, [verifiedEmail, navigate, toast, form.email]);
 
   // ==========================================================
-  // UI STATE
+  // HANDLE INPUT & CLEAR FIELD ERRORS
   // ==========================================================
-
-  const [loading, setLoading] =
-    useState(false);
-
-
-
-  // ==========================================================
-  // HANDLE INPUT
-  // ==========================================================
-
   const handleChange = (e) => {
-    const {
-      name,
-      value,
-      type,
-      checked,
-    } = e.target;
+    const { name, value, type, checked } = e.target;
+
+    // Email and Country are locked and strictly cannot be changed
+    if (name === "email" || name === "country") return;
+
+    let processedValue = type === "checkbox" ? checked : value;
+
+    // Phone: only digits, strictly max 10 digits
+    if (name === "phone") {
+      processedValue = value.replace(/\D/g, "").slice(0, 10);
+    }
+
+    // Pincode: only digits, strictly max 6 digits
+    if (name === "pincode") {
+      processedValue = value.replace(/\D/g, "").slice(0, 6);
+    }
 
     setForm((previous) => ({
       ...previous,
-
-      [name]:
-        type === "checkbox"
-          ? checked
-          : value,
+      [name]: processedValue,
     }));
 
-  
+    if (errors[name]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
   };
 
-
   // ==========================================================
-  // VALIDATION
+  // PROFESSIONAL VALIDATION & DIRECT SMOOTH SCROLL TO ERROR
   // ==========================================================
-
   const validateForm = () => {
     if (!selectedPlan?._id) {
-      return (
-        "Please select a subscription plan before registering your hotel."
-      );
+      toast.error("Please select a subscription plan before registering your hotel.");
+      return false;
     }
 
-    if (!form.hotelName.trim()) {
-      return "Please enter your hotel name.";
+    const newErrors = {};
+
+    if (!form.hotelName || !form.hotelName.trim()) {
+      newErrors.hotelName = "Hotel name is required.";
+    } else if (form.hotelName.trim().length < 2) {
+      newErrors.hotelName = "Hotel name must be at least 2 characters.";
     }
 
-    if (!form.ownerName.trim()) {
-      return "Please enter the owner name.";
+    if (!form.ownerName || !form.ownerName.trim()) {
+      newErrors.ownerName = "Owner name is required.";
+    } else if (form.ownerName.trim().length < 2) {
+      newErrors.ownerName = "Owner name must be at least 2 characters.";
     }
 
-    if (!form.email.trim()) {
-      return "Please enter your email address.";
+    const activeEmail = (verifiedEmail || form.email || "").trim().toLowerCase();
+    if (!activeEmail) {
+      newErrors.email = "Email address is required. Please verify your email.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(activeEmail)) {
+      newErrors.email = "Please enter a valid email address.";
     }
 
-    const emailRegex =
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (
-      !emailRegex.test(
-        form.email.trim()
-      )
-    ) {
-      return "Please enter a valid email address.";
+    const cleanPhone = form.phone ? form.phone.replace(/\D/g, "") : "";
+    if (!cleanPhone) {
+      newErrors.phone = "Phone number is required.";
+    } else if (cleanPhone.length !== 10) {
+      newErrors.phone = "Phone number must be exactly 10 digits.";
     }
 
-    if (!form.phone.trim()) {
-      return "Please enter your phone number.";
+    if (!form.country || !form.country.trim()) {
+      newErrors.country = "Please select a country.";
     }
 
-    const phoneDigits =
-      form.phone.replace(
-        /\D/g,
-        ""
-      );
-
-    if (
-      phoneDigits.length < 10 ||
-      phoneDigits.length > 15
-    ) {
-      return "Please enter a valid phone number.";
+    if (!form.state || !form.state.trim()) {
+      newErrors.state = "Please select a state.";
     }
 
-    if (!form.city.trim()) {
-      return "Please enter your city.";
+    if (!form.city || !form.city.trim()) {
+      newErrors.city = "Please select a city.";
     }
 
-    if (!form.state.trim()) {
-      return "Please enter your state.";
+    const cleanPincode = form.pincode ? form.pincode.replace(/\D/g, "") : "";
+    if (!cleanPincode) {
+      newErrors.pincode = "Pincode is required.";
+    } else if (cleanPincode.length !== 6) {
+      newErrors.pincode = "Pincode must be exactly 6 digits.";
     }
 
-    if (!form.country.trim()) {
-      return "Please enter your country.";
+    if (!form.street || !form.street.trim()) {
+      newErrors.street = "Street address is required.";
+    } else if (form.street.trim().length < 3) {
+      newErrors.street = "Please enter street address (min 3 characters).";
     }
 
-    if (!form.pincode.trim()) {
-      return "Please enter your pincode.";
+    if (form.taxEnabled) {
+      if (!form.gstNumber || !form.gstNumber.trim()) {
+        newErrors.gstNumber = "GSTIN is required when tax is enabled.";
+      } else if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/i.test(form.gstNumber.trim())) {
+        newErrors.gstNumber = "Please enter a valid 15-character GSTIN (e.g., 33AAAAA0000A1Z5).";
+      }
     }
 
-    if (!form.billingCycle && !isFreeTrial) {
-      return "Please select a billing cycle.";
+    setErrors(newErrors);
+
+    const errorKeys = Object.keys(newErrors);
+    if (errorKeys.length > 0) {
+      const fieldOrder = [
+        "hotelName",
+        "ownerName",
+        "email",
+        "phone",
+        "country",
+        "state",
+        "city",
+        "pincode",
+        "street",
+        "gstNumber",
+      ];
+
+      const firstErrorKey = fieldOrder.find((k) => newErrors[k]) || errorKeys[0];
+      const targetElement = document.getElementById(`field-${firstErrorKey}`);
+
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => {
+          const inputEl = document.getElementById(`input-${firstErrorKey}`);
+          if (inputEl) inputEl.focus({ preventScroll: true });
+        }, 300);
+      }
+
+      toast.error(`Please correct: ${newErrors[firstErrorKey]}`);
+      return false;
     }
 
-    return "";
+    return true;
   };
-
 
   // ==========================================================
   // SUBMIT REGISTRATION
@@ -312,14 +363,15 @@ const [form, setForm] = useState({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const validationError = validateForm();
-    if (validationError) {
-      toast.error(validationError);
+    const isValid = validateForm();
+    if (!isValid) {
       return;
     }
 
     try {
       setLoading(true);
+
+      const lockedEmail = (verifiedEmail || form.email).trim().toLowerCase();
 
       // ======================================================
       // 1. FREE TRIAL REGISTRATION FLOW (INSTANT ACCESS)
@@ -328,7 +380,7 @@ const [form, setForm] = useState({
         const trialResponse = await registerFreeTrial({
           hotelName: form.hotelName.trim(),
           ownerName: form.ownerName.trim(),
-          email: form.email.trim().toLowerCase(),
+          email: lockedEmail,
           phone: form.phone.trim(),
           address: {
             street: form.street.trim(),
@@ -355,7 +407,7 @@ const [form, setForm] = useState({
         setTrialSuccessModal(
           trialResponse.data || {
             hotelName: form.hotelName.trim(),
-            ownerEmail: form.email.trim().toLowerCase(),
+            ownerEmail: lockedEmail,
             startDate: new Date(),
             endDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
             trialDays: 14,
@@ -377,9 +429,7 @@ const [form, setForm] = useState({
           form.ownerName.trim(),
 
         email:
-          form.email
-            .trim()
-            .toLowerCase(),
+          lockedEmail,
 
         phone:
           form.phone.trim(),
@@ -424,102 +474,21 @@ const [form, setForm] = useState({
       );
 
 
-      // ------------------------------------------------------
-      // API
-      // ------------------------------------------------------
+      // Cache details in sessionStorage for checkout and return visits
+      // Note: Data is saved to DB ONLY AFTER successful payment verification!
+      sessionStorage.setItem("saasHotelDetails", JSON.stringify(registrationData));
+      sessionStorage.setItem("saasRegistration", JSON.stringify(registrationData));
 
-      const response =
-        await createRegistration(
-          registrationData
-        );
-
-
-      console.log(
-        "Registration response:",
-        response
-      );
-
-
-      if (!response?.success) {
-        throw new Error(
-          response?.message ||
-            "Unable to submit your hotel registration."
-        );
-      }
-
-
-      // ------------------------------------------------------
-      // GET REGISTRATION DATA
-      // ------------------------------------------------------
-
-      const registration =
-        response?.data ||
-        response?.registration ||
-        {};
-
-
-      const registrationId =
-        registration?.registrationId ||
-        registration?._id ||
-        response?.registrationId ||
-        response?.data?.registrationId;
-
-
-      if (!registrationId) {
-        throw new Error(
-          "Registration was created, but the application ID was not returned by the server."
-        );
-      }
-
-
-      // ------------------------------------------------------
-      // SAVE REGISTRATION ID
-      // ------------------------------------------------------
-
-      localStorage.setItem(
-        "saasRegistrationId",
-        registrationId
-      );
-
-
-      // ------------------------------------------------------
-      // KEEP PLAN AVAILABLE
-      // ------------------------------------------------------
-
-
-      // ------------------------------------------------------
-      // GO TO CHECKOUT
-      // ------------------------------------------------------
-
+      // Navigate directly to checkout without creating an unpaid database record
       navigate(
         "/saas-user/checkout",
         {
           state: {
             selectedPlan,
-
-            billingCycle:
-              form.billingCycle,
-
-            registration: {
-              registrationId,
-
-              hotelName:
-                form.hotelName.trim(),
-
-              ownerName:
-                form.ownerName.trim(),
-
-              email:
-                form.email
-                  .trim()
-                  .toLowerCase(),
-
-              phone:
-                form.phone.trim(),
-            },
-
-            registrationResponse:
-              response,
+            billingCycle: form.billingCycle,
+            registration: registrationData,
+            registrationData,
+            hotelDetails: registrationData,
           },
         }
       );
@@ -806,7 +775,7 @@ const [form, setForm] = useState({
       ======================================================= */}
 
       <SaaSSetupProgress
-        activeStep={2}
+        activeStep={3}
       />
 
 
@@ -833,10 +802,6 @@ const [form, setForm] = useState({
             HEADER
         ==================================================== */}
 
-{/* ====================================================
-          HEADER
-      ==================================================== */}
-
       <header
         className="
           mb-7
@@ -852,12 +817,8 @@ const [form, setForm] = useState({
         }}
       >
         <div className="min-w-0">
-
-      
-
           <h1
-            className="
-              mt-4
+            className=" 
               text-[18px]
               font-bold
               leading-[1.1]
@@ -867,17 +828,10 @@ const [form, setForm] = useState({
               lg:text-[28px]
             "
           >
-            Register Your Hotel
+            Register Your Hotel 
           </h1>
-
-        
         </div>
-
-       
       </header>
-
-   
-    
 
         {/* ====================================================
             FORM
@@ -896,19 +850,15 @@ const [form, setForm] = useState({
           "
         >
 
-
           {/* ==================================================
               LEFT
           ================================================== */}
 
           <div className="space-y-5">
 
-
             {/* =================================================
                 HOTEL INFORMATION
             ================================================= */}
-
-            
 
             <SectionCard
               icon={Building2}
@@ -932,8 +882,8 @@ const [form, setForm] = useState({
                   placeholder="Enter hotel name"
                   required
                   icon={Building2}
+                  error={errors.hotelName}
                 />
-
 
                 <InputField
                   label="Owner Name"
@@ -943,6 +893,7 @@ const [form, setForm] = useState({
                   placeholder="Enter owner name"
                   required
                   icon={User}
+                  error={errors.ownerName}
                 />
 
               </div>
@@ -967,51 +918,70 @@ const [form, setForm] = useState({
                 md:grid-cols-2
               ">
 
-                <InputField
-                  label="Email Address"
-                  name="email"
-                  type="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  placeholder="example@email.com"
-                  required
-                  icon={Mail}
-                />
+                {/* LOCKED VERIFIED EMAIL DISPLAY */}
+                <div className="min-w-0 w-full" id="field-email">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-[13px] font-bold leading-5 text-[#243B53]">
+                      Verified Email Address <span className="ml-1 text-red-500">*</span>
+                    </label>
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 shadow-xs">
+                      <CheckCircle2 size={12} className="text-emerald-600" />
+                      Verified via OTP
+                    </span>
+                  </div>
 
+                  <div className="relative w-full">
+                    <div className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center text-emerald-600">
+                      <Mail size={17} />
+                    </div>
+
+                    <input
+                      type="email"
+                      name="email"
+                      id="input-email"
+                      value={form.email || verifiedEmail || ""}
+                      readOnly
+                      disabled
+                      tabIndex={-1}
+                      autoComplete="off"
+                      className="w-full min-w-0 rounded-xl border border-slate-200 bg-[#F1F5F9] text-[#1E293B] font-semibold text-[14px] leading-5 py-3.5 pl-11 pr-24 outline-none cursor-not-allowed select-none pointer-events-none opacity-95"
+                    />
+
+                  
+                  </div>
+
+                  {errors.email ? (
+                    <p className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-red-600">
+                      <AlertCircle size={13} className="shrink-0" />
+                      <span>{errors.email}</span>
+                    </p>
+                  ) : (
+                    <p className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-[#64748B]">
+                      <LockKeyhole size={11} className="text-slate-400 shrink-0" />
+                      Email is Already Verified. Cannot be edited.
+                    </p>
+                  )}
+                </div>
 
                 <InputField
                   label="Phone Number"
                   name="phone"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  pattern="[0-9]{10}"
                   value={form.phone}
                   onChange={handleChange}
-                  placeholder="Enter phone number"
+                  placeholder="Enter 10-digit phone number"
                   required
                   icon={Phone}
+                  error={errors.phone}
                 />
 
               </div>
 
 
-              <div className="
-                mt-4
-                flex
-                items-center
-                gap-2
-                text-[11px]
-                font-medium
-                leading-5
-                text-[#64748B]
-              ">
-
-                <LockKeyhole
-                  size={13}
-                  className="shrink-0 text-[#1769D2]"
-                />
-
-                Contact details are used for
-                communication and login.
-
-              </div>
+            
 
             </SectionCard>
 
@@ -1020,75 +990,121 @@ const [form, setForm] = useState({
                 ADDRESS
             ================================================= */}
 
-        <SectionCard
-  icon={MapPin}
-  title="Hotel Address"
-  description="Provide the registered address of your hotel."
-  delay="0.15s"
->
-  <div className="space-y-5">
+            <SectionCard
+              icon={MapPin}
+              title="Hotel Address"
+              description="Provide the registered address of your hotel."
+              delay="0.15s"
+            >
+              <div className="space-y-5">
 
-    {/* COUNTRY */}
-    <SearchableSelect
-      label="Country"
-      name="country"
-      value={form.country}
-      onChange={handleChange}
-      placeholder="Search country..."
-      options={countries}
-      required
-      icon={Globe2}
-    />
+                {/* COUNTRY (DEFAULT & NON-EDITABLE) */}
+                <InputField
+                  label="Country"
+                  name="country"
+                  value={form.country || "India"}
+                  readOnly={true}
+                  disabled={true}
+                  required
+                  icon={Globe2}
+                  error={errors.country}
+                />
 
-    {/* STATE */}
-    <SearchableSelect
-      label="State"
-      name="state"
-      value={form.state}
-      onChange={handleChange}
-      placeholder="Search state..."
-      options={states}
-      required
-      icon={MapPinned}
-    />
+                {/* STATE */}
+                <SearchableSelect
+                  label="State"
+                  name="state"
+                  value={form.state}
+                  onChange={handleChange}
+                  placeholder="Search state..."
+                  options={states}
+                  required
+                  icon={MapPinned}
+                  error={errors.state}
+                />
 
-    {/* CITY */}
-    <SearchableSelect
-      label="City"
-      name="city"
-      value={form.city}
-      onChange={handleChange}
-      placeholder="Search city..."
-      options={cities}
-      required
-      icon={Landmark}
-    />
+                {/* CITY */}
+                <SearchableSelect
+                  label="City"
+                  name="city"
+                  value={form.city}
+                  onChange={handleChange}
+                  placeholder="Search city..."
+                  options={cities}
+                  required
+                  icon={Landmark}
+                  error={errors.city}
+                />
 
-    {/* PINCODE */}
-    <InputField
-      label="Pincode"
-      name="pincode"
-      value={form.pincode}
-      onChange={handleChange}
-      placeholder="Enter pincode"
-      required
-      icon={MapPin}
-    />
+                {/* PINCODE */}
+                <InputField
+                  label="Pincode"
+                  name="pincode"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={6}
+                  pattern="[0-9]{6}"
+                  value={form.pincode}
+                  onChange={handleChange}
+                  placeholder="Enter 6-digit pincode"
+                  required
+                  icon={MapPin}
+                  error={errors.pincode}
+                />
 
-    {/* STREET / ADDRESS */}
-    <InputField
-      label="Street / Address"
-      name="street"
-      value={form.street}
-      onChange={handleChange}
-      placeholder="Building, street, area"
-      icon={MapPin}
-    />
+                {/* STREET / ADDRESS */}
+                <InputField
+                  label="Street / Address"
+                  name="street"
+                  value={form.street}
+                  onChange={handleChange}
+                  placeholder="Building, street, area"
+                  required
+                  icon={MapPin}
+                  error={errors.street}
+                />
 
-   
+              </div>
+            </SectionCard>
 
-  </div>
-</SectionCard>
+
+            {/* =================================================
+                GST & TAX (OPTIONAL)
+            ================================================= */}
+
+            {/* <SectionCard
+              icon={ReceiptText}
+              title="GST & Tax Information (Optional)"
+              description="Enable if your hotel is registered for GST invoicing."
+              delay="0.20s"
+            >
+              <div className="space-y-4">
+                <label className="flex items-center gap-3 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    name="taxEnabled"
+                    id="input-taxEnabled"
+                    checked={form.taxEnabled}
+                    onChange={handleChange}
+                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
+                  />
+                  <span className="text-[13px] font-bold text-[#243B53]">Enable GST Billing for this Hotel</span>
+                </label>
+
+                {form.taxEnabled && (
+                  <InputField
+                    label="GSTIN Number"
+                    name="gstNumber"
+                    value={form.gstNumber}
+                    onChange={handleChange}
+                    placeholder="e.g. 33AAAAA0000A1Z5"
+                    required={true}
+                    icon={ReceiptText}
+                    error={errors.gstNumber}
+                  />
+                )}
+              </div>
+            </SectionCard> */}
 
 
           
@@ -1745,6 +1761,8 @@ const SearchableSelect = ({
   options = [],
   required = false,
   icon: Icon,
+  error,
+  id,
 }) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -1767,7 +1785,7 @@ const SearchableSelect = ({
   };
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full" id={id || `field-${name}`}>
       <label className="mb-2 block text-[13px] font-bold leading-5 text-[#243B53]">
         {label}
         {required && (
@@ -1779,46 +1797,35 @@ const SearchableSelect = ({
         {Icon && (
           <Icon
             size={17}
-            className="
-              pointer-events-none
-              absolute
-              left-3.5
-              top-1/2
-              z-10
-              -translate-y-1/2
-              text-[#71859A]
-            "
+            className={`pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 ${
+              error ? "text-red-500" : "text-[#71859A]"
+            }`}
           />
         )}
 
         <button
           type="button"
+          id={`input-${name}`}
           onClick={() => setOpen((previous) => !previous)}
-          className="
-            w-full
-            rounded-xl
-            border
-            border-[#D6E1EF]
-            bg-[#F8FBFF]
-            px-3.5
-            py-3.5
-            pl-11
-            pr-4
-            text-left
-            text-[14px]
-            font-semibold
-            text-[#17324D]
-            outline-none
-            transition-all
-            hover:border-[#B8CCE3]
-            focus:border-[#3B8EF3]
-            focus:bg-white
-            focus:ring-4
-            focus:ring-[#3B8EF3]/10
-          "
+          className={`
+            w-full rounded-xl border
+            ${
+              error
+                ? "border-red-400 bg-red-50/20 text-[#17324D] ring-2 ring-red-400/20 focus:border-red-500"
+                : "border-[#D6E1EF] bg-[#F8FBFF] text-[#17324D] hover:border-[#B8CCE3] focus:border-[#3B8EF3] focus:bg-white focus:ring-4 focus:ring-[#3B8EF3]/10"
+            }
+            px-3.5 py-3.5 pl-11 pr-4 text-left text-[14px] font-semibold outline-none transition-all
+          `}
         >
           {value || placeholder}
         </button>
+
+        {error && (
+          <p className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-red-600">
+            <AlertCircle size={13} className="shrink-0" />
+            <span>{error}</span>
+          </p>
+        )}
 
         {open && (
           <div
@@ -2060,36 +2067,80 @@ const InputField = ({
   placeholder,
   required = false,
   icon: Icon,
+  error,
+  readOnly = false,
+  disabled = false,
+  maxLength,
+  inputMode,
+  pattern,
+  id,
+  badge,
+  ...rest
 }) => {
   return (
-    <div className="min-w-0 w-full">
-      <label className="mb-2 block text-[13px] font-bold leading-5 text-[#243B53]">
-        {label}
-        {required && <span className="ml-1 text-red-500">*</span>}
-      </label>
+    <div className="min-w-0 w-full" id={id || `field-${name}`}>
+      <div className="flex items-center justify-between mb-2">
+        <label className="block text-[13px] font-bold leading-5 text-[#243B53]">
+          {label}
+          {required && <span className="ml-1 text-red-500">*</span>}
+        </label>
+        {badge && (
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+            {badge}
+          </span>
+        )}
+      </div>
       <div className="relative w-full">
         {Icon && (
           <Icon
             size={17}
-            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#71859A]"
+            className={`pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 ${
+              error ? "text-red-500" : "text-[#71859A]"
+            }`}
           />
         )}
         <input
           type={type}
           name={name}
+          id={`input-${name}`}
           value={value}
           onChange={onChange}
           placeholder={placeholder}
           required={required}
+          readOnly={readOnly}
+          disabled={disabled}
+          maxLength={maxLength}
+          inputMode={inputMode}
+          pattern={pattern}
+          {...rest}
           className={`
-            w-full min-w-0 rounded-xl border border-[#D6E1EF] bg-[#F8FBFF]
-            px-3.5 py-3.5 text-[14px] font-semibold leading-5 text-[#17324D]
+            w-full min-w-0 rounded-xl border
+            ${
+              error
+                ? "border-red-400 bg-red-50/20 text-[#17324D] ring-2 ring-red-400/20 focus:border-red-500 focus:ring-red-400/30"
+                : readOnly
+                ? "border-slate-200 bg-[#F1F5F9] text-[#1E293B] cursor-not-allowed select-none opacity-95"
+                : "border-[#D6E1EF] bg-[#F8FBFF] text-[#17324D] hover:border-[#B8CCE3] focus:border-[#3B8EF3] focus:bg-white focus:ring-4 focus:ring-[#3B8EF3]/10"
+            }
+            px-3.5 py-3.5 text-[14px] font-semibold leading-5
             outline-none transition-all duration-200 placeholder:text-[#8A9AAF]
-            hover:border-[#B8CCE3] focus:border-[#3B8EF3] focus:bg-white
-            focus:ring-4 focus:ring-[#3B8EF3]/10 ${Icon ? "pl-11" : ""}
+            ${Icon ? "pl-11" : ""}
+            ${readOnly ? "pr-20" : ""}
           `}
         />
+        {readOnly && (
+          <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[11px] font-bold text-slate-500 bg-white border border-slate-200/80 rounded-md px-2 py-0.5 select-none shadow-xs">
+            <LockKeyhole size={11} className="text-slate-400" />
+            Default
+          </div>
+        )}
       </div>
+      {error && (
+        <p className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-red-600">
+          <AlertCircle size={13} className="shrink-0" />
+          <span>{error}</span>
+        </p>
+      )}
     </div>
   );
 };

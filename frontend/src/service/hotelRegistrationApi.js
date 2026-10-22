@@ -152,6 +152,32 @@ export const registerFreeTrial = async (registrationData) => {
   }
 };
 
+// SEND REGISTRATION OTP (WITH ALREADY REGISTERED CHECK)
+export const sendRegistrationOTP = async (email) => {
+  try {
+    const response = await api.post("/hotel-registrations/send-registration-otp", { email });
+    return response.data;
+  } catch (error) {
+    throw (
+      error.response?.data || {
+        success: false,
+        message: error.message || "Failed to send verification code.",
+      }
+    );
+  }
+};
 
-
-
+// VERIFY REGISTRATION OTP
+export const verifyRegistrationOTP = async (email, otp) => {
+  try {
+    const response = await api.post("/hotel-registrations/verify-registration-otp", { email, otp });
+    return response.data;
+  } catch (error) {
+    throw (
+      error.response?.data || {
+        success: false,
+        message: error.message || "Failed to verify code.",
+      }
+    );
+  }
+};

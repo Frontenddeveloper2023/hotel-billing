@@ -94,12 +94,8 @@ const SaaSUserCheckout = () => {
       location.state?.registration?._id ||
       location.state?.registrationId ||
       "";
-    // If we can determine the current registration and it differs from the
-    // paid one, this is a new hotel — allow payment.
-    if (currentRegId && paidRegId && currentRegId !== paidRegId) return false;
-    // If current ID is unknown at mount (will be resolved from sessionStorage
-    // fallback later) but paidRegId exists, stay safe and still mark paid.
-    return true;
+    if (!currentRegId || !paidRegId) return false;
+    return currentRegId === paidRegId;
   });
 
   // ==========================================================
@@ -254,7 +250,9 @@ const handlePayNow = () => {
   }
   // ──────────────────────────────────────────────────────────────────────
 
-  if (!registrationId) {
+  const regPayload = registration || hotelDetails;
+
+  if (!registrationId && !regPayload) {
     setError(
       "Registration details are missing. Please go back and complete registration again."
     );
@@ -274,13 +272,17 @@ const handlePayNow = () => {
       setIsPaying(true);
       setError("");
 
-      if (!registrationId) {
-        setError("Registration ID is missing. Please try again.");
+      const regPayload = registration || hotelDetails;
+      if (!registrationId && !regPayload) {
+        setError("Registration details are missing. Please try again.");
         return;
       }
 
-      // 1. Create Cashfree Order session from backend
-      const orderRes = await createRegistrationOrder(registrationId);
+      // 1. Create Cashfree Order session from backend (passing registrationData)
+      const orderRes = await createRegistrationOrder({
+        registrationId: registrationId || undefined,
+        registrationData: regPayload,
+      });
       if (!orderRes?.success || !orderRes?.data?.paymentSessionId) {
         throw new Error(orderRes?.message || "Failed to initiate payment with Cashfree.");
       }
@@ -305,16 +307,20 @@ const handlePayNow = () => {
         throw new Error(checkoutResult.error.message || "Payment was cancelled or failed.");
       }
 
-      // 3. Server-side verification with Cashfree API
+      // 3. Server-side verification with Cashfree API (THIS IS WHERE IT PERSISTS TO DB!)
       setIsPaying(true);
       const verifyRes = await verifyRegistrationPayment({
-        registrationId,
+        registrationId: registrationId || undefined,
         orderId,
+        registrationData: regPayload,
       });
 
       if (!verifyRes?.success) {
         throw new Error(verifyRes?.message || "Payment verification failed. Please contact support.");
       }
+
+      const createdRegId =
+        verifyRes?.data?.registrationId || registrationId || "";
 
       const paymentTransactionId =
         verifyRes?.data?.paymentTransactionId || `CF-${orderId}`;
@@ -322,8 +328,12 @@ const handlePayNow = () => {
       setTransactionId(paymentTransactionId);
       setPaymentSuccess(true);
 
-      sessionStorage.setItem("saasRegistrationId", registrationId);
+      if (createdRegId) {
+        sessionStorage.setItem("saasRegistrationId", String(createdRegId));
+      }
       sessionStorage.setItem("saasPaymentStatus", "paid");
+      sessionStorage.removeItem("saasHotelDetails");
+      sessionStorage.removeItem("saasRegistration");
     } catch (error) {
       if (isPaymentCancellation(error)) {
         setError("Payment was cancelled. You have not been charged. Click 'Pay & Submit Registration' whenever you are ready to continue.");
@@ -344,7 +354,8 @@ const handlePayNow = () => {
   // ==========================================================
 
   const handleViewApplicationStatus = () => {
-    navigate("/saas-user/application-status", { state: { registrationId } });
+    const targetRegId = registrationId || sessionStorage.getItem("saasRegistrationId");
+    navigate("/saas-user/application-status", { state: { registrationId: targetRegId } });
   };
 
   const handleGoToHotelManagement = () => {
@@ -411,7 +422,7 @@ if (paymentSuccess) {
       ==================================================== */}
       <div className="sticky top-0 z-50 border-b border-[#DDE5F0] bg-white shadow-[0_1px_4px_rgba(16,24,40,0.05)]">
         <div className="mx-auto w-full max-w-[1180px]">
-          <SaaSSetupProgress activeStep={4} />
+          <SaaSSetupProgress activeStep={5} />
         </div>
       </div>
 
@@ -761,8 +772,8 @@ if (paymentSuccess) {
       ====================================================== */}
       <div className="border-b border-[#E2EAF5] bg-white">
         <div className="mx-auto w-full max-w-[1180px]">
-<SaaSSetupProgress activeStep={3} />    
-    </div>
+          <SaaSSetupProgress activeStep={4} />
+        </div>
       </div>
 
       {/* ======================================================
@@ -1679,7 +1690,7 @@ Most Popular      </span>
                     {/* BILL */}
                     <div className="mt-5 rounded-xl border border-[#E2EAF5] bg-white p-5">
                       {/* PLAN */}
-                      <div className="flex items-start justify-between gap-4">
+                      {/* <div className="flex items-start justify-between gap-4">
                         <div >
                           <p className="text-[13px] p-4 font-bold text-[#17345D]">{selectedPlan.planName}</p>
                           <p className="mt-1 text-[11px] p-4 font-medium text-[#5B6472]">
@@ -1690,7 +1701,7 @@ Most Popular      </span>
                         <p className="text-[13px] font-bold text-[#17345D]">{formatCurrency(price)}</p>
                       </div>
 
-                      <div className="my-4 border-t border-dashed border-[#D6DBE3]" />
+                      <div className="my-4 border-t border-dashed border-[#D6DBE3]" /> */}
 
                      
 
@@ -1700,7 +1711,7 @@ Most Popular      </span>
                         <div className="flex items-end justify-between gap-3">
                           <div>
                             <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#C4DAFF]">
-                              Total Due Today
+                              Total Amount
                             </p>
                             <p className="mt-1 text-[24px] font-bold tracking-[-0.02em] text-white">
                               {formatCurrency(total)}

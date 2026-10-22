@@ -9,6 +9,8 @@ import {
   rejectRegistration,
   confirmDummyPayment,
   registerFreeTrial,
+  sendRegistrationOTP,
+  verifyRegistrationOTP,
 } from "../controllers/hotelRegistrationController.js";
 
 import {
@@ -17,6 +19,13 @@ import {
 } from "../middleware/userVerify.js";
 
 const router = express.Router();
+
+// ==========================================
+// REGISTRATION OTP & EMAIL VERIFICATION
+// ==========================================
+
+router.post("/send-registration-otp", sendRegistrationOTP);
+router.post("/verify-registration-otp", verifyRegistrationOTP);
 
 // ==========================================
 // PUBLIC REGISTRATION
