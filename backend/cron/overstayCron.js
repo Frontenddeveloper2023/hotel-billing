@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import Customer from "../models/customers.js";
 import { log } from "../util/logger.js";
+import { emitTenantEvent } from "../util/socket.js";
 
 const INDIA_TIME_ZONE = "Asia/Kolkata";
 
@@ -333,6 +334,13 @@ const checkOverstays = async () => {
             `[OVERSTAY] SUCCESS: ${customer.customerName} ` +
             `updated to Overstayed`
           );
+
+          emitTenantEvent(customer.hotelId, customer.branchId, "overstayAlert", {
+            action: "customerOverstayed",
+            customerId: customer._id,
+            customerName: customer.customerName,
+            roomNumber: customer.roomNumber,
+          });
         } else {
           log.info(
             `[OVERSTAY] ${customer.customerName} ` +

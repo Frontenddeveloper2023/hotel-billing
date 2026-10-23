@@ -9,6 +9,7 @@ import {
   logout,
   getUser,
 } from "../service/usersService";
+import { getSocket, joinTenantRoom, leaveTenantRoom } from "../service/socket.js";
 
 const AuthContext = createContext(null);
 
@@ -158,11 +159,89 @@ export const AuthProvider = ({ children }) => {
   // =====================================================
 
   useEffect(() => {
-
     fetchAdminUser();
     fetchHotelUser();
-
   }, []);
+
+  // =====================================================
+  // REAL-TIME SOCKET CONNECTION & MULTI-TENANT ROOM
+  // =====================================================
+
+  useEffect(() => {
+    if (hotelUser?.hotelId || hotelUser?._id) {
+      joinTenantRoom(hotelUser.hotelId, hotelUser.branchId, hotelUser._id);
+
+      const socket = getSocket();
+      const onHotelManagementUpdated = (data) => {
+        console.log("[AuthContext][Socket] Received hotelManagementUpdated:", data);
+        window.dispatchEvent(
+          new CustomEvent("hotelManagementUpdated", { detail: data })
+        );
+      };
+
+      const onRoomServiceUpdated = (data) => {
+        window.dispatchEvent(
+          new CustomEvent("roomServiceUpdated", { detail: data })
+        );
+      };
+
+      const onFoodServiceUpdated = (data) => {
+        window.dispatchEvent(
+          new CustomEvent("foodServiceUpdated", { detail: data })
+        );
+      };
+
+      const onOverstayAlert = (data) => {
+        window.dispatchEvent(
+          new CustomEvent("overstayAlert", { detail: data })
+        );
+      };
+
+      const onUserStatusChanged = (data) => {
+        console.log("[AuthContext][Socket] Received userStatusChanged:", data);
+        window.dispatchEvent(
+          new CustomEvent("userStatusChanged", { detail: data })
+        );
+      };
+
+      const onHotelStatusChanged = (data) => {
+        console.log("[AuthContext][Socket] Received hotelStatusChanged:", data);
+        window.dispatchEvent(
+          new CustomEvent("hotelStatusChanged", { detail: data })
+        );
+        if (data?.status && data.status !== "active") {
+          // Immediately log out and notify
+          alert(data.blockReason || `Your hotel account has been ${data.status} by administration.`);
+          logoutUser("owner");
+        }
+      };
+
+      const onAccountBlocked = (data) => {
+        console.log("[AuthContext][Socket] Received accountBlocked:", data);
+        alert(data?.message || "Your receptionist account has been deactivated by the administrator.");
+        logoutUser("staff");
+      };
+
+      socket.on("hotelManagementUpdated", onHotelManagementUpdated);
+      socket.on("roomServiceUpdated", onRoomServiceUpdated);
+      socket.on("foodServiceUpdated", onFoodServiceUpdated);
+      socket.on("overstayAlert", onOverstayAlert);
+      socket.on("userStatusChanged", onUserStatusChanged);
+      socket.on("hotelStatusChanged", onHotelStatusChanged);
+      socket.on("accountBlocked", onAccountBlocked);
+
+      return () => {
+        socket.off("hotelManagementUpdated", onHotelManagementUpdated);
+        socket.off("roomServiceUpdated", onRoomServiceUpdated);
+        socket.off("foodServiceUpdated", onFoodServiceUpdated);
+        socket.off("overstayAlert", onOverstayAlert);
+        socket.off("userStatusChanged", onUserStatusChanged);
+        socket.off("hotelStatusChanged", onHotelStatusChanged);
+        socket.off("accountBlocked", onAccountBlocked);
+        leaveTenantRoom(hotelUser.hotelId, hotelUser.branchId, hotelUser._id);
+      };
+    }
+  }, [hotelUser?.hotelId, hotelUser?.branchId, hotelUser?._id]);
 
 
   // =====================================================
@@ -176,7 +255,7 @@ export const AuthProvider = ({ children }) => {
       user
     );
 
-    if (user?.role === "admin") {
+    if (user?.role === "admin" || user?.role === "sub_admin") {
       sessionStorage.setItem("hotelPortal", "admin");
       setAdminUser(user);
       await fetchAdminUser();

@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Room from "../models/room.js";
 import { log } from "../util/logger.js";
+import { emitTenantEvent } from "../util/socket.js";
 
 // ============================================================
 // GET TENANT IDS
@@ -291,6 +292,11 @@ const addRoom = async (req, res) => {
             `Room added successfully: ${room.roomNumber} | Hotel: ${hotelId} | Branch: ${branchId}`
         );
 
+        emitTenantEvent(hotelId, branchId, "hotelManagementUpdated", {
+            action: "roomAdded",
+            roomId: room._id,
+        });
+
         return res.status(201).json({
             success: true,
             message: "Room added successfully.",
@@ -333,7 +339,7 @@ const getAllRooms = async (req, res) => {
             branchId,
         }).sort({
             roomNumber: 1,
-        });
+        }).lean();
 
         log(
             "INFO",
@@ -508,7 +514,10 @@ const updateRoom = async (req, res) => {
         }
 
         const currentStatus = String(existingRoom.status || "").toLowerCase();
-        if (currentStatus === "booked" || currentStatus === "occupied") {
+        // If room is occupied/booked, allow changing status (e.g. manually freeing room to 'available'),
+        // but block changing structural fields (room number, type, price) while occupied unless status is also being changed to available
+        const isStatusChangeOnly = status && status === "available";
+        if ((currentStatus === "booked" || currentStatus === "occupied") && !isStatusChangeOnly) {
             log(
                 "WARN",
                 `Update Room rejected: Room is currently occupied/booked - roomNumber=${existingRoom.roomNumber}`
@@ -517,7 +526,7 @@ const updateRoom = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message:
-                    "This room is currently occupied/booked by a guest and cannot be edited. Please wait until checkout.",
+                    "This room is currently occupied/booked by a guest. To change other details, first change status to available or wait until checkout.",
             });
         }
 
@@ -707,6 +716,11 @@ const updateRoom = async (req, res) => {
             `Room updated successfully: ${updatedRoom.roomNumber} | Hotel: ${hotelId} | Branch: ${branchId}`
         );
 
+        emitTenantEvent(hotelId, branchId, "hotelManagementUpdated", {
+            action: "roomUpdated",
+            roomId: updatedRoom._id,
+        });
+
         return res.status(200).json({
             success: true,
             message: "Room updated successfully.",
@@ -815,6 +829,11 @@ const deleteRoom = async (req, res) => {
             "INFO",
             `Room deleted successfully: ${room.roomNumber} | Hotel: ${hotelId} | Branch: ${branchId}`
         );
+
+        emitTenantEvent(hotelId, branchId, "hotelManagementUpdated", {
+            action: "roomDeleted",
+            roomId: id,
+        });
 
         return res.status(200).json({
             success: true,

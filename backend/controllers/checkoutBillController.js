@@ -5,6 +5,7 @@ import Booking from "../models/booking.js";
 import Settings from "../models/settings.js";
 
 import { log } from "../util/logger.js";
+import { emitTenantEvent } from "../util/socket.js";
 
 // ============================================================
 // CONSTANTS
@@ -1843,9 +1844,10 @@ export const createCheckoutBill =
           `grandTotal=${grandTotal}`
       );
 
-      // ======================================================
-      // RESPONSE
-      // ======================================================
+      emitTenantEvent(hotelId, branchId, "hotelManagementUpdated", {
+        action: "checkoutComplete",
+        data: savedBill,
+      });
 
       return res.status(201).json({
         success: true,

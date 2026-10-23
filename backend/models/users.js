@@ -14,11 +14,13 @@ const userSchema = new mongoose.Schema(
             required: true,
             enum: [
                 "admin",
+                "sub_admin",
                 "receptionist",
                 "hotelOwner",
             ],
         },
 
+        
         email: {
             type: String,
             required: true,

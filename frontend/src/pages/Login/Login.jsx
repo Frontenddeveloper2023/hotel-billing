@@ -678,15 +678,11 @@ const Login = () => {
 
 
             // -------------------------------------------------
-
-            // RESTRICT TO ADMINS ONLY
-
+            // RESTRICT TO ADMINS & SUB-ADMINS ONLY
             // -------------------------------------------------
 
-            if (loggedInUser?.role !== "admin") {
-
+            if (loggedInUser?.role !== "admin" && loggedInUser?.role !== "sub_admin") {
                 throw new Error("Access Denied: This portal is strictly for administrators. Please use the designated Hotel Login portal to access your account.");
-
             }
 
 

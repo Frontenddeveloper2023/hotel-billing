@@ -759,8 +759,8 @@ const handleViewEmailHistory = async () => {
         <div className="sh-in flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
              
-            <h1 className="mt-1.5 text-[18px] sm:text-[24px] lg:text-[28px] leading-tight font-extrabold tracking-[-0.035em] text-white">
-              Hotels &amp; Applications
+<h1 className="text-xl font-bold text-white tracking-tight">
+                Hotels &amp; Applications
             </h1>
            
           </div>

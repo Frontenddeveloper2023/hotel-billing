@@ -664,11 +664,20 @@ export default function User() {
             "subscriptionUpdated",
             handleSubscriptionUpdated
         );
+
+        const handleUserStatusChanged = async () => {
+            console.log("[UserManagement] Real-time userStatusChanged received - reloading staff list");
+            fetchUsers();
+        };
+
+        window.addEventListener("userStatusChanged", handleUserStatusChanged);
+
         return () => {
             window.removeEventListener(
                 "subscriptionUpdated",
                 handleSubscriptionUpdated
             );
+            window.removeEventListener("userStatusChanged", handleUserStatusChanged);
         };
     }, [fetchUsers, fetchSubscription]);
 
@@ -1352,7 +1361,8 @@ export default function User() {
                       
 
                         <div className="min-w-0">
-<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">                                Users Management
+<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">     
+                               Users Management
                             </h1>
 
                           

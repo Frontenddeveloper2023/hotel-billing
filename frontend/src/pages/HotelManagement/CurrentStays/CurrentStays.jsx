@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useToast } from "../../../Context/ToastContext";
 import {
   Search,
   BedDouble,
@@ -16,6 +17,7 @@ import AddServiceModal from "./Components/AddServiceModal";
 import { getActiveBookings } from "../../../service/bookingApi";
 
 export default function CurrentStays({ onCheckout }) {
+  const toast = useToast();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -149,7 +151,27 @@ export default function CurrentStays({ onCheckout }) {
   useEffect(() => {
     loadBookings();
     const timer = setInterval(loadBookings, 60000);
-    return () => clearInterval(timer);
+
+    const handleHotelManagementUpdated = () => {
+      loadBookings();
+    };
+
+    const handleDataChanged = () => {
+      loadBookings();
+    };
+
+    window.addEventListener("hotelManagementUpdated", handleHotelManagementUpdated);
+    window.addEventListener("overstayAlert", handleDataChanged);
+    window.addEventListener("roomServiceUpdated", handleDataChanged);
+    window.addEventListener("foodServiceUpdated", handleDataChanged);
+
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("hotelManagementUpdated", handleHotelManagementUpdated);
+      window.removeEventListener("overstayAlert", handleDataChanged);
+      window.removeEventListener("roomServiceUpdated", handleDataChanged);
+      window.removeEventListener("foodServiceUpdated", handleDataChanged);
+    };
   }, []);
 
   // Flatten Booking.rooms into customer groups.
@@ -270,7 +292,7 @@ export default function CurrentStays({ onCheckout }) {
     if (!checkoutCustomer) return;
 
     if (!selectedRooms.length) {
-      alert("Please select at least one room to checkout.");
+      toast.warn("Please select at least one room to checkout.");
       return;
     }
 

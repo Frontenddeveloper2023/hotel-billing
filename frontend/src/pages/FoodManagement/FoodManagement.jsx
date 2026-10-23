@@ -243,7 +243,7 @@ export default function FoodManagement() {
     }
 
   return (
-    <div className="fm-root mx-auto w-full max-w-7xl space-y-5 px-3 sm:space-y-6 sm:px-4 md:px-5 lg:px-6">
+    <div className="fm-root mx-auto w-full max-w-7xl space-y-5 sm:space-y-6 ">
         {/* HEADER */}
         <div className="fm-rise w-full">
             <div

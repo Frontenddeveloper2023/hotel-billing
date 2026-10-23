@@ -17,6 +17,7 @@ import {
 import RegistrationOTP from "../models/registrationOtp.js";
 
 import { log } from "../util/logger.js";
+import { emitTenantEvent } from "../util/socket.js";
 
 // ============================================================
 // SEND REGISTRATION OTP (WITH ALREADY REGISTERED CHECK)
@@ -1574,6 +1575,13 @@ export const rejectRegistration = async (req, res) => {
             cancellationReason: `Cancelled by platform admin: ${reason}`,
           });
         }
+
+        emitTenantEvent(hotel._id, null, "hotelStatusChanged", {
+          action: "statusUpdated",
+          hotelId: hotel._id,
+          status: "blocked",
+          blockReason: hotel.blockReason,
+        });
       }
     }
 

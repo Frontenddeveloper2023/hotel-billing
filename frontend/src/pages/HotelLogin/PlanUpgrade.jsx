@@ -1082,31 +1082,12 @@ export default function PlanUpgrade() {
                 sm:gap-3
               "
             >
-              <span
-                className="
-                  flex
-                  h-9
-                  w-9
-                  shrink-0
-                  items-center
-                  justify-center
-                  rounded-xl
-                  border
-                  border-white/20
-                  bg-white/15
-                  text-white
-                  shadow-inner
-                  sm:h-10
-                  sm:w-10
-                  sm:rounded-2xl
-                "
-              >
-                <ArrowUpCircle className="h-5 w-5 sm:h-6 sm:w-6" />
-              </span>
+            
+<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">     
+                Upgrade Your Plan 
 
-              <span className="min-w-0">
-                Upgrade Your Plan
-              </span>
+</h1>
+             
             </h1>
 
             <p

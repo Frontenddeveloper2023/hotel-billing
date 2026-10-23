@@ -840,17 +840,8 @@ export default function ServiceManagement() {
                 <p className="font-bold text-sm text-[#0f2a63] mt-4">
                   No services found
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
-                  Click "Add New Service" to get started.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleOpenCreateModal}
-                  className="sv-btn sv-shine cursor-pointer mt-5 inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 text-white text-sm font-semibold rounded-xl shadow-lg shadow-blue-700/30"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add New Service
-                </button>
+               
+               
               </div>
             ) : (
               /* Tablet / desktop: table */

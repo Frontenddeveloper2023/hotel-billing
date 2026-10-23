@@ -2,6 +2,7 @@ import Hotels from "../models/hotels.js";
 import User from "../models/users.js";
 import { sendHotelBlockedEmail } from "../util/email.js";
 import { log } from "../util/logger.js";
+import { emitTenantEvent } from "../util/socket.js";
 
 // ============================================================
 // CREATE HOTEL
@@ -491,6 +492,14 @@ export const updateHotel = async (req, res) => {
     const updatedHotel = await existingHotel.save();
 
     log.info(`Hotel updated successfully: ${updatedHotel._id}`);
+
+    // Real-time broadcast to all users of this hotel (owners, receptionists, staff)
+    emitTenantEvent(updatedHotel._id, null, "hotelStatusChanged", {
+      action: "statusUpdated",
+      hotelId: updatedHotel._id,
+      status: updatedHotel.status,
+      blockReason: updatedHotel.blockReason || `Hotel marked as ${updatedHotel.status} by administrator.`,
+    });
 
     return res.status(200).json({
       success: true,

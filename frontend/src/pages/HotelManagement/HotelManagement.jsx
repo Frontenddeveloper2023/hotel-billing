@@ -1,6 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 import InvoiceTemplate from "../InvoiceTemplate/InvoiceTemplate";
 import { DoorOpen, LogIn, BedDouble, CheckCircle2, Printer, Receipt } from "lucide-react";
 
@@ -9,6 +7,7 @@ import AddBooking from "./Booking/AddBooking";
 import CurrentStays from "./CurrentStays/CurrentStays";
 import Checkout from "../HotelManagement/Checkout/Checkout";
 import { sendInvoiceEmail } from "../../service/invoiceApi";
+import { useToast } from "../../Context/ToastContext";
 
 const styles = `
 @keyframes hm-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
@@ -29,11 +28,18 @@ const tabs = [
 ];
 
 export default function HotelManagement() {
+    const toast = useToast();
     const [activePage, setActivePage] = useState("availability");
+    const [visitedPages, setVisitedPages] = useState(new Set(["availability"]));
     const [selectedStay, setSelectedStay] = useState(null);
     const [successData, setSuccessData] = useState(null);
     const [isSendingEmail, setIsSendingEmail] = useState(false);
     const receiptRef = useRef(null);
+
+    const navigateTo = (page) => {
+        setVisitedPages((prev) => new Set(prev).add(page));
+        setActivePage(page);
+    };
 
     // GENERATE PDF
     useEffect(() => {
@@ -43,6 +49,13 @@ export default function HotelManagement() {
 
         const generatePdf = async () => {
             try {
+                // Dynamic imports — these heavy libs are only loaded when a PDF is actually needed
+                const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+                    import("html2canvas"),
+                    import("jspdf"),
+                ]);
+                if (cancelled) return;
+
                 const canvas = await html2canvas(receiptRef.current, {
                     scale: 2,
                     useCORS: true,
@@ -82,50 +95,41 @@ export default function HotelManagement() {
 
     // BOOKING COMPLETED
     const handleBookingComplete = (booking) => {
-        console.log("Booking completed:", booking);
         setSelectedStay(null);
-        setActivePage("availability");
+        window.dispatchEvent(new CustomEvent("hotelManagementUpdated", { detail: { action: "bookingComplete", booking } }));
+        navigateTo("availability");
     };
 
     // CURRENT STAY -> CHECKOUT
     const handleCheckout = (stay) => {
-        console.log("=================================");
-        console.log("PROCEED TO BILL");
-        console.log("CHECKOUT DATA:", stay);
-        console.log("ROOMS:", stay?.rooms);
-        console.log("=================================");
-
-        if (!stay) {
-            console.error("Cannot proceed to bill: stay data is missing.");
-            return;
-        }
-
+        if (!stay) return;
         setSelectedStay(stay);
-        setActivePage("checkout");
+        navigateTo("checkout");
     };
 
     // BACK TO AVAILABILITY
     const handleAvailability = () => {
         setSelectedStay(null);
-        setActivePage("availability");
+        navigateTo("availability");
     };
 
     // NEW BOOKING
     const handleNewBooking = () => {
         setSelectedStay(null);
-        setActivePage("booking");
+        navigateTo("booking");
     };
 
     // BACK TO CURRENT STAYS
     const handleCurrentStays = () => {
         setSelectedStay(null);
-        setActivePage("currentStays");
+        navigateTo("currentStays");
     };
 
     // CLOSE CHECKOUT — payment done, show success overlay
     const handleCloseCheckout = (data) => {
         setSelectedStay(null);
-        setActivePage("currentStays");
+        window.dispatchEvent(new CustomEvent("hotelManagementUpdated", { detail: { action: "checkoutComplete", data } }));
+        navigateTo("currentStays");
         if (data?.invoice) {
             setSuccessData(data);
         }
@@ -140,7 +144,6 @@ export default function HotelManagement() {
     const handleSendEmail = async () => {
         const customer = successData?.customer || {};
         const invoice = successData?.invoice || {};
-        const pdfBlob = successData?.pdfBlob;
         const email = customer?.email || "";
         const invoiceNo = invoice?.invoiceNo || "N/A";
         const name = customer?.customerName || "Guest";
@@ -155,22 +158,56 @@ export default function HotelManagement() {
         const method = (successData?.paymentMethod || "CASH").toUpperCase();
 
         if (!email.trim()) {
-            alert("Customer email address is not available.");
-            return;
-        }
-
-        if (!pdfBlob) {
-            alert("Invoice PDF is not available. Please wait a moment and try again.");
-            return;
-        }
-
-        if (!pdfBlob.size || pdfBlob.size <= 0) {
-            alert("Invoice PDF is empty. Please generate the invoice again.");
+            toast.warn("Customer email address is not available.");
             return;
         }
 
         try {
             setIsSendingEmail(true);
+
+            let pdfBlob = successData?.pdfBlob;
+
+            // If PDF blob isn't generated yet, generate it immediately on the fly
+            if (!pdfBlob || !pdfBlob.size) {
+                if (!receiptRef.current) {
+                    toast.warn("Invoice template is still loading. Please wait 1 second.");
+                    setIsSendingEmail(false);
+                    return;
+                }
+
+                const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+                    import("html2canvas"),
+                    import("jspdf"),
+                ]);
+
+                const canvas = await html2canvas(receiptRef.current, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: "#ffffff",
+                });
+
+                const imgData = canvas.toDataURL("image/png");
+                const pdfWidth = 80;
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+                const pdf = new jsPDF({
+                    orientation: "portrait",
+                    unit: "mm",
+                    format: [pdfWidth, pdfHeight],
+                });
+
+                pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+                pdfBlob = pdf.output("blob");
+
+                if (pdfBlob && pdfBlob.size > 0) {
+                    setSuccessData(prev => ({ ...prev, pdfBlob }));
+                }
+            }
+
+            if (!pdfBlob || !pdfBlob.size || pdfBlob.size <= 0) {
+                toast.warn("Unable to generate invoice PDF. Please try again.");
+                return;
+            }
 
             const formData = new FormData();
             formData.append("email", email.trim());
@@ -186,14 +223,16 @@ export default function HotelManagement() {
                 throw new Error(data?.message || "Failed to send invoice email.");
             }
 
-            alert(`Invoice PDF sent successfully to ${email}.`);
+            toast.success(data?.message || `Invoice PDF sent successfully to ${email}.`);
         } catch (error) {
             console.error("[HotelManagement] Invoice email error:", error);
-            alert(error?.message || "Failed to send invoice email.");
+            toast.error(error?.message || "Failed to send invoice email.");
         } finally {
             setIsSendingEmail(false);
         }
     };
+
+    
 
 
     const tabHandlers = {
@@ -239,22 +278,30 @@ export default function HotelManagement() {
             </div>
 
             {/* MAIN CONTENT */}
-            <main key={activePage} className="hm-fade max-w-7xl">
-                {activePage === "availability" && (
-                    <RoomAvailability onNewBooking={handleNewBooking} />
+            <main className="hm-fade max-w-7xl">
+              <div className={activePage === "availability" ? "block" : "hidden"}>
+                {visitedPages.has("availability") && (
+                  <RoomAvailability onNewBooking={handleNewBooking} />
                 )}
+              </div>
 
-                {activePage === "booking" && (
-                    <AddBooking onComplete={handleBookingComplete} onCancel={handleAvailability} />
+              <div className={activePage === "booking" ? "block" : "hidden"}>
+                {visitedPages.has("booking") && (
+                  <AddBooking onComplete={handleBookingComplete} onCancel={handleAvailability} />
                 )}
+              </div>
 
-                {activePage === "currentStays" && (
-                    <CurrentStays onCheckout={handleCheckout} />
+              <div className={activePage === "currentStays" ? "block" : "hidden"}>
+                {visitedPages.has("currentStays") && (
+                  <CurrentStays onCheckout={handleCheckout} />
                 )}
+              </div>
 
-                {activePage === "checkout" && selectedStay && (
-                    <Checkout stay={selectedStay} onClose={handleCloseCheckout} />
+              <div className={activePage === "checkout" && selectedStay ? "block" : "hidden"}>
+                {visitedPages.has("checkout") && selectedStay && (
+                  <Checkout stay={selectedStay} onClose={handleCloseCheckout} />
                 )}
+              </div>
             </main>
 
             {/* ============================================================

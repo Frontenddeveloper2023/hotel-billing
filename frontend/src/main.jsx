@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { ToastProvider } from './Context/ToastContext.jsx'
 import { AuthProvider } from './Context/AuthContext.jsx' 
+import { SubscriptionProvider } from './Context/SubscriptionContext.jsx'
 import './index.css'
 import App from './App.jsx'
 
@@ -12,9 +13,11 @@ createRoot(document.getElementById('root')).render(
     <HelmetProvider>
         <ToastProvider>
           <AuthProvider> {/* 2. Wrap your app with AuthProvider */}
-            <BrowserRouter basename={import.meta.env.VITE_BASENAME}>
-              <App />
-            </BrowserRouter>
+            <SubscriptionProvider>
+              <BrowserRouter basename={import.meta.env.VITE_BASENAME}>
+                <App />
+              </BrowserRouter>
+            </SubscriptionProvider>
           </AuthProvider>
         </ToastProvider>
     </HelmetProvider>

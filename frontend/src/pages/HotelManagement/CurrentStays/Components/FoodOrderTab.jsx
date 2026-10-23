@@ -99,7 +99,7 @@ export default function FoodOrderTab({
   };
 
   // =====================================================
-  // FETCH BOOKING FOOD SERVICES
+  // FETCH BOOKING FOOD SERVICES & REAL-TIME SYNC
   // =====================================================
   useEffect(() => {
     if (!featureAllowed || !bookingId || !roomId) {
@@ -109,6 +109,18 @@ export default function FoodOrderTab({
     }
 
     fetchBookingFoodServices();
+
+    const handleFoodServiceUpdated = (e) => {
+      // If the food update belongs to the current booking & room, refresh immediately
+      if (!e.detail?.bookingId || e.detail.bookingId === bookingId) {
+        fetchBookingFoodServices();
+      }
+    };
+
+    window.addEventListener("foodServiceUpdated", handleFoodServiceUpdated);
+    return () => {
+      window.removeEventListener("foodServiceUpdated", handleFoodServiceUpdated);
+    };
   }, [featureAllowed, bookingId, roomId, roomNumber]);
 
   // =====================================================

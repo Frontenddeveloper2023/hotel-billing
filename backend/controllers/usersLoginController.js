@@ -61,9 +61,9 @@ const sendOTPForLogin = async (req, res) => {
     });
 }
 
-if (user.role !== "admin") {
+if (user.role !== "admin" && user.role !== "sub_admin") {
     return res.status(403).json({
-        message: "This email is not registered as a admin email.",
+        message: "This email is not registered as an admin or sub-admin email.",
     });
 }
 
@@ -287,9 +287,9 @@ const verifyOTP = async (req, res) => {
     });
 }
 
-if (user.role !== "admin") {
+if (user.role !== "admin" && user.role !== "sub_admin") {
     return res.status(403).json({
-        message: "This email is not registered as a admin email.",
+        message: "This email is not registered as an admin or sub-admin email.",
     });
 }
 

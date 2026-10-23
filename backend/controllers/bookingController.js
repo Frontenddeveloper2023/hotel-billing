@@ -5,6 +5,7 @@ import Customer from "../models/customers.js";
 import Room from "../models/room.js";
 
 import { log } from "../util/logger.js";
+import { emitTenantEvent } from "../util/socket.js";
 
 // ============================================================
 // COMMON HELPERS
@@ -712,6 +713,11 @@ export const createBooking = async (
     log.info(
       `[Booking] Create booking completed. bookingId=${booking._id}, hotelId=${hotelId}, branchId=${branchId}`
     );
+
+    emitTenantEvent(hotelId, branchId, "hotelManagementUpdated", {
+      action: "bookingComplete",
+      booking: populatedBooking,
+    });
 
     return res.status(201).json({
       success: true,

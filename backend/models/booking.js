@@ -405,6 +405,12 @@ bookingSchema.index({
 });
 
 bookingSchema.index({
+  hotelId: 1,
+  branchId: 1,
+  bookingStatus: 1,
+});
+
+bookingSchema.index({
   createdAt: -1,
 });
 

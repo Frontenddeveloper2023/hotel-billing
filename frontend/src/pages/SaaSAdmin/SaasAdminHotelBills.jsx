@@ -1150,54 +1150,14 @@ export default function SaasAdminHotelBills() {
         "
         style={{ animationDelay: "0ms" }}
       >
-        <div
-          className="
-            flex
-            h-10
-            w-10
-            shrink-0
-            items-center
-            justify-center
-            rounded-xl
-            bg-gradient-to-br
-            from-[#5b9bf5]
-            to-[#2568e0]
-            text-white
-            shadow
-            shadow-blue-400/30
-            sm:h-11
-            sm:w-11
-          "
-        >
-          <BarChart3 size={20} />
-        </div>
+       
 
         <div className="min-w-0">
-          <h1
-            className="
-              break-words
-              text-lg
-              font-extrabold
-              leading-tight
-              text-white
-              sm:text-xl
-            "
-          >
+          <h1 className="text-xl font-bold text-white tracking-tight">
             Hotel Bills &amp; Revenue
           </h1>
 
-          <p
-            className="
-              mt-0.5
-              break-words
-              text-[11px]
-              leading-4
-              text-blue-200/70
-              sm:text-xs
-            "
-          >
-            All registered hotels · billing summary · plan status
-          </p>
+        
         </div>
       </header>
 
@@ -1383,34 +1343,34 @@ export default function SaasAdminHotelBills() {
             "
           />
 
-          <input
-            id="hotel-bills-search"
-            value={search}
-            onChange={(e) =>
-              setSearch(e.target.value)
-            }
-            placeholder="Search hotel, email, owner, city…"
-            className="
-              h-11
-              w-full
-              rounded-xl
-              border
-              border-[#dbe6f5]
-              bg-white
-              pl-9
-              pr-4
-              text-xs
-              text-[#0e2a4a]
-              outline-none
-              placeholder:text-[#8fa4be]
-              focus:border-[#3b82f0]
-              focus:ring-2
-              focus:ring-[#3b82f0]/25
-              transition
-              shadow-sm
-              sm:text-sm
-            "
-          />
+         <input
+  id="hotel-bills-search"
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  placeholder="Search hotel, email, owner, city…"
+  className="
+    h-11
+    w-80
+    rounded-xl
+    border
+    border-white/20
+    bg-white/10
+    backdrop-blur-md
+    pl-9
+    pr-4
+    text-xs
+    text-white
+    outline-none
+    placeholder:text-blue-100/60
+    focus:bg-white/15
+    focus:border-white/40
+    focus:ring-2
+    focus:ring-white/20
+    transition
+    shadow-sm
+    sm:text-sm
+  "
+/>
         </div>
 
         <select

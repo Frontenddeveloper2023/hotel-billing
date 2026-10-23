@@ -52,12 +52,23 @@ export default function ServiceTab({
     verifyRoomServiceAccess();
   }, []);
 
-  // Fetch embedded room services whenever the selected booking/room changes.
+  // Fetch embedded room services whenever the selected booking/room changes & listen for real-time updates.
   useEffect(() => {
     if (!featureAllowed || !bookingId) return;
     setHasNewServicesAdded(false);
     setConfirmedSuccess(false);
     fetchBookingServices();
+
+    const handleRoomServiceUpdated = (e) => {
+      if (!e.detail?.bookingId || e.detail.bookingId === bookingId) {
+        fetchBookingServices();
+      }
+    };
+
+    window.addEventListener("roomServiceUpdated", handleRoomServiceUpdated);
+    return () => {
+      window.removeEventListener("roomServiceUpdated", handleRoomServiceUpdated);
+    };
   }, [featureAllowed, bookingId, roomId, roomNumber]);
 
   const verifyRoomServiceAccess = async () => {

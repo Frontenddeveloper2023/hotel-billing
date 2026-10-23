@@ -1264,11 +1264,16 @@ export const processRenewalActivation = async ({
         isRead: false,
         metadata: {
           hotelName: hotel.hotelName,
+          ownerName: hotel.ownerName,
+          email: hotel.email,
+          phone: hotel.phone,
           planName: plan.planName,
           billingCycle,
           amount: newSubscription.finalAmount,
           orderId: linkId,
           transactionId: String(transactionId || `CF-${linkId}`),
+          startDate,
+          endDate,
           source: "email_quick_renew",
         },
       });

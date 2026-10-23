@@ -913,7 +913,7 @@ const NotificationItem = memo(
 ========================================================= */
 
 const SkeletonList = () => (
-  <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-3" aria-busy="true">
+  <div className="max-w-[1280px] " aria-busy="true">
     <div className="sn-skeleton h-24 rounded-2xl" />
     {[0, 1, 2, 3].map((i) => (
       <div key={i} className="sn-skeleton h-32 rounded-2xl" style={{ animationDelay: `${i * 120}ms` }} />
@@ -1179,10 +1179,9 @@ const NotificationDetailsModal = ({
               <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-indigo-500">
                 Notification Details
               </p>
-
-              <h2 className="mt-1 text-[20px] font-extrabold tracking-[-0.02em] text-slate-900">
-                {summary.title}
-              </h2>
+<h2 className="mt-1 text-lg sm:text-xl font-extrabold tracking-[-0.02em] text-slate-900">
+  {summary.title}
+</h2>
 
              
 
@@ -1722,7 +1721,7 @@ const NotificationDetailsModal = ({
     <div className="min-h-screen pb-16 font-sans antialiased">
       <style>{ANIMATION_CSS}</style>
 
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      <div className="max-w-[1280px] ">
         {/* TOOLBAR */}
         <div className="sn-rise relative z-30 bg-white rounded-2xl border border-slate-200/90 shadow-sm p-2 sm:p-3 mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">

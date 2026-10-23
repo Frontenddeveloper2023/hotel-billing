@@ -42,6 +42,7 @@ export default function Layout() {
   const isAdminRoute = location.pathname.startsWith("/saas-admin");
   const userData = isAdminRoute ? adminUser : hotelUser;
   const isMainAdmin = userData?.role === "admin";
+  const isSaasPortalUser = userData?.role === "admin" || userData?.role === "sub_admin";
 
   const adminNavigation = [
     { name: "Dashboard", href: "/saas-admin/dashboard", permissionKey: "saasAdmin", icon: <LayoutDashboard className={ic} /> },
@@ -50,6 +51,7 @@ export default function Layout() {
     { name: "Plans", href: "/saas-admin/plans", permissionKey: "plans", icon: <CreditCard className={ic} /> },
     { name: "Subscriptions", href: "/saas-admin/subscriptions", permissionKey: "subscriptions", icon: <Receipt className={ic} /> },
     { name: "Notifications", href: "/saas-admin/notifications", permissionKey: "hotelRegistrations", icon: <Bell className={ic} /> },
+    { name: "Settings", href: "/saas-admin/settings", permissionKey: "saasSettings", icon: <SlidersHorizontal className={ic} /> },
   ];
 
   const hotelNavigation = [
@@ -66,21 +68,29 @@ export default function Layout() {
     { name: "Users", href: "/users", permissionKey: "users", icon: <UserShield className={ic} /> },
   ];
 
-  const navigation = isMainAdmin ? adminNavigation : hotelNavigation;
+  const navigation = isSaasPortalUser ? adminNavigation : hotelNavigation;
 
   const hasPermission = (permissionKey) => {
     if (isMainAdmin) return true;
+    if (userData?.role === "sub_admin") return true;
     if (userData?.role === "hotelOwner") return true;
     return userData?.permission?.[permissionKey] === true;
   };
 
   React.useEffect(() => {
     if (!isAdminRoute && userData) {
+      const cached = sessionStorage.getItem('companyLogo');
+      if (cached) {
+        setCompanyLogo(cached);
+        return;
+      }
       const loadLogo = async () => {
         try {
           const res = await getSettings();
           if (res?.success && res.data?.companyLogo) {
-            setCompanyLogo(getLogoUrl(res.data.companyLogo));
+            const url = getLogoUrl(res.data.companyLogo);
+            setCompanyLogo(url);
+            sessionStorage.setItem('companyLogo', url);
           }
         } catch (error) {
           console.warn("Could not load company logo", error);

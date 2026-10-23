@@ -645,7 +645,8 @@ const SaaSAdminSubscriptions = () => {
         <div className="ss-in flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
           <div>
 
-            <h1 className="mt-2 text-[18px] sm:text-[24px] lg:text-[28px] leading-tight font-extrabold tracking-[-0.035em] text-white">Subscriptions</h1>
+<h1 className="text-xl font-bold text-white tracking-tight">
+                Subscriptions</h1>
           </div>
 
 

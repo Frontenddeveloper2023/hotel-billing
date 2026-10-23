@@ -351,14 +351,21 @@ const permissionVerify = (permissionName) => {
 
 
             // -------------------------------------------------
-            // ADMIN
+            // ADMIN & SUB_ADMIN
             // -------------------------------------------------
-            // Admin can access everything.
+            // Main Admin and Sub-Admin have access to SaaS Admin modules
             // -------------------------------------------------
 
             if (req.user.role === "admin") {
-
                 return next();
+            }
+
+            if (req.user.role === "sub_admin") {
+                // Sub-admin has access to SaaS admin portal modules
+                const saasPermissions = ["saasAdmin", "hotels", "plans", "hotelRegistrations", "subscriptions", "settings"];
+                if (saasPermissions.includes(permissionName) || req.user.permission?.[permissionName] === true) {
+                    return next();
+                }
             }
 
 
@@ -439,6 +446,14 @@ const permissionVerifyAny = (...permissionNames) => {
             // Admin can access everything
             if (req.user.role === "admin") {
                 return next();
+            }
+
+            if (req.user.role === "sub_admin") {
+                const saasPermissions = ["saasAdmin", "hotels", "plans", "hotelRegistrations", "subscriptions", "settings"];
+                const hasSaasMatch = permissionNames.some((p) => saasPermissions.includes(p));
+                if (hasSaasMatch) {
+                    return next();
+                }
             }
 
             const permissions = req.user.permission || {};

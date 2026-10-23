@@ -14,7 +14,7 @@ import {
 
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "../../../Context/ToastContext";
-import { getMySubscription } from "../../../service/subscriptionApi";
+import { useSubscription } from "../../../Context/SubscriptionContext";
 
 import RoomFilters from "./Components/RoomFilters";
 import RoomCard from "./Components/RoomCard";
@@ -69,10 +69,10 @@ export default function RoomAvailability({ onNewBooking }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-    // SUBSCRIPTION & PLAN LIMITS
-    const [subscription, setSubscription] = useState(null);
-    const [plan, setPlan] = useState(null);
-    const [subLoading, setSubLoading] = useState(true);
+    // SUBSCRIPTION & PLAN LIMITS from unified SubscriptionContext
+    const { subData, refresh: refreshSubscription } = useSubscription();
+    const subscription = subData;
+    const plan = subData?.planId && typeof subData.planId === "object" ? subData.planId : null;
 
     // MODALS
     const [showAddRoom, setShowAddRoom] = useState(false);
@@ -103,32 +103,34 @@ export default function RoomAvailability({ onNewBooking }) {
         }
     };
 
-    // FETCH SUBSCRIPTION DETAILS
-    const fetchSubscriptionDetails = async () => {
+    // HANDLE STATUS CHANGE (e.g. manually changing occupied room to available)
+    const handleStatusChange = async (roomId, newStatus) => {
         try {
-            setSubLoading(true);
-            const response = await getMySubscription();
-            const subData = response?.data || response?.subscription || null;
-            setSubscription(subData);
-            if (subData?.planId && typeof subData.planId === "object") {
-                setPlan(subData.planId);
+            // Optimistic update
+            setRooms((prev) =>
+                prev.map((r) =>
+                    (r._id === roomId || r.id === roomId)
+                        ? { ...r, status: newStatus }
+                        : r
+                )
+            );
+
+            const res = await updateRoom(roomId, { status: newStatus });
+            if (res?.success) {
+                toast.success(`Room status changed to ${newStatus}!`);
             }
-            return subData;
         } catch (err) {
-            console.warn("Could not load subscription for room limits:", err);
-            return null;
-        } finally {
-            setSubLoading(false);
+            console.error("Failed to change room status:", err);
+            toast.error(err?.message || "Failed to update room status.");
+            // Re-fetch to restore correct state on error
+            fetchRooms();
         }
     };
 
-    // Load rooms and subscription on component mount & listen for real-time upgrade
+    // Load rooms on component mount & listen for real-time upgrade
     useEffect(() => {
         const loadInitialData = async () => {
-            const [fetchedRooms] = await Promise.all([
-                fetchRooms(),
-                fetchSubscriptionDetails()
-            ]);
+            const fetchedRooms = await fetchRooms();
             
             // Check if we were redirected to automatically open the Add Room modal
             if (location.state?.autoOpenAddRoom && fetchedRooms.length === 0) {
@@ -140,15 +142,19 @@ export default function RoomAvailability({ onNewBooking }) {
         
         loadInitialData();
 
-        const handleSubscriptionUpdated = (e) => {
-            console.log("[RoomAvailability] Subscription updated event - refreshing:", e?.detail);
-            fetchSubscriptionDetails();
+        const handleSubscriptionUpdated = () => {
+            fetchRooms();
+        };
+
+        const handleHotelManagementUpdated = () => {
             fetchRooms();
         };
 
         window.addEventListener("subscriptionUpdated", handleSubscriptionUpdated);
+        window.addEventListener("hotelManagementUpdated", handleHotelManagementUpdated);
         return () => {
             window.removeEventListener("subscriptionUpdated", handleSubscriptionUpdated);
+            window.removeEventListener("hotelManagementUpdated", handleHotelManagementUpdated);
         };
     }, []);
 
@@ -170,7 +176,7 @@ export default function RoomAvailability({ onNewBooking }) {
             toast.success("Room added successfully!");
             setShowAddRoom(false);
             await fetchRooms();
-            await fetchSubscriptionDetails();
+            refreshSubscription();
         } catch (err) {
             console.error("Failed to create room:", err);
             throw err;
@@ -195,7 +201,7 @@ export default function RoomAvailability({ onNewBooking }) {
             toast.success("Room deleted successfully!");
             setDeletingRoom(null);
             await fetchRooms();
-            await fetchSubscriptionDetails();
+            refreshSubscription();
         } catch (err) {
             console.error("Failed to delete room:", err);
             throw err;
@@ -424,7 +430,14 @@ export default function RoomAvailability({ onNewBooking }) {
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {filteredRooms.map((room, i) => (
-                            <RoomCard key={room._id || room.id} room={room} index={i} onEdit={setEditingRoom} onDelete={setDeletingRoom} />
+                            <RoomCard
+                                key={room._id || room.id}
+                                room={room}
+                                index={i}
+                                onEdit={setEditingRoom}
+                                onDelete={setDeletingRoom}
+                                onStatusChange={handleStatusChange}
+                            />
                         ))}
                     </div>
                 )}
@@ -436,7 +449,7 @@ export default function RoomAvailability({ onNewBooking }) {
                 onClose={() => setShowAddRoom(false)}
                 onSuccess={async () => {
                     await fetchRooms();
-                    await fetchSubscriptionDetails();
+                    refreshSubscription();
                 }}
                 createRoom={handleCreateRoomAPI}
                 roomLimit={roomLimit}

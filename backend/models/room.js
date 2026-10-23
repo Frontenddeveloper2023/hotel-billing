@@ -91,6 +91,12 @@ roomSchema.index(
     }
 );
 
+roomSchema.index({
+    hotelId: 1,
+    branchId: 1,
+    status: 1,
+});
+
 const Room =
     mongoose.models.Room ||
     mongoose.model("Room", roomSchema);

@@ -1,11 +1,13 @@
 import "dotenv/config";
 
 import express from "express";
+import http from "http";
 import cors from "cors";
 import connectDB from "./config/db.js";
 import cookieParser from "cookie-parser";
 import path from "path";
 import { fileURLToPath } from "url";
+import { initSocket } from "./util/socket.js";
 
 import './cron/overstayCron.js';
 import "./cron/subscriptionExpiryCron.js";
@@ -44,6 +46,7 @@ import customersManagementRoutes from "./routers/customersManagementRoutes.js";
 
 import emailRoutes from "./routers/emailRoutes.js";
 import paymentRoutes from "./routers/paymentRoutes.js";
+import saasAdminSettingsRoutes from "./routers/saasAdminSettingsRoutes.js";
 
 
 // ----------------------------------
@@ -294,6 +297,7 @@ apiRouter.use(
 );
 
 apiRouter.use("/payments", paymentRoutes);
+apiRouter.use("/saas-admin-settings", saasAdminSettingsRoutes);
 
 // ----------------------------------
 // MOUNT API ROUTER
@@ -340,7 +344,10 @@ app.use((error, req, res, next) => {
 // START SERVER
 // ----------------------------------
 
-app.listen(PORT, () => {
+const httpServer = http.createServer(app);
+initSocket(httpServer, allowedOrigins);
+
+httpServer.listen(PORT, () => {
     startLogCleanupScheduler();
 
     log(

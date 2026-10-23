@@ -18,12 +18,13 @@ import {
   Settings2,
 } from "lucide-react";
 
-import Spinner from "../../components/Spinner";
+
+import Spinner from "../../Components/Spinner";
 import { useToast } from "../../Context/ToastContext";
 import { useAuth } from "../../Context/AuthContext";
 
 import Select from "react-select";
-import { Country, State, City } from "country-state-city";
+// country-state-city will be loaded lazily via dynamic import
 
 import {
   getSettings,
@@ -233,12 +234,6 @@ const customSelectStyles = {
   })
 };
 
-const countryOptions = Country.getAllCountries().map(c => ({
-  label: c.name,
-  value: c.isoCode,
-  name: c.name
-}));
-
 // ============================================================
 // SMALL REUSABLE PIECES (memoized, defined outside so they
 // never remount and only re-render when their props change)
@@ -382,8 +377,33 @@ export default function Settings() {
   // ============================================================
   // DROPDOWN DYNAMIC OPTIONS
   // ============================================================
+  const [cscModule, setCscModule] = useState(null);
+  const [countryOptions, setCountryOptions] = useState([]);
   const [stateOptions, setStateOptions] = useState([]);
   const [cityOptions, setCityOptions] = useState([]);
+
+  // Load country-state-city module lazily on mount
+  useEffect(() => {
+    let cancelled = false;
+    import("country-state-city")
+      .then((mod) => {
+        if (!cancelled) {
+          setCscModule(mod);
+          const options = mod.Country.getAllCountries().map((c) => ({
+            label: c.name,
+            value: c.isoCode,
+            name: c.name,
+          }));
+          setCountryOptions(options);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load country-state-city:", err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // ============================================================
   // FETCH SETTINGS
@@ -601,12 +621,14 @@ export default function Settings() {
 
   // Update dynamic dropdown options based on selected country/state
   useEffect(() => {
+    if (!cscModule) return;
+    const { Country, State, City } = cscModule;
     const selectedCountryObj = Country.getAllCountries().find(c => c.name === formData.country);
     if (selectedCountryObj) {
       const states = State.getStatesOfCountry(selectedCountryObj.isoCode).map(s => ({
         label: s.name,
         value: s.isoCode,
-        name: s.name
+        name: s.name,
       }));
       setStateOptions(states);
 
@@ -615,7 +637,7 @@ export default function Settings() {
         const cities = City.getCitiesOfState(selectedCountryObj.isoCode, selectedStateObj.value).map(c => ({
           label: c.name,
           value: c.name,
-          name: c.name
+          name: c.name,
         }));
         setCityOptions(cities);
       } else {
@@ -625,7 +647,7 @@ export default function Settings() {
       setStateOptions([]);
       setCityOptions([]);
     }
-  }, [formData.country, formData.state]);
+  }, [cscModule, formData.country, formData.state]);
 
   // ============================================================
   // LOGO UPLOAD
@@ -999,7 +1021,8 @@ export default function Settings() {
 
 
             <div className="min-w-0">
-              <h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">                System Settings
+<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">     
+                              System Settings
               </h1>
 
 

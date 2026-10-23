@@ -568,6 +568,12 @@ invoiceSchema.index(
     }
 );
 
+invoiceSchema.index({
+    hotelId: 1,
+    branchId: 1,
+    createdAt: -1,
+});
+
 
 
 // ============================================================

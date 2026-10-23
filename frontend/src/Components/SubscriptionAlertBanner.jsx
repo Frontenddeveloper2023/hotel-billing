@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
@@ -10,173 +10,77 @@ import {
 } from "lucide-react";
 import { useAuth } from "../Context/AuthContext";
 import { useToast } from "../Context/ToastContext";
-import { getMySubscription } from "../service/subscriptionApi";
+import { useSubscription } from "../Context/SubscriptionContext";
 
 export default function SubscriptionAlertBanner() {
   const navigate = useNavigate();
   const { isAuthenticated, userData } = useAuth();
   const toast = useToast();
 
-  const [subData, setSubData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // ──────────────────────────────────────────────────────────
+  // USE SHARED SUBSCRIPTION CONTEXT (no more per-component fetch)
+  // ──────────────────────────────────────────────────────────
+  const { subData, loading } = useSubscription();
+
   const lastToastStatusRef = useRef(null);
 
   // ==========================================================
-  // CALCULATE EXPIRY & STATUS
+  // TOAST NOTIFICATIONS (fire once per unique status change)
   // ==========================================================
-  const computeStatus = useCallback((subscription, isExpiredExplicit) => {
-    if (!subscription) return null;
+  useEffect(() => {
+    if (!subData) return;
 
-    const now = new Date();
-    const endDate = subscription.endDate ? new Date(subscription.endDate) : null;
+    const statusKey = `${subData.isExpired ? "expired" : subData.isCancelled ? "cancelled" : subData.isExpiringSoon ? `expiring_${subData.daysRemaining}` : "active"}`;
 
-    // Days remaining difference (rounded)
-    let daysRemaining = null;
-    if (endDate) {
-      const diffTime = endDate.getTime() - now.getTime();
-      daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    }
+    if (lastToastStatusRef.current !== statusKey) {
+      lastToastStatusRef.current = statusKey;
 
-    const isExpired =
-      isExpiredExplicit === true ||
-      subscription.status === "expired" ||
-      (endDate && now >= endDate) ||
-      (daysRemaining !== null && daysRemaining <= 0);
-
-    const isCancelled =
-      subscription.status === "cancelled" ||
-      subscription.status === "suspended";
-
-    const isExpiringSoon =
-      !isExpired &&
-      !isCancelled &&
-      daysRemaining !== null &&
-      daysRemaining <= 3 &&
-      daysRemaining >= 0;
-
-    const isTrial = Boolean(
-      subscription.billingCycle === "trial" ||
-      subscription.trialStatus === "active" ||
-      subscription.status === "trial" ||
-      subscription.planId?.planName?.toLowerCase().includes("trial")
-    );
-
-    return {
-      subscription,
-      daysRemaining: daysRemaining ?? 0,
-      isExpired,
-      isCancelled,
-      isExpiringSoon,
-      isTrial,
-      status: subscription.status,
-      planName: subscription.planId?.planName || (isTrial ? "Free Trial" : "Current Plan"),
-      cancellationReason: subscription.cancellationReason || "",
-    };
-  }, []);
-
-  // ==========================================================
-  // FETCH SUBSCRIPTION STATUS
-  // ==========================================================
-  const checkStatus = useCallback(async (isInitial = false) => {
-    if (!isAuthenticated || userData?.role === "admin") {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const res = await getMySubscription();
-
-      if (res?.success && res?.data) {
-        const computed = computeStatus(res.data, res.isExpired);
-        setSubData(computed);
-
-        if (computed) {
-          const statusKey = `${computed.isExpired ? "expired" : computed.isCancelled ? "cancelled" : computed.isExpiringSoon ? `expiring_${computed.daysRemaining}` : "active"}`;
-
-          if (lastToastStatusRef.current !== statusKey) {
-            lastToastStatusRef.current = statusKey;
-
-            if (computed.isExpired) {
-              if (computed.isTrial) {
-                toast.warn(
-                  "Your free trial was ended so purchase any active plan and continue your portal.",
-                  6000
-                );
-              } else {
-                toast.warn(
-                  "Your plan subscription has expired! Please upgrade to continue your work.",
-                  6000
-                );
-              }
-            } else if (computed.isCancelled) {
-              const reasonText = computed.cancellationReason
-                ? `: ${computed.cancellationReason}`
-                : "";
-              toast.warn(
-                `Your plan subscription was cancelled by admin${reasonText}. Please upgrade or reactivate.`,
-                6000
-              );
-            } else if (computed.isExpiringSoon) {
-              if (computed.isTrial) {
-                const daysText = computed.daysRemaining === 0 ? "today" : computed.daysRemaining === 1 ? "1 day (tomorrow)" : `${computed.daysRemaining} days`;
-                toast.warn(
-                  `Your free trial expires ${daysText}! Purchase an active plan to continue your portal.`,
-                  5000
-                );
-              } else if (computed.daysRemaining === 0) {
-                toast.warn(
-                  "Your plan expires today! Please upgrade now to continue your work without interruption.",
-                  5000
-                );
-              } else if (computed.daysRemaining === 1) {
-                toast.warn(
-                  "Your plan is going to expire in 1 day (tomorrow)! Upgrade now to continue your work.",
-                  5000
-                );
-              } else {
-                toast.warn(
-                  `Your plan is going to expire in ${computed.daysRemaining} days. Upgrade to continue your work.`,
-                  5000
-                );
-              }
-            }
-          }
+      if (subData.isExpired) {
+        if (subData.isTrial) {
+          toast.warn(
+            "Your free trial was ended so purchase any active plan and continue your portal.",
+            6000
+          );
+        } else {
+          toast.warn(
+            "Your plan subscription has expired! Please upgrade to continue your work.",
+            6000
+          );
+        }
+      } else if (subData.isCancelled) {
+        const reasonText = subData.cancellationReason
+          ? `: ${subData.cancellationReason}`
+          : "";
+        toast.warn(
+          `Your plan subscription was cancelled by admin${reasonText}. Please upgrade or reactivate.`,
+          6000
+        );
+      } else if (subData.isExpiringSoon) {
+        if (subData.isTrial) {
+          const daysText = subData.daysRemaining === 0 ? "today" : subData.daysRemaining === 1 ? "1 day (tomorrow)" : `${subData.daysRemaining} days`;
+          toast.warn(
+            `Your free trial expires ${daysText}! Purchase an active plan to continue your portal.`,
+            5000
+          );
+        } else if (subData.daysRemaining === 0) {
+          toast.warn(
+            "Your plan expires today! Please upgrade now to continue your work without interruption.",
+            5000
+          );
+        } else if (subData.daysRemaining === 1) {
+          toast.warn(
+            "Your plan is going to expire in 1 day (tomorrow)! Upgrade now to continue your work.",
+            5000
+          );
+        } else {
+          toast.warn(
+            `Your plan is going to expire in ${subData.daysRemaining} days. Upgrade to continue your work.`,
+            5000
+          );
         }
       }
-    } catch (err) {
-      if (err?.status === 404 || err?.response?.status === 404) {
-        setSubData({
-          isExpired: true,
-          isCancelled: false,
-          isExpiringSoon: false,
-          daysRemaining: 0,
-          planName: "None",
-          cancellationReason: "",
-        });
-      }
-    } finally {
-      setLoading(false);
     }
-  }, [isAuthenticated, userData, computeStatus, toast]);
-
-  useEffect(() => {
-    checkStatus(true);
-
-    const handleSubscriptionUpdated = () => {
-      checkStatus(false);
-    };
-
-    window.addEventListener("subscriptionUpdated", handleSubscriptionUpdated);
-
-    const interval = setInterval(() => {
-      checkStatus(false);
-    }, 30000);
-
-    return () => {
-      window.removeEventListener("subscriptionUpdated", handleSubscriptionUpdated);
-      clearInterval(interval);
-    };
-  }, [checkStatus]);
+  }, [subData, toast]);
 
   const handleUpgradeClick = () => {
     navigate("/plan-upgrade");

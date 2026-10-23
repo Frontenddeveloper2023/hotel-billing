@@ -18,12 +18,17 @@ import { getRegistrationStatus } from "./service/hotelRegistrationApi";
 
 import "./App.css";
 
-import CustomerManagement
-  from "./pages/Customers/CustomerManagement";
+const CustomerManagement = lazy(() =>
+  import("./pages/Customers/CustomerManagement")
+);
 
-import InvoicesManagement
-  from "./pages/InvoicesManage/InvoicesManagement";
-import SaaSHome from "./pages/SaaSUser/SaasUserHome";
+const InvoicesManagement = lazy(() =>
+  import("./pages/InvoicesManage/InvoicesManagement")
+);
+
+const SaaSHome = lazy(() =>
+  import("./pages/SaaSUser/SaasUserHome")
+);
 
 
 // =====================================================
@@ -128,13 +133,13 @@ const SaaSUserApplicationStatus = lazy(() =>
 
 const SaaSAdminDashboard = lazy(() =>
   import(
-    "./pages/SaaSAdmin/SaaSAdminDashboard"
+    "./pages/SaaSAdmin/SaasAdminDashboard"
   )
 );
 
 const SaaSAdminHotels = lazy(() =>
   import(
-    "./pages/SaaSAdmin/SaaSAdminHotels"
+    "./pages/SaaSAdmin/SaasAdminHotels"
   )
 );
 
@@ -152,13 +157,19 @@ const SaaSAdminNotifications = lazy(() =>
 
 const SaaSAdminSubscriptions = lazy(() =>
   import(
-    "./pages/SaaSAdmin/SaaSAdminSubscriptions"
+    "./pages/SaaSAdmin/SaasAdminSubscriptions"
   )
 );
 
 const SaaSAdminHotelBills = lazy(() =>
   import(
     "./pages/SaaSAdmin/SaasAdminHotelBills"
+  )
+);
+
+const SaaSAdminSettings = lazy(() =>
+  import(
+    "./pages/SaaSAdmin/SaaSAdminSettings"
   )
 );
 
@@ -248,6 +259,7 @@ const isAdminRoute = [
   "plans",
   "hotelRegistrations",
   "subscriptions",
+  "saasSettings",
 ].includes(permission);
 
 const currentUser = isAdminRoute
@@ -288,15 +300,16 @@ const isAuthenticated = Boolean(currentUser);
     "hotels",
     "plans",
     "hotelRegistrations",
-    "subscriptions"
+    "subscriptions",
+    "saasSettings"
   ];
 
 
   // -------------------------------------------------
-  // ADMIN
+  // ADMIN & SUB-ADMIN
   // -------------------------------------------------
 
-if (currentUser?.role === "admin") {
+if (currentUser?.role === "admin" || currentUser?.role === "sub_admin") {
       if (!isAdminRoute) {
       return <Navigate to="/saas-admin/dashboard" replace />;
     }
@@ -646,6 +659,22 @@ element={
               permission="hotels"
             >
               <SaaSAdminHotelBills />
+            </PermissionRoute>
+          }
+        />
+
+
+        {/* -----------------------------------------------
+            SaaS ADMIN SETTINGS
+        ------------------------------------------------ */}
+
+        <Route
+          path="saas-admin/settings"
+          element={
+            <PermissionRoute
+              permission="saasSettings"
+            >
+              <SaaSAdminSettings />
             </PermissionRoute>
           }
         />

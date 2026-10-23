@@ -653,26 +653,19 @@ const SaaSAdminPlans = () => {
   return (
     <div className="min-h-full font-['Inter']">
       <style>{styles}</style>
-      <div className="max-w-[1440px] mx-auto">
+      <div className="max-w-[1440px] ">
 
         {/* HEADER */}
         <div className="sp-in flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
           <div>
             
-            <h1 className="mt-1.5 text-[18px] sm:text-[24px] lg:text-[28px] leading-tight font-extrabold tracking-[-0.035em] text-white">SaaS Plans</h1>
+<h1 className="text-xl font-bold text-white tracking-tight">
+                SaaS Plans</h1>
           </div>
 
-          <div className="flex items-center gap-3">
-          
+         
 
-            <button
-              type="button"
-              onClick={handleCreate}
-              className="inline-flex cursor-pointer items-center gap-2 px-5 h-12 rounded-2xl bg-white text-[#1d4fc4] hover:bg-blue-50 hover:-translate-y-0.5 text-sm font-bold shadow-lg shadow-black/20 transition active:scale-95"
-            >
-              <Plus size={18} /> Add Plan
-            </button>
-          </div>
+
         </div>
 
         {/* SUCCESS */}
@@ -898,16 +891,26 @@ Choose how many days new hotel owners get free trial access.        </p>
 </div>
 
         {/* SEARCH */}
-        <div style={delay(4)} className="sp-in relative mb-6">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-100" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search plans by name or description..."
-            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md text-sm text-white placeholder:text-blue-100/60 outline-none focus:bg-white/15 focus:border-white/40 focus:ring-2 focus:ring-white/20 transition"
-          />
-        </div>
+       <div style={delay(4)} className="sp-in relative flex flex-row items-center justify-between w-full gap-3 mb-6">
+  <div className="relative w-80">
+    <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-100" />
+    <input
+      type="text"
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      placeholder="Search plans by name or description..."
+      className="w-full pl-12 pr-4 h-10 rounded-xl bg-white/10 border border-white/20 backdrop-blur-md text-sm text-white placeholder:text-blue-100/60 outline-none focus:bg-white/15 focus:border-white/40 focus:ring-2 focus:ring-white/20 transition"
+    />
+  </div>
+
+  <button
+    type="button"
+    onClick={handleCreate}
+    className="inline-flex shrink-0 cursor-pointer items-center gap-2 px-4 h-10 rounded-xl bg-white text-[#1d4fc4] hover:bg-blue-50 hover:-translate-y-0.5 text-sm font-semibold shadow-md shadow-black/10 transition active:scale-95"
+  >
+    <Plus size={16} /> Add Plan 
+  </button>
+</div>
 
         {/* PLANS */}
         {loading ? (

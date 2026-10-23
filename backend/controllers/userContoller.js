@@ -4,6 +4,7 @@ import Hotels from "../models/hotels.js";
 import Settings from "../models/settings.js";
 import Subscription from "../models/subscription.js";
 import { log } from "../util/logger.js";
+import { emitTenantEvent, emitUserEvent } from "../util/socket.js";
 
 /**
  * ============================================================
@@ -1253,6 +1254,21 @@ export const updateUser =
       log.info(
         `[updateUser] User updated successfully | User ID: ${id} | Hotel ID: ${hotelId} | Branch ID: ${branchId} | Subscription: ${subscription._id}`
       );
+
+      // Emit real-time notification to all staff in branch & hotel
+      emitTenantEvent(hotelId, branchId, "userStatusChanged", {
+        action: "userUpdated",
+        userId: id,
+        user: updatedUser,
+      });
+
+      // If user status was changed to inactive, notify that user directly to terminate session/lock screen
+      if (updatedUser.status === "inactive") {
+        emitUserEvent(id, "accountBlocked", {
+          message: "Your receptionist account has been deactivated by the hotel administrator.",
+          userId: id,
+        });
+      }
 
       /**
        * --------------------------------------------------------

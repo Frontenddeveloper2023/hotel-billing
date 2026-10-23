@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Booking from "../models/booking.js";
 import RoomService from "../models/roomService.js";
 import { log } from "../util/logger.js";
+import { emitTenantEvent } from "../util/socket.js";
 
 // ============================================================
 // HELPER
@@ -412,6 +413,13 @@ export const addRoomService = async (req, res) => {
             "INFO",
             `[ROOM SERVICE] Added | Booking: ${bookingId} | Room: ${room.roomNumber} | Service: ${addedService.name} | Total: ${addedService.total} | Hotel: ${hotelId} | Branch: ${branchId}`
         );
+
+        emitTenantEvent(hotelId, branchId, "roomServiceUpdated", {
+            action: "added",
+            bookingId,
+            roomId,
+            service: addedService,
+        });
 
         return res.status(201).json({
             success: true,
@@ -881,6 +889,13 @@ export const updateRoomService = async (
             `[ROOM SERVICE] Updated | Booking: ${bookingId} | Room: ${room.roomNumber} | Service: ${service.name} | Hotel: ${hotelId} | Branch: ${branchId}`
         );
 
+        emitTenantEvent(hotelId, branchId, "roomServiceUpdated", {
+            action: "updated",
+            bookingId,
+            roomId,
+            service,
+        });
+
         return res.status(200).json({
             success: true,
             message:
@@ -1034,6 +1049,13 @@ export const deleteRoomService = async (
             "INFO",
             `[ROOM SERVICE] Deleted | Booking: ${bookingId} | Room: ${room.roomNumber} | Service: ${serviceId} | Hotel: ${hotelId} | Branch: ${branchId}`
         );
+
+        emitTenantEvent(hotelId, branchId, "roomServiceUpdated", {
+            action: "deleted",
+            bookingId,
+            roomId,
+            serviceId,
+        });
 
         return res.status(200).json({
             success: true,

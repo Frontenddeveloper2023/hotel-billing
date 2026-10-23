@@ -447,30 +447,28 @@ const SaaSAdminDashboard = () => {
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
             <div className="min-w-0">
              
-              <h1 className="text-[18px] sm:text-[24px] lg:text-[30px] leading-tight font-extrabold tracking-[-0.035em] text-white">
-                SaaS Admin Dashboard
+<h1 className="text-xl font-bold text-white tracking-tight">
+                  SaaS Admin Dashboard
               </h1>
              
             </div>
 
-            <div className="flex items-center gap-3">
-             
+           <div className="flex items-center gap-3">
+  <Link
+    to="/saas-admin/notifications"
+    className="relative inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-white/20 bg-white/15 backdrop-blur-md text-white hover:bg-white/25 transition"
+    aria-label={`Notifications${unreadNotificationCount > 0 ? `, ${unreadNotificationCount} unread` : ""}`}
+  >
+    <Bell size={16} />
+    {unreadNotificationCount > 0 && (
+      <span className="absolute -right-1 -top-1 min-w-[16px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none border-2 border-[#1d3f70]">
+        {unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}
+      </span>
+    )}
+  </Link>
+</div>
 
-           
 
-              <Link
-                to="/saas-admin/notifications"
-                className="relative inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 transition"
-                aria-label={`Notifications${unreadNotificationCount > 0 ? `, ${unreadNotificationCount} unread` : ""}`}
-              >
-                <Bell size={20} />
-                {unreadNotificationCount > 0 && (
-                  <span className="absolute -right-1 -top-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold leading-none border-2 border-[#1d3f70]">
-                    {unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}
-                  </span>
-                )}
-              </Link>
-            </div>
           </div>
         </header>
 

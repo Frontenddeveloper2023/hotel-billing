@@ -524,6 +524,16 @@ export default function AddBooking({ onComplete, onCancel }) {
         };
 
         loadData();
+
+        const handleHotelManagementUpdated = (e) => {
+            console.log("[AddBooking] Real-time hotelManagementUpdated event received:", e?.detail);
+            loadData();
+        };
+
+        window.addEventListener("hotelManagementUpdated", handleHotelManagementUpdated);
+        return () => {
+            window.removeEventListener("hotelManagementUpdated", handleHotelManagementUpdated);
+        };
     }, []);
 
     // ============================================================
