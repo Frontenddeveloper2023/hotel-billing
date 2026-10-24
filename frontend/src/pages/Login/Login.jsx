@@ -1336,7 +1336,7 @@ const Login = () => {
                                     />
 
                                     <div>
-                                        <p className="text-base font-bold text-slate-900">
+                                        <p className="text-base font-bold text-black">
                                             StayLio
                                         </p>
                                         <p className="text-[10px] text-[#1877F2]">
@@ -1357,11 +1357,11 @@ const Login = () => {
                                         OK
                                     </div>
 
-                                    <h2 className="mt-5 text-2xl font-bold tracking-tight text-slate-900">
+                                    <h2 className="mt-5 text-2xl font-bold tracking-tight text-black">
                                         Welcome, Administrator
                                     </h2>
 
-                                    <p className="mx-auto mt-2 max-w-[320px] text-sm leading-6 text-slate-500">
+                                    <p className="mx-auto mt-2 max-w-[320px] text-sm leading-6 text-black">
                                         Your access has been verified. Opening
                                         the StayLio administration dashboard.
                                     </p>
@@ -1379,11 +1379,11 @@ const Login = () => {
             Hotel Management
         </p>
 
-        <h2 className="mt-2.5 text-[28px] font-bold tracking-tight text-slate-900 sm:text-[30px]">
+        <h2 className="mt-2.5 text-[28px] font-bold tracking-tight text-black sm:text-[30px]">
             Get Started Now
         </h2>
 
-        <p className="mt-3 max-w-[390px] text-sm leading-6 text-slate-500 sm:text-[15px]">
+        <p className="mt-3 max-w-[390px] text-sm leading-6 text-black sm:text-[15px]">
             Sign in to your administrator account to manage your hotel
             operations securely.
         </p>
@@ -1393,7 +1393,7 @@ const Login = () => {
         <div>
             <label
                 htmlFor="email"
-                className="mb-2 block text-xs font-semibold text-slate-700 sm:text-sm"
+                className="mb-2 block text-xs font-semibold text-black sm:text-sm"
             >
                 Email address
             </label>
@@ -1420,11 +1420,11 @@ const Login = () => {
                     px-4
                     text-sm
                     font-medium
-                    text-slate-800
+                    text-black
                     outline-none
                     transition-all
                     duration-200
-                    placeholder:text-slate-400
+                    placeholder:text-black-300
                     hover:border-slate-400
                     focus:border-[#1877F2]
                     focus:ring-4
@@ -1518,7 +1518,7 @@ const Login = () => {
     </form>
 
     <div className="mt-9 border-t border-slate-100 pt-6 text-center">
-        <p className="text-xs leading-5 text-slate-400 sm:text-sm">
+        <p className="text-xs leading-5 text-black sm:text-sm">
             Secure administrator login powered by StayLio.
         </p>
     </div>
@@ -1531,22 +1531,22 @@ const Login = () => {
             Security Verification
         </p>
 
-        <h2 className="mt-2.5 text-[28px] font-bold tracking-tight text-slate-900 sm:text-[30px]">
+        <h2 className="mt-2.5 text-[28px] font-bold tracking-tight text-black sm:text-[30px]">
             Verify your access
         </h2>
 
-        <p className="mt-3 max-w-[390px] text-sm leading-6 text-slate-500 sm:text-[15px]">
+        <p className="mt-3 max-w-[390px] text-sm leading-6 text-black sm:text-[15px]">
             Enter the 6-digit code sent to your registered administrator
             email.
         </p>
     </div>
 
     <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3.5">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <p className="text-xs font-semibold uppercase tracking-wide text-black">
             Verification code sent to
         </p>
 
-        <p className="mt-1.5 truncate text-sm font-semibold text-slate-700">
+        <p className="mt-1.5 truncate text-sm font-semibold text-black">
             {email}
         </p>
     </div>
@@ -1575,7 +1575,7 @@ const Login = () => {
         onSubmit={verifyOtp}
     >
         <div>
-            <label className="mb-2.5 block text-xs font-semibold text-slate-700 sm:text-sm">
+            <label className="mb-2.5 block text-xs font-semibold text-black sm:text-sm">
                 Verification code
             </label>
 
@@ -1618,7 +1618,7 @@ const Login = () => {
                             text-center
                             text-xl
                             font-bold
-                            text-slate-800
+                            text-black
                             outline-none
                             transition-all
                             duration-200
@@ -1716,11 +1716,11 @@ const Login = () => {
             )}
         </button>
 
-        <div className="text-center text-xs text-slate-500 sm:text-sm">
+        <div className="text-center text-xs text-black sm:text-sm">
             {secondsLeft > 0 ? (
                 <>
                     Resend available in{" "}
-                    <span className="font-semibold text-slate-700">
+                    <span className="font-semibold text-black">
                         {formatTime(secondsLeft)}
                     </span>
                 </>
@@ -1744,7 +1744,7 @@ const Login = () => {
     </form>
 
     <div className="mt-9 border-t border-slate-100 pt-6 text-center">
-        <p className="text-xs leading-5 text-slate-400 sm:text-sm">
+        <p className="text-xs leading-5 text-black sm:text-sm">
             Your administrator account is protected with secure
             OTP verification.
         </p>
@@ -1752,7 +1752,7 @@ const Login = () => {
 </div>
                             )}
 
-                            <p className="mt-6 text-center text-[9px] text-slate-400">
+                            <p className="mt-6 text-center text-[9px] text-black">
                                 © {new Date().getFullYear()} StayLio. All rights reserved.
                             </p>
                         </div>

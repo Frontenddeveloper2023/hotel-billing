@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
 import InvoiceTemplate from "../InvoiceTemplate/InvoiceTemplate";
 import { DoorOpen, LogIn, BedDouble, CheckCircle2, Printer, Receipt } from "lucide-react";
 
@@ -29,6 +30,8 @@ const tabs = [
 
 export default function HotelManagement() {
     const toast = useToast();
+    const location = useLocation();
+    const [searchParams] = useSearchParams();
     const [activePage, setActivePage] = useState("availability");
     const [visitedPages, setVisitedPages] = useState(new Set(["availability"]));
     const [selectedStay, setSelectedStay] = useState(null);
@@ -40,6 +43,14 @@ export default function HotelManagement() {
         setVisitedPages((prev) => new Set(prev).add(page));
         setActivePage(page);
     };
+
+    // Listen for tab changes via URL query params or navigation state
+    useEffect(() => {
+        const tabParam = searchParams.get("tab") || location.state?.tab;
+        if (tabParam && (tabParam === "availability" || tabParam === "booking" || tabParam === "currentStays")) {
+            navigateTo(tabParam);
+        }
+    }, [searchParams, location.state]);
 
     // GENERATE PDF
     useEffect(() => {
@@ -165,57 +176,12 @@ export default function HotelManagement() {
         try {
             setIsSendingEmail(true);
 
-            let pdfBlob = successData?.pdfBlob;
-
-            // If PDF blob isn't generated yet, generate it immediately on the fly
-            if (!pdfBlob || !pdfBlob.size) {
-                if (!receiptRef.current) {
-                    toast.warn("Invoice template is still loading. Please wait 1 second.");
-                    setIsSendingEmail(false);
-                    return;
-                }
-
-                const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
-                    import("html2canvas"),
-                    import("jspdf"),
-                ]);
-
-                const canvas = await html2canvas(receiptRef.current, {
-                    scale: 2,
-                    useCORS: true,
-                    backgroundColor: "#ffffff",
-                });
-
-                const imgData = canvas.toDataURL("image/png");
-                const pdfWidth = 80;
-                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-                const pdf = new jsPDF({
-                    orientation: "portrait",
-                    unit: "mm",
-                    format: [pdfWidth, pdfHeight],
-                });
-
-                pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-                pdfBlob = pdf.output("blob");
-
-                if (pdfBlob && pdfBlob.size > 0) {
-                    setSuccessData(prev => ({ ...prev, pdfBlob }));
-                }
-            }
-
-            if (!pdfBlob || !pdfBlob.size || pdfBlob.size <= 0) {
-                toast.warn("Unable to generate invoice PDF. Please try again.");
-                return;
-            }
-
             const formData = new FormData();
             formData.append("email", email.trim());
             formData.append("customerName", name);
             formData.append("invoiceNo", invoiceNo);
             formData.append("amount", amount);
             formData.append("paymentMethod", method);
-            formData.append("pdf", pdfBlob, `Invoice_${invoiceNo}.pdf`);
 
             const data = await sendInvoiceEmail(formData);
 
@@ -249,7 +215,7 @@ export default function HotelManagement() {
             <style>{styles}</style>
 
             {/* TOP NAVIGATION */}
-            <div className="hm-in rounded-3xl bg-white shadow-[0_14px_36px_rgba(6,20,52,0.14)] mb-5 overflow-hidden">
+            <div className="hm-in rounded-3xl bg-white/95 backdrop-blur-xl border border-white/40 shadow-[0_14px_36px_rgba(6,20,52,0.18)] mb-5 overflow-hidden">
                 <div className="px-2 sm:px-4">
                     <div className="flex items-center gap-1 overflow-x-auto hm-scroll">
                         {tabs.map(({ key, label, icon: Icon }) => {
@@ -390,7 +356,7 @@ export default function HotelManagement() {
                                             </>
                                         ) : (
                                             <>
-                                                <span className="text-[20px]">📧</span>
+                                                <span className="cursor-pointer text-[20px]">📧</span>
                                                 Send invoice to Email
                                             </>
                                         )}

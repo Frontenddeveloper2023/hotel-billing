@@ -16,7 +16,7 @@ export default function DeleteFood({ food, onClose, onDelete, saving = false }) 
                         onClick={onClose}
                         disabled={saving}
                         aria-label="Close"
-                        className="fm-btn flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 hover:bg-[var(--tint)] hover:text-blue-700 disabled:opacity-50"
+                        className="fm-btn flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-black hover:bg-[var(--tint)] hover:text-blue-700 disabled:opacity-50"
                     >
                         <X className="h-4 w-4" />
                     </button>
@@ -26,7 +26,7 @@ export default function DeleteFood({ food, onClose, onDelete, saving = false }) 
                     Delete Food Item?
                 </h2>
 
-                <p className="mt-2 text-sm leading-6 text-slate-500">
+                <p className="mt-2 text-sm leading-6 text-black">
                     Are you sure you want to delete{" "}
                     <span className="break-words font-bold text-[#12306b]">
                         {food.foodName}
@@ -39,7 +39,7 @@ export default function DeleteFood({ food, onClose, onDelete, saving = false }) 
                         type="button"
                         onClick={onClose}
                         disabled={saving}
-                        className="fm-btn cursor-pointer rounded-lg border border-[var(--line)] px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-[var(--tint)] disabled:opacity-50"
+                        className="fm-btn cursor-pointer rounded-lg border border-[var(--line)] px-5 py-2.5 text-sm font-bold text-black hover:bg-[var(--tint)] disabled:opacity-50"
                     >
                         Cancel
                     </button>

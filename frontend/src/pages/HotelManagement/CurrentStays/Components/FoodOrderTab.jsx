@@ -3,6 +3,7 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
+import { createPortal } from "react-dom";
 import { useToast } from "../../../../Context/ToastContext.jsx";
 import {
   Search,
@@ -16,6 +17,8 @@ import {
   UtensilsCrossed,
   Tag,
   ShieldCheck,
+  X,
+  ChevronLeft,
 } from "lucide-react";
 import { getAllFoods } from "../../../../service/foodService.js";
 import {
@@ -44,8 +47,10 @@ export default function FoodOrderTab({
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [foodSearch, setFoodSearch] = useState("");
 
-  // CART
+  // CART & WIZARD STEPS ("menu" | "confirm")
   const [cart, setCart] = useState({});
+  const [currentStep, setCurrentStep] = useState("menu");
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   // DATABASE FOOD RECORDS
   const [activeFoodList, setActiveFoodList] = useState([]);
@@ -336,7 +341,7 @@ export default function FoodOrderTab({
   // =====================================================
   // PLACE FOOD ORDER
   // =====================================================
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (submitting) return;
 
     if (cartItems.length === 0) {
@@ -344,70 +349,53 @@ export default function FoodOrderTab({
       return;
     }
 
-    if (!bookingId) {
-      toast.warn("Booking ID is missing. Please select a booking.");
+    if (!bookingId || !roomId) {
+      toast.warn("Booking or room ID is missing.");
       return;
     }
 
-    if (!roomId) {
-      toast.warn("Booked room ID is missing. Please select a room.");
-      return;
+    try {
+      setSubmitting(true);
+      setError("");
+
+      await Promise.all(
+        cartItems.map(async (cartItem) => {
+          const foodId = cartItem._id || cartItem.id;
+          if (!foodId) throw new Error("Food ID is missing.");
+
+          const price = Number(
+            cartItem.price || cartItem.foodPrice || 0
+          );
+          const quantity = Number(cartItem.quantity || 1);
+
+          const payload = {
+            foodId,
+            name: cartItem.name || cartItem.foodName || "",
+            price,
+            quantity,
+            total: price * quantity,
+            paymentStatus: "Pending",
+          };
+
+          await addFoodService(bookingId, roomId, payload);
+        })
+      );
+
+      setCart({});
+      setCurrentStep("menu");
+      await fetchBookingFoodServices();
+
+      toast.success(
+        `Food order of ₹${cartTotalAmount} added to Room ${roomNumber || ""} successfully.`
+      );
+    } catch (err) {
+      console.error("Failed to place food order:", err);
+      const errMsg = err?.message || "Failed to save food order.";
+      setError(errMsg);
+      toast.error(errMsg);
+    } finally {
+      setSubmitting(false);
     }
-
-    toast.confirm(
-      `Confirm food order of ₹${cartTotalAmount} (${cartItems.length} items) for Room ${roomNumber || ""
-      }? These charges will be attached to checkout.`,
-      async () => {
-        try {
-          setSubmitting(true);
-          setError("");
-
-          await Promise.all(
-            cartItems.map(async (cartItem) => {
-              const foodId = cartItem._id || cartItem.id;
-              if (!foodId) throw new Error("Food ID is missing.");
-
-              const price = Number(
-                cartItem.price || cartItem.foodPrice || 0
-              );
-              const quantity = Number(cartItem.quantity || 1);
-
-              const payload = {
-                foodId,
-                name: cartItem.name || cartItem.foodName || "",
-                price,
-                quantity,
-                total: price * quantity,
-                paymentStatus: "Pending",
-              };
-
-              await addFoodService(bookingId, roomId, payload);
-            })
-          );
-
-          setCart({});
-          await fetchBookingFoodServices();
-
-          toast.success(
-            `Food order of ₹${cartTotalAmount} added to Room ${roomNumber || ""
-            } successfully.`
-          );
-        } catch (err) {
-          console.error("Failed to place food order:", err);
-          const errMsg = err?.message || "Failed to save food order.";
-          setError(errMsg);
-          toast.error(errMsg);
-        } finally {
-          setSubmitting(false);
-        }
-      },
-      {
-        title: "Confirm Food Order",
-        confirmText: `Confirm Order (₹${cartTotalAmount})`,
-        cancelText: "Review Cart",
-        variant: "primary",
-      }
-    );
   };
 
   // =====================================================
@@ -488,7 +476,7 @@ export default function FoodOrderTab({
         <p className="text-sm font-bold text-[#0f2a63]">
           Checking Food Service Access...
         </p>
-        <p className="text-xs text-slate-500 mt-1">
+        <p className="text-xs text-black mt-1">
           Verifying active plan permissions.
         </p>
       </div>
@@ -504,7 +492,7 @@ export default function FoodOrderTab({
         <h3 className="text-base font-bold text-[#0f2a63]">
           Food Service Not Available
         </h3>
-        <p className="text-xs text-slate-600 max-w-md mt-2 leading-relaxed">
+        <p className="text-xs text-black max-w-md mt-2 leading-relaxed">
           {featureMessage ||
             "Food Service is not included in your current subscription plan."}
         </p>
@@ -513,121 +501,138 @@ export default function FoodOrderTab({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+    <div className="space-y-4">
       {/* ===================================================
-          LEFT SIDE: MENU & QUEUES
+          STEP 1: CHOOSE FOOD MENU & ADD
       ==================================================== */}
-      <div className="lg:col-span-2 space-y-6">
-        {/* FOOD CATALOG */}
-        <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-[0_4px_20px_rgba(15,42,99,0.04)] space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100">
-            <div>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-[#0f2a63] text-white flex items-center justify-center shrink-0 shadow-sm">
-                  <UtensilsCrossed className="w-4 h-4" />
-                </div>
-                <h3 className="font-bold text-[#0f2a63] text-base">
-                  Food Menu
-                </h3>
+      {currentStep === "menu" && (
+        <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200/90 shadow-xs space-y-3">
+          {/* TOP BAR */}
+          <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#0f2a63] text-white flex items-center justify-center shrink-0">
+                <UtensilsCrossed className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <p className="text-xs text-slate-500 mt-1 pl-10">
-                Select food items and add them to the room order cart.
-              </p>
+              <div>
+                <h3 className="font-extrabold text-[#0f2a63] text-sm sm:text-base leading-tight">
+                  Choose Food
+                </h3>
+                {roomNumber && (
+                  <span className="text-[10px] text-blue-600 font-bold">
+                    Room {roomNumber}
+                  </span>
+                )}
+              </div>
             </div>
 
+            {/* QUICK HISTORY & PENDING ICON BUTTON */}
             <div className="flex items-center gap-2">
-              {roomNumber && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-blue-50 text-[#0f2a63] border border-blue-100 text-xs font-bold shrink-0">
-                  <Tag className="w-3.5 h-3.5 text-blue-600" />
-                  Room {roomNumber}
-                </span>
-              )}
+              <button
+                type="button"
+                onClick={() => setShowHistoryModal(true)}
+                className="relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-[#0f2a63] text-xs font-bold transition-all cursor-pointer border border-slate-200/80 active:scale-95 shadow-2xs"
+                title="View Pending & Past Orders"
+              >
+                <History className="w-3.5 h-3.5 text-blue-600" />
+                <span className="hidden sm:inline">Orders</span>
+                {activeFoodList.length > 0 && (
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                )}
+              </button>
             </div>
           </div>
 
-          {/* SEARCH & FILTERS BAR */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex gap-1.5 w-full sm:w-auto">
+          {/* SEARCH & FILTER */}
+          {/* <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+            <div className="flex gap-1">
               {["All", "Veg", "Non-Veg"].map((filter) => (
                 <button
                   key={filter}
                   type="button"
                   onClick={() => setSelectedFilter(filter)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-150 cursor-pointer ${selectedFilter === filter
-                      ? "bg-[#0f2a63] text-white shadow-sm"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200"
-                    }`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    selectedFilter === filter
+                      ? "bg-[#0f2a63] text-white shadow-xs"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
                 >
                   {filter}
                 </button>
               ))}
             </div>
 
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+            <div className="relative flex-1 sm:max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search food item..."
+                placeholder="Search menu..."
                 value={foodSearch}
                 onChange={(e) => setFoodSearch(e.target.value)}
-                className="w-full pl-9 pr-3.5 py-2 bg-slate-50/70 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-600/15 transition-all shadow-xs"
+                className="w-full pl-8 pr-7 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               />
+              {foodSearch && (
+                <button
+                  type="button"
+                  onClick={() => setFoodSearch("")}
+                  aria-label="Clear search"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded flex items-center justify-center text-slate-400 hover:text-slate-700 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
             </div>
-          </div>
+          </div> */}
 
           {error && (
-            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+            <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
               {error}
             </div>
           )}
 
-          {/* FOOD CARDS LIST */}
-          <div className="max-h-[320px] overflow-y-auto pr-1 space-y-2.5">
+          {/* FOOD MENU CARDS (Compact, Clean, Touch-friendly) */}
+          <div className="max-h-[380px] overflow-y-auto pr-1 space-y-2 staylio-scrollbar">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-                <Loader2 className="w-6 h-6 text-blue-600 animate-spin mb-2" />
-                <p className="text-xs font-medium">Loading food menu...</p>
+              <div className="flex flex-col items-center justify-center py-10 text-slate-400">
+                <Loader2 className="w-5 h-5 text-blue-600 animate-spin mb-1.5" />
+                <p className="text-xs">Loading menu...</p>
               </div>
             ) : filteredFoods.length === 0 ? (
-              <div className="p-8 text-center bg-slate-50/60 rounded-xl border border-dashed border-slate-200 text-xs font-medium text-slate-500">
-                No food items match your search or filter.
+              <div className="p-6 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 text-xs text-slate-500">
+                No items match your filter.
               </div>
             ) : (
               filteredFoods.map((food) => {
                 const foodId = food._id || food.id;
                 const foodName = food.foodName || food.name || "";
-                const foodPrice = Number(
-                  food.foodPrice ?? food.price ?? 0
-                );
+                const foodPrice = Number(food.foodPrice ?? food.price ?? 0);
                 const foodDesc = food.description || food.desc || "";
-                const imageSrc = getImageUrl(
-                  food.foodImage || food.image
-                );
+                const imageSrc = getImageUrl(food.foodImage || food.image);
                 const qty = Number(cart[foodId]?.quantity || 0);
 
                 return (
                   <div
                     key={foodId}
-                    className="bg-white p-3 rounded-xl border border-slate-200/80 hover:border-blue-200 flex items-center justify-between gap-3 shadow-xs transition-colors"
+                    className="bg-slate-50/60 p-2.5 sm:p-3 rounded-xl border border-slate-200/80 hover:border-blue-300 flex items-center justify-between gap-3 transition-colors"
                   >
                     <img
                       src={imageSrc}
                       alt={foodName}
-                      className="w-13 h-13 rounded-xl object-cover bg-slate-100 shrink-0 border border-slate-100"
+                      className="w-11 h-11 sm:w-12 sm:h-12 rounded-lg object-cover bg-slate-200 shrink-0 border border-slate-200"
                     />
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-slate-800 text-xs truncate">
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="font-bold text-slate-900 text-xs truncate">
                           {foodName}
                         </h4>
                         {(food.type || food.foodType) && (
                           <span
-                            className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${(food.type || food.foodType) === "Veg"
+                            className={`text-[8.5px] font-bold px-1.5 py-0.2 rounded border ${
+                              (food.type || food.foodType) === "Veg"
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                 : "bg-rose-50 text-rose-700 border-rose-200"
-                              }`}
+                            }`}
                           >
                             {food.type || food.foodType}
                           </span>
@@ -635,35 +640,35 @@ export default function FoodOrderTab({
                       </div>
 
                       {foodDesc && (
-                        <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
+                        <p className="text-[10.5px] text-slate-500 line-clamp-1 mt-0.5">
                           {foodDesc}
                         </p>
                       )}
 
-                      <p className="text-xs font-extrabold text-[#0f2a63] mt-1">
+                      <p className="text-xs font-extrabold text-[#0f2a63] mt-0.5">
                         ₹{foodPrice}
                       </p>
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
                       {qty > 0 ? (
-                        <div className="flex items-center gap-2 bg-blue-50 px-2 py-1 rounded-xl border border-blue-100">
+                        <div className="flex items-center gap-1.5 bg-blue-50 px-2 py-1 rounded-lg border border-blue-200/80">
                           <button
                             type="button"
                             onClick={() => updateCartQuantity(food, -1)}
-                            className="w-6 h-6 bg-white rounded-lg shadow-xs font-bold text-slate-700 hover:bg-slate-100 flex items-center justify-center cursor-pointer active:scale-95 transition-all text-xs"
+                            className="w-6 h-6 bg-white rounded shadow-2xs font-bold text-slate-700 hover:bg-slate-100 flex items-center justify-center cursor-pointer active:scale-90 transition-all text-xs"
                           >
                             -
                           </button>
 
-                          <span className="text-xs font-bold w-4 text-center text-[#0f2a63]">
+                          <span className="text-xs font-extrabold w-4 text-center text-blue-700">
                             {qty}
                           </span>
 
                           <button
                             type="button"
                             onClick={() => updateCartQuantity(food, 1)}
-                            className="w-6 h-6 bg-white rounded-lg shadow-xs font-bold text-slate-700 hover:bg-slate-100 flex items-center justify-center cursor-pointer active:scale-95 transition-all text-xs"
+                            className="w-6 h-6 bg-white rounded shadow-2xs font-bold text-slate-700 hover:bg-slate-100 flex items-center justify-center cursor-pointer active:scale-90 transition-all text-xs"
                           >
                             +
                           </button>
@@ -672,10 +677,10 @@ export default function FoodOrderTab({
                         <button
                           type="button"
                           onClick={() => updateCartQuantity(food, 1)}
-                          className="px-3.5 py-1.5 bg-[#0f2a63] hover:bg-[#183d8a] text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
+                          className="px-3 py-1.5 bg-[#0f2a63] hover:bg-[#183d8a] text-white rounded-lg text-xs font-semibold flex items-center gap-1 shadow-2xs transition-all cursor-pointer active:scale-95"
                         >
                           <Plus className="w-3.5 h-3.5" />
-                          Add
+                          <span>Add</span>
                         </button>
                       )}
                     </div>
@@ -684,226 +689,87 @@ export default function FoodOrderTab({
               })
             )}
           </div>
-        </div>
 
-        {/* PENDING QUEUE & PAID HISTORY */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-[0_4px_20px_rgba(15,42,99,0.04)] space-y-5">
-          {/* PENDING FOOD ORDERS */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-bold text-[#0f2a63] text-xs uppercase tracking-wide">
-                Food Queue (Unconfirmed / Pending)
-              </h4>
-              <span className="bg-blue-50 text-[#0f2a63] border border-blue-100 font-bold px-2.5 py-0.5 rounded-full text-[11px]">
-                {activeFoodList.length} items
-              </span>
+          {/* BOTTOM ACTION: 1-CLICK CONFIRM BILL */}
+          <div className="pt-3 pb-7 border-t border-slate-100 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] text-slate-500 font-medium">Selected Items</p>
+              <p className="text-sm font-extrabold text-[#0f2a63]">
+                {cartItems.length} items • <span className="text-blue-600">₹{cartTotalAmount}</span>
+              </p>
             </div>
 
-            <div className="space-y-2 max-h-[190px] overflow-y-auto pr-1">
-              {activeFoodList.length === 0 ? (
-                <div className="p-5 text-center bg-slate-50/60 rounded-xl border border-dashed border-slate-200 text-xs font-medium text-slate-400">
-                  No pending food orders for Room {roomNumber || "-"}.
-                </div>
+            <button
+              type="button"
+              disabled={submitting || cartItems.length === 0}
+              onClick={handlePlaceOrder}
+              className="px-5 py-2.5 bg-[#0f2a63] hover:bg-[#183d8a] text-white rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 active:scale-98"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Confirming...</span>
+                </>
               ) : (
-                activeFoodList.map((item) => {
-                  const recordId = item._id || item.id;
-                  const itemTotal = Number(
-                    item.totalPrice ?? item.total ?? 0
-                  );
-
-                  return (
-                    <div
-                      key={recordId}
-                      className="bg-white p-3 rounded-xl border border-slate-200/80 hover:border-blue-200 flex items-center justify-between shadow-xs transition-colors"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#0f2a63] flex items-center justify-center shrink-0 border border-blue-100">
-                          <UtensilsCrossed className="w-4 h-4" />
-                        </div>
-
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-800 truncate">
-                            {item.foodName} × {item.quantity}
-                          </p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[10px] font-semibold text-slate-500">
-                              Room {item.roomNumber || roomNumber || "-"}
-                            </span>
-                            <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">
-                              Pending
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3 shrink-0 pl-2">
-                        <span className="text-xs font-extrabold text-[#0f2a63]">
-                          ₹{itemTotal}
-                        </span>
-
-                        <button
-                          type="button"
-                          disabled={removingId === recordId}
-                          onClick={() =>
-                            handleRemoveActiveItem(
-                              recordId,
-                              item.foodName,
-                              itemTotal
-                            )
-                          }
-                          className="w-7 h-7 rounded-xl flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 border border-transparent transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
-                          title="Remove food item"
-                        >
-                          {removingId === recordId ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-3.5 h-3.5" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
+                <>
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Confirm Bill</span>
+                </>
               )}
-            </div>
-
-            {activeFoodList.length > 0 && (
-              <div className="flex justify-end mt-2 text-xs font-bold text-amber-700">
-                Pending Food Total: ₹{activeTotal}
-              </div>
-            )}
-          </div>
-
-          {/* PAID FOOD HISTORY */}
-          <div className="border-t border-slate-100 pt-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <History className="w-4 h-4 text-slate-500" />
-                <h4 className="font-bold text-[#0f2a63] text-xs uppercase tracking-wide">
-                  Paid Food History
-                </h4>
-              </div>
-              <span className="text-xs font-bold text-slate-500">
-                {historyFoodList.length} records
-              </span>
-            </div>
-
-            <div className="space-y-2 max-h-[150px] overflow-y-auto pr-1">
-              {historyFoodList.length === 0 ? (
-                <p className="text-xs text-slate-400 py-3 text-center font-medium">
-                  No past paid food orders found.
-                </p>
-              ) : (
-                historyFoodList.map((item, idx) => {
-                  const itemId = item._id || item.id || idx;
-                  const itemTotal = Number(
-                    item.totalPrice ?? item.total ?? 0
-                  );
-
-                  return (
-                    <div
-                      key={itemId}
-                      className="bg-slate-50/70 p-2.5 rounded-xl border border-slate-100 flex items-center justify-between text-xs"
-                    >
-                      <div className="min-w-0">
-                        <p className="font-bold text-slate-800 truncate">
-                          {item.foodName} × {item.quantity}
-                        </p>
-                        <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
-                          <span className="font-semibold text-slate-600">
-                            Room {item.roomNumber || roomNumber || "-"}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-slate-400" />
-                            {formatDateTime(
-                              item.updatedAt || item.createdAt
-                            )}
-                          </span>
-                          <span className="bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.2 rounded font-bold">
-                            Paid
-                          </span>
-                        </div>
-                      </div>
-
-                      <span className="font-extrabold text-slate-700 ml-3 shrink-0">
-                        ₹{itemTotal}
-                      </span>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {historyFoodList.length > 0 && (
-              <div className="flex justify-end mt-2 text-xs font-bold text-emerald-700">
-                Paid Food Total: ₹{historyTotal}
-              </div>
-            )}
+            </button>
           </div>
         </div>
-      </div>
+      )}
 
       {/* ===================================================
-          RIGHT SIDEBAR: NEW ORDER CART
+          STEP 2: CONFIRM BILL & SEND TO ROOM
       ==================================================== */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-5 flex flex-col justify-between min-h-[360px] sticky top-4 shadow-[0_6px_24px_rgba(15,42,99,0.06)] overflow-hidden">
-        <div className="flex flex-col h-full">
-          {/* HEADER */}
-          <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 shrink-0">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#0f2a63] flex items-center justify-center shrink-0 border border-blue-100">
-                <ShoppingBag className="w-4 h-4" />
-              </div>
-              <h3 className="font-bold text-[#0f2a63] text-sm">
-                Food Order Cart
-              </h3>
-            </div>
-            {roomNumber && (
-              <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
-                Room {roomNumber}
-              </span>
-            )}
+      {currentStep === "confirm" && (
+        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/90 shadow-xs space-y-4">
+          {/* HEADER WITH BACK BUTTON */}
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <button
+              type="button"
+              onClick={() => setCurrentStep("menu")}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Back to Menu</span>
+            </button>
+
+            <span className="text-xs font-extrabold text-[#0f2a63]">
+              Confirm Bill (Room {roomNumber || "-"})
+            </span>
           </div>
 
-          {/* CART ITEMS LIST */}
-          <div className="flex-1 overflow-y-auto divide-y divide-slate-100 my-2 pr-1 min-h-0">
+          {/* ORDER ITEMS REVIEW */}
+          <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 staylio-scrollbar">
             {cartItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center space-y-2 py-12">
-                <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300">
-                  <ShoppingBag className="w-5 h-5" />
-                </div>
-                <p className="text-xs font-semibold text-slate-500">
-                  Your cart is empty.
-                </p>
-                <p className="text-[11px] text-slate-400 max-w-[200px]">
-                  Click 'Add' on food menu items to build the order.
-                </p>
+              <div className="p-6 text-center text-xs text-slate-500">
+                Cart is empty.
               </div>
             ) : (
               cartItems.map((item) => {
                 const itemId = item._id || item.id;
-                const imageSrc = getImageUrl(
-                  item.foodImage || item.image
-                );
-                const itemTotal =
-                  Number(item.price || 0) * Number(item.quantity || 0);
+                const imageSrc = getImageUrl(item.foodImage || item.image);
+                const itemTotal = Number(item.price || 0) * Number(item.quantity || 0);
 
                 return (
                   <div
                     key={itemId}
-                    className="py-2.5 flex items-center justify-between gap-3"
+                    className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <img
                         src={imageSrc}
                         alt={item.name}
-                        className="w-9 h-9 rounded-xl object-cover bg-slate-100 shrink-0 border border-slate-100"
+                        className="w-9 h-9 rounded-lg object-cover bg-slate-200 shrink-0 border border-slate-200"
                       />
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-slate-800 truncate">
+                        <p className="text-xs font-bold text-slate-900 truncate">
                           {item.name}
                         </p>
-                        <p className="text-[11px] text-slate-500 font-medium">
+                        <p className="text-[10px] text-slate-500">
                           ₹{item.price} × {item.quantity}
                         </p>
                       </div>
@@ -922,8 +788,8 @@ export default function FoodOrderTab({
                             return copy;
                           })
                         }
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
-                        title="Remove from cart"
+                        className="w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
+                        title="Remove"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -934,50 +800,232 @@ export default function FoodOrderTab({
             )}
           </div>
 
-          {/* CART FOOTER */}
-          <div className="border-t border-slate-100 pt-3.5 space-y-3 shrink-0 bg-white">
-            <div className="flex items-center justify-between text-sm font-extrabold text-[#0f2a63]">
-              <span>Cart Total:</span>
-              <span className="text-blue-600 text-base">
-                ₹{cartTotalAmount}
+          {/* BILL SUMMARY & CONFIRM TRIGGER */}
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/90 space-y-2.5">
+            <div className="flex items-center justify-between text-xs text-slate-600">
+              <span>Items Total:</span>
+              <span className="font-bold text-slate-900">₹{cartTotalAmount}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs text-slate-600">
+              <span>Payment Type:</span>
+              <span className="font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                Added to Room Bill
               </span>
             </div>
+            <div className="border-t border-slate-200 pt-2 flex items-center justify-between text-sm font-extrabold text-[#0f2a63]">
+              <span>Final Bill Amount:</span>
+              <span className="text-blue-600 text-base">₹{cartTotalAmount}</span>
+            </div>
+          </div>
 
-            {cartItems.length > 0 ? (
-              <button
-                type="button"
-                onClick={handlePlaceOrder}
-                disabled={submitting || !bookingId || !roomId}
-                className="w-full py-2.5 bg-[#0f2a63] hover:bg-[#183d8a] text-white rounded-xl text-xs font-semibold shadow-sm transition-all duration-150 flex items-center justify-center gap-2 active:scale-98 cursor-pointer disabled:cursor-not-allowed"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Placing Order...
-                  </>
-                ) : (
-                  <>
-                    <ShieldCheck className="w-4 h-4" />
-                    Confirm & Send to Bill (₹{cartTotalAmount})
-                  </>
-                )}
-              </button>
-            ) : (
-              <button
-                disabled
-                className="w-full py-2.5 bg-slate-100 text-slate-400 border border-slate-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-not-allowed"
-              >
-                <ShieldCheck className="w-4 h-4 text-slate-300" />
-                Confirm & Send to Bill
-              </button>
-            )}
+          <div className="flex items-center gap-2 pb-7 pt-2">
+            <button
+              type="button"
+              onClick={() => setCurrentStep("menu")}
+              className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer"
+            >
+              Add More Items
+            </button>
 
-            <p className="text-[10px] text-slate-400 text-center font-medium">
-              Confirmed food orders are attached to checkout invoice
-            </p>
+            <button
+              type="button"
+              onClick={handlePlaceOrder}
+              disabled={submitting || cartItems.length === 0 || !bookingId || !roomId}
+              className="flex-1 py-2.5 bg-[#0f2a63] hover:bg-[#183d8a] text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Saving Bill...</span>
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Confirm Bill</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* ===================================================
+          HISTORY & PENDING ORDERS MODAL (PORTAL)
+      ==================================================== */}
+      {showHistoryModal &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[9999] bg-[#061434]/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
+            onClick={() => setShowHistoryModal(false)}
+          >
+            <div
+              className="bg-white w-full max-w-lg rounded-2xl sm:rounded-3xl shadow-[0_25px_60px_rgba(6,20,52,0.45)] border border-slate-200/90 max-h-[85vh] flex flex-col overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+            {/* MODAL HEADER */}
+            <div className="flex items-center justify-between py-2.5 px-3.5 sm:px-4 border-b border-slate-100 bg-slate-50/80 shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+                  <History className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-[#0f2a63] text-xs sm:text-sm leading-tight">
+                    Orders & History
+                  </h3>
+                  <span className="text-[9.5px] text-slate-500 font-semibold">
+                    Room {roomNumber || "-"}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowHistoryModal(false)}
+                className="w-6 h-6 rounded-md bg-white border border-slate-200 text-slate-500 hover:text-black flex items-center justify-center cursor-pointer active:scale-95"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* MODAL BODY */}
+            <div className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3 staylio-scrollbar">
+              {/* PENDING QUEUE */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-bold text-[#0f2a63] text-xs uppercase tracking-wider">
+                    Pending Orders
+                  </h4>
+                  <span className="bg-amber-50 text-amber-700 border border-amber-200 font-bold px-2 py-0.5 rounded-full text-[10px]">
+                    {activeFoodList.length} items
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 max-h-[50vh] overflow-y-auto pr-1 staylio-scrollbar">
+                  {activeFoodList.length === 0 ? (
+                    <div className="p-3 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 text-xs text-slate-400">
+                      No pending food orders.
+                    </div>
+                  ) : (
+                    activeFoodList.map((item) => {
+                      const recordId = item._id || item.id;
+                      const itemTotal = Number(item.totalPrice ?? item.total ?? 0);
+
+                      return (
+                        <div
+                          key={recordId}
+                          className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 flex items-center justify-between"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-900 truncate">
+                              {item.foodName} × {item.quantity}
+                            </p>
+                            <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                              Pending
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2.5 shrink-0 pl-2">
+                            <span className="text-xs font-extrabold text-[#0f2a63]">
+                              ₹{itemTotal}
+                            </span>
+                            <button
+                              type="button"
+                              disabled={removingId === recordId}
+                              onClick={() =>
+                                handleRemoveActiveItem(recordId, item.foodName, itemTotal)
+                              }
+                              className="w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
+                            >
+                              {removingId === recordId ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {activeFoodList.length > 0 && (
+                  <div className="flex justify-end pt-2 text-xs font-bold text-amber-800 border-t border-slate-100 mt-2">
+                    Pending Total: ₹{activeTotal}
+                  </div>
+                )}
+              </div>
+
+              {/* PAID HISTORY */}
+              {/* <div className="border-t border-slate-100 pt-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-bold text-[#0f2a63] text-xs uppercase tracking-wider">
+                    Paid History
+                  </h4>
+                  <span className="text-[11px] font-bold text-slate-500">
+                    {historyFoodList.length} items
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 max-h-[170px] overflow-y-auto pr-1 staylio-scrollbar">
+                  {historyFoodList.length === 0 ? (
+                    <p className="text-xs text-slate-400 py-3 text-center">
+                      No past paid orders found.
+                    </p>
+                  ) : (
+                    historyFoodList.map((item, idx) => {
+                      const itemId = item._id || item.id || idx;
+                      const itemTotal = Number(item.totalPrice ?? item.total ?? 0);
+
+                      return (
+                        <div
+                          key={itemId}
+                          className="bg-slate-50/70 p-2 rounded-xl border border-slate-100 flex items-center justify-between text-xs"
+                        >
+                          <div className="min-w-0">
+                            <p className="font-bold text-slate-900 truncate">
+                              {item.foodName} × {item.quantity}
+                            </p>
+                            <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mt-0.5">
+                              <span>{formatDateTime(item.updatedAt || item.createdAt)}</span>
+                              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-1 py-0.2 rounded font-bold text-[9px]">
+                                Paid
+                              </span>
+                            </div>
+                          </div>
+
+                          <span className="font-extrabold text-slate-800 ml-2 shrink-0">
+                            ₹{itemTotal}
+                          </span>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {historyFoodList.length > 0 && (
+                  <div className="flex justify-end mt-1.5 text-xs font-bold text-emerald-700">
+                    Paid Total: ₹{historyTotal}
+                  </div>
+                )}
+              </div> */}
+            </div>
+
+            {/* MODAL FOOTER */}
+            {/* <div className="p-3 border-t border-slate-100 bg-slate-50/80 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowHistoryModal(false)}
+                className="px-4 py-1.5 bg-[#0f2a63] text-white rounded-lg text-xs font-semibold cursor-pointer"
+              >
+                Close
+              </button>
+            </div> */}
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

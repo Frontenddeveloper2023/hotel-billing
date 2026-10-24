@@ -225,14 +225,17 @@ const SaaSUserApplicationStatus = () => {
   // ==========================================================
 
   useEffect(() => {
-    const savedId = localStorage.getItem("saasRegistrationId");
+    // 1. Check if application ID is passed via URL query parameter (e.g. ?id=xxx or ?appId=xxx)
+    const searchParams = new URLSearchParams(location.search);
+    const queryId = searchParams.get("id") || searchParams.get("appId") || searchParams.get("applicationId");
 
-    if (savedId) {
-      setRegistrationId(savedId);
+    const targetId = queryId || localStorage.getItem("saasRegistrationId");
 
-      loadApplication(savedId);
+    if (targetId) {
+      setRegistrationId(targetId);
+      loadApplication(targetId);
     }
-  }, []);
+  }, [location.search]);
 
 
   // ==========================================================
@@ -495,7 +498,7 @@ const SaaSUserApplicationStatus = () => {
 
             <h1
               className="
-                mt-4
+                
                 max-w-3xl
                 text-[20px]
                 font-extrabold
@@ -530,71 +533,7 @@ const SaaSUserApplicationStatus = () => {
           </div>
 
 
-          {/* SECURITY */}
-
-          <div
-            className="
-              flex
-              w-full
-              items-center
-              gap-3
-              rounded-2xl
-              border
-              border-white/15
-              bg-white/10
-              px-4
-              py-3.5
-              backdrop-blur-md
-              sm:w-fit
-            "
-          >
-
-            <div
-              className="
-                flex
-                h-10
-                w-10
-                shrink-0
-                items-center
-                justify-center
-                rounded-xl
-                bg-white/15
-                text-[#BFE0FF]
-              "
-            >
-              <ShieldCheck size={19} />
-            </div>
-
-
-            <div>
-
-              <p
-                className="
-                  text-[12px]
-                  font-bold
-                  leading-4
-                  text-white
-                "
-              >
-                Secure Application
-              </p>
-
-              <p
-                className="
-                  mt-0.5
-                  text-[11px]
-                  font-medium
-                  leading-4
-                  text-[#C9D9ED]
-                "
-              >
-                Your application data is protected
-              </p>
-
-            </div>
-
-          </div>
-
+        
         </header>
 
 
@@ -634,23 +573,7 @@ const SaaSUserApplicationStatus = () => {
 
               <div className="flex items-center gap-3">
 
-                <div
-                  className="
-                    flex
-                    h-10
-                    w-10
-                    items-center
-                    justify-center
-                    rounded-xl
-                    bg-[#EAF3FF]
-                    text-[#347BE9]
-                    ring-1
-                    ring-[#CFE2FF]
-                  "
-                >
-                  <Search size={18} />
-                </div>
-
+               
                 <div>
 
                   <h2
@@ -687,114 +610,40 @@ const SaaSUserApplicationStatus = () => {
 
             <form
               onSubmit={handleSearch}
-              className="
-                flex
-                w-full
-                flex-col
-                gap-3
-                sm:flex-row
-                lg:max-w-xl
-              "
+              className="flex w-full flex-col gap-2.5 sm:flex-row sm:items-center lg:max-w-xl"
             >
-
               <div className="relative flex-1">
-
                 <Search
-                  size={16}
-                  className="
-                    pointer-events-none
-                    absolute
-                    left-3.5
-                    top-1/2
-                    -translate-y-1/2
-                    text-[#64748B]
-                  "
+                  size={15}
+                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
                 />
 
                 <input
                   type="text"
                   value={registrationId}
-                  onChange={(e) =>
-                    setRegistrationId(e.target.value)
-                  }
+                  onChange={(e) => setRegistrationId(e.target.value)}
                   placeholder="Enter application ID"
-                  className="
-                    w-full
-                    rounded-xl
-                    border
-                    border-[#CBD9EA]
-                    bg-white
-                    py-3.5
-                    pl-11
-                    pr-4
-                    text-[14px]
-                    font-semibold
-                    text-[#17345D]
-                    outline-none
-                    transition-all
-                    duration-200
-                    placeholder:text-[#98A6B8]
-                    focus:border-[#347BE9]
-                    focus:bg-white
-                    focus:ring-4
-                    focus:ring-[#347BE9]/10
-                  "
+                  className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-3.5 text-xs font-semibold text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 sm:text-[13px]"
                 />
-
               </div>
-
 
               <button
                 type="submit"
-                disabled={
-                  loading ||
-                  !registrationId.trim()
-                }
-                className="
-                  inline-flex
-                  min-h-[50px]
-                  w-full
-                  items-center
-                  justify-center
-                  gap-2
-                  rounded-xl
-                  bg-[#347BE9]
-                  px-5
-                  py-3.5
-                  text-[14px]
-                  font-bold
-                  text-white
-                  shadow-[0_5px_14px_rgba(52,123,233,0.22)]
-                  transition-all
-                  duration-200
-                  hover:bg-[#2467D5]
-                  hover:shadow-[0_7px_18px_rgba(52,123,233,0.28)]
-                  active:scale-[0.98]
-                  disabled:cursor-not-allowed
-                  disabled:opacity-60
-                  sm:w-auto
-                "
+                disabled={loading || !registrationId.trim()}
+                className="inline-flex min-h-[42px] w-full items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:text-[13px]"
               >
-
                 {loading ? (
                   <>
-                    <Loader2
-                      size={16}
-                      className="animate-spin"
-                    />
-
+                    <Loader2 size={14} className="animate-spin" />
                     Checking...
                   </>
                 ) : (
                   <>
-                    <Search size={16} />
-
+                    <Search size={14} />
                     Check Status
                   </>
                 )}
-
               </button>
-
             </form>
 
           </div>

@@ -13,6 +13,7 @@ import {
 } from "../../service/customersService";
 import { getCustomerManagementData } from "../../service/customersApi";
 import { useToast } from "../../Context/ToastContext";
+import StaylioLoader from "../../Components/StaylioLoader";
 
 import {
   History,
@@ -285,7 +286,7 @@ const CSS = `
 // ============================================================
 
 const inputClass =
-  "cm-input w-full rounded-xl border border-slate-200 bg-slate-50/70 text-sm text-slate-900 placeholder:text-slate-400 outline-none";
+  "cm-input w-full rounded-xl border border-slate-200 bg-slate-50/70 text-sm text-black placeholder:text-black outline-none";
 
 const STATUS_STYLE = {
   Staying: {
@@ -297,11 +298,11 @@ const STATUS_STYLE = {
     dot: "bg-rose-500",
   },
   "Checked Out": {
-    chip: "bg-slate-100 text-slate-700 border-slate-200",
+    chip: "bg-slate-100 text-black border-slate-200",
     dot: "bg-slate-400",
   },
   Unknown: {
-    chip: "bg-slate-100 text-slate-700 border-slate-200",
+    chip: "bg-slate-100 text-black border-slate-200",
     dot: "bg-slate-400",
   },
 };
@@ -368,24 +369,24 @@ const BookingRow = memo(function BookingRow({
         </div>
       </td>
       <td className="px-4 lg:px-5 py-4 align-top">
-        <div className="flex items-center gap-2 text-sm text-slate-800 whitespace-nowrap">
+        <div className="flex items-center gap-2 text-sm text-black whitespace-nowrap">
           <Phone className="w-3.5 h-3.5 text-blue-400 shrink-0" />
           {customer?.phoneNumber || "-"}
         </div>
       </td>
       <td className="px-4 lg:px-5 py-4 align-top">
-        <div className="flex items-center gap-2 text-sm text-slate-800 whitespace-nowrap">
+        <div className="flex items-center gap-2 text-sm text-black whitespace-nowrap">
           <Mail className="w-3.5 h-3.5 text-blue-400 shrink-0" />
           {customer?.email || "-"}
         </div>
       </td>
       <td className="px-4 lg:px-5 py-4 align-top">
-        <div className="text-sm text-slate-800 max-w-[200px] truncate">
+        <div className="text-sm text-black max-w-[200px] truncate">
           {customer?.address || "-"}
         </div>
       </td>
       <td className="px-4 lg:px-5 py-4 align-top">
-        <div className="text-sm font-bold text-slate-800">
+        <div className="text-sm font-bold text-black">
           {bookings?.length || 0} Bookings
         </div>
       </td>
@@ -439,7 +440,7 @@ const BookingCard = memo(function BookingCard({
             <h3 className="text-sm font-bold text-[#0f2a63] whitespace-nowrap">
               {customer?.customerName || "-"}
             </h3>
-            <p className="text-[11px] text-slate-500 font-medium">
+            <p className="text-[11px] text-black font-medium">
               {customer?.email || "No Email"}
             </p>
           </div>
@@ -448,12 +449,12 @@ const BookingCard = memo(function BookingCard({
 
       <div className="grid grid-cols-2 gap-3">
          <div>
-            <p className="text-[11px] font-semibold text-slate-500">Phone</p>
-            <p className="text-xs font-bold text-slate-800">{customer?.phoneNumber || "-"}</p>
+            <p className="text-[11px] font-semibold text-black">Phone</p>
+            <p className="text-xs font-bold text-black">{customer?.phoneNumber || "-"}</p>
          </div>
          <div>
-            <p className="text-[11px] font-semibold text-slate-500">Bookings</p>
-            <p className="text-xs font-bold text-slate-800">{bookings?.length || 0} Bookings</p>
+            <p className="text-[11px] font-semibold text-black">Bookings</p>
+            <p className="text-xs font-bold text-black">{bookings?.length || 0} Bookings</p>
          </div>
       </div>
 
@@ -490,7 +491,7 @@ const BookingCard = memo(function BookingCard({
 const Field = memo(function Field({ label, className = "", children }) {
   return (
     <div className={`min-w-0 ${className}`}>
-      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+      <label className="block text-xs font-semibold text-black mb-1.5">
         {label}
       </label>
       {children}
@@ -526,7 +527,7 @@ const EditModal = memo(function EditModal({
               <h2 className="text-base sm:text-lg font-bold text-[#0f2a63]">
                 Edit Customer
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-black">
                 Update customer personal information
               </p>
             </div>
@@ -537,7 +538,7 @@ const EditModal = memo(function EditModal({
             onClick={onClose}
             disabled={saving}
             aria-label="Close"
-            className="cm-btn cursor-pointer w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+            className="cm-btn cursor-pointer w-9 h-9 rounded-xl flex items-center justify-center text-black hover:text-black hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
@@ -634,7 +635,7 @@ const EditModal = memo(function EditModal({
                   ))}
                 </select>
                 <svg
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-black pointer-events-none"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
@@ -662,7 +663,7 @@ const EditModal = memo(function EditModal({
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="cm-btn cursor-pointer w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-bold hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="cm-btn cursor-pointer w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-black text-xs font-bold hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
@@ -1107,12 +1108,12 @@ const CustomerHistoryModal = memo(function CustomerHistoryModal({ customerData, 
               <h2 className="text-base sm:text-lg font-bold text-[#0f2a63]">
                 {customer?.customerName || 'Customer'}
               </h2>
-              <p className="text-xs text-slate-500 font-medium">Booking History</p>
+              <p className="text-xs text-black font-medium">Booking History</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none"
+            className="p-2 rounded-xl text-black hover:text-black hover:bg-slate-100 transition-colors focus:outline-none"
           >
             <X className="w-5 h-5" />
           </button>
@@ -1124,7 +1125,7 @@ const CustomerHistoryModal = memo(function CustomerHistoryModal({ customerData, 
               return (
                 <div key={booking?._id || i} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
-                     <span className="text-sm font-bold text-slate-800">Booking #{booking?.bookingId || booking?._id?.substring(0,6)}</span>
+                     <span className="text-sm font-bold text-black">Booking #{booking?.bookingId || booking?._id?.substring(0,6)}</span>
                      <StatusChip status={getBookingStatus(booking, now)} />
                   </div>
                   {rooms.length > 0 ? (
@@ -1132,23 +1133,23 @@ const CustomerHistoryModal = memo(function CustomerHistoryModal({ customerData, 
                       {rooms.map((room, ri) => (
                         <div key={ri} className="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
                            <div>
-                              <p className="text-sm font-bold text-slate-800 flex items-center gap-2"><BedDouble className="w-4 h-4 text-blue-500"/> Room {room?.roomNumber}</p>
-                              <p className="text-[11px] text-slate-500">{room?.roomType} • {room?.bedType}</p>
+                              <p className="text-sm font-bold text-black flex items-center gap-2"><BedDouble className="w-4 h-4 text-blue-500"/> Room {room?.roomNumber}</p>
+                              <p className="text-[11px] text-black">{room?.roomType} • {room?.bedType}</p>
                            </div>
                            <div className="text-right">
-                              <p className="text-xs font-semibold text-slate-700">Check-in: {formatDate(room?.checkIn)}</p>
-                              <p className="text-xs font-semibold text-slate-700">Check-out: {formatDate(room?.checkOut)}</p>
+                              <p className="text-xs font-semibold text-black">Check-in: {formatDate(room?.checkIn)}</p>
+                              <p className="text-xs font-semibold text-black">Check-out: {formatDate(room?.checkOut)}</p>
                            </div>
                         </div>
                       ))}
                     </div>
-                  ) : <p className="text-sm text-slate-500">No rooms found for this booking.</p>}
+                  ) : <p className="text-sm text-black">No rooms found for this booking.</p>}
                 </div>
               );
             })
           ) : (
             <div className="text-center py-10">
-               <p className="text-sm text-slate-500 font-bold">No bookings found for this customer.</p>
+               <p className="text-sm text-black font-bold">No bookings found for this customer.</p>
             </div>
           )}
         </div>
@@ -1173,7 +1174,7 @@ const thClass =
             <div className="min-w-0">
             
 
-<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">                Customer Management
+<h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight text-white leading-tight">                Customer Management
               </h1>
             
             </div>
@@ -1225,13 +1226,12 @@ const thClass =
       className="
         pointer-events-none
         absolute
-        left-3
+        left-3.5
         top-1/2
         h-4
         w-4
         -translate-y-1/2
-        text-blue-400
-        sm:left-3.5
+        text-blue-500
       "
     />
 
@@ -1240,21 +1240,19 @@ const thClass =
       placeholder="Search name, phone, email, room or ID proof..."
       value={searchTerm}
       onChange={(e) => setSearchTerm(e.target.value)}
-      className={`
-        ${inputClass}
-        h-10
-        w-full
-        min-w-0
-        pl-10
-        pr-3
-        py-2.5
-        text-xs
-        sm:h-11
-        sm:pl-11
-        sm:pr-4
-        sm:text-sm
-      `}
+      className="staylio-search-input"
     />
+
+    {searchTerm && (
+      <button
+        type="button"
+        onClick={() => setSearchTerm("")}
+        aria-label="Clear search"
+        className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-black hover:bg-slate-100 transition cursor-pointer"
+      >
+        <X className="w-4 h-4" />
+      </button>
+    )}
   </div>
 
   {/* Status Filters */}
@@ -1309,7 +1307,7 @@ const thClass =
             ${
               statusFilter === tab
                 ? "bg-white text-blue-700 shadow-sm"
-                : "text-slate-600 hover:bg-white/60 hover:text-blue-700"
+                : "text-black hover:bg-white/60 hover:text-blue-700"
             }
           `}
         >
@@ -1325,7 +1323,7 @@ const thClass =
               ${
                 statusFilter === tab
                   ? "bg-blue-100 text-blue-700"
-                  : "bg-white/70 text-slate-500"
+                  : "bg-white/70 text-black"
               }
             `}
           >
@@ -1357,12 +1355,11 @@ const thClass =
 
         {/* LOADING */}
         {loading && (
-          <div className="cm-pop bg-white border border-blue-100/80 rounded-2xl p-10 sm:p-14 text-center shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)]">
-            <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
-            <p className="text-xs sm:text-sm font-semibold text-slate-600">
-              Loading customer and booking records...
-            </p>
-          </div>
+          <StaylioLoader
+            message="Loading Customer Records"
+            subtitle="Fetching customer history, stay summaries, and bookings..."
+            translucent={true}
+          />
         )}
 
         {/* LIST */}
@@ -1453,7 +1450,7 @@ const thClass =
         {/* PAGINATION */}
         {!loading && !error && totalPages > 1 && (
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3 bg-white border border-blue-100/80 rounded-2xl p-3 sm:p-4 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)]">
-            <p className="text-xs sm:text-sm text-slate-600 text-center sm:text-left">
+            <p className="text-xs sm:text-sm text-black text-center sm:text-left">
               Showing{" "}
               <span className="font-bold text-[#0f2a63]">
                 {(currentPage - 1) * ROWS_PER_PAGE + 1}

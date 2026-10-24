@@ -22,17 +22,17 @@ export default function AdditionalCharges({
 
                     <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center">
 
-                        <ReceiptText className="w-4 h-4 text-slate-600" />
+                        <ReceiptText className="w-4 h-4 text-black" />
 
                     </div>
 
                     <div>
 
-                        <h2 className="text-sm font-bold text-slate-900">
+                        <h2 className="text-sm font-bold text-black">
                             Additional Charges
                         </h2>
 
-                        <p className="text-xs text-slate-400 mt-0.5">
+                        <p className="text-xs text-black mt-0.5">
                             Food and hotel service charges
                         </p>
 
@@ -68,18 +68,18 @@ export default function AdditionalCharges({
 
                     <div>
 
-                        <p className="text-[10px] uppercase tracking-wide font-bold text-slate-400">
+                        <p className="text-[10px] uppercase tracking-wide font-bold text-black">
                             Total Additional Charges
                         </p>
 
-                        <p className="text-xs text-slate-500 mt-0.5">
+                        <p className="text-xs text-black mt-0.5">
                             Food + Services
                         </p>
 
                     </div>
 
 
-                    <p className="text-base font-bold text-slate-900">
+                    <p className="text-base font-bold text-black">
                         ₹{money(additionalCharges)}
                     </p>
 

@@ -16,14 +16,30 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
 
   // =====================================================
-  // SEPARATE ADMIN + HOTEL SESSIONS
+  // SEPARATE ADMIN + HOTEL SESSIONS (with cached fallback for network loss)
   // =====================================================
 
-  const [adminUser, setAdminUser] = useState(null);
-  const [hotelUser, setHotelUser] = useState(null);
+  const [adminUser, setAdminUser] = useState(() => {
+    try {
+      const cached = localStorage.getItem("cachedAdminUser");
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [hotelUser, setHotelUser] = useState(() => {
+    try {
+      const cached = localStorage.getItem("cachedHotelUser");
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
 
   const [adminLoading, setAdminLoading] = useState(true);
   const [hotelLoading, setHotelLoading] = useState(true);
+  const [isOnline, setIsOnline] = useState(() => typeof navigator !== "undefined" ? navigator.onLine : true);
 
 
   // =====================================================
@@ -32,7 +48,6 @@ export const AuthProvider = ({ children }) => {
 
   const fetchAdminUser = async () => {
     try {
-
       const response = await getUser("admin");
 
       console.log(
@@ -54,32 +69,35 @@ export const AuthProvider = ({ children }) => {
           userObj.email
         )
       ) {
-
         console.log(
           "[AuthContext] Admin user:",
           userObj
         );
-
         setAdminUser(userObj);
-
+        try {
+          localStorage.setItem("cachedAdminUser", JSON.stringify(userObj));
+        } catch {}
       } else {
-
         setAdminUser(null);
+        try {
+          localStorage.removeItem("cachedAdminUser");
+        } catch {}
       }
 
     } catch (error) {
-
-      if (error?.response?.status === 401) {
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
         setAdminUser(null);
+        try {
+          localStorage.removeItem("cachedAdminUser");
+        } catch {}
       } else {
-        console.error(
-          "[AuthContext] Admin session check failed:",
-          error
+        // Network error / offline / server disconnect: preserve current / cached user session
+        console.warn(
+          "[AuthContext] Admin session check encountered network issue — preserving session:",
+          error?.message || error
         );
       }
-
     } finally {
-
       setAdminLoading(false);
     }
   };
@@ -102,7 +120,7 @@ export const AuthProvider = ({ children }) => {
           response = await getUser("owner");
           sessionStorage.setItem("hotelPortal", "owner");
         } catch (err) {
-          if (err?.response?.status === 401) {
+          if (err?.response?.status === 401 || err?.response?.status === 403) {
             response = await getUser("staff");
             sessionStorage.setItem("hotelPortal", "staff");
           } else {
@@ -135,17 +153,27 @@ export const AuthProvider = ({ children }) => {
           userObj
         );
         setHotelUser(userObj);
+        try {
+          localStorage.setItem("cachedHotelUser", JSON.stringify(userObj));
+        } catch {}
       } else {
         setHotelUser(null);
+        try {
+          localStorage.removeItem("cachedHotelUser");
+        } catch {}
       }
 
     } catch (error) {
-      if (error?.response?.status === 401) {
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
         setHotelUser(null);
+        try {
+          localStorage.removeItem("cachedHotelUser");
+        } catch {}
       } else {
-        console.error(
-          "[AuthContext] Hotel session check failed:",
-          error
+        // Network error / offline / server disconnect: preserve current / cached user session
+        console.warn(
+          "[AuthContext] Hotel session check encountered network issue — preserving session:",
+          error?.message || error
         );
       }
     } finally {
@@ -155,12 +183,32 @@ export const AuthProvider = ({ children }) => {
 
 
   // =====================================================
-  // INITIAL SESSION CHECK
+  // INITIAL SESSION CHECK & ONLINE/OFFLINE LISTENERS
   // =====================================================
 
   useEffect(() => {
     fetchAdminUser();
     fetchHotelUser();
+
+    const handleOnline = () => {
+      console.log("[AuthContext] Network reconnected: re-validating sessions");
+      setIsOnline(true);
+      fetchAdminUser();
+      fetchHotelUser();
+    };
+
+    const handleOffline = () => {
+      console.warn("[AuthContext] Network disconnected: offline mode active");
+      setIsOnline(false);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   // =====================================================
@@ -375,6 +423,9 @@ export const AuthProvider = ({ children }) => {
         loginUser,
         logoutUser,
         refreshUser,
+
+        // Network status
+        isOnline,
 
         // Optional direct refresh functions
         fetchAdminUser,

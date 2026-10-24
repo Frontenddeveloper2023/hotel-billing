@@ -565,7 +565,7 @@ const SaaSUserRegistration = () => {
   onClick={() => navigate("/saas-user/choose-plan")}
   className="
     group mb-8 inline-flex items-center gap-2 
-    text-sm font-medium text-slate-600 
+    text-sm font-medium text-black 
     transition-colors duration-200 
     hover:text-indigo-600 focus:outline-none focus-visible:underline
   "
@@ -789,10 +789,10 @@ const SaaSUserRegistration = () => {
         mx-auto
         w-full
         max-w-[1440px]
-        px-4
-        py-7
+        px-3.5
+        py-4
         sm:px-6
-        sm:py-9
+        sm:py-8
         lg:px-8
         xl:px-10
       ">
@@ -804,10 +804,11 @@ const SaaSUserRegistration = () => {
 
       <header
         className="
-          mb-7
+          mb-4
+          sm:mb-6
           flex
           flex-col
-          gap-5
+          gap-2
           lg:flex-row
           lg:items-end
           lg:justify-between
@@ -819,17 +820,20 @@ const SaaSUserRegistration = () => {
         <div className="min-w-0">
           <h1
             className=" 
-              text-[18px]
-              font-bold
-              leading-[1.1]
-              tracking-[-0.045em]
+              text-lg
+              sm:text-2xl
+              lg:text-3xl
+              font-extrabold
+              tracking-tight
               text-white
-              sm:text-[24px]
-              lg:text-[28px]
+              leading-tight
             "
           >
             Register Your Hotel 
           </h1>
+          <p className="mt-1 text-xs text-blue-100 sm:text-sm font-medium">
+            Enter your property information to complete your registration
+          </p>
         </div>
       </header>
 
@@ -844,7 +848,8 @@ const SaaSUserRegistration = () => {
             w-full
             min-w-0
             grid-cols-1
-            gap-5
+            gap-4
+            sm:gap-5
             lg:gap-6
             xl:grid-cols-[minmax(0,1fr)_390px]
           "
@@ -944,7 +949,8 @@ const SaaSUserRegistration = () => {
                       disabled
                       tabIndex={-1}
                       autoComplete="off"
-                      className="w-full min-w-0 rounded-xl border border-slate-200 bg-[#F1F5F9] text-[#1E293B] font-semibold text-[14px] leading-5 py-3.5 pl-11 pr-24 outline-none cursor-not-allowed select-none pointer-events-none opacity-95"
+                      title={form.email || verifiedEmail || ""}
+                      className="w-full min-w-0 rounded-xl border border-slate-200 bg-[#F1F5F9] text-[#1E293B] font-semibold text-[13px] sm:text-[14px] leading-5 py-2.5 sm:py-3 pl-9 sm:pl-10 pr-3 sm:pr-4 outline-none cursor-default select-all opacity-100"
                     />
 
                   
@@ -957,7 +963,7 @@ const SaaSUserRegistration = () => {
                     </p>
                   ) : (
                     <p className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-[#64748B]">
-                      <LockKeyhole size={11} className="text-slate-400 shrink-0" />
+                      <LockKeyhole size={11} className="text-black shrink-0" />
                       Email is Already Verified. Cannot be edited.
                     </p>
                   )}
@@ -1465,14 +1471,13 @@ const SaaSUserRegistration = () => {
             grid
             w-full
             min-w-0
-            grid-cols-1
-            gap-2
+            grid-cols-3
+            gap-1.5
             rounded-xl
             border
             border-[#D7E8FA]
             bg-[#EEF6FF]
-            p-2.5
-            sm:grid-cols-3
+            p-2
             sm:gap-3
             sm:p-3
           "
@@ -1484,7 +1489,7 @@ const SaaSUserRegistration = () => {
             />
           </div>
 
-          <div className="min-w-0">
+          <div className="min-w-0 border-x border-[#D7E8FA]">
             <Quota
               value={selectedPlan?.limits?.branches}
               label="Branches"
@@ -1786,7 +1791,7 @@ const SearchableSelect = ({
 
   return (
     <div className="relative w-full" id={id || `field-${name}`}>
-      <label className="mb-2 block text-[13px] font-bold leading-5 text-[#243B53]">
+      <label className="mb-1.5 block text-[12px] sm:text-[13px] font-bold leading-5 text-[#243B53]">
         {label}
         {required && (
           <span className="ml-1 text-red-500">*</span>
@@ -1796,8 +1801,8 @@ const SearchableSelect = ({
       <div className="relative">
         {Icon && (
           <Icon
-            size={17}
-            className={`pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 ${
+            size={16}
+            className={`pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 ${
               error ? "text-red-500" : "text-[#71859A]"
             }`}
           />
@@ -1812,9 +1817,9 @@ const SearchableSelect = ({
             ${
               error
                 ? "border-red-400 bg-red-50/20 text-[#17324D] ring-2 ring-red-400/20 focus:border-red-500"
-                : "border-[#D6E1EF] bg-[#F8FBFF] text-[#17324D] hover:border-[#B8CCE3] focus:border-[#3B8EF3] focus:bg-white focus:ring-4 focus:ring-[#3B8EF3]/10"
+                : "border-[#D6E1EF] bg-[#F8FBFF] text-[#17324D] hover:border-[#B8CCE3] focus:border-[#3B8EF3] focus:bg-white focus:ring-3 focus:ring-[#3B8EF3]/10"
             }
-            px-3.5 py-3.5 pl-11 pr-4 text-left text-[14px] font-semibold outline-none transition-all
+            px-3 py-2.5 sm:py-3 pl-9 sm:pl-10 pr-4 text-left text-[13px] sm:text-[14px] font-semibold outline-none transition-all
           `}
         >
           {value || placeholder}
@@ -1939,115 +1944,102 @@ const SectionCard = ({
   delay = "0s",
 }) => {
   return (
-  
-
     <section
-  className="
-    w-full
-    min-w-0
-    overflow-hidden
-    rounded-[18px]
-    border
-    border-[#DCE7F5]
-    bg-white
-    p-3
-    shadow-[0_12px_35px_rgba(31,78,121,0.07)]
-    sm:rounded-[20px]
-    sm:p-4
-    md:p-5
-    lg:rounded-[22px]
-    lg:p-6
-    xl:p-7
-  "
-  style={{
-    animation: `fadeUp 0.5s ease-out ${delay} both`,
-  }}
->
-  <div
-    className="
-      mb-4
-      flex
-      w-full
-      min-w-0
-      items-start
-      gap-2.5
-      sm:mb-5
-      sm:gap-3
-      md:mb-6
-      md:gap-4
-    "
-  >
-    {/* ICON */}
-    <div
       className="
-        flex
-        h-9
-        w-9
-        shrink-0
-        items-center
-        justify-center
-        rounded-lg
+        w-full
+        min-w-0
+        overflow-hidden
+        rounded-2xl
         border
-        border-[#D5E6FF]
-        bg-[#EAF3FF]
-        text-[#1769D2]
-        sm:h-10
-        sm:w-10
-        sm:rounded-xl
-        md:h-11
-        md:w-11
+        border-[#DCE7F5]
+        bg-white
+        p-3.5
+        shadow-[0_10px_30px_rgba(31,78,121,0.06)]
+        sm:rounded-[20px]
+        sm:p-5
+        lg:p-6
       "
+      style={{
+        animation: `fadeUp 0.5s ease-out ${delay} both`,
+      }}
     >
-      <Icon
-        size={17}
-        className="sm:h-[18px] sm:w-[18px] md:h-5 md:w-5"
-      />
-    </div>
-
-    {/* TITLE + DESCRIPTION */}
-    <div className="min-w-0 flex-1">
-      <h2
+      <div
         className="
-          break-words
-          text-[16px]
-          font-bold
-          leading-5
-          tracking-[-0.02em]
-          text-[#17324D]
-          sm:text-[17px]
-          sm:leading-6
-          md:text-[19px]
+          mb-3
+          sm:mb-4
+          flex
+          w-full
+          min-w-0
+          items-start
+          gap-2.5
+          sm:gap-3
         "
       >
-        {title}
-      </h2>
-
-      {description && (
-        <p
+        {/* ICON */}
+        <div
           className="
-            mt-1
-            break-words
-            text-[12px]
-            font-medium
-            leading-[18px]
-            text-[#647B91]
-            sm:mt-1.5
-            sm:text-[13px]
-            sm:leading-5
-            md:text-[14px]
+            flex
+            h-8
+            w-8
+            shrink-0
+            items-center
+            justify-center
+            rounded-lg
+            border
+            border-[#D5E6FF]
+            bg-[#EAF3FF]
+            text-[#1769D2]
+            sm:h-9
+            sm:w-9
+            sm:rounded-xl
           "
         >
-          {description}
-        </p>
-      )}
-    </div>
-  </div>
+          <Icon
+            size={16}
+            className="sm:h-[18px] sm:w-[18px]"
+          />
+        </div>
 
-  {/* CONTENT */}
-  <div className="w-full min-w-0">
-    {children}
-  </div>
-</section>
+        {/* TITLE + DESCRIPTION */}
+        <div className="min-w-0 flex-1">
+          <h2
+            className="
+              break-words
+              text-[15px]
+              font-bold
+              leading-snug
+              tracking-tight
+              text-[#17324D]
+              sm:text-[17px]
+            "
+          >
+            {title}
+          </h2>
+
+          {description && (
+            <p
+              className="
+                mt-0.5
+                break-words
+                text-[11px]
+                font-medium
+                leading-relaxed
+                text-[#647B91]
+                sm:mt-1
+                sm:text-[13px]
+              "
+            >
+              {description}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* CONTENT */}
+      <div className="w-full min-w-0">
+        {children}
+      </div>
+    </section>
 
 
   );
@@ -2079,13 +2071,13 @@ const InputField = ({
 }) => {
   return (
     <div className="min-w-0 w-full" id={id || `field-${name}`}>
-      <div className="flex items-center justify-between mb-2">
-        <label className="block text-[13px] font-bold leading-5 text-[#243B53]">
+      <div className="flex items-center justify-between mb-1.5">
+        <label className="block text-[12px] sm:text-[13px] font-bold leading-5 text-[#243B53]">
           {label}
           {required && <span className="ml-1 text-red-500">*</span>}
         </label>
         {badge && (
-          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+          <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
             {badge}
           </span>
         )}
@@ -2093,8 +2085,8 @@ const InputField = ({
       <div className="relative w-full">
         {Icon && (
           <Icon
-            size={17}
-            className={`pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 ${
+            size={16}
+            className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 ${
               error ? "text-red-500" : "text-[#71859A]"
             }`}
           />
@@ -2120,24 +2112,24 @@ const InputField = ({
                 ? "border-red-400 bg-red-50/20 text-[#17324D] ring-2 ring-red-400/20 focus:border-red-500 focus:ring-red-400/30"
                 : readOnly
                 ? "border-slate-200 bg-[#F1F5F9] text-[#1E293B] cursor-not-allowed select-none opacity-95"
-                : "border-[#D6E1EF] bg-[#F8FBFF] text-[#17324D] hover:border-[#B8CCE3] focus:border-[#3B8EF3] focus:bg-white focus:ring-4 focus:ring-[#3B8EF3]/10"
+                : "border-[#D6E1EF] bg-[#F8FBFF] text-[#17324D] hover:border-[#B8CCE3] focus:border-[#3B8EF3] focus:bg-white focus:ring-3 focus:ring-[#3B8EF3]/10"
             }
-            px-3.5 py-3.5 text-[14px] font-semibold leading-5
+            px-3 py-2.5 sm:py-3 text-[13px] sm:text-[14px] font-semibold leading-5
             outline-none transition-all duration-200 placeholder:text-[#8A9AAF]
-            ${Icon ? "pl-11" : ""}
+            ${Icon ? "pl-9 sm:pl-10" : ""}
             ${readOnly ? "pr-20" : ""}
           `}
         />
         {readOnly && (
-          <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[11px] font-bold text-slate-500 bg-white border border-slate-200/80 rounded-md px-2 py-0.5 select-none shadow-xs">
-            <LockKeyhole size={11} className="text-slate-400" />
+          <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-black bg-white border border-slate-200/80 rounded-md px-1.5 py-0.5 select-none shadow-xs">
+            <LockKeyhole size={11} className="text-black" />
             Default
           </div>
         )}
       </div>
       {error && (
-        <p className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-red-600">
-          <AlertCircle size={13} className="shrink-0" />
+        <p className="mt-1 flex items-center gap-1 text-[11px] sm:text-xs font-semibold text-red-600">
+          <AlertCircle size={12} className="shrink-0" />
           <span>{error}</span>
         </p>
       )}
@@ -2153,11 +2145,13 @@ const InputField = ({
 const Quota = ({ value, label }) => {
   const displayValue = Number(value || 0) === 0 ? "Unlimited" : value;
   return (
-    <div className="min-w-0 rounded-lg px-2 py-2 text-center">
-      <p className="break-words text-[18px] font-extrabold leading-5 tracking-[-0.02em] text-[#1769D2]">
+    <div className="min-w-0 rounded-lg px-1 py-1.5 sm:px-2 sm:py-2 text-center">
+      <p className="break-words text-[15px] sm:text-[18px] font-extrabold leading-tight tracking-tight text-[#1769D2]">
         {displayValue}
       </p>
-      <p className="mt-1 break-words text-[11px] font-bold leading-4 text-[#52667A]">{label}</p>
+      <p className="mt-0.5 break-words text-[10px] sm:text-[11px] font-bold leading-3 sm:leading-4 text-[#52667A] truncate">
+        {label}
+      </p>
     </div>
   );
 };
@@ -2221,13 +2215,13 @@ const BackToPlansButton = ({ navigate, fullWidth = false }) => {
   type="button"
   onClick={() => navigate("/saas-user/choose-plan")}
   className={`
-    inline-flex items-center gap-1.5 text-xs font-medium text-slate-600
-    transition-colors duration-150 hover:text-slate-900 hover:underline
+    inline-flex items-center gap-1.5 text-xs font-medium text-black
+    transition-colors duration-150 hover:text-black hover:underline
     underline-offset-2 focus:outline-none focus-visible:ring-1 focus-visible:ring-slate-400
     ${fullWidth ? "w-full justify-start" : "w-auto"}
   `}
 >
-  <ArrowLeft size={14} className="text-slate-500" />
+  <ArrowLeft size={14} className="text-black" />
   <span>Back to Plans</span>
 </button>
   );
@@ -2308,10 +2302,10 @@ const FreeTrialSuccessModal = ({ data, onLogin }) => {
         <Sparkles size={20} />
       </div>
       <div>
-        <h2 className="text-xl font-semibold text-slate-900 tracking-tight">
+        <h2 className="text-xl font-semibold text-black tracking-tight">
           Free Trial Activated
         </h2>
-        <p className="mt-1 text-xs text-slate-500 leading-relaxed">
+        <p className="mt-1 text-xs text-black leading-relaxed">
           Your hotel account has been successfully set up with instant trial access.
         </p>
       </div>
@@ -2319,15 +2313,15 @@ const FreeTrialSuccessModal = ({ data, onLogin }) => {
 
     {/* Trial Window Banner */}
     <div className="mt-5 rounded-xl bg-slate-50 border border-slate-200/70 p-3.5">
-      <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+      <div className="flex items-center justify-between text-xs font-medium text-black">
         <span>Trial Period</span>
         <span className="font-semibold text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-md">
           {data.trialDays || 14} Days Active
         </span>
       </div>
-      <div className="mt-2 flex items-center gap-2 text-sm font-semibold text-slate-900">
+      <div className="mt-2 flex items-center gap-2 text-sm font-semibold text-black">
         <span>{startFormatted}</span>
-        <span className="text-slate-400 font-normal text-xs">to</span>
+        <span className="text-black font-normal text-xs">to</span>
         <span>{endFormatted}</span>
       </div>
     </div>
@@ -2335,15 +2329,15 @@ const FreeTrialSuccessModal = ({ data, onLogin }) => {
     {/* Details Section */}
     <div className="mt-4 space-y-2.5 rounded-xl border border-slate-200/60 bg-white p-3.5 text-xs">
       <div className="flex justify-between items-center">
-        <span className="text-slate-500">Hotel Name</span>
-        <span className="font-medium text-slate-900 truncate max-w-[200px]">{data.hotelName}</span>
+        <span className="text-black">Hotel Name</span>
+        <span className="font-medium text-black truncate max-w-[200px]">{data.hotelName}</span>
       </div>
       <div className="flex justify-between items-center">
-        <span className="text-slate-500">Login Email</span>
-        <span className="font-medium text-slate-900 truncate max-w-[200px]">{data.ownerEmail}</span>
+        <span className="text-black">Login Email</span>
+        <span className="font-medium text-black truncate max-w-[200px]">{data.ownerEmail}</span>
       </div>
       <div className="flex justify-between items-center pt-2 border-t border-slate-100">
-        <span className="text-slate-500">Unlocked Access</span>
+        <span className="text-black">Unlocked Access</span>
         <span className="font-medium text-emerald-700">Food, Service & Bookings</span>
       </div>
     </div>
@@ -2356,7 +2350,7 @@ const FreeTrialSuccessModal = ({ data, onLogin }) => {
         className="w-full cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-medium text-white shadow-sm transition-all duration-150 hover:bg-slate-800 active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
       >
         <span>Go to Hotel Dashboard</span>
-        <ArrowRight size={16} className="text-slate-400" />
+        <ArrowRight size={16} className="text-black" />
       </button>
     </div>
 

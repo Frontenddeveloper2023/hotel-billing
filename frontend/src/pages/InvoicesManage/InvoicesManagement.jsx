@@ -30,6 +30,7 @@ import { getAllInvoices, deleteInvoice } from "../../service/invoiceApi.js";
 import { getSettings } from "../../service/settingsService.js";
 import { useToast } from "../../Context/ToastContext.jsx";
 import InvoiceTemplate from "../InvoiceTemplate/InvoiceTemplate.jsx";
+import StaylioLoader from "../../Components/StaylioLoader.jsx";
 import {
   computeExtraStayDetails,
   formatHumanDate,
@@ -173,7 +174,7 @@ const CSS = `
 // ============================================================
 
 const inputClass =
-  "iv-input w-full px-3 py-2.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 rounded-xl border border-slate-200 bg-slate-50/70 outline-none";
+  "iv-input w-full px-3 py-2.5 text-xs sm:text-sm text-black placeholder:text-black rounded-xl border border-slate-200 bg-slate-50/70 outline-none";
 
 const StatusBadge = memo(function StatusBadge({ status }) {
   const value = "PAID";
@@ -195,7 +196,7 @@ const ExtraStay = memo(function ExtraStay({ invoice }) {
   );
 
   if (!extraStay.hasExtraStay) {
-    return <span className="text-slate-300 text-xs">-</span>;
+    return <span className="text-black text-xs">-</span>;
   }
 
   return (
@@ -224,7 +225,7 @@ const Rooms = memo(function Rooms({ rooms }) {
       {rooms.map((room, index) => (
         <div key={room._id || index} className="whitespace-nowrap">
           <span className="font-semibold">Room {room.roomNumber || "-"}</span>
-          <span className="text-slate-500"> ({room.roomType || "-"})</span>
+          <span className="text-black"> ({room.roomType || "-"})</span>
         </div>
       ))}
     </div>
@@ -364,7 +365,7 @@ const InvoiceCard = memo(function InvoiceCard({
         <StatusBadge status={invoice.paymentInfo?.paymentStatus} />
       </div>
 
-      <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs text-slate-600">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs text-black">
         <span className="inline-flex items-center gap-1.5 min-w-0">
           <CalendarDays className="w-3.5 h-3.5 text-blue-400 shrink-0" />
           <span className="truncate">
@@ -379,15 +380,15 @@ const InvoiceCard = memo(function InvoiceCard({
         </span>
       </div>
 
-      <div className="flex items-start justify-between gap-3 text-xs text-slate-700 bg-blue-50/60 rounded-xl p-3">
+      <div className="flex items-start justify-between gap-3 text-xs text-black bg-blue-50/60 rounded-xl p-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold text-slate-500 mb-1">
+          <p className="text-[11px] font-semibold text-black mb-1">
             Rooms
           </p>
           <Rooms rooms={invoice.rooms} />
         </div>
         <div className="text-right shrink-0">
-          <p className="text-[11px] font-semibold text-slate-500 mb-1">
+          <p className="text-[11px] font-semibold text-black mb-1">
             Extra stay
           </p>
           <ExtraStay invoice={invoice} />
@@ -395,7 +396,7 @@ const InvoiceCard = memo(function InvoiceCard({
       </div>
 
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-slate-500">Total</span>
+        <span className="text-xs font-semibold text-black">Total</span>
         <span className="text-lg font-extrabold text-[#0f2a63]">
           ₹{invoice.financials?.grandTotal?.toLocaleString()}
         </span>
@@ -420,7 +421,7 @@ const StatTile = memo(function StatTile({ icon: Icon, label, value }) {
         <Icon className="w-5 h-5" />
       </div>
       <div className="min-w-0">
-        <p className="text-[11px] sm:text-xs font-semibold text-slate-500">
+        <p className="text-[11px] sm:text-xs font-semibold text-black">
           {label}
         </p>
         <p className="text-lg sm:text-xl font-extrabold text-[#0f2a63] tabular-nums truncate">
@@ -432,7 +433,7 @@ const StatTile = memo(function StatTile({ icon: Icon, label, value }) {
 });
 
 const FilterLabel = ({ children }) => (
-  <span className="block text-xs font-semibold text-slate-700 mb-1.5">
+  <span className="block text-xs font-semibold text-black mb-1.5">
     {children}
   </span>
 );
@@ -764,15 +765,10 @@ const InvoicesManagement = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <style>{CSS}</style>
-        <div className="iv-pop flex flex-col items-center gap-3 rounded-2xl bg-white px-8 py-7 shadow-lg shadow-blue-900/10 border border-blue-100">
-          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-          <span className="text-sm font-medium text-slate-500">
-            Loading invoices...
-          </span>
-        </div>
-      </div>
+      <StaylioLoader
+        message="Loading Invoices"
+        subtitle="Retrieving customer invoices, billing receipts, and status records..."
+      />
     );
   }
 
@@ -818,7 +814,7 @@ const InvoicesManagement = () => {
           <div className="min-w-0">
            
 
-<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">    Hotel Invoice Management
+<h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight text-white leading-tight">    Hotel Invoice Management
             </h1>
            
           </div>
@@ -872,7 +868,7 @@ const InvoicesManagement = () => {
         <label className="block">
           <FilterLabel>Search</FilterLabel>
           <div className="relative">
-            <Search className="w-4 h-4 text-blue-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-blue-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               placeholder="Name, phone, email, room, invoice..."
@@ -881,8 +877,21 @@ const InvoicesManagement = () => {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className={`${inputClass} pl-9`}
+              className="staylio-search-input"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  setCurrentPage(1);
+                }}
+                aria-label="Clear search"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-black hover:bg-slate-100 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </label>
 
@@ -990,7 +999,7 @@ const InvoicesManagement = () => {
                   </thead>
                   <tbody
                     key={`t-${currentPage}-${sortBy}`}
-                    className="divide-y divide-slate-100 text-xs sm:text-sm text-slate-800"
+                    className="divide-y divide-slate-100 text-xs sm:text-sm text-black"
                   >
                     {currentInvoices.map((inv, index) => (
                       <InvoiceRow

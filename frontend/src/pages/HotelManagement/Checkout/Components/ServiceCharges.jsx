@@ -19,11 +19,11 @@ export default function ServiceCharges({
 
                     <div>
 
-                        <h3 className="text-sm font-bold text-slate-800">
+                        <h3 className="text-sm font-bold text-black">
                             Service Charges
                         </h3>
 
-                        <p className="text-[11px] text-slate-400 mt-0.5">
+                        <p className="text-[11px] text-black mt-0.5">
                             Additional hotel services
                         </p>
 
@@ -75,14 +75,14 @@ export default function ServiceCharges({
 
                                             <div>
 
-                                                <h4 className="text-sm font-bold text-slate-900">
+                                                <h4 className="text-sm font-bold text-black">
                                                     {service.name ||
                                                     service.serviceName ||
                                                     service.title ||
                                                     "Hotel Service"}
                                                 </h4>
 
-                                                <p className="text-xs text-slate-500 mt-1">
+                                                <p className="text-xs text-black mt-1">
                                                     {service.description ||
                                                     service.detail ||
                                                     service.details ||
@@ -96,11 +96,11 @@ export default function ServiceCharges({
 
                                         <div className="sm:text-right">
 
-                                            <p className="text-base font-bold text-slate-900">
+                                            <p className="text-base font-bold text-black">
                                                 ₹{money(amount)}
                                             </p>
 
-                                            <p className="text-[10px] text-slate-400">
+                                            <p className="text-[10px] text-black">
                                                 Service Fee
                                             </p>
 
@@ -113,11 +113,11 @@ export default function ServiceCharges({
 
                                         <div className="rounded-lg bg-slate-50 px-3 py-2">
 
-                                            <p className="text-[9px] uppercase font-bold text-slate-400">
+                                            <p className="text-[9px] uppercase font-bold text-black">
                                                 Service Date
                                             </p>
 
-                                            <p className="text-xs font-bold text-slate-700 mt-1">
+                                            <p className="text-xs font-bold text-black mt-1">
                                                 {formatDate(
                                                     service.serviceDate ||
                                                     service.date
@@ -129,11 +129,11 @@ export default function ServiceCharges({
 
                                         <div className="rounded-lg bg-slate-50 px-3 py-2">
 
-                                            <p className="text-[9px] uppercase font-bold text-slate-400">
+                                            <p className="text-[9px] uppercase font-bold text-black">
                                                 Service Time
                                             </p>
 
-                                            <p className="text-xs font-bold text-slate-700 mt-1">
+                                            <p className="text-xs font-bold text-black mt-1">
                                                 {service.serviceTime ||
                                                 service.time ||
                                                 "Not provided"}
@@ -155,13 +155,13 @@ export default function ServiceCharges({
 
                 <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-5 py-8 text-center">
 
-                    <Wrench className="w-6 h-6 mx-auto text-slate-300" />
+                    <Wrench className="w-6 h-6 mx-auto text-black" />
 
-                    <p className="text-xs font-semibold text-slate-500 mt-2">
+                    <p className="text-xs font-semibold text-black mt-2">
                         No service charges
                     </p>
 
-                    <p className="text-[10px] text-slate-400 mt-1">
+                    <p className="text-[10px] text-black mt-1">
                         No additional services were added.
                     </p>
 

@@ -17,6 +17,7 @@ import {
   getCashfreeConfig,
 } from "../util/cashfree.js";
 import { verifyRenewalToken } from "../util/renewalToken.js";
+import { sendApplicationPaymentSuccessEmail } from "../util/email.js";
 import { log } from "../util/logger.js";
 
 // Helper: Calculate end date for subscription cycle
@@ -512,6 +513,27 @@ export const verifyRegistrationPayment = async (req, res) => {
       });
     } catch (notifErr) {
       log.error(`[verifyRegistrationPayment] Notification error: ${notifErr.message}`);
+    }
+
+    // 5. Send Professional Confirmation Email with Application ID & Tracking Link to Hotel Owner
+    try {
+      const recipientEmail = registration.email;
+      if (recipientEmail) {
+        await sendApplicationPaymentSuccessEmail({
+          to: recipientEmail,
+          ownerName: registration.ownerName,
+          hotelName: registration.hotelName,
+          applicationId: String(registration._id),
+          amount: orderDetails.order_amount,
+          planName: registration.planId?.planName,
+          billingCycle: registration.billingCycle,
+          transactionId,
+        });
+      }
+    } catch (emailErr) {
+      log.error(
+        `[verifyRegistrationPayment] Failed to send user confirmation email: ${emailErr.message}`
+      );
     }
 
     log.info(

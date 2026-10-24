@@ -189,17 +189,17 @@ export default function DateTimePicker({
       {/* Trigger Input Area */}
       <div 
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between px-4 h-10 border border-slate-200 rounded-lg text-sm bg-white cursor-pointer select-none transition-all hover:border-slate-300 ${isOpen ? "border-[var(--teal,#08838d)] ring-2 ring-[rgba(8,131,141,0.15)]" : ""} ${disabled ? "bg-slate-50 text-slate-400 cursor-not-allowed" : ""} ${className}`}
+        className={`w-full flex items-center justify-between px-4 h-10 border border-slate-200 rounded-lg text-sm bg-white cursor-pointer select-none transition-all hover:border-slate-300 ${isOpen ? "border-[var(--teal,#08838d)] ring-2 ring-[rgba(8,131,141,0.15)]" : ""} ${disabled ? "bg-slate-50 text-black cursor-not-allowed" : ""} ${className}`}
       >
-        <span className={value ? "text-slate-800" : "text-slate-400"}>
+        <span className={value ? "text-black" : "text-black"}>
           {getFormattedDisplayValue() || placeholder}
         </span>
-        <CalendarIcon className="w-4 h-4 text-slate-400 shrink-0 ml-2" />
+        <CalendarIcon className="w-4 h-4 text-black shrink-0 ml-2" />
       </div>
 
       {/* DatePicker Dropdown Popover */}
       {isOpen && (
-        <div className="absolute left-0 top-11 z-50 flex flex-col bg-white border border-slate-200 rounded-xl shadow-xl p-4 text-slate-800 w-[470px]">
+        <div className="absolute left-0 top-11 z-50 flex flex-col bg-white border border-slate-200 rounded-xl shadow-xl p-4 text-black w-[470px]">
           
           {/* Side-by-Side row containing Date (left) and Time (right) */}
           <div className="flex flex-row gap-4">
@@ -220,13 +220,13 @@ export default function DateTimePicker({
                     <select
                       value={months[navMonth]}
                       onChange={(e) => setNavDate(new Date(navYear, months.indexOf(e.target.value), 1))}
-                      className="appearance-none pl-2.5 pr-7 h-8 border border-slate-200 rounded-lg text-xs bg-white font-semibold text-slate-700 focus:border-[var(--teal,#08838d)] focus:ring-0 outline-none cursor-pointer"
+                      className="appearance-none pl-2.5 pr-7 h-8 border border-slate-200 rounded-lg text-xs bg-white font-semibold text-black focus:border-[var(--teal,#08838d)] focus:ring-0 outline-none cursor-pointer"
                     >
                       {months.map(mName => (
                         <option key={mName} value={mName}>{mName.substring(0, 3)}</option>
                       ))}
                     </select>
-                    <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-black pointer-events-none" />
                   </div>
 
                   {/* Year Select */}
@@ -234,13 +234,13 @@ export default function DateTimePicker({
                     <select
                       value={navYear}
                       onChange={(e) => setNavDate(new Date(parseInt(e.target.value), navMonth, 1))}
-                      className="appearance-none pl-2.5 pr-7 h-8 border border-slate-200 rounded-lg text-xs bg-white font-semibold text-slate-700 focus:border-[var(--teal,#08838d)] focus:ring-0 outline-none cursor-pointer"
+                      className="appearance-none pl-2.5 pr-7 h-8 border border-slate-200 rounded-lg text-xs bg-white font-semibold text-black focus:border-[var(--teal,#08838d)] focus:ring-0 outline-none cursor-pointer"
                     >
                       {years.map(yNum => (
                         <option key={yNum} value={yNum}>{yNum}</option>
                       ))}
                     </select>
-                    <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-black pointer-events-none" />
                   </div>
                 </div>
 
@@ -248,14 +248,14 @@ export default function DateTimePicker({
                   <button 
                     type="button" 
                     onClick={handlePrevMonth} 
-                    className="p-1 hover:bg-slate-100 rounded text-slate-600 transition-colors cursor-pointer"
+                    className="p-1 hover:bg-slate-100 rounded text-black transition-colors cursor-pointer"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <button 
                     type="button" 
                     onClick={handleNextMonth} 
-                    className="p-1 hover:bg-slate-100 rounded text-slate-600 transition-colors cursor-pointer"
+                    className="p-1 hover:bg-slate-100 rounded text-black transition-colors cursor-pointer"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -263,7 +263,7 @@ export default function DateTimePicker({
               </div>
 
               {/* Weekday headers */}
-              <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-slate-400 mb-2">
+              <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-black mb-2">
                 <span>Sun</span>
                 <span>Mon</span>
                 <span>Tue</span>
@@ -289,8 +289,8 @@ export default function DateTimePicker({
                           : current
                           ? "border border-[var(--teal,#08838d)] text-[var(--teal-dark,#065b62)] font-bold"
                           : item.isCurrentMonth
-                          ? "text-slate-700 hover:bg-slate-100" 
-                          : "text-slate-300 hover:bg-slate-50"
+                          ? "text-black hover:bg-slate-100" 
+                          : "text-black hover:bg-slate-50"
                       }`}
                     >
                       {item.day}
@@ -315,51 +315,51 @@ export default function DateTimePicker({
               <div className="space-y-3">
                 {/* Hours Select */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Hours</label>
+                  <label className="text-[10px] font-bold text-black uppercase">Hours</label>
                   <div className="relative">
                     <select
                       value={tempHours12}
                       onChange={(e) => handleTimeChange(parseInt(e.target.value), null, null)}
-                      className="w-full appearance-none pl-2.5 pr-7 h-9 border border-slate-200 rounded-lg text-sm bg-white font-semibold text-slate-700 focus:border-[var(--teal,#08838d)] outline-none cursor-pointer"
+                      className="w-full appearance-none pl-2.5 pr-7 h-9 border border-slate-200 rounded-lg text-sm bg-white font-semibold text-black focus:border-[var(--teal,#08838d)] outline-none cursor-pointer"
                     >
                       {Array.from({ length: 12 }, (_, i) => i + 1).map(h => (
                         <option key={h} value={h}>{String(h).padStart(2, "0")}</option>
                       ))}
                     </select>
-                    <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-black pointer-events-none" />
                   </div>
                 </div>
 
                 {/* Minutes Select */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Minutes</label>
+                  <label className="text-[10px] font-bold text-black uppercase">Minutes</label>
                   <div className="relative">
                     <select
                       value={tempMinutes}
                       onChange={(e) => handleTimeChange(null, parseInt(e.target.value), null)}
-                      className="w-full appearance-none pl-2.5 pr-7 h-9 border border-slate-200 rounded-lg text-sm bg-white font-semibold text-slate-700 focus:border-[var(--teal,#08838d)] outline-none cursor-pointer"
+                      className="w-full appearance-none pl-2.5 pr-7 h-9 border border-slate-200 rounded-lg text-sm bg-white font-semibold text-black focus:border-[var(--teal,#08838d)] outline-none cursor-pointer"
                     >
                       {Array.from({ length: 60 }, (_, i) => i).map(m => (
                         <option key={m} value={m}>{String(m).padStart(2, "0")}</option>
                       ))}
                     </select>
-                    <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-black pointer-events-none" />
                   </div>
                 </div>
 
                 {/* Period Select */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Period</label>
+                  <label className="text-[10px] font-bold text-black uppercase">Period</label>
                   <div className="relative">
                     <select
                       value={tempPeriod}
                       onChange={(e) => handleTimeChange(null, null, e.target.value)}
-                      className="w-full appearance-none pl-2.5 pr-7 h-9 border border-slate-200 rounded-lg text-sm bg-white font-semibold text-slate-700 focus:border-[var(--teal,#08838d)] outline-none cursor-pointer"
+                      className="w-full appearance-none pl-2.5 pr-7 h-9 border border-slate-200 rounded-lg text-sm bg-white font-semibold text-black focus:border-[var(--teal,#08838d)] outline-none cursor-pointer"
                     >
                       <option value="AM">AM</option>
                       <option value="PM">PM</option>
                     </select>
-                    <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-black pointer-events-none" />
                   </div>
                 </div>
               </div>
@@ -375,7 +375,7 @@ export default function DateTimePicker({
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+              className="px-4 py-2 border border-slate-200 rounded-lg text-black hover:bg-slate-50 transition-colors cursor-pointer"
             >
               Cancel
             </button>

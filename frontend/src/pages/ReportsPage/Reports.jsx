@@ -18,10 +18,12 @@ import {
   Loader2,
   CalendarDays,
   SearchX,
+  X,
 } from "lucide-react";
 import { useToast } from "../../Context/ToastContext";
 import { getReportsSummary } from "../../service/reportsApi";
 import { formatHumanDate } from "../InvoiceTemplate/stayDurationHelper.js";
+import StaylioLoader from "../../Components/StaylioLoader";
 import "./reports.css";
 
 // ============================================================
@@ -212,20 +214,20 @@ const StatCard = memo(function StatCard({
 }) {
   return (
     <div
-      className={`rp-rise ${delay} rp-lift bg-white rounded-2xl p-4 sm:p-5 border border-blue-100/80 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)] flex items-center justify-between gap-3`}
+      className={`rp-rise ${delay} rp-lift bg-white rounded-xl sm:rounded-2xl p-3 sm:p-5 border border-blue-100/80 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)] flex items-center justify-between gap-2.5 sm:gap-3`}
     >
       <div className="min-w-0">
-        <p className="text-[11px] sm:text-xs font-semibold text-slate-500">
+        <p className="text-[11px] sm:text-xs font-semibold text-black truncate">
           {label}
         </p>
         <h3
-          className={`text-xl sm:text-2xl font-extrabold mt-1 tabular-nums truncate ${valueClass}`}
+          className={`text-lg sm:text-2xl font-extrabold mt-0.5 sm:mt-1 tabular-nums truncate ${valueClass}`}
         >
           {children}
         </h3>
       </div>
-      <div className="shrink-0 p-3 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 text-white shadow-md shadow-blue-600/25">
-        <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+      <div className="shrink-0 p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 text-white shadow-md shadow-blue-600/25">
+        <Icon className="w-4 h-4 sm:w-6 sm:h-6" />
       </div>
     </div>
   );
@@ -260,7 +262,7 @@ const ServiceCell = memo(function ServiceCell({ row }) {
   const items = row.roomItems || [];
 
   return (
-    <div className="text-xs text-slate-800 space-y-1">
+    <div className="text-xs text-black space-y-1">
       {items.length > 0 ? (
         items.map((item, index) => (
           <div
@@ -291,7 +293,7 @@ const ReportRow = memo(function ReportRow({ row, index }) {
       <td className="px-4 lg:px-6 py-4">
         <ServiceCell row={row} />
       </td>
-      <td className="px-4 lg:px-6 py-4 font-semibold text-slate-700 tabular-nums whitespace-nowrap">
+      <td className="px-4 lg:px-6 py-4 font-semibold text-black tabular-nums whitespace-nowrap">
         {formatHumanDate(row.date)}
       </td>
       <td className="px-4 lg:px-6 py-4 font-bold text-[#0f2a63] tabular-nums whitespace-nowrap">
@@ -327,7 +329,7 @@ const ReportCard = memo(function ReportCard({ row, index }) {
       </div>
 
       <div className="flex items-center justify-between">
-        <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 tabular-nums">
+        <span className="inline-flex items-center gap-1.5 text-xs text-black tabular-nums">
           <CalendarDays className="w-3.5 h-3.5 text-blue-400" />
           {formatHumanDate(row.date)}
         </span>
@@ -362,7 +364,7 @@ const Bar = memo(function Bar({ item, index, max }) {
           }`}
       />
 
-      <span className="text-[10px] font-bold text-slate-700 truncate">
+      <span className="text-[10px] font-bold text-black truncate">
         {item.label}
       </span>
     </div>
@@ -755,18 +757,18 @@ export default function Reports() {
 
       <main className="w-full max-w-7xl mx-auto space-y-5 sm:space-y-6 pb-8">
         {/* HEADER */}
-        <header className="rp-rise rp-d1 flex flex-col gap-3 pb-4 sm:pb-5 border-b border-white/20">
+        <header className="rp-rise rp-d1 flex flex-col gap-3 ">
 
 
           <div>
-            <h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">              Billing & Revenue Reports
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight text-white leading-tight">              Billing & Revenue Reports
             </h1>
 
           </div>
         </header>
 
         {/* SUMMARY METRICS */}
-        <section className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
+        <section className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 lg:gap-5">
           <StatCard
             icon={FileText}
             label="Filtered Records Count"
@@ -846,7 +848,7 @@ export default function Reports() {
           shrink-0
           text-xs
           font-semibold
-          text-slate-700
+          text-black
           sm:text-sm
         "
               >
@@ -891,7 +893,7 @@ export default function Reports() {
               sm:px-4
               ${filterType === value
                         ? "bg-white text-blue-700 shadow-sm"
-                        : "text-slate-600 hover:bg-white/60 hover:text-blue-700"
+                        : "text-black hover:bg-white/60 hover:text-blue-700"
                       }
             `}
                   >
@@ -915,13 +917,12 @@ export default function Reports() {
                 className="
           pointer-events-none
           absolute
-          left-3
+          left-3.5
           top-1/2
           h-4
           w-4
           -translate-y-1/2
-          text-blue-400
-          sm:left-3.5
+          text-blue-500
         "
               />
 
@@ -930,35 +931,19 @@ export default function Reports() {
                 placeholder="Search guest, room, bill id..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="
-          rp-input
-          h-10
-          w-full
-          min-w-0
-          rounded-xl
-          border
-          border-slate-200
-          bg-slate-50/70
-          pl-10
-          pr-3
-          text-xs
-          font-medium
-          text-slate-900
-          outline-none
-          transition-all
-          duration-200
-          placeholder:text-slate-400
-          hover:border-blue-200
-          focus:border-blue-400
-          focus:bg-white
-          focus:ring-4
-          focus:ring-blue-100
-          sm:h-11
-          sm:pl-11
-          sm:pr-4
-          sm:text-sm
-        "
+                className="staylio-search-input"
               />
+
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm("")}
+                  aria-label="Clear search"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-black hover:bg-slate-100 transition cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -986,7 +971,7 @@ export default function Reports() {
           shrink-0
           text-xs
           font-semibold
-          text-slate-700
+          text-black
           sm:text-sm
         "
               >
@@ -1011,7 +996,7 @@ export default function Reports() {
           py-2
           text-xs
           font-semibold
-          text-slate-900
+          text-black
           outline-none
           transition-all
           duration-200
@@ -1052,7 +1037,7 @@ export default function Reports() {
           shrink-0
           text-xs
           font-semibold
-          text-slate-700
+          text-black
           sm:text-sm
         "
               >
@@ -1076,7 +1061,7 @@ export default function Reports() {
           py-2
           text-xs
           font-semibold
-          text-slate-900
+          text-black
           outline-none
           transition-all
           duration-200
@@ -1178,12 +1163,11 @@ export default function Reports() {
           </div>
 
           {isLoading ? (
-            <div className="rp-pop px-6 py-14 flex items-center justify-center gap-2 text-[#0f2a63]">
-              <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-              <span className="font-semibold text-sm">
-                Loading database records...
-              </span>
-            </div>
+            <StaylioLoader
+              message="Loading Financial & Occupancy Reports"
+              subtitle="Aggregating booking transactions, revenue calculations, and summary statistics..."
+              fullPage={false}
+            />
           ) : filteredReports.length === 0 ? (
             <div className="rp-pop px-6 py-14 flex flex-col items-center text-center">
               <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-500">

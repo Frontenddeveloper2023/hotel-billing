@@ -73,7 +73,7 @@ const statusColor = (s) => {
   if (k === "suspended")
     return "bg-orange-50 text-orange-700 border-orange-200";
 
-  return "bg-slate-50 text-slate-500 border-slate-200";
+  return "bg-slate-50 text-black border-slate-200";
 };
 
 const StatusIcon = ({ s }) => {
@@ -415,10 +415,10 @@ const HotelModal = memo(
                 items-center
                 justify-center
                 rounded-xl
-                text-slate-400
+                text-black
                 transition
                 hover:bg-slate-100
-                hover:text-slate-600
+                hover:text-black
                 sm:h-10
                 sm:w-10
               "
@@ -1330,47 +1330,37 @@ export default function SaasAdminHotelBills() {
         "
         style={{ animationDelay: "80ms" }}
       >
-        <div className="relative min-w-0 flex-1">
+        <div className="relative min-w-0 flex-1 max-w-md">
           <Search
-            size={15}
+            size={16}
             className="
               pointer-events-none
               absolute
               left-3.5
               top-1/2
               -translate-y-1/2
-              text-[#8fa4be]
+              text-blue-500
             "
           />
 
-         <input
-  id="hotel-bills-search"
-  value={search}
-  onChange={(e) => setSearch(e.target.value)}
-  placeholder="Search hotel, email, owner, city…"
-  className="
-    h-11
-    w-80
-    rounded-xl
-    border
-    border-white/20
-    bg-white/10
-    backdrop-blur-md
-    pl-9
-    pr-4
-    text-xs
-    text-white
-    outline-none
-    placeholder:text-blue-100/60
-    focus:bg-white/15
-    focus:border-white/40
-    focus:ring-2
-    focus:ring-white/20
-    transition
-    shadow-sm
-    sm:text-sm
-  "
-/>
+          <input
+            id="hotel-bills-search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search hotel, email, owner, city…"
+            className="staylio-search-input"
+          />
+
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              aria-label="Clear search"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-black hover:bg-slate-100 transition cursor-pointer"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
 
         <select

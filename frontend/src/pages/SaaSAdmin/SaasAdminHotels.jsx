@@ -71,7 +71,7 @@ const getStatusClass = (status) => {
     case "suspended":
       return "bg-orange-50 text-orange-700 border-orange-200";
     default:
-      return "bg-slate-50 text-slate-600 border-slate-200";
+      return "bg-slate-50 text-black border-slate-200";
   }
 };
 
@@ -940,7 +940,7 @@ const handleViewEmailHistory = async () => {
                       }`}
                     >
                       {label}
-                      <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] ${activeTab === key ? "bg-[#dbeaff] text-[#2568e0]" : "bg-slate-200 text-slate-600"}`}>
+                      <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] ${activeTab === key ? "bg-[#dbeaff] text-[#2568e0]" : "bg-slate-200 text-black"}`}>
                         {count}
                       </span>
                     </button>
@@ -950,14 +950,24 @@ const handleViewEmailHistory = async () => {
 
               {/* Search Bar */}
               <div className="relative w-full lg:w-[320px]">
-                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7d90a8]" />
+                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-500 pointer-events-none" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={activeTab === "applications" ? "Search hotel, owner, email..." : "Search properties by name, city..."}
-                  className={`${inputCls} pl-10 pr-4 py-2 text-xs sm:text-sm`}
+                  className="staylio-search-input"
                 />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch("")}
+                    aria-label="Clear search"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-black hover:bg-slate-100 transition cursor-pointer"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -1532,7 +1542,7 @@ const handleViewEmailHistory = async () => {
               
             }}
             disabled={emailLoading}
-            className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition disabled:opacity-50"
+            className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-black text-sm font-semibold transition disabled:opacity-50"
           >
             Cancel
           </button>
@@ -1711,7 +1721,7 @@ const handleViewEmailHistory = async () => {
               <button
                 type="button"
                 onClick={() => { setShowRejectModal(false);  }}
-                className="w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-500 shrink-0 cursor-pointer"
+                className="w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center text-black shrink-0 cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -1798,7 +1808,7 @@ const handleViewEmailHistory = async () => {
         py-2.5
         text-sm
         font-semibold
-        text-slate-700
+        text-black
         transition
         hover:bg-slate-200
         disabled:cursor-not-allowed

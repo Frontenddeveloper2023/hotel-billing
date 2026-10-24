@@ -23,6 +23,7 @@ import {
 import { useToast } from "../../Context/ToastContext";
 import { useAuth } from "../../Context/AuthContext";
 import { checkRoomServiceAccess } from "../../service/subscriptionFeatureApi";
+import StaylioLoader from "../../Components/StaylioLoader";
 import {
   getAllServicesApi,
   createServiceApi,
@@ -272,7 +273,7 @@ const ServiceCard = memo(function ServiceCard({
       </div>
 
       <div className="flex items-center justify-between bg-blue-50/60 rounded-xl px-3.5 py-2.5">
-        <span className="text-xs font-semibold text-slate-500">Fees</span>
+        <span className="text-xs font-semibold text-black">Fees</span>
         <span className="text-lg font-extrabold text-[#0f2a63] tabular-nums">
           {fees(service.serviceFees)}
         </span>
@@ -284,7 +285,7 @@ const ServiceCard = memo(function ServiceCard({
 });
 
 const inputClass = (hasError, extra = "") =>
-  `sv-input w-full px-3.5 py-2.5 text-sm rounded-xl border outline-none font-medium text-slate-900 placeholder:text-slate-400 ${hasError
+  `sv-input w-full px-3.5 py-2.5 text-sm rounded-xl border outline-none font-medium text-black placeholder:text-black ${hasError
     ? "border-red-400 bg-red-50/40"
     : "border-slate-200 bg-slate-50/70"
   } ${extra}`;
@@ -331,7 +332,7 @@ const ServiceModal = memo(function ServiceModal({
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="sv-btn cursor-pointer w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 shrink-0"
+            className="sv-btn cursor-pointer w-9 h-9 flex items-center justify-center rounded-xl text-black hover:text-black hover:bg-slate-100 shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
@@ -343,7 +344,7 @@ const ServiceModal = memo(function ServiceModal({
           <div>
             <label
               htmlFor="serviceName"
-              className="block mb-1.5 text-xs font-semibold text-slate-700"
+              className="block mb-1.5 text-xs font-semibold text-black"
             >
               Service Name<span className="text-red-500 ml-1">*</span>
             </label>
@@ -366,7 +367,7 @@ const ServiceModal = memo(function ServiceModal({
                 {errors.serviceName}
               </p>
             ) : (
-              <p className="mt-1.5 text-[11px] text-slate-400">
+              <p className="mt-1.5 text-[11px] text-black">
                 Example: Room Cleaning, Airport Pickup
               </p>
             )}
@@ -376,7 +377,7 @@ const ServiceModal = memo(function ServiceModal({
           <div>
             <label
               htmlFor="serviceFees"
-              className="block mb-1.5 text-xs font-semibold text-slate-700"
+              className="block mb-1.5 text-xs font-semibold text-black"
             >
               Service Fees (₹)<span className="text-red-500 ml-1">*</span>
             </label>
@@ -406,7 +407,7 @@ const ServiceModal = memo(function ServiceModal({
                 {errors.serviceFees}
               </p>
             ) : (
-              <p className="mt-1.5 text-[11px] text-slate-400">Example: ₹500</p>
+              <p className="mt-1.5 text-[11px] text-black">Example: ₹500</p>
             )}
           </div>
 
@@ -442,7 +443,7 @@ const ServiceModal = memo(function ServiceModal({
             <button
               type="button"
               onClick={onClose}
-              className="sv-btn cursor-pointer w-full sm:w-auto px-5 py-2.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-xl"
+              className="sv-btn cursor-pointer w-full sm:w-auto px-5 py-2.5 border border-slate-200 bg-white hover:bg-slate-50 text-black font-semibold text-sm rounded-xl"
             >
               Cancel
             </button>
@@ -736,9 +737,10 @@ export default function ServiceManagement() {
 
   if (accessLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-      </div>
+      <StaylioLoader
+        message="Loading Service Management"
+        subtitle="Verifying room service permissions and item catalogs..."
+      />
     );
   }
 
@@ -780,7 +782,7 @@ export default function ServiceManagement() {
             <div className="min-w-0">
 
 
-              <h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">   Service Management
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight text-white leading-tight">   Service Management
               </h1>
 
             </div>

@@ -37,11 +37,9 @@ function FoodSearch({ search, setSearch, foods = [], onFoodSelect }) {
     return (
         <div className="relative z-30 flex w-full justify-center px-2 sm:px-4">
             <div className="relative w-full max-w-xl">
-                {/* SEARCH BAR (blue glass) */}
-                <div className="flex h-11 w-full overflow-hidden rounded-xl border border-white/25 bg-white/10 shadow-lg shadow-[#0a1a3f]/20 backdrop-blur-md transition-all duration-300 focus-within:border-sky-300 focus-within:bg-white/15 focus-within:ring-2 focus-within:ring-sky-300/40 sm:h-12">
-                    <div className="flex shrink-0 items-center justify-center pl-3 sm:pl-4">
-                        <Search className="h-4 w-4 text-white/70 sm:h-5 sm:w-5" />
-                    </div>
+                {/* SEARCH BAR (Clean White High-Contrast) */}
+                <div className="relative w-full">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-500 pointer-events-none" />
 
                     <input
                         type="text"
@@ -52,9 +50,9 @@ function FoodSearch({ search, setSearch, foods = [], onFoodSelect }) {
                             setIsFocused(true);
                         }}
                         onFocus={() => setIsFocused(true)}
-                        onBlur={() => setTimeout(() => setIsFocused(false), 120)}
+                        onBlur={() => setTimeout(() => setIsFocused(false), 150)}
                         placeholder="Search food, dishes..."
-                        className="min-w-0 flex-1 bg-transparent px-2.5 text-xs font-medium text-white outline-none placeholder:text-white/60 sm:px-3 sm:text-sm"
+                        className="staylio-search-input"
                     />
 
                     {search && (
@@ -63,20 +61,11 @@ function FoodSearch({ search, setSearch, foods = [], onFoodSelect }) {
                             onClick={handleClear}
                             title="Clear search"
                             aria-label="Clear search"
-                            className="flex w-9 shrink-0 cursor-pointer items-center justify-center text-white/70 transition-colors hover:bg-white/10 hover:text-white sm:w-10"
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-black hover:bg-slate-100 transition cursor-pointer"
                         >
                             <X className="h-4 w-4" />
                         </button>
                     )}
-
-                    <button
-                        type="button"
-                        title="Search"
-                        aria-label="Search"
-                        className="fm-btn flex w-11 shrink-0 cursor-pointer items-center justify-center bg-gradient-to-br from-blue-500 to-sky-400 text-white hover:brightness-110 sm:w-12"
-                    >
-                        <Search className="h-4 w-4 sm:h-5 sm:w-5" />
-                    </button>
                 </div>
 
                 {/* RESULTS */}
@@ -120,7 +109,7 @@ function FoodSearch({ search, setSearch, foods = [], onFoodSelect }) {
                                                 </p>
                                             </div>
 
-                                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-blue-500" />
+                                            <ChevronRight className="h-4 w-4 shrink-0 text-black transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-blue-500" />
                                         </button>
                                     );
                                 })}
@@ -128,10 +117,10 @@ function FoodSearch({ search, setSearch, foods = [], onFoodSelect }) {
                         ) : (
                             <div className="px-4 py-6 text-center">
                                 <Search className="mx-auto h-6 w-6 text-blue-200" />
-                                <p className="mt-2 text-xs font-semibold text-slate-600 sm:text-sm">
+                                <p className="mt-2 text-xs font-semibold text-black sm:text-sm">
                                     No food found
                                 </p>
-                                <p className="mt-1 text-[10px] text-slate-400 sm:text-xs">
+                                <p className="mt-1 text-[10px] text-black sm:text-xs">
                                     Try searching with another food name.
                                 </p>
                             </div>

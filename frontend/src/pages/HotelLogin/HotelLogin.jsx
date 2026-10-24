@@ -581,7 +581,7 @@ const HotelLogin = () => {
 
           {/* Floating Glassmorphism Feature Card */}
           <div className="relative z-10 w-full bg-white/90 backdrop-blur-md rounded-2xl p-4 lg:p-5 shadow-2xl border border-white/40 space-y-2.5 transform translate-y-1">
-            <div className="flex items-center justify-between text-xs font-semibold text-slate-700 pb-2 border-b border-slate-200/60">
+            <div className="flex items-center justify-between text-xs font-semibold text-black pb-2 border-b border-slate-200/60">
               <span className="flex items-center gap-1.5 text-blue-600 font-medium">
                 <Building2 className="w-4 h-4" /> Hotel Operations & Automated Billing
               </span>
@@ -589,11 +589,11 @@ const HotelLogin = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-white/80 border border-slate-200/80 rounded-xl p-2 lg:p-2.5 text-slate-600 flex items-center gap-1.5 font-medium">
+              <div className="bg-white/80 border border-slate-200/80 rounded-xl p-2 lg:p-2.5 text-black flex items-center gap-1.5 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></span>
                 <span className="truncate">Room Bookings</span>
               </div>
-              <div className="bg-white/80 border border-slate-200/80 rounded-xl p-2 lg:p-2.5 text-slate-600 flex items-center gap-1.5 font-medium">
+              <div className="bg-white/80 border border-slate-200/80 rounded-xl p-2 lg:p-2.5 text-black flex items-center gap-1.5 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>
                 <span className="truncate">Instant GST Invoicing</span>
               </div>
@@ -612,8 +612,8 @@ const HotelLogin = () => {
                   <Building2 className="w-4 h-4 text-white" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-bold text-slate-900 text-xs sm:text-sm tracking-tight leading-none">StayLio</span>
-                  <span className="text-[10px] text-slate-400 font-medium mt-0.5">Hotel Management</span>
+                  <span className="font-bold text-black text-xs sm:text-sm tracking-tight leading-none">StayLio</span>
+                  <span className="text-[10px] text-black font-medium mt-0.5">Hotel Management</span>
                 </div>
               </div>
           
@@ -655,13 +655,13 @@ const HotelLogin = () => {
                 </div>
 
                 {/* Personalized Greeting */}
-                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-slate-900 leading-snug">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-black leading-snug">
                   Welcome back,{" "}
                   <span className="text-blue-600">
                     {verifiedUser?.name || verifiedUser?.branchName || "Manager"}
                   </span>
                 </h2>
-                <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-slate-500 max-w-xs sm:max-w-sm leading-relaxed">
+                <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-black max-w-xs sm:max-w-sm leading-relaxed">
                   {verifiedUser?.branchName
                     ? `Connecting to ${verifiedUser.branchName} workspace...`
                     : "Preparing your hotel management dashboard..."}
@@ -680,19 +680,19 @@ const HotelLogin = () => {
                 {/* Header branding */}
                 <div className="mb-5 sm:mb-7">
                   
-                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-slate-900 leading-tight">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-black leading-tight">
                     {step === "email" ? "Login to Your Hotel" : "Enter Verification Code"}
                   </h1>
-                  <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-slate-500 leading-relaxed">
+                  <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-black leading-relaxed">
                     {step === "email"
                       ? "Sign in securely using your registered hotel email address"
                       : "We've dispatched a secure 6-digit access code to:"}
                   </p>
                   {step === "otp" && (
-                  <div className="mt-2 flex w-full sm:w-auto items-center justify-between sm:justify-start gap-3 px-3.5 py-2 rounded-xl bg-slate-100 border border-slate-200 text-xs sm:text-sm font-medium text-slate-800">
+                  <div className="mt-2 flex w-full sm:w-auto items-center justify-between sm:justify-start gap-3 px-3.5 py-2 rounded-xl bg-slate-100 border border-slate-200 text-xs sm:text-sm font-medium text-black">
   <div className="flex items-center gap-2.5 min-w-0">
     <Mail className="w-4 h-4 text-blue-600 shrink-0" />
-    <span className="truncate text-slate-900 font-medium">{email}</span>
+    <span className="truncate text-black font-medium">{email}</span>
   </div>
   <button
     type="button"
@@ -733,7 +733,7 @@ const HotelLogin = () => {
                     )}
                     <div className="flex-1 leading-relaxed">
                       {paymentNotice.title && (
-                        <div className="font-semibold mb-0.5 text-slate-900">
+                        <div className="font-semibold mb-0.5 text-black">
                           {paymentNotice.title}
                         </div>
                       )}
@@ -762,11 +762,11 @@ const HotelLogin = () => {
                 {step === "email" && (
                   <form onSubmit={handleSendOTP} className="space-y-4 sm:space-y-5 hl-animate-fade-in">
                     <div>
-                      <label className="block text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5 sm:mb-2">
+                      <label className="block text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-black mb-1.5 sm:mb-2">
                         Registered Hotel Email
                       </label>
                       <div className="relative rounded-xl sm:rounded-2xl shadow-xs">
-                        <div className="absolute inset-y-0 left-0 pl-3.5 sm:pl-4 flex items-center pointer-events-none text-slate-400">
+                        <div className="absolute inset-y-0 left-0 pl-3.5 sm:pl-4 flex items-center pointer-events-none text-black">
                           <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
                         </div>
                         <input
@@ -777,7 +777,7 @@ const HotelLogin = () => {
                           autoComplete="email"
                           disabled={loading}
                           autoFocus
-                          className="w-full rounded-xl sm:rounded-2xl border border-slate-200 bg-slate-50/60 pl-10 sm:pl-11 pr-3 sm:pr-4 py-2.5 sm:py-3 text-slate-900 text-xs sm:text-sm placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-600/10 outline-none transition-all disabled:opacity-50"
+                          className="w-full rounded-xl sm:rounded-2xl border border-slate-200 bg-slate-50/60 pl-10 sm:pl-11 pr-3 sm:pr-4 py-2.5 sm:py-3 text-black text-xs sm:text-sm placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-3 focus:ring-blue-600/10 outline-none transition-all disabled:opacity-50"
                         />
                       </div>
                     </div>
@@ -807,7 +807,7 @@ const HotelLogin = () => {
                   <form onSubmit={(e) => handleVerifyOTP(e)} className="space-y-4 sm:space-y-5 hl-animate-fade-in">
                     <div>
                       <div className="flex items-center justify-between mb-2 sm:mb-2.5">
-                        <label className="block text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-600">
+                        <label className="block text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-black">
                           6-Digit Security Code
                         </label>
                         <button
@@ -843,7 +843,7 @@ const HotelLogin = () => {
                             className={`flex-1 min-w-0 max-w-[46px] sm:max-w-[54px] h-12 sm:h-14 text-center text-lg sm:text-2xl font-bold font-mono rounded-xl sm:rounded-2xl border transition-all duration-200 outline-none select-all ${
                               digit
                                 ? "border-blue-600 bg-blue-50/30 text-blue-900 shadow-xs shadow-blue-500/10"
-                                : "border-slate-200 bg-slate-50/60 text-slate-900"
+                                : "border-slate-200 bg-slate-50/60 text-black"
                             } focus:border-blue-600 focus:bg-white focus:ring-3 focus:ring-blue-600/15 disabled:opacity-60`}
                           />
                         ))}
@@ -870,10 +870,10 @@ const HotelLogin = () => {
 
                     {/* Resend OTP with Cooldown */}
                     <div className="text-center pt-0.5">
-                      <p className="text-[11px] sm:text-xs text-slate-500">
+                      <p className="text-[11px] sm:text-xs text-black">
                         Didn't receive the email?{" "}
                         {resendCooldown > 0 ? (
-                          <span className="font-semibold text-slate-400 inline-flex items-center gap-1">
+                          <span className="font-semibold text-black inline-flex items-center gap-1">
                             <Clock className="w-3 h-3" /> Resend in {resendCooldown}s
                           </span>
                         ) : (

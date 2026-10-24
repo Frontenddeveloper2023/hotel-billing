@@ -9,11 +9,16 @@ export default function ProtectedRoute() {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#f8fafc]">
-        <div className="text-sm font-semibold text-slate-600">Loading session...</div>
+        <div className="text-sm font-semibold text-black">Loading session...</div>
       </div>
     );
   }
 
-  // If authenticated, render the nested child routes (like Layout & Dashboard); else redirect to login
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+  // If authenticated, render the nested child routes (like Layout & Dashboard); else redirect to the appropriate portal login
+  const redirectTarget = 
+    (sessionStorage.getItem("hotelPortal") || localStorage.getItem("cachedHotelUser"))
+      ? "/hotel-login"
+      : (localStorage.getItem("cachedAdminUser") ? "/login" : "/hotel-login");
+
+  return isAuthenticated ? <Outlet /> : <Navigate to={redirectTarget} replace />;
 }

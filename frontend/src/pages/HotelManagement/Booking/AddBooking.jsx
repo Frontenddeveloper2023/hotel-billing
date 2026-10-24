@@ -303,7 +303,7 @@ function SectionCard({ icon: Icon, title, subtitle, right, delay, className = ""
                         <h2 className="text-sm sm:text-base font-bold text-[#0a1a3f]">
                             {title}
                         </h2>
-                        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                        <p className="text-xs sm:text-sm text-black mt-0.5">
                             {subtitle}
                         </p>
                     </div>
@@ -373,7 +373,7 @@ const RoomCard = memo(function RoomCard({ room, selected, index, onSelect }) {
                         </div>
 
                         <div className="min-w-0">
-                            <p className="text-[11px] font-semibold text-slate-400">
+                            <p className="text-[11px] font-semibold text-black">
                                 Room
                             </p>
 
@@ -401,18 +401,18 @@ const RoomCard = memo(function RoomCard({ room, selected, index, onSelect }) {
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
-                    <span className="px-2.5 py-1 rounded-md bg-white/70 border border-[#dbe6f8] text-xs font-semibold text-slate-600">
+                    <span className="px-2.5 py-1 rounded-md bg-white/70 border border-[#dbe6f8] text-xs font-semibold text-black">
                         {roomType || "-"}
                     </span>
 
-                    <span className="px-2.5 py-1 rounded-md bg-white/70 border border-[#dbe6f8] text-xs font-semibold text-slate-600">
+                    <span className="px-2.5 py-1 rounded-md bg-white/70 border border-[#dbe6f8] text-xs font-semibold text-black">
                         {bedType || "-"}
                     </span>
                 </div>
 
                 <div className="mt-4 pt-3 border-t border-[#dbe6f8] flex items-end justify-between">
                     <div>
-                        <p className="text-xs text-slate-400">Per night</p>
+                        <p className="text-xs text-black">Per night</p>
 
                         <p className="text-lg font-bold text-[#0a1a3f]">
                             ₹{price.toLocaleString("en-IN")}
@@ -434,7 +434,7 @@ const RoomCard = memo(function RoomCard({ room, selected, index, onSelect }) {
     );
 });
 
-const labelCls = "block text-xs sm:text-sm font-bold text-slate-700 mb-1.5";
+const labelCls = "block text-xs sm:text-sm font-bold text-black mb-1.5";
 
 export default function AddBooking({ onComplete, onCancel }) {
     const [form, setForm] = useState({
@@ -713,7 +713,7 @@ export default function AddBooking({ onComplete, onCancel }) {
         Boolean(touchedFields[name] && fieldErrors[name]);
 
     const inputCls = (name, pad = "px-3") =>
-        `w-full ${pad} py-2.5 sm:py-3 border rounded-xl text-sm text-[#0a1a3f] placeholder:text-slate-400 outline-none transition-all duration-200 disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 ${
+        `w-full ${pad} py-2.5 sm:py-3 border rounded-xl text-sm text-[#0a1a3f] placeholder:text-slate-400 outline-none transition-all duration-200 disabled:bg-slate-100 disabled:text-black disabled:cursor-not-allowed disabled:border-slate-200 ${
             hasError(name)
                 ? "border-red-500 bg-red-50 focus:border-red-600 focus:ring-2 focus:ring-red-100"
                 : "border-[#dbe6f8] bg-[#eff6ff]/40 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -1005,6 +1005,11 @@ export default function AddBooking({ onComplete, onCancel }) {
 
         return errors;
     };
+
+    const isFormValid = useMemo(() => {
+        const errors = validateBooking();
+        return Object.keys(errors).length === 0;
+    }, [form, selectedRooms, roomBreakdown, roomTotal]);
 
     // ============================================================
     // SUBMIT -> INITIAL PAYMENT
@@ -1386,26 +1391,7 @@ export default function AddBooking({ onComplete, onCancel }) {
             autoComplete="off"
             className="w-full max-w-5xl mx-auto pb-4 space-y-5 sm:space-y-6"
         >
-            {/* HEADER (self-contained navy banner: works on any page background) */}
-            <Reveal>
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0a1a3f] via-[#12306b] to-blue-600 p-5 sm:p-6 text-white shadow-xl shadow-[#0a1a3f]/25">
-                    <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-sky-300/20 blur-2xl" />
-
-                  <div className="relative flex items-center justify-center">
-    <div className="flex items-center justify-center gap-3 min-w-0">
-        <div className="hidden sm:flex shrink-0 w-12 h-12 items-center justify-center rounded-2xl bg-white/15 border border-white/20">
-            <BedDouble className="w-6 h-6" />
-        </div>
-
-        <div className="min-w-0">
-<h1 className="text-[12px] sm:text-[15px] lg:text-[20px]  leading-tight font-extrabold tracking-[-0.035em] text-white">                New Room Booking
-            </h1>
-        </div>
-    </div>
-</div>
-                </div>
-            </Reveal>
-
+           
             {/* LOADING */}
             {isLoading && (
                 <div
@@ -1505,7 +1491,7 @@ export default function AddBooking({ onComplete, onCancel }) {
                                             Add New Customer
                                         </p>
 
-                                        <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+                                        <p className="text-[11px] sm:text-xs text-black mt-0.5">
                                             Enter customer details manually
                                         </p>
                                     </div>
@@ -1514,7 +1500,7 @@ export default function AddBooking({ onComplete, onCancel }) {
                                 {deferredSuggestions.length > 0 ? (
                                     <div className="max-h-56 overflow-y-auto overscroll-contain">
                                         <div className="px-3 py-2 bg-[#eff6ff]/70 border-b border-[#dbe6f8]">
-                                            <p className="text-[11px] font-semibold text-slate-500">
+                                            <p className="text-[11px] font-semibold text-black">
                                                 Existing customers
                                             </p>
                                         </div>
@@ -1544,7 +1530,7 @@ export default function AddBooking({ onComplete, onCancel }) {
                                                     </div>
 
                                                     {customer.email && (
-                                                        <p className="text-[11px] sm:text-xs text-slate-500 truncate mt-0.5">
+                                                        <p className="text-[11px] sm:text-xs text-black truncate mt-0.5">
                                                             {customer.email}
                                                         </p>
                                                     )}
@@ -1554,7 +1540,7 @@ export default function AddBooking({ onComplete, onCancel }) {
                                     </div>
                                 ) : (
                                     <div className="px-4 py-3">
-                                        <p className="text-xs sm:text-sm text-slate-500">
+                                        <p className="text-xs sm:text-sm text-black">
                                             No existing customer found for this number.
                                         </p>
                                     </div>
@@ -1748,7 +1734,7 @@ export default function AddBooking({ onComplete, onCancel }) {
                 {/* FILTERS */}
                 <div className="rounded-xl border border-[#dbe6f8] bg-[#eff6ff]/50 p-3.5 sm:p-4">
                     <div className="flex items-center justify-between gap-2 mb-3">
-                        <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                        <div className="flex items-center gap-2 text-xs font-bold text-black">
                             <Filter className="w-4 h-4 text-blue-600" />
                             Filters
                         </div>
@@ -1760,14 +1746,14 @@ export default function AddBooking({ onComplete, onCancel }) {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg">
                         <div>
-                            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                            <label className="block text-[11px] font-semibold text-black mb-1">
                                 Room Type
                             </label>
 
                             <select
                                 value={roomFilter}
                                 onChange={(e) => setRoomFilter(e.target.value)}
-                                className="w-full h-10 px-3 bg-white border border-[#dbe6f8] rounded-lg text-xs font-medium text-slate-700 outline-none cursor-pointer transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                className="w-full h-10 px-3 bg-white border border-[#dbe6f8] rounded-lg text-xs font-medium text-black outline-none cursor-pointer transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             >
                                 <option value="all">All Room Types</option>
                                 <option value="AC">AC</option>
@@ -1776,14 +1762,14 @@ export default function AddBooking({ onComplete, onCancel }) {
                         </div>
 
                         <div>
-                            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                            <label className="block text-[11px] font-semibold text-black mb-1">
                                 Bed Type
                             </label>
 
                             <select
                                 value={bedFilter}
                                 onChange={(e) => setBedFilter(e.target.value)}
-                                className="w-full h-10 px-3 bg-white border border-[#dbe6f8] rounded-lg text-xs font-medium text-slate-700 outline-none cursor-pointer transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                className="w-full h-10 px-3 bg-white border border-[#dbe6f8] rounded-lg text-xs font-medium text-black outline-none cursor-pointer transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             >
                                 <option value="all">All Bed Types</option>
 
@@ -1826,11 +1812,11 @@ export default function AddBooking({ onComplete, onCancel }) {
                     <div className="py-10 text-center border border-dashed border-[#dbe6f8] rounded-xl bg-[#eff6ff]/40">
                         <BedDouble className="w-8 h-8 mx-auto text-blue-300" />
 
-                        <p className="text-sm font-semibold text-slate-600 mt-3">
+                        <p className="text-sm font-semibold text-black mt-3">
                             No rooms found
                         </p>
 
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-xs text-black mt-1">
                             Try changing the room or bed type filter.
                         </p>
                     </div>
@@ -1990,11 +1976,11 @@ export default function AddBooking({ onComplete, onCancel }) {
                     <section className="rounded-2xl border border-blue-200 bg-gradient-to-br from-[#eff6ff] to-white p-4 sm:p-5">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div className="min-w-0">
-                                <p className="text-xs font-semibold text-slate-400">
+                                <p className="text-xs font-semibold text-black">
                                     Booking total
                                 </p>
 
-                                <p className="text-sm text-slate-600 mt-1">
+                                <p className="text-sm text-black mt-1">
                                     {selectedRooms.length} room
                                     {selectedRooms.length === 1 ? "" : "s"}
                                     {" × "}
@@ -2017,7 +2003,7 @@ export default function AddBooking({ onComplete, onCancel }) {
                                                 type="button"
                                                 onClick={() => removeSelectedRoom(room)}
                                                 aria-label={`Remove room ${getRoomNumber(room)}`}
-                                                className="w-5 h-5 flex items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600 active:scale-90 transition"
+                                                className="w-5 h-5 flex items-center justify-center rounded-full text-black hover:bg-red-50 hover:text-red-600 active:scale-90 transition"
                                             >
                                                 <X className="w-3 h-3" />
                                             </button>
@@ -2031,7 +2017,7 @@ export default function AddBooking({ onComplete, onCancel }) {
                                     ₹{roomTotal.toLocaleString("en-IN")}
                                 </p>
 
-                                <p className="text-xs text-slate-400 mt-1">
+                                <p className="text-xs text-black mt-1">
                                     Total room charges
                                 </p>
                             </div>
@@ -2040,31 +2026,31 @@ export default function AddBooking({ onComplete, onCancel }) {
                 </div>
             </div>
 
-            {/* ACTION BUTTONS (sticky so they stay reachable on long forms) */}
-            <div className="sticky bottom-3 z-10">
-                <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2.5 rounded-2xl border border-[#dbe6f8] bg-white/90 backdrop-blur-md p-2.5 shadow-xl shadow-[#0a1a3f]/15">
+            {/* ACTION BUTTONS (placed naturally at the end of the form) */}
+            <div className="pt-6  mt-6">
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-between items-center gap-3">
                     <button
                         type="button"
                         onClick={onCancel}
                         disabled={savingBooking}
-                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-[#dbe6f8] bg-white rounded-xl text-sm font-bold text-slate-700 hover:bg-[#eff6ff] active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-[#dbe6f8] bg-white rounded-xl text-sm font-bold text-black hover:bg-[#eff6ff] active:scale-[0.98] transition-all duration-200 disabled:opacity-50"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         Cancel
                     </button>
 
-                    <button
-                        type="submit"
-                        disabled={
-                            savingBooking ||
-                            selectedRooms.length === 0 ||
-                            nights <= 0
-                        }
-                        className="inline-flex cursor-pointer items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#12306b] to-blue-600 text-white rounded-xl text-sm font-bold shadow-md shadow-blue-600/25 hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 motion-reduce:transform-none disabled:from-slate-300 disabled:to-slate-300 disabled:text-slate-500 disabled:shadow-none disabled:translate-y-0 disabled:cursor-not-allowed"
-                    >
-                        <CheckCircle2 className="w-4 h-4" />
-                        Proceed to Initial Payment
-                    </button>
+                    {isFormValid && (
+                        <button
+                            type="submit"
+                            disabled={savingBooking}
+                            className="group relative w-full mb-2 sm:w-auto inline-flex cursor-pointer items-center justify-center gap-2.5 px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 shadow-[0_4px_18px_rgba(16,185,129,0.35)] hover:shadow-[0_6px_24px_rgba(16,185,129,0.5)] border border-emerald-400/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-300"
+                        >
+                            <span className="flex items-center justify-center  w-5 h-5 rounded-full bg-white/20 group-hover:bg-white/30 transition-colors">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-white stroke-[2.5]" />
+                            </span>
+                            <span className="tracking-wide">Proceed to Initial Payment</span>
+                        </button>
+                    )}
                 </div>
             </div>
 

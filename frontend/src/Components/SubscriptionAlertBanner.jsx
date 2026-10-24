@@ -95,33 +95,23 @@ export default function SubscriptionAlertBanner() {
     if (subData.isTrial) {
       return (
         <div className="w-full border-b border-amber-300 bg-gradient-to-r from-[#FFFBEB] via-[#FEF3C7] to-[#FFFBEB] text-[#172B4D] shadow-sm">
-          <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
-            <div className="flex items-start gap-3 sm:items-center">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 ring-1 ring-amber-300">
-                <AlertOctagon size={20} />
-              </div>
-              <div className="flex flex-col">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-amber-200/90 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wide text-amber-900 ring-1 ring-amber-300">
-                    Free Trial Ended
-                  </span>
-                  <span className="text-xs sm:text-sm md:text-[15px] font-bold text-[#0E2A4A]">
-                    Your free trial has ended. Purchase an active plan to continue.
-                  </span>
-                </div>
-                <p className="mt-0.5 text-xs sm:text-sm text-[#64748B] leading-relaxed">
-                  You have full read-only access. Upgrade to reactivate room creation, bookings, and billing operations.
-                </p>
-              </div>
+          <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-2 px-3 py-2 sm:gap-4 sm:px-6 sm:py-2.5">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <span className="shrink-0 rounded-full bg-amber-200/90 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-amber-900 ring-1 ring-amber-300 sm:text-[10px]">
+                Trial Ended
+              </span>
+              <p className="truncate text-xs font-bold text-[#0E2A4A] sm:text-sm">
+                Free trial ended. Activate a plan to resume billing & bookings.
+              </p>
             </div>
             <button
               type="button"
               onClick={handleUpgradeClick}
-              className="inline-flex h-10 w-full sm:w-auto shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#347BE9] px-4 text-xs sm:text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#2868DA] active:translate-y-0"
+              className="inline-flex h-7 shrink-0 cursor-pointer items-center justify-center gap-1 whitespace-nowrap rounded-lg bg-[#347BE9] px-2.5 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#2868DA] active:scale-[0.98] sm:h-8 sm:px-3 sm:text-xs"
             >
-              <Sparkles size={16} />
-              <span>Purchase Plan</span>
-              <ArrowRight size={16} />
+              <Sparkles size={12} className="shrink-0" />
+              <span>Choose Plan</span>
+              <ArrowRight size={12} className="shrink-0" />
             </button>
           </div>
         </div>
@@ -130,33 +120,22 @@ export default function SubscriptionAlertBanner() {
 
     return (
       <div className="w-full border-b border-red-200 bg-gradient-to-r from-[#FFF5F5] via-white to-[#FFF7F7] text-[#172B4D] shadow-sm">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
-          <div className="flex items-start gap-3 sm:items-center">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600 ring-1 ring-red-200">
-              <AlertOctagon size={20} />
-            </div>
-            <div className="flex flex-col">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wide text-red-700">
-                  Plan Expired
-                </span>
-                <span className="text-xs sm:text-sm md:text-[15px] font-bold text-[#0E2A4A]">
-                  Your hotel plan has ended.
-                </span>
-              </div>
-              <p className="mt-0.5 text-xs sm:text-sm text-[#64748B] leading-relaxed">
-                Renew your plan to restore room management, bookings, and receptionist features.
-              </p>
-            </div>
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-2 px-3 py-2 sm:gap-4 sm:px-6 sm:py-2.5">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-red-700 sm:text-[10px]">
+              Expired
+            </span>
+            <p className="truncate text-xs font-bold text-[#0E2A4A] sm:text-sm">
+              Subscription expired. Renew to continue hotel operations.
+            </p>
           </div>
           <button
             type="button"
             onClick={handleUpgradeClick}
-            className="inline-flex h-10 w-full sm:w-auto shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#347BE9] px-4 text-xs sm:text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#2868DA] active:translate-y-0"
+            className="inline-flex h-7 shrink-0 cursor-pointer items-center justify-center gap-1 whitespace-nowrap rounded-lg bg-[#347BE9] px-2.5 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#2868DA] active:scale-[0.98] sm:h-8 sm:px-3 sm:text-xs"
           >
-            <Sparkles size={16} />
             <span>Renew Plan</span>
-            <ArrowRight size={16} />
+            <ArrowRight size={12} className="shrink-0" />
           </button>
         </div>
       </div>
@@ -169,35 +148,23 @@ export default function SubscriptionAlertBanner() {
   if (subData.isCancelled) {
     return (
       <div className="w-full border-b border-rose-200 bg-gradient-to-r from-[#FFF5F7] via-white to-[#FFF7F8] text-[#172B4D] shadow-sm">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
-          <div className="flex items-start gap-3 sm:items-center">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-600 ring-1 ring-rose-200">
-              <ShieldAlert size={20} />
-            </div>
-            <div className="flex flex-col">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wide text-rose-700">
-                  {subData.status === "suspended" ? "Plan Suspended" : "Plan Cancelled"}
-                </span>
-                <span className="text-xs sm:text-sm md:text-[15px] font-bold text-[#0E2A4A]">
-                  Your hotel plan is currently unavailable.
-                </span>
-              </div>
-              <p className="mt-0.5 text-xs sm:text-sm text-[#64748B] leading-relaxed">
-                {subData.cancellationReason
-                  ? `Reason: ${subData.cancellationReason}`
-                  : "Choose a new plan to continue using your hotel system."}
-              </p>
-            </div>
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-2 px-3 py-2 sm:gap-4 sm:px-6 sm:py-2.5">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <span className="shrink-0 rounded-full bg-rose-100 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-rose-700 sm:text-[10px]">
+              {subData.status === "suspended" ? "Suspended" : "Cancelled"}
+            </span>
+            <p className="truncate text-xs font-bold text-[#0E2A4A] sm:text-sm">
+              Plan unavailable. Select a new plan to resume.
+            </p>
           </div>
           <button
             type="button"
             onClick={handleUpgradeClick}
-            className="inline-flex h-10 w-full sm:w-auto shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#347BE9] px-4 text-xs sm:text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#2868DA] active:translate-y-0"
+            className="inline-flex h-7 shrink-0 cursor-pointer items-center justify-center gap-1 whitespace-nowrap rounded-lg bg-[#347BE9] px-2.5 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#2868DA] active:scale-[0.98] sm:h-8 sm:px-3 sm:text-xs"
           >
-            <Sparkles size={16} />
+            <Sparkles size={12} className="shrink-0" />
             <span>Choose Plan</span>
-            <ArrowRight size={16} />
+            <ArrowRight size={12} className="shrink-0" />
           </button>
         </div>
       </div>
@@ -209,43 +176,27 @@ export default function SubscriptionAlertBanner() {
   // ----------------------------------------------------------
   if (subData.isExpiringSoon) {
     const days = subData.daysRemaining;
-    const daysText = days === 0 ? "today" : days === 1 ? "1 day" : `${days} days`;
+    const daysText = days === 0 ? "today" : days === 1 ? "in 1d" : `in ${days}d`;
 
     return (
       <div className="w-full border-b border-amber-200 bg-gradient-to-r from-[#FFF9EB] via-white to-[#FFF8EE] text-[#172B4D] shadow-sm">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
-          <div className="flex items-start gap-3 sm:items-center">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-600 ring-1 ring-amber-200">
-              <Clock size={20} />
-            </div>
-            <div className="flex flex-col">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wide text-amber-700">
-                  {subData.isTrial ? `Trial ends in ${daysText}` : `Expires in ${daysText}`}
-                </span>
-                <span className="text-xs sm:text-sm md:text-[15px] font-bold text-[#0E2A4A]">
-                  {subData.isTrial ? "Your free trial is ending soon." : "Your plan is ending soon."}
-                </span>
-              </div>
-              <p className="mt-0.5 text-xs sm:text-sm text-[#64748B] leading-relaxed">
-                {subData.isTrial ? (
-                  "Purchase an active plan to continue using your portal without interruption."
-                ) : (
-                  <>
-                    Current plan: <strong className="font-bold text-[#334155]">{subData.planName}</strong>. Renew now to keep your hotel system running.
-                  </>
-                )}
-              </p>
-            </div>
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-2 px-3 py-2 sm:gap-4 sm:px-6 sm:py-2.5">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-amber-700 sm:text-[10px]">
+              Ends {daysText}
+            </span>
+            <p className="truncate text-xs font-bold text-[#0E2A4A] sm:text-sm">
+              {subData.isTrial ? "Trial ends soon. Upgrade to keep access." : "Plan expiring soon. Renew to avoid disruption."}
+            </p>
           </div>
           <button
             type="button"
             onClick={handleUpgradeClick}
-            className="inline-flex h-10 w-full sm:w-auto shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#347BE9] px-4 text-xs sm:text-sm font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#2868DA] active:translate-y-0"
+            className="inline-flex h-7 shrink-0 cursor-pointer items-center justify-center gap-1 whitespace-nowrap rounded-lg bg-[#347BE9] px-2.5 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#2868DA] active:scale-[0.98] sm:h-8 sm:px-3 sm:text-xs"
           >
-            <Sparkles size={16} />
-            <span>{subData.isTrial ? "Purchase Plan" : "Renew Now"}</span>
-            <ArrowRight size={16} />
+            <Sparkles size={12} className="shrink-0" />
+            <span>{subData.isTrial ? "Pick Plan" : "Renew Now"}</span>
+            <ArrowRight size={12} className="shrink-0" />
           </button>
         </div>
       </div>

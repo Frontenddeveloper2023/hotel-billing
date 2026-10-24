@@ -169,21 +169,18 @@ export default function EditRoom({ room, onClose, onSuccess, updateRoom, rooms =
     };
 
     return (
-        <div className="er-fade fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#0b1d3d]/60 backdrop-blur-sm px-0 sm:px-4">
+        <div className="er-fade fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#0b1d3d]/65 backdrop-blur-sm overflow-y-auto">
             <style>{styles}</style>
-            <div className="er-pop w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-[0_24px_70px_rgba(6,20,52,0.45)] overflow-hidden max-h-[94vh] flex flex-col">
+            <div className="er-pop w-full max-w-md bg-white rounded-2xl shadow-[0_20px_60px_rgba(6,20,52,0.4)] overflow-hidden max-h-[88vh] flex flex-col my-auto border border-slate-100">
 
                 {/* MODAL HEADER */}
-                <div className="shrink-0 flex items-center justify-between px-5 sm:px-6 py-4 bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] text-white">
-                    <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                            <Pencil size={19} />
+                <div className="shrink-0 flex items-center justify-between px-5 py-3.5 bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] text-white">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                            <Pencil size={16} />
                         </div>
                         <div className="min-w-0">
-                            <h2 className="text-lg font-bold">Edit Room {room.roomNumber ? `(${room.roomNumber})` : ""}</h2>
-                            <p className="text-xs text-blue-100 mt-0.5">
-                                {isOccupied ? "Room is occupied — modifications locked" : "Update room information and pricing."}
-                            </p>
+                            <h2 className="text-base font-bold truncate">Edit Room {room.roomNumber ? `(${room.roomNumber})` : ""}</h2>
                         </div>
                     </div>
                     <button
@@ -191,9 +188,9 @@ export default function EditRoom({ room, onClose, onSuccess, updateRoom, rooms =
                         onClick={onClose}
                         disabled={updatingRoom}
                         aria-label="Close"
-                        className="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center disabled:opacity-50 shrink-0 transition"
+                        className="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 flex items-center justify-center disabled:opacity-50 shrink-0 transition"
                     >
-                        <X className="w-5 h-5" />
+                        <X className="w-4 h-4" />
                     </button>
                 </div>
 
@@ -333,13 +330,13 @@ export default function EditRoom({ room, onClose, onSuccess, updateRoom, rooms =
                         </div>
                     </div>
 
-                    {/* ACTION BUTTONS */}
-                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                    {/* ACTION BUTTONS (Natural form footer inside modal) */}
+                    <div className="pt-4 mb-8  lg:mb-0 border-t border-slate-100 flex justify-end gap-2.5">
                         <button
                             type="button"
                             onClick={onClose}
                             disabled={updatingRoom}
-                            className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold transition disabled:opacity-50"
+                            className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-black text-xs sm:text-sm font-semibold transition active:scale-95 disabled:opacity-50"
                         >
                             Cancel
                         </button>
@@ -347,15 +344,15 @@ export default function EditRoom({ room, onClose, onSuccess, updateRoom, rooms =
                         <button
                             type="submit"
                             disabled={updatingRoom || isOccupied}
-                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] hover:brightness-110 text-white text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-blue-500/25 transition"
+                            className="inline-flex items-center justify-center gap-1.5 px-4.5 py-2 rounded-xl bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] hover:brightness-110 text-white text-xs sm:text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-blue-500/25 transition active:scale-95"
                         >
                             {updatingRoom ? (
                                 <>
-                                    <RefreshCw className="w-4 h-4 animate-spin" /> Updating...
+                                    <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Updating...
                                 </>
                             ) : (
                                 <>
-                                    <Save className="w-4 h-4" /> Update Room
+                                    <Save className="w-3.5 h-3.5" /> Update Room
                                 </>
                             )}
                         </button>

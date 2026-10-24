@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
 
 import { useToast } from "../../Context/ToastContext";
+import StaylioLoader from "../../Components/StaylioLoader";
 
 import {
   getPublicActivePlans,
@@ -44,6 +45,8 @@ import {
   Info,
   ArrowRight,
   Lock,
+  Check,
+  ShieldCheck,
 } from "lucide-react";
 
 const BILLING_CYCLES = [
@@ -143,19 +146,20 @@ const InfoChip = ({ label, value, cls }) => (
       gap-2
       rounded-2xl
       border
-      px-3
+      px-3.5
       py-2.5
+      shadow-sm
       sm:gap-2.5
       sm:px-4
       sm:py-3
       ${cls}
     `}
   >
-    <span className="shrink-0 text-[11px] text-white sm:text-xs">
+    <span className="shrink-0 text-[11px] font-semibold text-black/70 sm:text-xs">
       {label}:
     </span>
 
-    <strong className="min-w-0 truncate text-xs sm:text-sm">
+    <strong className="min-w-0 truncate text-xs font-black text-black sm:text-sm">
       {value}
     </strong>
   </div>
@@ -874,23 +878,10 @@ export default function PlanUpgrade() {
 
   if (isLoading) {
     return (
-      <div
-        className="
-          flex
-          min-h-[60vh]
-          w-full
-          items-center
-          justify-center
-          gap-3
-          px-4
-        "
-      >
-        <Loader2 className="h-7 w-7 animate-spin text-white sm:h-8 sm:w-8" />
-
-        <span className="text-sm text-blue-100 sm:text-lg">
-          Loading plans...
-        </span>
-      </div>
+      <StaylioLoader
+        message="Loading Subscription Plans"
+        subtitle="Fetching tier features, pricing models, and room quota packages..."
+      />
     );
   }
 
@@ -1059,7 +1050,10 @@ export default function PlanUpgrade() {
         {/* =====================================================
             HEADER
         ===================================================== */}
-        <div className="pu-in mb-5 min-w-0 sm:mb-6">
+        {/* =====================================================
+            HEADER / CURRENT SUBSCRIPTION CARD
+        ===================================================== */}
+        <div className="pu-in mb-5 min-w-0 sm:mb-6 rounded-3xl bg-white/95 backdrop-blur-xl border border-white/60 shadow-[0_18px_45px_rgba(6,20,52,0.14)] p-5 sm:p-6">
           <div
             className="
               flex
@@ -1069,92 +1063,80 @@ export default function PlanUpgrade() {
               sm:gap-4
             "
           >
-            <h1
-              className="
-                flex
-                min-w-0
-                items-center
-                gap-2.5
-                text-[clamp(1.35rem,5vw,2rem)]
-                font-extrabold
-                tracking-[-0.02em]
-                text-white
-                sm:gap-3
-              "
-            >
-            
-<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">     
-                Upgrade Your Plan 
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#5b9bf5] to-[#2568e0] text-white flex items-center justify-center shadow-md shadow-blue-500/25 shrink-0">
+                <Crown className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-[18px] sm:text-[22px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-black">
+                  Upgrade Your Plan
+                </h1>
+                <p className="text-xs text-black/60 font-medium mt-0.5">
+                  Select a subscription tier that matches your property size and service requirements
+                </p>
+              </div>
+            </div>
 
-</h1>
-             
-            </h1>
-
-            <p
+            <div
               className="
                 min-w-0
                 break-words
                 text-xs
                 leading-relaxed
-                text-blue-100/90
-                sm:text-sm
+                text-black
+                font-semibold
+                bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 sm:text-sm flex flex-wrap items-center gap-x-2 gap-y-1.5
               "
             >
               {hotelName && (
-                <>
+                <span>
                   Hotel:{" "}
-                  <strong className="text-white font-bold">
+                  <strong className="text-black font-extrabold">
                     {hotelName}
                   </strong>
-                </>
+                </span>
               )}
 
             {currentPlanObj && (
               <>
-                {" "}
-                <span className="hidden sm:inline">
+                <span className="hidden sm:inline text-slate-400">
                   &bull;
-                </span>{" "}
-                <span className="sm:inline">
+                </span>
+                <span>
                   Current Plan:{" "}
+                  <strong className="text-blue-700 font-extrabold uppercase tracking-wide">
+                    {currentPlanObj.planName}
+                  </strong>
                 </span>
 
-                <strong className="text-emerald-300">
-                  {currentPlanObj.planName}
-                </strong>
-
-                {" "}
-                <span className="hidden sm:inline">
+                <span className="hidden sm:inline text-slate-400">
                   &bull;
-                </span>{" "}
-                <span className="sm:inline">
+                </span>
+                <span>
                   Billing:{" "}
+                  <strong className="text-amber-700 font-extrabold uppercase">
+                    {currentSub?.billingCycle}
+                  </strong>
                 </span>
 
-                <strong className="text-amber-300">
-                  {currentSub?.billingCycle}
-                </strong>
-
-                {" "}
-                <span className="hidden sm:inline">
+                <span className="hidden sm:inline text-slate-400">
                   &bull;
-                </span>{" "}
-                <span className="sm:inline">
-                  Status:{" "}
                 </span>
-
-                <strong
-                  className={
-                    currentSub?.status === "active"
-                      ? "text-emerald-300"
-                      : "text-red-300"
-                  }
-                >
-                  {currentSub?.status}
-                </strong>
+                <span>
+                  Status:{" "}
+                  <strong
+                    className={`font-black uppercase px-2 py-0.5 rounded-md text-[11px] ${
+                      currentSub?.status === "active"
+                        ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                        : "bg-red-100 text-red-800 border border-red-300"
+                    }`}
+                  >
+                    {currentSub?.status}
+                  </strong>
+                </span>
               </>
             )}
-          </p>
+          </div>
 
           {/* VALIDITY DATES */}
           {currentSub?.startDate &&
@@ -1174,19 +1156,19 @@ export default function PlanUpgrade() {
                 <InfoChip
                   label="Valid From"
                   value={fmtDate(currentSub.startDate)}
-                  cls="bg-emerald-500/10 border-emerald-300/25 text-white"
+                  cls="bg-emerald-50 border-emerald-200 text-emerald-950"
                 />
 
                 <InfoChip
                   label="Expires On"
                   value={fmtDate(currentSub.endDate)}
-                  cls="bg-red-500/10 border-red-300/25 text-white"
+                  cls="bg-rose-50 border-rose-200 text-rose-950"
                 />
 
                 <InfoChip
                   label="Days Left"
                   value={`${daysLeft} days`}
-                  cls="bg-white/10 border-white/20 text-white"
+                  cls="bg-blue-50 border-blue-200 text-blue-950"
                 />
               </div>
             )}
@@ -1201,30 +1183,25 @@ export default function PlanUpgrade() {
                 gap-3
                 rounded-2xl
                 border
-                border-amber-400/40
-                bg-gradient-to-r
-                from-amber-500/20
-                via-amber-500/15
-                to-amber-500/10
+                border-amber-400/50
+                bg-amber-50
                 px-4
                 py-3.5
                 text-xs
                 font-medium
-                text-amber-100
-                backdrop-blur-md
-                shadow-lg
-                shadow-amber-950/20
+                text-amber-950
+                shadow-sm
                 sm:text-sm
               "
             >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-400/20 border border-amber-400/30 text-amber-300">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-200 border border-amber-300 text-amber-900">
                 <Sparkles size={18} />
               </div>
               <div className="min-w-0 flex-1">
-                <strong className="block text-amber-200 font-bold mb-0.5">
+                <strong className="block text-amber-950 font-bold mb-0.5">
                   Subscription Expired
                 </strong>
-                <span className="text-amber-100/90 leading-relaxed">
+                <span className="text-amber-900 leading-relaxed">
                   Your subscription has expired. You can choose and activate any plan below to restore your hotel service immediately.
                 </span>
               </div>
@@ -1233,64 +1210,301 @@ export default function PlanUpgrade() {
         </div>
       </div>
 
-      {/* =====================================================
-          BILLING CYCLE SELECTOR
-      ===================================================== */}
+      {/* =========================================================================
+          MOBILE PAYWALL EXPERIENCE (Hidden on sm+, matching modern in-app design)
+      ========================================================================= */}
+      <div className="block sm:hidden pu-in mb-6">
+       
+         {(() => {
+          const activePlan = selectedPlan || plans[0];
+          const roomsLimit = activePlan?.limits?.rooms || 0;
+          const branchesLimit = activePlan?.limits?.branches || 1;
+          const staffLimit = activePlan?.limits?.receptionists || 1;
+          const hasFood = Boolean(activePlan?.features?.foodService);
+          const hasRoomService = Boolean(activePlan?.features?.roomService);
 
-      <div
-        style={delay(1)}
-        className="
-          pu-in
-          pu-scroll
-          mb-5
-          flex
-          w-full
-          min-w-0
-          gap-2
-          overflow-x-auto
-          pb-1
-          sm:mb-6
-        "
-      >
-        {BILLING_CYCLES.filter((c) => billingCycleConfig[c.key]).map((c) => {
-          const isActive = billingCycle === c.key;
           return (
-            <button
-              key={c.key}
-              type="button"
-              onClick={() => setBillingCycle(c.key)}
-              className={`
-                inline-flex
-                min-h-10
-                shrink-0
-                cursor-pointer
-                items-center
-                justify-center
-                rounded-xl
-                px-4
-                py-2.5
-                text-xs
-                font-bold
-                transition-all
-                duration-200
-                active:scale-[0.98]
-                sm:px-5
-                sm:text-sm
-                ${
-                  isActive
-                    ? "bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] text-white shadow-md shadow-blue-500/30 ring-2 ring-white/30"
-                    : "border border-white/20 bg-white/10 text-white/90 hover:bg-white/20 hover:text-white"
-                }
-              `}
-            >
-              {c.label}
-            </button>
+            <div className="rounded-3xl bg-white/95 backdrop-blur-xl border border-white/60 shadow-[0_18px_45px_rgba(6,20,52,0.18)] overflow-hidden p-5 space-y-5">
+            
+
+              {/* 1. SELECT PLAN TIER (TOP) */}
+              {plans.length > 1 && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[11px] font-bold text-black/60 uppercase tracking-wider">
+                      1. Select Plan Tier
+                    </p>
+                    <span className="text-[10px] font-extrabold text-[#2568e0] bg-blue-50 px-2 py-0.5 rounded-full">
+                      Active: {activePlan?.planName}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 overflow-x-auto pu-scroll scroll-smooth overscroll-x-contain touch-pan-x pb-1 pt-0.5 -mx-1 px-1">
+                    {plans.map((p) => {
+                      const isTierSelected = activePlan?._id === p._id;
+                      return (
+                        <button
+                          key={p._id}
+                          type="button"
+                          onClick={() => setSelectedPlan(p)}
+                          className={`flex-1 min-w-[95px] shrink-0 py-2.5 px-3 rounded-2xl text-xs font-black transition-all duration-200 cursor-pointer border text-center capitalize flex items-center justify-center gap-1.5 whitespace-nowrap select-none active:scale-95 ${
+                            isTierSelected
+                              ? "bg-[#0b1b36] text-white border-[#0b1b36] shadow-md shadow-slate-900/25 ring-2 ring-[#0b1b36]/20"
+                              : "bg-slate-50 text-black border-slate-200 hover:bg-slate-100"
+                          }`}
+                        >
+                          <Crown size={13} className={`shrink-0 ${isTierSelected ? "text-amber-400" : "text-black/40"}`} />
+                          <span className="leading-none">{p.planName}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  
+                </div>
+              )}
+
+              {/* 2. DYNAMIC PLAN FEATURES & CAPABILITIES (POINTS CHANGE BASED ON CHOSEN PLAN) */}
+              <div className="rounded-2xl bg-gradient-to-b from-blue-50/60 to-slate-50/80 border border-blue-100/80 p-3.5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] font-black text-black uppercase tracking-wider flex items-center gap-1.5">
+                    <ShieldCheck size={14} className="text-[#2568e0]" />
+                    {activePlan?.planName} Inclusions &amp; Access
+                  </p>
+                  <span className="text-[10px] font-bold text-black/60">
+                    Live Details
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  {/* Dynamic Limit Badges / Points */}
+                  <div className="flex items-start gap-2 text-xs font-bold text-black">
+                    <div className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                      <Check size={11} strokeWidth={3} />
+                    </div>
+                    <span className="leading-snug">
+                      <strong className="text-[#1d4fc4]">{roomsLimit} Total Rooms</strong> management &amp; multi-room bookings
+                    </span>
+                  </div>
+
+                  <div className="flex items-start gap-2 text-xs font-bold text-black">
+                    <div className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                      <Check size={11} strokeWidth={3} />
+                    </div>
+                    <span className="leading-snug">
+                      <strong className="text-[#1d4fc4]">{branchesLimit} Hotel Branch{branchesLimit > 1 ? "es" : ""}</strong> access with centralized billing
+                    </span>
+                  </div>
+
+                  <div className="flex items-start gap-2 text-xs font-bold text-black">
+                    <div className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                      <Check size={11} strokeWidth={3} />
+                    </div>
+                    <span className="leading-snug">
+                      <strong className="text-[#1d4fc4]">{staffLimit} Staff / Receptionist</strong> role-based login account{staffLimit > 1 ? "s" : ""}
+                    </span>
+                  </div>
+
+                  <div className="flex items-start gap-2 text-xs font-bold text-black">
+                    <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 shadow-xs ${
+                      hasFood ? "bg-emerald-600 text-white" : "bg-slate-200 text-slate-500"
+                    }`}>
+                      {hasFood ? <Check size={11} strokeWidth={3} /> : <X size={10} strokeWidth={3} />}
+                    </div>
+                    <span className={`leading-snug ${hasFood ? "text-black" : "text-black/50 line-through"}`}>
+                      {hasFood ? "Food service included" : "Food service not included (Upgrade required)"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-start gap-2 text-xs font-bold text-black">
+                    <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 shadow-xs ${
+                      hasRoomService ? "bg-emerald-600 text-white" : "bg-slate-200 text-slate-500"
+                    }`}>
+                      {hasRoomService ? <Check size={11} strokeWidth={3} /> : <X size={10} strokeWidth={3} />}
+                    </div>
+                    <span className={`leading-snug ${hasRoomService ? "text-black" : "text-black/50 line-through"}`}>
+                      {hasRoomService ? "Room service included" : "Room service not included (Upgrade required)"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-start gap-2 text-xs font-bold text-black">
+                    <div className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                      <Check size={11} strokeWidth={3} />
+                    </div>
+                    <span className="leading-snug">
+                      PDF Invoices, GST Breakdown &amp; Excel Reports
+                    </span>
+                    
+                  </div>
+
+
+                </div>
+              </div>
+
+              {/* 3. SIDE-BY-SIDE BILLING CYCLE CARDS */}
+              <div>
+                <p className="text-[11px] font-bold text-black/60 uppercase tracking-wider mb-2 text-center">
+                  2. Choose Billing Cycle
+                </p>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {BILLING_CYCLES.filter((c) => billingCycleConfig[c.key]).map((c) => {
+                    const isActive = billingCycle === c.key;
+                    const cyclePrice = activePlan ? getPrice(activePlan, c.key) : 0;
+                    const cycleActual = activePlan ? getActualPrice(activePlan, c.key) : 0;
+                    const cycleMonths = c.key === "quarterly" ? 3 : c.key === "halfYearly" ? 6 : c.key === "yearly" ? 12 : 1;
+                    const monthlyEquiv = cyclePrice > 0 ? Math.round(cyclePrice / cycleMonths) : 0;
+                    const hasDiscount = cycleActual > cyclePrice && cyclePrice > 0;
+                    const discountPct = hasDiscount ? Math.round(((cycleActual - cyclePrice) / cycleActual) * 100) : 0;
+
+                    return (
+                      <button
+                        key={c.key}
+                        type="button"
+                        onClick={() => setBillingCycle(c.key)}
+                        className={`relative p-3 rounded-2xl text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
+                          isActive
+                            ? "border-2 border-[#2568e0] bg-blue-50/70 shadow-md shadow-blue-500/15 ring-2 ring-[#2568e0]/20"
+                            : "border border-slate-200/90 bg-white hover:border-blue-300"
+                        }`}
+                      >
+                        {/* Badge: Best Value / Discount */}
+                        {c.key === "yearly" && (
+                          <span className="absolute -top-2.5 right-2 px-2 py-0.5 rounded-full bg-[#2568e0] text-white text-[9px] font-black uppercase tracking-wider shadow-sm">
+                            Best Value
+                          </span>
+                        )}
+                        {discountPct > 0 && c.key !== "yearly" && (
+                          <span className="absolute -top-2.5 right-2 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[9px] font-black uppercase tracking-wider shadow-sm">
+                            Save {discountPct}%
+                          </span>
+                        )}
+
+                        <div>
+                          <p className="text-xs font-black text-black capitalize">
+                            {c.label}
+                          </p>
+                          <div className="mt-1">
+                            {/* Monthly amount shown upside big */}
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-xl font-black text-black tracking-tight">
+                                ₹{monthlyEquiv.toLocaleString("en-IN")}
+                              </span>
+                              <span className="text-[11px] font-bold text-black/60">
+                                /mo
+                              </span>
+                            </div>
+
+                            {/* Downside show total amount for multi-month, or billed monthly */}
+                            {cycleMonths > 1 ? (
+                              <span className="text-[10px] font-bold text-black/75 block mt-0.5">
+                                ₹{cyclePrice.toLocaleString("en-IN")} total / {c.label.toLowerCase()}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-medium text-black/55 block mt-0.5">
+                                Billed monthly
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {discountPct > 0 && (
+                          <p className="mt-2 text-[10px] font-extrabold text-emerald-700">
+                            Save {discountPct}%
+                          </p>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Subtext reminder */}
+              <p className="text-[11px] text-center font-medium text-black/60">
+                Instant activation &bull; Upgrade or downgrade anytime
+              </p>
+
+              {/* 4. PRIMARY CALL TO ACTION BUTTON */}
+              <button
+                type="button"
+                onClick={() => handleSelectPlan(activePlan)}
+                disabled={processing}
+                className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#2568e0] to-[#5b9bf5] hover:brightness-110 active:scale-[0.98] text-white text-sm font-black shadow-lg shadow-blue-500/35 transition cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>Proceed with {activePlan?.planName || "Plan"}</span>
+                <ArrowRight size={16} />
+              </button>
+            </div>
           );
-        })}
+        })()}
       </div>
 
       {/* =====================================================
-          PLANS GRID
+          DESKTOP BILLING CYCLE SELECTOR (Retained exactly for sm+)
+      ===================================================== */}
+      <div
+        style={delay(1)}
+        className="hidden sm:flex pu-in mb-6 sm:mb-8 justify-center w-full px-3"
+      >
+        <div
+          className="
+            flex
+            items-center
+            gap-1.5
+            p-1.5
+            rounded-2xl
+            bg-white/95
+            backdrop-blur-xl
+            border
+            border-white/60
+            shadow-[0_8px_25px_rgba(6,20,52,0.12)]
+            max-w-full
+            overflow-x-auto
+            overflow-y-hidden
+            pu-scroll
+            scroll-smooth
+            overscroll-x-contain
+            touch-pan-x
+          "
+        >
+          {BILLING_CYCLES.filter((c) => billingCycleConfig[c.key]).map((c) => {
+            const isActive = billingCycle === c.key;
+            return (
+              <button
+                key={c.key}
+                type="button"
+                onClick={() => setBillingCycle(c.key)}
+                className={`
+                  inline-flex
+                  h-10
+                  shrink-0
+                  cursor-pointer
+                  items-center
+                  justify-center
+                  rounded-xl
+                  px-4
+                  sm:px-5
+                  text-xs
+                  sm:text-sm
+                  font-extrabold
+                  transition-all
+                  duration-200
+                  active:scale-95
+                  ${
+                    isActive
+                      ? "bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] text-white shadow-md shadow-blue-500/30"
+                      : "text-black/80 hover:text-black hover:bg-slate-100/80"
+                  }
+                `}
+              >
+                {c.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* =====================================================
+          DESKTOP PLANS GRID (Retained exactly for sm+)
       ===================================================== */}
 
       {plans.length === 0 ? (
@@ -1314,7 +1528,8 @@ export default function PlanUpgrade() {
       ) : (
         <div
           className="
-            grid
+            hidden
+            sm:grid
             w-full
             min-w-0
             grid-cols-1
@@ -1526,14 +1741,14 @@ export default function PlanUpgrade() {
                   >
                     {/* CURRENT SUBSCRIPTION SECTION */}
                     <div className="border-b border-[#e2ebf7] pb-3">
-                      <div className="mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      <div className="mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-black">
                         <span>Current Subscription</span>
                         {remainingUnusedDays > 0 ? (
                           <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
                             Active ({remainingUnusedDays}d left)
                           </span>
                         ) : (
-                          <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
+                          <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-black">
                             Expired / 0d left
                           </span>
                         )}
@@ -1545,17 +1760,17 @@ export default function PlanUpgrade() {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-[#6b7f99]">Current Plan Price</span>
-                          <span className="font-semibold text-slate-800">
+                          <span className="font-semibold text-black">
                             ₹{currentPlanPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-[#6b7f99]">Original Plan Validity</span>
-                          <span className="font-semibold text-slate-800">{currentPlanValidity} days</span>
+                          <span className="font-semibold text-black">{currentPlanValidity} days</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-[#6b7f99]">Remaining Unused Days</span>
-                          <span className={`font-semibold ${remainingUnusedDays > 0 ? "text-emerald-700" : "text-slate-500"}`}>
+                          <span className={`font-semibold ${remainingUnusedDays > 0 ? "text-emerald-700" : "text-black"}`}>
                             {remainingUnusedDays} days
                           </span>
                         </div>
@@ -1572,7 +1787,7 @@ export default function PlanUpgrade() {
 
                     {/* NEW SUBSCRIPTION SECTION */}
                     <div className="border-b border-[#e2ebf7] pb-3">
-                      <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-black">
                         New Subscription
                       </div>
                       <div className="space-y-1.5 text-xs sm:text-sm">
@@ -1586,7 +1801,7 @@ export default function PlanUpgrade() {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-[#6b7f99]">New Plan Price</span>
-                          <span className="font-semibold text-slate-800">
+                          <span className="font-semibold text-black">
                             ₹{newPlanPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         </div>
@@ -1606,36 +1821,36 @@ export default function PlanUpgrade() {
 
                     {/* PRORATION / CREDIT BREAKDOWN */}
                     <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3.5 space-y-2.5">
-                      <div className="flex items-center justify-between text-xs sm:text-sm text-slate-700">
-                        <span className="flex items-center gap-1.5 text-slate-600 font-medium">
+                      <div className="flex items-center justify-between text-xs sm:text-sm text-black">
+                        <span className="flex items-center gap-1.5 text-black font-medium">
                           <Tag size={13} className="text-emerald-600" />
                           New Plan Price
                         </span>
-                        <span className="font-bold text-slate-800">
+                        <span className="font-bold text-black">
                           ₹{newPlanPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </div>
 
                       {unusedCredit > 0 && (
-                        <div className="flex items-center justify-between text-xs sm:text-sm text-emerald-700">
-                          <div className="flex flex-col">
-                            <span className="font-medium text-emerald-700">
+                        <div className="flex items-center justify-between gap-2 text-xs sm:text-sm text-emerald-700">
+                          <div className="flex flex-col min-w-0 pr-1">
+                            <span className="font-medium text-emerald-700 text-xs sm:text-sm">
                               Current Plan Balance Discount
                             </span>
-                            <span className="text-[11px] text-emerald-600">
+                            <span className="text-[10px] sm:text-[11px] text-emerald-600 leading-tight">
                               {rawCredit > unusedCredit
                                 ? `Using ₹${unusedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} from your ₹${rawCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} balance (${remainingUnusedDays}d left)`
                                 : `Credit for ${remainingUnusedDays} unused days @ ₹${prorationPreview?.perDayCost || 0}/day`}
                             </span>
                           </div>
-                          <span className="font-bold text-emerald-700">
+                          <span className="font-bold text-emerald-700 text-[11px] sm:text-sm shrink-0 whitespace-nowrap">
                             - ₹{unusedCredit.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         </div>
                       )}
 
                       <div className="flex items-center justify-between border-t border-emerald-200/80 pt-2 text-xs sm:text-sm">
-                        <span className="font-bold text-slate-900">Total to Pay</span>
+                        <span className="font-bold text-black">Total to Pay</span>
                         <div className="flex items-center gap-2">
                           {finalPayable === 0 && (
                             <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white">
@@ -1685,7 +1900,7 @@ export default function PlanUpgrade() {
                     py-2.5
                     text-sm
                     font-bold
-                    text-slate-700
+                    text-black
                     transition
                     hover:bg-slate-200
                     disabled:opacity-50

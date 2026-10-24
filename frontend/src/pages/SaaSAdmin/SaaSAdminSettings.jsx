@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../Context/AuthContext";
 import { useToast } from "../../Context/ToastContext";
+import StaylioLoader from "../../Components/StaylioLoader";
 import {
   getAdminUsers,
   createSubAdmin,
@@ -652,18 +653,20 @@ export default function SaaSAdminSettings() {
           {/* Search & Filters */}
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-500 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search by name or email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                className="staylio-search-input"
               />
               {searchQuery && (
                 <button
+                  type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  aria-label="Clear search"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-black hover:bg-slate-100 transition cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -696,10 +699,11 @@ export default function SaaSAdminSettings() {
 
         {/* Table Content */}
         {loading ? (
-          <div className="py-20 flex flex-col items-center justify-center text-gray-400 space-y-3">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-            <p className="text-sm">Loading administrator accounts...</p>
-          </div>
+          <StaylioLoader
+            message="Loading Administrator Accounts"
+            subtitle="Fetching sub-admin credentials and permission matrices..."
+            fullPage={false}
+          />
         ) : filteredUsers.length === 0 ? (
           <div className="py-16 text-center text-gray-500">
             <Users className="w-10 h-10 mx-auto text-gray-300 mb-2" />

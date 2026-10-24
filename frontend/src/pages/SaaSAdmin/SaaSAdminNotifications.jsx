@@ -248,26 +248,26 @@ const CalendarPicker = memo(({ selectedDate, onSelectDate }) => {
         <button
           type="button"
           onClick={() => setViewDate(new Date(year, month - 1, 1))}
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition active:scale-90"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-black hover:text-black hover:bg-slate-100 transition active:scale-90"
           aria-label="Previous Month"
         >
           <ChevronLeft size={17} />
         </button>
         {/* key forces a quick fade whenever the month changes */}
-        <span key={`${year}-${month}`} className="sn-fade text-sm font-bold text-slate-900">
+        <span key={`${year}-${month}`} className="sn-fade text-sm font-bold text-black">
           {MONTHS[month]} {year}
         </span>
         <button
           type="button"
           onClick={() => setViewDate(new Date(year, month + 1, 1))}
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition active:scale-90"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-black hover:text-black hover:bg-slate-100 transition active:scale-90"
           aria-label="Next Month"
         >
           <ChevronRight size={17} />
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 mb-2">
+      <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-black mb-2">
         {WEEKDAYS.map((d) => (
           <span key={d}>{d}</span>
         ))}
@@ -286,8 +286,8 @@ const CalendarPicker = memo(({ selectedDate, onSelectDate }) => {
                 selected
                   ? "bg-[#4338CA] text-white font-bold shadow-md shadow-indigo-600/30"
                   : cell.current
-                  ? "text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"
-                  : "text-slate-300 hover:bg-slate-50"
+                  ? "text-black hover:bg-indigo-50 hover:text-indigo-600"
+                  : "text-black hover:bg-slate-50"
               } ${isToday && !selected ? "border border-indigo-300 font-bold text-indigo-600" : ""}`}
             >
               {cell.day}
@@ -324,8 +324,8 @@ const CalendarPicker = memo(({ selectedDate, onSelectDate }) => {
 
 const DetailField = ({ label, value, truncate }) => (
   <div className="min-w-0">
-    <p className="text-[10px] font-bold text-slate-400 uppercase">{label}</p>
-    <p className={`font-semibold text-slate-800 mt-0.5 ${truncate ? "truncate" : ""}`}>{value}</p>
+    <p className="text-[10px] font-bold text-black uppercase">{label}</p>
+    <p className={`font-semibold text-black mt-0.5 ${truncate ? "truncate" : ""}`}>{value}</p>
   </div>
 );
 
@@ -731,21 +731,21 @@ const NotificationItem = memo(
               </div>
 
               <div className="min-w-0">
-                <div className="text-xs sm:text-sm text-slate-800 leading-snug">
-                  <span className="font-bold text-slate-900">{hotelName}</span>{" "}
-                  <span className="text-slate-600 font-normal">{config.actionText}</span>
+                <div className="text-xs sm:text-sm text-black leading-snug">
+                  <span className="font-bold text-black">{hotelName}</span>{" "}
+                  <span className="text-black font-normal">{config.actionText}</span>
                   {planName && (
-                    <span className="text-slate-600 font-normal">
+                    <span className="text-black font-normal">
                       {" for the "}
-                      <span className="font-semibold text-slate-900">{planName}</span>
+                      <span className="font-semibold text-black">{planName}</span>
                       {" plan"}
                     </span>
                   )}
-                  <span className="text-slate-600 font-normal">.</span>
+                  <span className="text-black font-normal">.</span>
                 </div>
 
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[11px] sm:text-xs text-slate-400 font-medium">
+                  <span className="text-[11px] sm:text-xs text-black font-medium">
                     {getRelativeTime(notification?.createdAt)}
                   </span>
                   {!isRead && (
@@ -765,7 +765,7 @@ const NotificationItem = memo(
 
             <div className="flex items-center gap-2 shrink-0">
               {formattedPrice && (
-                <span className="hidden sm:inline-flex items-center text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
+                <span className="hidden sm:inline-flex items-center text-xs font-semibold text-black bg-slate-100 px-2.5 py-1 rounded-lg">
                   {formattedPrice}
                 </span>
               )}
@@ -783,7 +783,7 @@ const NotificationItem = memo(
                           setMenuOpen(false);
                           onMarkRead(notification);
                         }}
-                        className="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 flex items-center gap-2 transition"
+                        className="w-full text-left px-3 py-2 rounded-lg text-black hover:bg-indigo-50 hover:text-indigo-600 flex items-center gap-2 transition"
                       >
                         <Check size={14} /> Mark as read
                       </button>
@@ -794,7 +794,7 @@ const NotificationItem = memo(
                         setMenuOpen(false);
                         setExpanded((v) => !v);
                       }}
-                      className="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition"
+                      className="w-full text-left px-3 py-2 rounded-lg text-black hover:bg-slate-50 flex items-center gap-2 transition"
                     >
                       {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                       {expanded ? "Hide Details" : "Quick Details"}
@@ -806,7 +806,7 @@ const NotificationItem = memo(
                           setMenuOpen(false);
                           onViewApplication(notification);
                         }}
-                        className="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 flex items-center gap-2 transition"
+                        className="w-full text-left px-3 py-2 rounded-lg text-black hover:bg-indigo-50 hover:text-indigo-600 flex items-center gap-2 transition"
                       >
                         <ExternalLink size={14} /> Go to Details
                       </button>
@@ -846,15 +846,15 @@ const NotificationItem = memo(
           {/* Smooth height animation with no layout thrash: grid 0fr -> 1fr */}
           <div className="sn-expand" data-open={expanded} aria-hidden={!expanded}>
             <div className="overflow-hidden">
-              <div className="mt-4 pt-3.5 border-t border-slate-100 rounded-xl bg-slate-50/80 p-3.5 text-xs text-slate-700 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="mt-4 pt-3.5 border-t border-slate-100 rounded-xl bg-slate-50/80 p-3.5 text-xs text-black grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <DetailField label="Hotel Owner" value={ownerName} />
                 <DetailField label="Contact Email" value={email} truncate />
                 <DetailField label="Contact Phone" value={phone} />
                 <DetailField label="Event Time" value={formatDate(notification?.createdAt)} />
                 {notification?.message && (
                   <div className="sm:col-span-2 lg:col-span-4 mt-1 pt-2 border-t border-slate-200/60">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Description</p>
-                    <p className="text-slate-600 mt-0.5">{notification.message}</p>
+                    <p className="text-[10px] font-bold text-black uppercase">Description</p>
+                    <p className="text-black mt-0.5">{notification.message}</p>
                   </div>
                 )}
               </div>
@@ -884,7 +884,7 @@ const NotificationItem = memo(
                   <span>Mark Read</span>
                 </button>
               ) : (
-                <span className="sn-pop inline-flex items-center gap-1 text-[11px] font-medium text-slate-400">
+                <span className="sn-pop inline-flex items-center gap-1 text-[11px] font-medium text-black">
                   <CheckCheck size={13} className="text-emerald-500" /> Read
                 </span>
               )}
@@ -1179,7 +1179,7 @@ const NotificationDetailsModal = ({
               <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-indigo-500">
                 Notification Details
               </p>
-<h2 className="mt-1 text-lg sm:text-xl font-extrabold tracking-[-0.02em] text-slate-900">
+<h2 className="mt-1 text-lg sm:text-xl font-extrabold tracking-[-0.02em] text-black">
   {summary.title}
 </h2>
 
@@ -1200,10 +1200,10 @@ const NotificationDetailsModal = ({
               items-center
               justify-center
               rounded-lg
-              text-slate-400
+              text-black
               transition
               hover:bg-slate-100
-              hover:text-slate-700
+              hover:text-black
             "
           >
             <X size={17} />
@@ -1227,21 +1227,21 @@ const NotificationDetailsModal = ({
           </p>
 
           {isRegistration && (
-            <p className="mt-2 text-[12px] font-medium leading-5 text-slate-600">
+            <p className="mt-2 text-[12px] font-medium leading-5 text-black">
               A new hotel registration was submitted and is waiting for admin
               approval.
             </p>
           )}
 
           {isUpgrade && (
-            <p className="mt-2 text-[12px] font-medium leading-5 text-slate-600">
+            <p className="mt-2 text-[12px] font-medium leading-5 text-black">
               The hotel changed from the previous subscription plan to the
               newly selected plan.
             </p>
           )}
 
           {isPayment && (
-            <p className="mt-2 text-[12px] font-medium leading-5 text-slate-600">
+            <p className="mt-2 text-[12px] font-medium leading-5 text-black">
               This payment activity is related to the hotel's subscription.
             </p>
           )}
@@ -1251,44 +1251,44 @@ const NotificationDetailsModal = ({
         {/* USER DETAILS */}
         <div className="mt-5">
 
-          <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400">
+          <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.08em] text-black">
             User Details
           </p>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 
             <div className="rounded-xl border border-slate-200 bg-white p-3.5">
-              <p className="text-[10px] font-bold text-slate-400">
+              <p className="text-[10px] font-bold text-black">
                 Hotel Name
               </p>
-              <p className="mt-1 text-[13px] font-bold text-slate-800">
+              <p className="mt-1 text-[13px] font-bold text-black">
                 {hotelName}
               </p>
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-white p-3.5">
-              <p className="text-[10px] font-bold text-slate-400">
+              <p className="text-[10px] font-bold text-black">
                 Owner Name
               </p>
-              <p className="mt-1 text-[13px] font-bold text-slate-800">
+              <p className="mt-1 text-[13px] font-bold text-black">
                 {ownerName}
               </p>
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-white p-3.5">
-              <p className="text-[10px] font-bold text-slate-400">
+              <p className="text-[10px] font-bold text-black">
                 Email
               </p>
-              <p className="mt-1 break-all text-[13px] font-semibold text-slate-700">
+              <p className="mt-1 break-all text-[13px] font-semibold text-black">
                 {email}
               </p>
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-white p-3.5">
-              <p className="text-[10px] font-bold text-slate-400">
+              <p className="text-[10px] font-bold text-black">
                 Phone
               </p>
-              <p className="mt-1 text-[13px] font-semibold text-slate-700">
+              <p className="mt-1 text-[13px] font-semibold text-black">
                 {phone}
               </p>
             </div>
@@ -1299,7 +1299,7 @@ const NotificationDetailsModal = ({
         {/* ACTIVITY DETAILS */}
         <div className="mt-5">
 
-          <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400">
+          <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.08em] text-black">
             Activity Details
           </p>
 
@@ -1308,21 +1308,21 @@ const NotificationDetailsModal = ({
             <div className="grid grid-cols-1 divide-y divide-slate-100 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
 
               <div className="p-3.5">
-                <p className="text-[10px] font-bold text-slate-400">
+                <p className="text-[10px] font-bold text-black">
                   Activity
                 </p>
 
-                <p className="mt-1 text-[13px] font-bold text-slate-800">
+                <p className="mt-1 text-[13px] font-bold text-black">
                   {summary.badge}
                 </p>
               </div>
 
               <div className="p-3.5">
-                <p className="text-[10px] font-bold text-slate-400">
+                <p className="text-[10px] font-bold text-black">
                   Date & Time
                 </p>
 
-                <p className="mt-1 text-[13px] font-semibold text-slate-700">
+                <p className="mt-1 text-[13px] font-semibold text-black">
                   {formatReadableDateTime(createdAt)}
                 </p>
               </div>
@@ -1333,21 +1333,21 @@ const NotificationDetailsModal = ({
               <div className="grid grid-cols-1 divide-y divide-slate-100 border-t border-slate-100 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
 
                 <div className="p-3.5">
-                  <p className="text-[10px] font-bold text-slate-400">
+                  <p className="text-[10px] font-bold text-black">
                     Subscription Plan
                   </p>
 
-                  <p className="mt-1 text-[13px] font-bold text-slate-800">
+                  <p className="mt-1 text-[13px] font-bold text-black">
                     {planName}
                   </p>
                 </div>
 
                 <div className="p-3.5">
-                  <p className="text-[10px] font-bold text-slate-400">
+                  <p className="text-[10px] font-bold text-black">
                     Amount
                   </p>
 
-                  <p className="mt-1 text-[13px] font-bold text-slate-800">
+                  <p className="mt-1 text-[13px] font-bold text-black">
                     {formatCurrency(planPrice) || "-"}
                   </p>
                 </div>
@@ -1362,7 +1362,7 @@ const NotificationDetailsModal = ({
         {isUpgrade && (
           <div className="mt-5">
 
-            <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.08em] text-slate-400">
+            <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.08em] text-black">
               Subscription Change
             </p>
 
@@ -1371,17 +1371,17 @@ const NotificationDetailsModal = ({
               <div className="grid grid-cols-1 sm:grid-cols-2">
 
                 <div className="border-b border-slate-100 p-4 sm:border-r">
-                  <p className="text-[10px] font-bold text-slate-400">
+                  <p className="text-[10px] font-bold text-black">
                     Previous Plan
                   </p>
 
-                  <p className="mt-1 text-[14px] font-extrabold text-slate-700">
+                  <p className="mt-1 text-[14px] font-extrabold text-black">
                     {previousPlanName || "Not available"}
                   </p>
                 </div>
 
                 <div className="border-b border-slate-100 p-4">
-                  <p className="text-[10px] font-bold text-slate-400">
+                  <p className="text-[10px] font-bold text-black">
                     New Plan
                   </p>
 
@@ -1391,57 +1391,57 @@ const NotificationDetailsModal = ({
                 </div>
 
                 <div className="border-b border-slate-100 p-4 sm:border-r">
-                  <p className="text-[10px] font-bold text-slate-400">
+                  <p className="text-[10px] font-bold text-black">
                     Billing Cycle
                   </p>
 
-                  <p className="mt-1 text-[13px] font-bold capitalize text-slate-800">
+                  <p className="mt-1 text-[13px] font-bold capitalize text-black">
                     {billingCycle || "Not available"}
                   </p>
                 </div>
 
                 <div className="border-b border-slate-100 p-4">
-                  <p className="text-[10px] font-bold text-slate-400">
+                  <p className="text-[10px] font-bold text-black">
                     Upgrade Date
                   </p>
 
-                  <p className="mt-1 text-[13px] font-bold text-slate-800">
+                  <p className="mt-1 text-[13px] font-bold text-black">
                     {formatReadableDateTime(upgradeDate)}
                   </p>
                 </div>
 
                 <div className="border-b border-slate-100 p-4 sm:border-r">
-                  <p className="text-[10px] font-bold text-slate-400">
+                  <p className="text-[10px] font-bold text-black">
                     Plan Started
                   </p>
 
-                  <p className="mt-1 text-[13px] font-bold text-slate-800">
+                  <p className="mt-1 text-[13px] font-bold text-black">
                     {formatReadableDate(planStartDate)}
                   </p>
                 </div>
 
                 <div className="border-b border-slate-100 p-4">
-                  <p className="text-[10px] font-bold text-slate-400">
+                  <p className="text-[10px] font-bold text-black">
                     Valid Until
                   </p>
 
-                  <p className="mt-1 text-[13px] font-bold text-slate-800">
+                  <p className="mt-1 text-[13px] font-bold text-black">
                     {formatReadableDate(planEndDate)}
                   </p>
                 </div>
 
                 <div className="p-4 sm:border-r">
-                  <p className="text-[10px] font-bold text-slate-400">
+                  <p className="text-[10px] font-bold text-black">
                     New Plan Amount
                   </p>
 
-                  <p className="mt-1 text-[14px] font-extrabold text-slate-900">
+                  <p className="mt-1 text-[14px] font-extrabold text-black">
                     {formatCurrency(planPrice) || "-"}
                   </p>
                 </div>
 
                 <div className="p-4">
-                  <p className="text-[10px] font-bold text-slate-400">
+                  <p className="text-[10px] font-bold text-black">
                     Status
                   </p>
 
@@ -1487,7 +1487,7 @@ const NotificationDetailsModal = ({
             py-2.5
             text-[12px]
             font-bold
-            text-slate-700
+            text-black
             transition
             hover:bg-slate-50
           "
@@ -1738,7 +1738,7 @@ const NotificationDetailsModal = ({
                     className={`relative px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all duration-200 whitespace-nowrap flex items-center gap-1.5 active:scale-95 ${
                       active
                         ? "text-[#4338CA] bg-indigo-50/80"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                        : "text-black hover:text-black hover:bg-slate-50"
                     }`}
                   >
                     {tab.id === "unread" && tabCounts.unread > 0 && (
@@ -1748,7 +1748,7 @@ const NotificationDetailsModal = ({
                     {/* key re-triggers the count animation when the number changes */}
                     <span
                       key={tabCounts[tab.countKey]}
-                      className="sn-count text-[11px] font-semibold text-slate-400"
+                      className="sn-count text-[11px] font-semibold text-black"
                     >
                       {tabCounts[tab.countKey]}
                     </span>
@@ -1771,10 +1771,10 @@ const NotificationDetailsModal = ({
                   className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs sm:text-sm font-semibold transition-all active:scale-95 shadow-sm ${
                     selectedDate
                       ? "border-[#4338CA] bg-indigo-50 text-[#4338CA]"
-                      : "border-slate-300/90 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-400"
+                      : "border-slate-300/90 bg-white text-black hover:bg-slate-50 hover:border-slate-400"
                   }`}
                 >
-                  <Calendar size={15} className="text-slate-500" />
+                  <Calendar size={15} className="text-black" />
                   <span>{formattedSelectedDate || "Select Date"}</span>
                   {selectedDate && (
                     <span
@@ -1801,7 +1801,7 @@ const NotificationDetailsModal = ({
                   type="button"
                   disabled={markingAll}
                   onClick={handleMarkAllAsRead}
-                  className="sn-pop inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition active:scale-95 disabled:opacity-50"
+                  className="sn-pop inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-black text-xs font-semibold transition active:scale-95 disabled:opacity-50"
                 >
                   {markingAll ? <Loader2 size={13} className="animate-spin" /> : <CheckCheck size={13} />}
                   <span className="hidden sm:inline">Mark all read</span>
@@ -1811,33 +1811,33 @@ const NotificationDetailsModal = ({
           </div>
 
           <div className="mt-2.5 pt-2.5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="relative flex-1 max-w-sm group/search">
+            <div className="relative flex-1 max-w-sm">
               <Search
-                size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors group-focus-within/search:text-indigo-500"
+                size={16}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-500 pointer-events-none"
               />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Filter by hotel, owner, or text..."
-                className="w-full pl-9 pr-8 py-1.5 rounded-lg border border-slate-200 bg-slate-50/50 text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition"
+                className="staylio-search-input"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="sn-pop absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-black hover:bg-slate-100 transition cursor-pointer"
                   aria-label="Clear search"
                 >
-                  <X size={12} />
+                  <X size={14} />
                 </button>
               )}
             </div>
 
-            <div className="text-[11px] font-semibold text-slate-400 flex items-center gap-2">
+            <div className="text-[11px] font-semibold text-black flex items-center gap-2">
               <span>
-                Showing <span className="text-slate-700 font-bold">{filtered.length}</span> of{" "}
+                Showing <span className="text-black font-bold">{filtered.length}</span> of{" "}
                 {notifications.length} events
               </span>
               {selectedDate && (
@@ -1861,10 +1861,10 @@ const NotificationDetailsModal = ({
             <div className="sn-ring w-14 h-14 mx-auto rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center">
               <Bell size={24} />
             </div>
-            <h3 className="mt-4 font-bold text-slate-800 text-base">
+            <h3 className="mt-4 font-bold text-black text-base">
               No notifications match your filters
             </h3>
-            <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+            <p className="mt-1 text-xs text-black max-w-sm mx-auto">
               {hasFilters
                 ? "Try adjusting your search query, clearing the date filter, or selecting 'All'."
                 : "You're all caught up! New hotel registrations and subscription events will show up here."}
@@ -1900,7 +1900,7 @@ const NotificationDetailsModal = ({
                 <button
                   type="button"
                   onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-                  className="px-5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-sm transition active:scale-95"
+                  className="px-5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-black text-xs font-semibold shadow-sm transition active:scale-95"
                 >
                   Load more ({filtered.length - visibleCount} remaining)
                 </button>

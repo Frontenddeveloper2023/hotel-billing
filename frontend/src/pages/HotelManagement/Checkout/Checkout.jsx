@@ -1330,7 +1330,6 @@ const grandTotal =
             <section className="rounded-2xl bg-white border border-[#dbe6f5] shadow-[0_1px_3px_rgba(20,25,30,0.03)] overflow-hidden">
               <div className="px-6 pt-6 pb-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <Receipt className="w-[20px] h-[20px] text-[#0e2a4a]" />
                   <h2 className="text-[18px] font-bold tracking-[-0.3px] text-[#0e2a4a]">
                     Billing Breakdown
                   </h2>
@@ -1534,45 +1533,42 @@ const grandTotal =
             </section>
 
             {/* PAYMENT METHOD */}
-            <section className="rounded-2xl bg-white border border-[#dbe6f5] shadow-[0_1px_3px_rgba(20,25,30,0.03)] overflow-hidden">
-              <div className="px-6 pt-6 pb-4 flex items-center gap-3">
-                <CreditCard className="w-[21px] h-[21px] text-[#0e2a4a]" />
-                <h2 className="text-[18px] font-bold tracking-[-0.3px] text-[#0e2a4a]">
+            <section className="rounded-xl mb-15 bg-white border border-[#dbe6f5] shadow-[0_1px_3px_rgba(20,25,30,0.03)] overflow-hidden">
+              <div className="px-5 pt-4 pb-3 flex items-center gap-2.5 border-b border-[#f0f4f9]">
+                <CreditCard className="w-[18px] h-[18px] text-[#0e2a4a]" />
+                <h2 className="text-[15px] font-bold tracking-[-0.2px] text-[#0e2a4a]">
                   Payment Method
                 </h2>
               </div>
 
-              <div className="px-6 pb-6">
-                
-
+              <div className="p-4 sm:p-5">
                 <button
                   type="button"
                   disabled={roomBreakdown.length === 0 || settingsLoading}
                   onClick={() => setShowPaymentPage(true)}
                   className="
                     group/co
-                    mt-6 w-full min-h-[56px] relative overflow-hidden cursor-pointer
+                    w-full min-h-[44px] h-[44px] relative overflow-hidden cursor-pointer
                     flex items-center justify-center gap-2
-                    rounded-xl
+                    rounded-lg
                     bg-gradient-to-r from-orange-500 via-orange-500 to-amber-400
                     hover:from-orange-600 hover:via-orange-500 hover:to-amber-500
                     active:scale-[0.98]
-                    text-white text-[15px] font-bold
-                    shadow-[0_4px_14px_rgba(249,115,22,0.4)]
-                    hover:shadow-[0_6px_20px_rgba(249,115,22,0.55)]
+                    text-white text-[14px] font-semibold
+                    shadow-[0_2px_10px_rgba(249,115,22,0.35)]
+                    hover:shadow-[0_4px_14px_rgba(249,115,22,0.45)]
                     transition-all duration-200
                     disabled:opacity-50 disabled:cursor-not-allowed
                   "
                 >
                   <span className="absolute inset-0 translate-x-[-100%] group-hover/co:translate-x-[100%] transition-transform duration-500 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
-                  <CheckCircle2 className="w-[18px] h-[18px] transition-transform duration-200 group-hover/co:translate-x-0.5" />
-                  Confirm Payment & Complete Checkout
+                  Complete Checkout
                 </button>
 
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="mt-3 w-full cursor-pointer rounded-xl border border-[#dbe6f5] bg-white hover:bg-[#f4f8fd] text-[#6b7f99] px-5 py-3 text-[13px] font-semibold transition"
+                  className="mt-2.5 w-full h-[40px] cursor-pointer rounded-lg border border-[#dbe6f5] bg-white hover:bg-[#f4f8fd] text-[#6b7f99] px-4 text-[13px] font-medium transition flex items-center justify-center"
                 >
                   Cancel
                 </button>

@@ -8,6 +8,7 @@ import React, {
 import { Plus, ShieldAlert, Loader2 } from "lucide-react";
 import { useAuth } from "../../Context/AuthContext";
 import { checkFoodServiceAccess } from "../../service/subscriptionFeatureApi";
+import StaylioLoader from "../../Components/StaylioLoader";
 
 import "./Components/FoodTheme.css";
 
@@ -220,9 +221,10 @@ export default function FoodManagement() {
 
     if (accessLoading) {
         return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-            </div>
+            <StaylioLoader
+                message="Loading Food Management"
+                subtitle="Verifying subscription privileges and menu items..."
+            />
         );
     }
 

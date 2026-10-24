@@ -16,7 +16,7 @@ function DetailItem({
         <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
             <div className="flex items-start gap-2.5">
 
-                <div className="mt-0.5 text-slate-400">
+                <div className="mt-0.5 text-black">
                     {React.cloneElement(icon, {
                         className: "w-3.5 h-3.5",
                     })}
@@ -24,11 +24,11 @@ function DetailItem({
 
                 <div className="min-w-0">
 
-                    <p className="text-[10px] uppercase tracking-wide font-bold text-slate-400">
+                    <p className="text-[10px] uppercase tracking-wide font-bold text-black">
                         {label}
                     </p>
 
-                    <p className="text-sm font-semibold text-slate-800 mt-1 break-words">
+                    <p className="text-sm font-semibold text-black mt-1 break-words">
                         {value || "Not provided"}
                     </p>
 
@@ -52,18 +52,18 @@ function SectionHeader({
 
                 <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center">
                     {React.cloneElement(icon, {
-                        className: "w-4 h-4 text-slate-600",
+                        className: "w-4 h-4 text-black",
                     })}
                 </div>
 
                 <div>
 
-                    <h2 className="text-sm font-bold text-slate-900">
+                    <h2 className="text-sm font-bold text-black">
                         {title}
                     </h2>
 
                     {subtitle && (
-                        <p className="text-xs text-slate-400 mt-0.5">
+                        <p className="text-xs text-black mt-0.5">
                             {subtitle}
                         </p>
                     )}

@@ -188,7 +188,7 @@ export default function AddFood({ onClose, onSave, saving = false }) {
     // ----------------------------------
     const getInputClass = (field) => {
         const hasError = touched[field] && errors[field];
-        return `w-full rounded-xl border px-3.5 py-3 text-sm text-[#0a1a3f] outline-none transition-all placeholder:text-slate-400 disabled:cursor-not-allowed disabled:bg-slate-100 sm:px-4 ${
+        return `w-full rounded-xl border px-3.5 py-3 text-sm text-[#0a1a3f] outline-none transition-all placeholder:text-black disabled:cursor-not-allowed disabled:bg-slate-100 sm:px-4 ${
             hasError
                 ? "border-rose-400 bg-rose-50/30 focus:border-rose-500 focus:ring-2 focus:ring-rose-100"
                 : "border-[var(--line)] bg-[var(--tint)]/40 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
@@ -203,7 +203,7 @@ export default function AddFood({ onClose, onSave, saving = false }) {
             </div>
         ) : null;
 
-    const labelCls = "mb-1.5 block text-xs font-bold text-slate-600 sm:text-[13px]";
+    const labelCls = "mb-1.5 block text-xs font-bold text-black sm:text-[13px]";
 
     return (
         <div
@@ -224,7 +224,7 @@ export default function AddFood({ onClose, onSave, saving = false }) {
                         </div>
                         <div className="min-w-0">
                             <h2 className="text-base font-bold text-[#0a1a3f] sm:text-lg">Add Food</h2>
-                            <p className="mt-0.5 text-[11px] text-slate-400 sm:text-xs">
+                            <p className="mt-0.5 text-[11px] text-black sm:text-xs">
                                 Add a new item to your menu
                             </p>
                         </div>
@@ -235,7 +235,7 @@ export default function AddFood({ onClose, onSave, saving = false }) {
                         onClick={onClose}
                         disabled={saving}
                         aria-label="Close"
-                        className="fm-btn flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-slate-400 hover:bg-[var(--tint)] hover:text-blue-700 disabled:opacity-50"
+                        className="fm-btn flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-black hover:bg-[var(--tint)] hover:text-blue-700 disabled:opacity-50"
                     >
                         <X className="h-5 w-5" />
                     </button>
@@ -280,7 +280,7 @@ export default function AddFood({ onClose, onSave, saving = false }) {
                             <div className="min-w-0 flex-1">
                                 {renderError("description")}
                             </div>
-                            <span className="ml-auto shrink-0 text-[11px] text-slate-400">
+                            <span className="ml-auto shrink-0 text-[11px] text-black">
                                 {description.length}/500
                             </span>
                         </div>
@@ -335,7 +335,7 @@ export default function AddFood({ onClose, onSave, saving = false }) {
                                     <span className="mt-3 text-sm font-semibold text-[#12306b]">
                                         Upload food image
                                     </span>
-                                    <span className="mt-1 text-center text-[10px] text-slate-400 sm:text-xs">
+                                    <span className="mt-1 text-center text-[10px] text-black sm:text-xs">
                                         JPG, JPEG, PNG or WEBP · Max 5 MB
                                     </span>
                                 </div>
@@ -371,7 +371,7 @@ export default function AddFood({ onClose, onSave, saving = false }) {
                     {/* INFO */}
                     <div className="flex items-start gap-2.5 rounded-xl border border-blue-100 bg-[var(--tint)] px-3.5 py-3">
                         <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
-                        <p className="text-[10px] leading-relaxed text-slate-500 sm:text-[11px]">
+                        <p className="text-[10px] leading-relaxed text-black sm:text-[11px]">
                             Fields marked with <span className="font-bold text-rose-500">*</span> are
                             required. You can add a description and image later if needed.
                         </p>
@@ -383,7 +383,7 @@ export default function AddFood({ onClose, onSave, saving = false }) {
                             type="button"
                             onClick={onClose}
                             disabled={saving}
-                            className="fm-btn w-full cursor-pointer rounded-xl border border-[var(--line)] bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-[var(--tint)] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                            className="fm-btn w-full cursor-pointer rounded-xl border border-[var(--line)] bg-white px-5 py-2.5 text-sm font-semibold text-black hover:bg-[var(--tint)] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
                             Cancel
                         </button>

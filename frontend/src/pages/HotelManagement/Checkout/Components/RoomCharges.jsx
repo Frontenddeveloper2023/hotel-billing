@@ -17,18 +17,18 @@ function SectionHeader({
                 <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center">
 
                     {React.cloneElement(icon, {
-                        className: "w-4 h-4 text-slate-600",
+                        className: "w-4 h-4 text-black",
                     })}
 
                 </div>
 
                 <div>
 
-                    <h2 className="text-sm font-bold text-slate-900">
+                    <h2 className="text-sm font-bold text-black">
                         {title}
                     </h2>
 
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-black mt-0.5">
                         {subtitle}
                     </p>
 
@@ -66,11 +66,11 @@ export default function RoomCharges({
 
                     <div className="grid grid-cols-[1fr_auto] gap-4 px-4 py-3 bg-slate-50 border-b border-slate-100">
 
-                        <span className="text-[10px] uppercase tracking-wide font-bold text-slate-400">
+                        <span className="text-[10px] uppercase tracking-wide font-bold text-black">
                             Description
                         </span>
 
-                        <span className="text-[10px] uppercase tracking-wide font-bold text-slate-400">
+                        <span className="text-[10px] uppercase tracking-wide font-bold text-black">
                             Amount
                         </span>
 
@@ -83,18 +83,18 @@ export default function RoomCharges({
 
                         <div>
 
-                            <p className="text-sm font-bold text-slate-800">
+                            <p className="text-sm font-bold text-black">
                                 Room {roomNumber || "-"}
                             </p>
 
-                            <p className="text-xs text-slate-400 mt-1">
+                            <p className="text-xs text-black mt-1">
                                 ₹{money(pricePerNight)} × {nights} nights
                             </p>
 
                         </div>
 
 
-                        <p className="text-sm font-bold text-slate-900">
+                        <p className="text-sm font-bold text-black">
                             ₹{money(roomCharge)}
                         </p>
 
@@ -107,11 +107,11 @@ export default function RoomCharges({
 
                 <div className="flex items-center justify-between mt-4 px-4 py-3 rounded-xl bg-slate-50 border border-slate-100">
 
-                    <span className="text-xs font-bold text-slate-600">
+                    <span className="text-xs font-bold text-black">
                         Total Room Charges
                     </span>
 
-                    <span className="text-sm font-bold text-slate-900">
+                    <span className="text-sm font-bold text-black">
                         ₹{money(roomCharge)}
                     </span>
 

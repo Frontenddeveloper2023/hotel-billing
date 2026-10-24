@@ -91,7 +91,7 @@ const getStatusClass = (status) => {
     case "expiring_soon": return "bg-amber-50 text-amber-700 border-amber-200";
     case "grace_period": case "suspended": return "bg-orange-50 text-orange-700 border-orange-200";
     case "expired": case "cancelled": case "payment_failed": return "bg-red-50 text-red-700 border-red-200";
-    default: return "bg-slate-50 text-slate-600 border-slate-200";
+    default: return "bg-slate-50 text-black border-slate-200";
   }
 };
 
@@ -101,7 +101,7 @@ const getPaymentStatusClass = (status) => {
     case "partially_paid": return "bg-amber-50 text-amber-700 border-amber-200";
     case "failed": return "bg-red-50 text-red-700 border-red-200";
     case "refunded": return "bg-violet-50 text-violet-700 border-violet-200";
-    default: return "bg-slate-50 text-slate-600 border-slate-200";
+    default: return "bg-slate-50 text-black border-slate-200";
   }
 };
 
@@ -122,7 +122,7 @@ const statusMeta = {
   grace_period: { label: "Grace Period", bar: "from-orange-300 to-orange-500", Icon: Hourglass, chip: "bg-orange-50 text-orange-600" },
   expired: { label: "Expired", bar: "from-red-400 to-red-600", Icon: XCircle, chip: "bg-red-50 text-red-600" },
   suspended: { label: "Suspended", bar: "from-orange-400 to-red-500", Icon: Ban, chip: "bg-orange-50 text-orange-600" },
-  cancelled: { label: "Cancelled", bar: "from-slate-400 to-slate-600", Icon: Ban, chip: "bg-slate-100 text-slate-600" },
+  cancelled: { label: "Cancelled", bar: "from-slate-400 to-slate-600", Icon: Ban, chip: "bg-slate-100 text-black" },
   payment_failed: { label: "Payment Failed", bar: "from-rose-400 to-rose-600", Icon: AlertCircle, chip: "bg-rose-50 text-rose-600" },
 };
 
@@ -765,7 +765,7 @@ const SaaSAdminSubscriptions = () => {
               ) : (
                 <ol className="relative border-l-2 border-[#e2ebf7] ml-3 space-y-4">
                   {recentActivity.map((s, i) => {
-                    const m = statusMeta[s.status] || { Icon: CreditCard, chip: "bg-slate-100 text-slate-600" };
+                    const m = statusMeta[s.status] || { Icon: CreditCard, chip: "bg-slate-100 text-black" };
                     return (
                       <li 
                         key={s._id} 
@@ -794,8 +794,24 @@ const SaaSAdminSubscriptions = () => {
         <div style={delay(8)} className={`ss-in ${card} p-3 sm:p-4 mb-5`}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="relative">
-              <Search size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7d90a8]" />
-              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search hotel, plan or ID..." className={`${inputCls} pl-10`} />
+              <Search size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-500 pointer-events-none" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search hotel, plan or ID..."
+                className="staylio-search-input"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  aria-label="Clear search"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-black hover:bg-slate-100 transition cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
+              )}
             </div>
 
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={inputCls}>
@@ -1211,7 +1227,7 @@ const SaaSAdminSubscriptions = () => {
                     setError("");
                   }}
                   disabled={emailLoading}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold"
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-black text-sm font-semibold"
                 >
                   Cancel
                 </button>

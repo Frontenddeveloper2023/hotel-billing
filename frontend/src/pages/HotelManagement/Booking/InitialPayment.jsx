@@ -412,7 +412,7 @@ export default function InitialPayment({ booking, onConfirm, onCancel }) {
                                                         <p className="flex items-center gap-1.5 text-xs text-[#6b7f99] mt-2">
                                                             <CalendarDays className="w-3.5 h-3.5 shrink-0" />
                                                             {checkIn || "—"}
-                                                            <span className="text-slate-300">→</span>
+                                                            <span className="text-black">→</span>
                                                             {checkOut || "—"}
                                                         </p>
                                                     )}
@@ -577,7 +577,7 @@ export default function InitialPayment({ booking, onConfirm, onCancel }) {
                                 <div className="flex items-center justify-between gap-3">
                                     <div className="flex items-center gap-2">
                                         <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                                        <span className="text-xs sm:text-sm font-semibold text-slate-700">
+                                        <span className="text-xs sm:text-sm font-semibold text-black">
                                             Advance Received
                                         </span>
                                     </div>
@@ -589,7 +589,7 @@ export default function InitialPayment({ booking, onConfirm, onCancel }) {
                                 <div className="border-t border-blue-100" />
 
                                 <div className="flex items-center justify-between gap-3">
-                                    <span className="text-xs sm:text-sm font-semibold text-slate-700">
+                                    <span className="text-xs sm:text-sm font-semibold text-black">
                                         Balance at Checkout
                                     </span>
                                     <span

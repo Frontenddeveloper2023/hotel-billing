@@ -80,7 +80,7 @@ export default function DeleteRoom({ room, onClose, onSuccess, deleteRoom }) {
 
                 <div className="flex justify-end gap-3 mt-6">
                     <button type="button" onClick={onClose} disabled={deleting}
-                        className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold disabled:opacity-50 transition">
+                        className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-black text-sm font-bold disabled:opacity-50 transition">
                         Cancel
                     </button>
 

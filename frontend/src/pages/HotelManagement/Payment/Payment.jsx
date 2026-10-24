@@ -2429,380 +2429,207 @@ useEffect(() => {
   // =========================================================
 
   return (
-    <div className="fixed inset-0 z-[60] overflow-y-auto bg-[#040e24]/35 p-3 backdrop-blur-[2px] sm:p-4">
-      <div className="flex min-h-full w-full items-center justify-center">
-        <div className="flex w-full max-w-[720px] flex-col overflow-hidden rounded-[18px] bg-[#f4f8fd] shadow-[0_25px_70px_rgba(0,0,0,0.20)]">
+    <div className="min-h-[calc(100vh-64px)] w-full px-4 sm:px-6 lg:px-8 ">
+      {/* Top Header */}
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={isProcessing}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/20 bg-black/20 hover:bg-black/30 text-white backdrop-blur-sm transition active:scale-95 disabled:opacity-50 cursor-pointer shadow-sm"
+            aria-label="Back to checkout"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-xl font-bold tracking-tight text-white drop-shadow-sm truncate">
+              Payment & Settlement
+            </h1>
+          </div>
+        </div>
 
-          {/* =================================================
-              HEADER
-          ================================================= */}
+       
+      </div>
 
-          <div className="flex items-center justify-between border-b border-[#dbe6f5] bg-white px-5 py-4 sm:px-6">
+      {/* Main 2-Column Responsive Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 xl:gap-6 items-start pb-20">
+        
+        {/* Left Column: Guest & Stay Summary (5 cols on lg) */}
+        <div className="lg:col-span-5 space-y-4">
+          
+          {/* Guest & Room Details Card */}
+          <section className="rounded-xl border border-[#dbe6f5] bg-white shadow-sm overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-[#f0f4f9] flex items-center justify-between bg-[#f8fbfe]">
+              <div className="flex items-center gap-2.5">
+                <Receipt className="w-4 h-4 text-[#0e2a4a]" />
+                <h2 className="text-[14px] font-bold text-[#0e2a4a] tracking-tight">Stay Summary</h2>
+              </div>
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                {roomBreakdown.length} {roomBreakdown.length === 1 ? "Room" : "Rooms"}
+              </span>
+            </div>
 
-            <div className="flex min-w-0 items-center gap-3">
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* Guest Box */}
+                <div className="p-3 rounded-lg bg-[#f8fafc] border border-[#e8eef5]">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#6b7f99]">Guest Name</p>
+                  <p className="text-[14px] font-bold text-[#0e2a4a] truncate mt-0.5">
+                    {customer.customerName || "Guest"}
+                  </p>
+                  <p className="text-[12px] text-[#6b7f99] truncate mt-0.5">
+                    {customer.phoneNumber || "No phone provided"}
+                  </p>
+                </div>
 
-              <button
-                type="button"
-                onClick={onBack}
-                disabled={
-                  isProcessing
-                }
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#dbe6f5] bg-white text-[#3d5473] transition hover:bg-[#f4f8fd] disabled:opacity-50"
-                aria-label="Back to checkout"
-              >
-                <ArrowLeft
-                  className="h-[17px] w-[17px]"
-                />
-              </button>
-
-              <div className="min-w-0">
-
-                <h1 className="text-[18px] font-bold tracking-[-0.02em] text-[#0e2a4a] sm:text-[19px]">
-                  Payment
-                </h1>
-
-                <p className="mt-0.5 text-[10px] text-[#6b7f99] sm:text-[11px]">
-                  Complete checkout payment
-                </p>
-
+                {/* Room Numbers Box */}
+                <div className="p-3 rounded-lg bg-[#f8fafc] border border-[#e8eef5]">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#6b7f99]">Assigned Room(s)</p>
+                  <p className="text-[14px] font-bold text-[#0e2a4a] truncate mt-0.5">
+                    {displayRoomNumbers}
+                  </p>
+                  <p className="text-[12px] text-[#6b7f99] truncate mt-0.5">
+                    {firstRoom.roomType || "Standard Room"}
+                  </p>
+                </div>
               </div>
 
+              {/* Billing Itemized Rows */}
+              <div className="rounded-lg border border-[#e8eef5] overflow-hidden text-[13px]">
+                <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-[#f0f4f9] bg-white">
+                  <span className="text-[#51637b] font-medium">Grand Subtotal</span>
+                  <span className="font-semibold text-[#0e2a4a] tabular-nums">₹{grandTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-[#f0f4f9] bg-white">
+                  <span className="text-emerald-700 font-medium flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Advance Received
+                  </span>
+                  <span className="font-semibold text-emerald-600 tabular-nums">- ₹{advancePaid.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between px-3.5 py-3 bg-[#eefaf6]">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-800">Balance Due</p>
+                    <p className="text-[11px] text-emerald-700/80 font-medium">To be collected right now</p>
+                  </div>
+                  <p className="text-lg font-extrabold text-[#00796b] tabular-nums">
+                    ₹{currentPayment.toFixed(2)}
+                  </p>
+                </div>
+              </div>
             </div>
+          </section>
 
-            <div className="text-right">
+       
+        </div>
 
-              <p className="text-[8px] font-bold uppercase tracking-[0.1em] text-[#9aabc0]">
-                Amount Due
-              </p>
-
-              <p className="mt-0.5 text-[18px] font-extrabold tabular-nums text-[#00796B]">
-                ₹
-                {currentPayment.toFixed(
-                  2
-                )}
-              </p>
-
+        {/* Right Column: Payment Method Selection & Actions (7 cols on lg) */}
+        <div className="lg:col-span-7 space-y-4">
+          
+          {/* Payment Method Card */}
+          <section className="rounded-xl border border-[#dbe6f5] bg-white shadow-sm overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-[#f0f4f9] flex items-center gap-2.5 bg-[#f8fbfe]">
+              <CreditCard className="w-4 h-4 text-[#0e2a4a]" />
+              <h2 className="text-[14px] font-bold text-[#0e2a4a] tracking-tight">Select Payment Method</h2>
             </div>
-
-          </div>
-
-          {/* =================================================
-              CONTENT
-          ================================================= */}
-
-          <div className="max-h-[calc(100vh-90px)] overflow-y-auto">
 
             <div className="p-4 sm:p-5">
-
-              {/* =============================================
-                  PAYMENT DETAILS
-              ============================================= */}
-
-              <section className="overflow-hidden rounded-[15px] border border-[#dbe6f5] bg-white shadow-[0_2px_10px_rgba(15,23,42,0.035)]">
-
-                <div className="border-b border-[#e7eff8] px-5 py-4 sm:px-6">
-
-                  <div className="flex items-center gap-2.5">
-
-                    <Receipt
-                      className="h-[18px] w-[18px] text-black"
-                    />
-
-                    <h2 className="text-[16px] font-bold text-[#0e2a4a]">
-                      Payment Details
-                    </h2>
-
-                  </div>
-
-                </div>
-
-                <div className="p-4 sm:p-5">
-
-                  {/* Customer + Room */}
-
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-
-                    {/* CUSTOMER */}
-
-                    <div className="rounded-xl bg-[#F1F3F5] px-4 py-3.5">
-
-                      <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#0e2a4a]">
-                        Customer
-                      </p>
-
-                      <p className="mt-1.5 text-[15px] font-bold leading-5 text-[#0e2a4a]">
-                        {customer.customerName ||
-                          "Guest"}
-                      </p>
-
-                      <p className="mt-1 text-[12px] font-medium text-[#0e2a4a]">
-                        {customer.phoneNumber ||
-                          "Mobile number unavailable"}
-                      </p>
-
-                    </div>
-
-                    {/* ROOM */}
-
-                    <div className="rounded-xl bg-[#F1F3F5] px-4 py-3.5">
-
-                      <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-[#0e2a4a]">
-                        Room
-                      </p>
-
-                      <p className="mt-1.5 text-[15px] font-bold leading-5 text-[#0e2a4a]">
-                        {displayRoomNumbers}
-                      </p>
-
-                      <p className="mt-1 text-[12px] font-medium text-[#0e2a4a]">
-                        {firstRoom.roomType ||
-                          "Room"}
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                  {/* =========================================
-                      AMOUNT SUMMARY
-                  ========================================= */}
-
-                  <div className="mt-3 overflow-hidden rounded-xl border border-[#dbe6f5]">
-
-                    {/* TOTAL */}
-
-                    <div className="flex items-center justify-between gap-4 border-b border-[#e7eff8] px-4 py-3.5">
-
-                      <span className="text-[15px] font-medium text-[#0e2a4a]">
-                        Total Amount
+              {/* Payment Methods Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {[
+                  ["cash", <Banknote className="h-5 w-5" />, "Cash"],
+                  ["upi", <QrCode className="h-5 w-5" />, "UPI / QR"],
+                  ["card", <CreditCard className="h-5 w-5" />, "Credit / Debit"],
+                  ["bank", <Landmark className="h-5 w-5" />, "Bank Transfer"],
+                ].map(([key, icon, label]) => {
+                  const isSelected = paymentMethod === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      disabled={isProcessing}
+                      onClick={() => {
+                        setPaymentMethod(key);
+                        setErrorMessage("");
+                      }}
+                      className={`relative flex h-[68px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border transition-all duration-200 select-none ${
+                        isSelected
+                          ? "border-[#1e5ec8] bg-gradient-to-b from-[#2568e0] to-[#1a55c2] text-white shadow-md shadow-blue-500/25 scale-[1.01]"
+                          : "border-[#dbe6f5] bg-[#f8fafc] text-[#2c3e55] hover:border-[#b8d1f2] hover:bg-white"
+                      } disabled:cursor-not-allowed disabled:opacity-60 active:scale-95`}
+                    >
+                      <span className={isSelected ? "text-white" : "text-[#1e3a5f]"}>
+                        {icon}
                       </span>
-
-                      <span className="text-[16px] font-bold tabular-nums text-[#0e2a4a]">
-                        ₹
-                        {grandTotal.toFixed(
-                          2
-                        )}
+                      <span className="text-[12px] font-semibold tracking-tight whitespace-nowrap">
+                        {label}
                       </span>
+                      {isSelected && (
+                        <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-cyan-300" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
 
-                    </div>
-
-                    {/* ADVANCE */}
-
-                    <div className="flex items-center justify-between gap-4 border-b border-[#e7eff8] px-4 py-3.5">
-
-                      <span className="text-[15px] font-medium text-green-700">
-                        Advance Paid
-                      </span>
-
-                      <span className="text-[15px] font-semibold tabular-nums text-green-600">
-                        - ₹
-                        {advancePaid.toFixed(
-                          2
-                        )}
-                      </span>
-
-                    </div>
-
-                    {/* BALANCE */}
-
-                    <div className="flex items-center justify-between gap-4 bg-[#EAF8F5] px-4 py-4">
-
-                      <div>
-
-                        <p className="text-[14px] font-bold uppercase tracking-[0.1em] text-green-800">
-                          Balance Due
-                        </p>
-
-                        <p className="mt-0.5 text-[12px] font-medium text-[#0e2a4a]">
-                          Amount to collect
-                        </p>
-
-                      </div>
-
-                      <p className="text-[21px] font-extrabold tabular-nums text-[#00796B] sm:text-[23px]">
-                        ₹
-                        {currentPayment.toFixed(
-                          2
-                        )}
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-              </section>
-
-              {/* =============================================
-                  ERROR
-              ============================================= */}
-
+              {/* Error Message if any */}
               {errorMessage && (
-                <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
-
+                <div className="mt-3.5 flex items-start gap-2.5 rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2.5">
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
-
-                  <p className="text-[11px] leading-5 text-rose-700">
+                  <p className="text-[12px] font-medium leading-5 text-rose-700">
                     {errorMessage}
                   </p>
-
                 </div>
               )}
 
-              {/* =============================================
-                  PAYMENT METHOD
-              ============================================= */}
+              {/* Action Buttons: Confirm & Cancel */}
+              <div className="mt-5 space-y-2.5">
+                <button
+                  type="button"
+                  onClick={handlePayment}
+                  disabled={isProcessing}
+                  className="
+                    group/pay
+                    relative overflow-hidden w-full h-[46px] min-h-[46px] cursor-pointer
+                    flex items-center justify-center gap-2 rounded-lg
+                    bg-gradient-to-r from-orange-500 via-orange-500 to-amber-400
+                    hover:from-orange-600 hover:via-orange-500 hover:to-amber-500
+                    active:scale-[0.99]
+                    text-[14px] font-semibold text-white
+                    shadow-[0_2px_10px_rgba(249,115,22,0.35)]
+                    hover:shadow-[0_4px_16px_rgba(249,115,22,0.5)]
+                    transition-all duration-200
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                  "
+                >
+                  <span className="absolute inset-0 translate-x-[-100%] group-hover/pay:translate-x-[100%] transition-transform duration-500 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
 
-              <section className="mt-3 overflow-hidden rounded-[15px] border border-[#dbe6f5] bg-white shadow-[0_2px_10px_rgba(15,23,42,0.035)]">
+                  {isProcessing ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      <span>Processing Payment & Finalizing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Confirm Payment (₹{currentPayment.toFixed(2)})</span>
+                    </>
+                  )}
+                </button>
 
-                <div className="px-5 pb-2 pt-5 sm:px-6">
-
-                  <div className="flex items-center gap-2.5">
-
-                    <CreditCard
-                      className="h-[19px] w-[19px] text-black"
-                    />
-
-                    <h2 className="text-[17px] font-bold tracking-[-0.01em] text-[#0e2a4a]">
-                      Payment Method
-                    </h2>
-
-                  </div>
-
-                </div>
-
-                <div className="p-4 sm:px-5 sm:pb-5">
-
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-
-                    {[
-                      [
-                        "cash",
-                        <Banknote className="h-[21px] w-[21px]" />,
-                        "Cash",
-                      ],
-
-                      [
-                        "upi",
-                        <QrCode className="h-[21px] w-[21px]" />,
-                        "UPI",
-                      ],
-
-                      [
-                        "card",
-                        <CreditCard className="h-[21px] w-[21px]" />,
-                        "Card",
-                      ],
-
-                      [
-                        "bank",
-                        <Landmark className="h-[21px] w-[21px]" />,
-                        "Bank Transfer",
-                      ],
-                    ].map(
-                      ([
-                        key,
-                        icon,
-                        label,
-                      ]) => (
-                        <button
-                          key={key}
-                          type="button"
-                          disabled={
-                            isProcessing
-                          }
-                          onClick={() => {
-                            setPaymentMethod(
-                              key
-                            );
-
-                            setErrorMessage(
-                              ""
-                            );
-                          }}
-                          className={`flex h-[72px] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border text-[11px] font-semibold transition-all duration-200 ${
-                            paymentMethod ===
-                            key
-                              ? "border-black bg-[#2568e0] text-white shadow-[0_7px_16px_rgba(0,0,0,0.14)]"
-                              : "border-[#dbe6f5] bg-[#F6F7F8] text-[#0e2a4a] hover:border-[#c7d8f0] hover:bg-[#f4f8fd]"
-                          } disabled:cursor-not-allowed disabled:opacity-60`}
-                        >
-
-                          <span
-                            className={
-                              paymentMethod ===
-                              key
-                                ? "text-white"
-                                : "text-slate-950"
-                            }
-                          >
-                            {icon}
-                          </span>
-
-                          <span className="whitespace-nowrap">
-                            {label}
-                          </span>
-
-                        </button>
-                      )
-                    )}
-
-                  </div>
-
-                  {/* =========================================
-                      CONFIRM PAYMENT
-                  ========================================= */}
-
-                  <button
-                    type="button"
-                    onClick={handlePayment}
-                    disabled={isProcessing}
-                    className="
-                      group/co
-                      mt-4 flex h-[54px] w-full cursor-pointer relative overflow-hidden
-                      items-center justify-center gap-2 rounded-xl
-                      bg-gradient-to-r from-orange-500 via-orange-500 to-amber-400
-                      hover:from-orange-600 hover:via-orange-500 hover:to-amber-500
-                      active:scale-[0.98]
-                      text-[15px] font-bold text-white
-                      shadow-[0_4px_14px_rgba(249,115,22,0.4)]
-                      hover:shadow-[0_6px_20px_rgba(249,115,22,0.55)]
-                      transition-all duration-200
-                      disabled:opacity-50 disabled:cursor-not-allowed
-                    "
-                  >
-                    <span className="absolute inset-0 translate-x-[-100%] group-hover/co:translate-x-[100%] transition-transform duration-500 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
-
-                    {isProcessing ? (
-                      <>
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-
-                        Processing Payment...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="h-[17px] w-[17px]" />
-
-                        Confirm Payment &amp; Complete Checkout
-                      </>
-                    )}
-
-                  </button>
-
-                </div>
-
-              </section>
-
+                <button
+                  type="button"
+                  onClick={onBack}
+                  disabled={isProcessing}
+                  className="w-full h-[40px] cursor-pointer rounded-lg border border-[#dbe6f5] bg-white hover:bg-[#f4f8fd] text-[#556982] hover:text-[#0e2a4a] text-[13px] font-medium transition flex items-center justify-center active:scale-[0.99] disabled:opacity-50"
+                >
+                  Back to Checkout Details
+                </button>
+              </div>
             </div>
-
-          </div>
+          </section>
 
         </div>
-
       </div>
-
-     
     </div>
   );
 }

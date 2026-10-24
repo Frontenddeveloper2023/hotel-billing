@@ -691,7 +691,7 @@ const SaaSAdminPlans = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
           <StatCard index={1} title="Total Plans" value={plans.length} icon={Package} cls="bg-[#EAF3FF] text-[#2568e0]" valueCls="text-[#0e2a4a]" loading={loading} />
           <StatCard index={2} title="Active Plans" value={activePlans} icon={Check} cls="bg-[#E1FAF0] text-[#087A58]" valueCls="text-[#087A58]" loading={loading} />
-          <StatCard index={3} title="Inactive Plans" value={inactivePlans} icon={Settings2} cls="bg-slate-100 text-slate-600" valueCls="text-slate-600" loading={loading} />
+          <StatCard index={3} title="Inactive Plans" value={inactivePlans} icon={Settings2} cls="bg-slate-100 text-black" valueCls="text-black" loading={loading} />
         </div>
 
         {/* FREE TRIAL SETTINGS CARD */}
@@ -703,27 +703,27 @@ const SaaSAdminPlans = () => {
     
     {/* Left Info Group */}
     <div className="flex items-start gap-3.5">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700 border border-slate-200/80">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-black border border-slate-200/80">
         <Sparkles size={20} />
       </div>
 
       <div className="space-y-1">
         <div className="flex flex-wrap items-center gap-2">
-          <h3 className="text-base sm:text-lg font-semibold tracking-tight text-slate-900">
+          <h3 className="text-base sm:text-lg font-semibold tracking-tight text-black">
             Free Trial Access
           </h3>
           <span
             className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${
               trialConfig.isEnabled
                 ? "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20"
-                : "bg-slate-100 text-slate-600"
+                : "bg-slate-100 text-black"
             }`}
           >
             {trialConfig.isEnabled ? "Enabled" : "Disabled"}
           </span>
         </div>
 
-        <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-xl">
+        <p className="text-xs sm:text-sm text-black leading-relaxed max-w-xl">
 Choose how many days new hotel owners get free trial access.        </p>
       </div>
     </div>
@@ -734,14 +734,14 @@ Choose how many days new hotel owners get free trial access.        </p>
       className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100"
     >
       {/* Toggle Checkbox */}
-      <label className="inline-flex cursor-pointer select-none items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-xs sm:text-sm font-medium text-slate-700 transition hover:bg-slate-100/70">
+      <label className="inline-flex cursor-pointer select-none items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2 text-xs sm:text-sm font-medium text-black transition hover:bg-slate-100/70">
         <input
           type="checkbox"
           checked={trialConfig.isEnabled}
           onChange={(e) =>
             setTrialConfig((prev) => ({ ...prev, isEnabled: e.target.checked }))
           }
-          className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 cursor-pointer"
+          className="h-4 w-4 rounded border-slate-300 text-black focus:ring-slate-900 cursor-pointer"
         />
         <span>Allow Free Trial</span>
       </label>
@@ -759,9 +759,9 @@ Choose how many days new hotel owners get free trial access.        </p>
               trialDays: Math.max(1, Number(e.target.value) || 1),
             }))
           }
-          className="w-14 rounded-md border border-slate-200 bg-slate-50 py-1 text-center text-xs sm:text-sm font-semibold text-slate-900 outline-none focus:border-slate-400 focus:bg-white"
+          className="w-14 rounded-md border border-slate-200 bg-slate-50 py-1 text-center text-xs sm:text-sm font-semibold text-black outline-none focus:border-slate-400 focus:bg-white"
         />
-        <span className="text-xs font-medium text-slate-500">Days</span>
+        <span className="text-xs font-medium text-black">Days</span>
       </div>
 
       {/* Save Button */}
@@ -771,7 +771,7 @@ Choose how many days new hotel owners get free trial access.        </p>
         className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs sm:text-sm font-medium text-white shadow-sm transition-all hover:bg-slate-800 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900"
       >
         {trialSaving ? (
-          <RefreshCw size={15} className="animate-spin text-slate-300" />
+          <RefreshCw size={15} className="animate-spin text-black" />
         ) : (
           <Check size={15} />
         )}
@@ -803,7 +803,7 @@ Choose how many days new hotel owners get free trial access.        </p>
 
       <div className="space-y-1">
         <div className="flex flex-wrap items-center gap-2">
-          <h3 className="text-base sm:text-lg font-semibold tracking-tight text-slate-900">
+          <h3 className="text-base sm:text-lg font-semibold tracking-tight text-black">
             Global Billing Cycles
           </h3>
           <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-600/20">
@@ -811,7 +811,7 @@ Choose how many days new hotel owners get free trial access.        </p>
           </span>
         </div>
 
-        <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-xl">
+        <p className="text-xs sm:text-sm text-black leading-relaxed max-w-xl">
           Enable or disable billing cycle options globally across all plans. Disabled cycles will be completely hidden from the user UI.
         </p>
       </div>
@@ -837,7 +837,7 @@ Choose how many days new hotel owners get free trial access.        </p>
               className={`inline-flex cursor-pointer select-none items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-all ${
                 isChecked
                   ? "border-blue-300 bg-blue-50 text-blue-800 shadow-xs"
-                  : "border-slate-200 bg-slate-50 text-slate-400 hover:bg-slate-100"
+                  : "border-slate-200 bg-slate-50 text-black hover:bg-slate-100"
               }`}
             >
               <input
@@ -864,7 +864,7 @@ Choose how many days new hotel owners get free trial access.        </p>
         className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs sm:text-sm font-medium text-white shadow-sm transition-all hover:bg-slate-800 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {cyclesSaving ? (
-          <RefreshCw size={15} className="animate-spin text-slate-300" />
+          <RefreshCw size={15} className="animate-spin text-black" />
         ) : (
           <Check size={15} />
         )}
@@ -892,15 +892,25 @@ Choose how many days new hotel owners get free trial access.        </p>
 
         {/* SEARCH */}
        <div style={delay(4)} className="sp-in relative flex flex-row items-center justify-between w-full gap-3 mb-6">
-  <div className="relative w-80">
-    <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-100" />
+  <div className="relative w-full sm:w-80">
+    <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-500 pointer-events-none" />
     <input
       type="text"
       value={search}
       onChange={(e) => setSearch(e.target.value)}
       placeholder="Search plans by name or description..."
-      className="w-full pl-12 pr-4 h-10 rounded-xl bg-white/10 border border-white/20 backdrop-blur-md text-sm text-white placeholder:text-blue-100/60 outline-none focus:bg-white/15 focus:border-white/40 focus:ring-2 focus:ring-white/20 transition"
+      className="staylio-search-input"
     />
+    {search && (
+      <button
+        type="button"
+        onClick={() => setSearch("")}
+        aria-label="Clear search"
+        className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-black hover:bg-slate-100 transition cursor-pointer"
+      >
+        <X size={16} />
+      </button>
+    )}
   </div>
 
   <button
@@ -1087,7 +1097,7 @@ Choose how many days new hotel owners get free trial access.        </p>
                             <span>Customer Preview:</span>
                             <div className="flex items-baseline gap-2">
                               {actualVal > offerVal && (
-                                <span className="line-through text-slate-400 font-medium">
+                                <span className="line-through text-black font-medium">
                                   {formatCurrency(actualVal)}
                                 </span>
                               )}
@@ -1135,7 +1145,7 @@ Choose how many days new hotel owners get free trial access.        </p>
                   type="button"
                   onClick={handleCloseModal}
                   disabled={saving}
-                  className="flex-1 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold disabled:opacity-50 transition cursor-pointer"
+                  className="flex-1 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-black text-sm font-semibold disabled:opacity-50 transition cursor-pointer"
                 >
                   Cancel
                 </button>

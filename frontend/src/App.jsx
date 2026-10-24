@@ -287,9 +287,12 @@ const isAuthenticated = Boolean(currentUser);
   // -------------------------------------------------
 
   if (!isAuthenticated) {
+    // If accessing an admin route or last known as admin, redirect to /login
+    // Otherwise redirect hotel owners, receptionists, and hotel management users to /hotel-login
+    const redirectTarget = isAdminRoute ? "/login" : "/hotel-login";
     return (
       <Navigate
-        to="/login"
+        to={redirectTarget}
         replace
       />
     );
@@ -540,7 +543,11 @@ element={
               <Layout />
             ) : (
               <Navigate
-                to="/login"
+                to={
+                  (sessionStorage.getItem("hotelPortal") || localStorage.getItem("cachedHotelUser"))
+                    ? "/hotel-login"
+                    : (localStorage.getItem("cachedAdminUser") ? "/login" : "/hotel-login")
+                }
                 replace
               />
             )

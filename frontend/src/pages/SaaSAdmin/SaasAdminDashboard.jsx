@@ -46,7 +46,7 @@ const getStatusClass = (status) => {
     case "suspended":
       return "bg-orange-50 text-orange-700 border-orange-200";
     default:
-      return "bg-slate-50 text-slate-600 border-slate-200";
+      return "bg-slate-50 text-black border-slate-200";
   }
 };
 
@@ -181,8 +181,8 @@ const Skeleton = ({ n = 4, h = "h-16" }) => (
 
 const Empty = ({ icon: Icon, text }) => (
   <div className="p-10 text-center flex-1">
-    <Icon size={32} className="mx-auto text-slate-300" />
-    <p className="mt-3 text-sm text-slate-500">{text}</p>
+    <Icon size={32} className="mx-auto text-black" />
+    <p className="mt-3 text-sm text-black">{text}</p>
   </div>
 );
 

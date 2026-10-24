@@ -56,10 +56,10 @@ const featureInfo = {
 ========================================================= */
 
 const labelCls =
-    "block text-xs font-semibold text-slate-700 mb-1.5";
+    "block text-xs font-semibold text-black mb-1.5";
 
 const inputCls = (hasError) =>
-    `w-full pl-9 pr-4 py-2.5 text-sm text-[#0a1a3f] rounded-xl border outline-none transition-all duration-200 placeholder:text-slate-400 disabled:opacity-60 disabled:cursor-not-allowed ${
+    `w-full pl-9 pr-4 py-2.5 text-sm text-[#0a1a3f] rounded-xl border outline-none transition-all duration-200 placeholder:text-black disabled:opacity-60 disabled:cursor-not-allowed ${
         hasError
             ? "border-red-400 bg-red-50/60 focus:ring-2 focus:ring-red-100"
             : "border-[#dbe6f8] bg-[#eff6ff]/40 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -231,7 +231,7 @@ const canSubmitForm =
                                 : "Add Receptionist"}
                         </h2>
 
-                        <p className="text-[11px] text-slate-400">
+                        <p className="text-[11px] text-black">
                             {isSelfEdit
                                 ? "Update your own name and email."
                                 : editingPrivilegedUser
@@ -246,7 +246,7 @@ const canSubmitForm =
                     disabled={isSaving}
                     onClick={onCancel}
                     aria-label="Close"
-                    className="w-9 h-9 shrink-0 flex items-center justify-center rounded-lg text-slate-400 hover:bg-[#eff6ff] hover:text-blue-700 active:scale-95 transition-all duration-200 disabled:opacity-50"
+                    className="w-9 h-9 shrink-0 flex items-center justify-center rounded-lg text-black hover:bg-[#eff6ff] hover:text-blue-700 active:scale-95 transition-all duration-200 disabled:opacity-50"
                 >
                     <X className="w-5 h-5" />
                 </button>
@@ -274,7 +274,7 @@ const canSubmitForm =
                                 )}
                             </div>
 
-                            <p className="text-[11px] text-slate-500 mt-0.5">
+                            <p className="text-[11px] text-black mt-0.5">
                                 {isSelfEdit
                                     ? "You can update only your own basic profile details."
                                     : editingPrivilegedUser
@@ -285,7 +285,7 @@ const canSubmitForm =
 
                         {receptionistLimit > 0 && (
                             <div className="text-left sm:text-right">
-                                <p className="text-[10px] font-semibold text-slate-400">
+                                <p className="text-[10px] font-semibold text-black">
                                     Receptionists
                                 </p>
 
@@ -468,16 +468,16 @@ const canSubmitForm =
                                     <div className="rounded-xl border border-[#dbe6f8] bg-[#eff6ff]/60 p-4">
                                         <div className="flex items-start gap-3">
                                             <div className="w-9 h-9 rounded-lg bg-white border border-[#dbe6f8] flex items-center justify-center shrink-0">
-                                                <Lock className="w-4 h-4 text-slate-400" />
+                                                <Lock className="w-4 h-4 text-black" />
                                             </div>
 
                                             <div>
-                                                <p className="text-xs font-bold text-slate-700">
+                                                <p className="text-xs font-bold text-black">
                                                     Upgrade your Plan to Add
                                                     More Receptionist
                                                 </p>
 
-                                                <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                                                <p className="text-[11px] text-black mt-1 leading-relaxed">
                                                     All receptionist seats
                                                     included in your current
                                                     plan are already in use.
@@ -597,13 +597,13 @@ const canSubmitForm =
                                             Permissions
                                         </h3>
 
-                                        <p className="text-[11px] text-slate-400 mt-0.5">
+                                        <p className="text-[11px] text-black mt-0.5">
                                             Choose which modules this
                                             receptionist can access.
                                         </p>
                                     </div>
 
-                                    <span className="text-[10px] text-slate-400">
+                                    <span className="text-[10px] text-black">
                                         Subscription controlled
                                     </span>
                                 </div>
@@ -640,7 +640,7 @@ const canSubmitForm =
                                                 <div
                                                     className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-colors duration-200 ${
                                                         locked
-                                                            ? "bg-slate-100 text-slate-400"
+                                                            ? "bg-slate-100 text-black"
                                                             : value
                                                               ? "bg-gradient-to-br from-blue-500 to-[#12306b] text-white"
                                                               : "bg-[#eff6ff] text-blue-500"
@@ -657,7 +657,7 @@ const canSubmitForm =
                                                     <p
                                                         className={`text-xs font-bold ${
                                                             locked
-                                                                ? "text-slate-500"
+                                                                ? "text-black"
                                                                 : "text-[#0a1a3f]"
                                                         }`}
                                                     >
@@ -666,7 +666,7 @@ const canSubmitForm =
                                                         ] || key}
                                                     </p>
 
-                                                    <p className="text-[10px] text-slate-400 mt-0.5">
+                                                    <p className="text-[10px] text-black mt-0.5">
                                                         {locked
                                                             ? "Not included in current plan"
                                                             : value
@@ -685,7 +685,7 @@ const canSubmitForm =
                                                     }`}
                                                 >
                                                     {locked ? (
-                                                        <Lock className="w-3 h-3 text-slate-400" />
+                                                        <Lock className="w-3 h-3 text-black" />
                                                     ) : (
                                                         <Check
                                                             className={`w-3 h-3 stroke-[3] transition-transform duration-200 ${
@@ -714,7 +714,7 @@ const canSubmitForm =
                             type="button"
                             disabled={isSaving}
                             onClick={onCancel}
-                            className="px-4 py-2.5 text-sm font-semibold text-slate-700 bg-white border border-[#dbe6f8] hover:bg-[#eff6ff] active:scale-[0.98] rounded-xl transition-all duration-200 disabled:opacity-50"
+                            className="px-4 py-2.5 text-sm font-semibold text-black bg-white border border-[#dbe6f8] hover:bg-[#eff6ff] active:scale-[0.98] rounded-xl transition-all duration-200 disabled:opacity-50"
                         >
                             Cancel
                         </button>
@@ -724,7 +724,7 @@ const canSubmitForm =
                             disabled={
                                 isSaving || !canSubmitForm || detailsLocked
                             }
-                            className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-[#12306b] to-blue-600 rounded-xl shadow-md shadow-blue-600/25 hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 motion-reduce:transform-none disabled:from-slate-300 disabled:to-slate-300 disabled:text-slate-500 disabled:shadow-none disabled:translate-y-0 disabled:cursor-not-allowed"
+                            className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-[#12306b] to-blue-600 rounded-xl shadow-md shadow-blue-600/25 hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 motion-reduce:transform-none disabled:from-slate-300 disabled:to-slate-300 disabled:text-black disabled:shadow-none disabled:translate-y-0 disabled:cursor-not-allowed"
                         >
                             {isSaving ? (
                                 <>

@@ -26,7 +26,7 @@ function FoodList({ foods, onEdit, onDelete }) {
                 </div>
                 <div className="min-w-0">
                     <h2 className="text-sm font-bold text-[#0a1a3f]">Food Menu</h2>
-                    <p className="mt-0.5 text-xs text-slate-400">
+                    <p className="mt-0.5 text-xs text-black">
                         {foods.length} food {foods.length === 1 ? "item" : "items"}
                     </p>
                 </div>

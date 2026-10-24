@@ -240,7 +240,7 @@ const customSelectStyles = {
 // ============================================================
 
 const inputClass = (hasError, extra = "") =>
-  `st-input w-full text-sm rounded-xl border outline-none text-slate-900 placeholder:text-slate-400 disabled:opacity-60 disabled:cursor-not-allowed ${hasError
+  `st-input w-full text-sm rounded-xl border outline-none text-black placeholder:text-black disabled:opacity-60 disabled:cursor-not-allowed ${hasError
     ? "border-red-400 bg-red-50/40"
     : "border-slate-200 bg-slate-50/70"
   } ${extra}`;
@@ -258,7 +258,7 @@ const Field = memo(function Field({
     <div className={`flex flex-col gap-1.5 min-w-0 ${className}`}>
       <label
         htmlFor={htmlFor}
-        className="text-xs font-semibold text-slate-700"
+        className="text-xs font-semibold text-black"
       >
         {label}
         {required && (
@@ -269,7 +269,7 @@ const Field = memo(function Field({
       {children}
 
       {hint && (
-        <span className="text-[11px] text-slate-400">
+        <span className="text-[11px] text-black">
           {hint}
         </span>
       )}
@@ -303,7 +303,7 @@ const SectionCard = memo(function SectionCard({
           <h2 className="text-sm sm:text-base font-bold text-[#0f2a63]">
             {title}
           </h2>
-          <p className="text-[11px] sm:text-xs text-slate-500">
+          <p className="text-[11px] sm:text-xs text-black">
             {subtitle}
           </p>
         </div>
@@ -326,7 +326,7 @@ const PolicyCard = memo(function PolicyCard({
         <h3 className="text-sm font-bold text-[#0f2a63]">
           {title}
         </h3>
-        <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+        <p className="text-[11px] sm:text-xs text-black mt-0.5">
           {subtitle}
         </p>
       </div>
@@ -982,7 +982,7 @@ export default function Settings() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="st-pop flex flex-col items-center gap-3 rounded-2xl bg-white px-8 py-7 shadow-lg shadow-blue-900/10 border border-blue-100">
           <Spinner />
-          <span className="text-xs font-medium text-slate-500">
+          <span className="text-xs font-medium text-black">
             Loading settings...
           </span>
         </div>
@@ -1011,17 +1011,17 @@ export default function Settings() {
         />
       </Helmet>
 
-      <main className="w-full max-w-6xl mx-auto space-y-5 sm:space-y-6 pb-8">
+      <main className="w-full max-w-6xl mx-auto space-y-5 sm:space-y-6">
         {/* HEADER */}
 
-        <header className="st-rise st-d1 flex flex-col gap-3 pb-4 sm:pb-5 border-b border-white/20">
+        <header className="st-rise st-d1 flex flex-col gap-3 ">
 
 
           <div className="flex items-start gap-3">
 
 
             <div className="min-w-0">
-<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">     
+<h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight text-white leading-tight">     
                               System Settings
               </h1>
 
@@ -1158,7 +1158,7 @@ export default function Settings() {
                   <div className="flex items-center gap-2 min-w-0">
                     <Percent className="w-4 h-4 shrink-0 text-blue-600" />
 
-                    <span className="text-xs font-semibold text-slate-700">
+                    <span className="text-xs font-semibold text-black">
                       GST Tax Calculation
                     </span>
                   </div>
@@ -1204,7 +1204,7 @@ export default function Settings() {
                           )}
                         />
 
-                        <span className="text-xs font-medium text-slate-600">
+                        <span className="text-xs font-medium text-black">
                           % GST rate applied automatically on invoices
                         </span>
                       </div>
@@ -1317,17 +1317,17 @@ export default function Settings() {
 
               <div className="flex flex-col gap-3 md:col-span-2">
                 <div className="flex flex-col">
-                  <span className="text-xs font-semibold text-slate-700">
+                  <span className="text-xs font-semibold text-black">
                     Company Logo
                   </span>
 
-                  <span className="text-[11px] text-slate-500 mt-0.5">
+                  <span className="text-[11px] text-black mt-0.5">
                     Supported formats:{" "}
-                    <strong className="text-slate-700">
+                    <strong className="text-black">
                       JPG, JPEG, PNG
                     </strong>{" "}
                     · Max size:{" "}
-                    <strong className="text-slate-700">1MB</strong>
+                    <strong className="text-black">1MB</strong>
                   </span>
                 </div>
 
@@ -1374,7 +1374,7 @@ export default function Settings() {
                       </button>
                     </div>
                   ) : (
-                    <span className="text-xs text-slate-400 font-medium">
+                    <span className="text-xs text-black font-medium">
                       No logo uploaded yet
                     </span>
                   )}
@@ -1403,7 +1403,7 @@ export default function Settings() {
                   onChange={handleInputChange}
                   disabled={isSaving}
                   aria-label="Before 12 PM rate type"
-                  className="st-input px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-slate-800 outline-none cursor-pointer"
+                  className="st-input px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-black outline-none cursor-pointer"
                 >
                   <option value="percentage">% of Room Rate</option>
                   <option value="flat">Flat Amount (₹)</option>
@@ -1442,7 +1442,7 @@ export default function Settings() {
                   onChange={handleInputChange}
                   disabled={isSaving}
                   aria-label="After 12 PM rate type"
-                  className="st-input px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-slate-800 outline-none cursor-pointer"
+                  className="st-input px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-white text-black outline-none cursor-pointer"
                 >
                   <option value="full">Full Day Charge</option>
                   <option value="flat">Flat Amount (₹)</option>

@@ -276,10 +276,10 @@ export default function AddRoom({
                 {/* HEADER */}
                 <div className="flex items-center justify-between px-6 py-4 sm:py-5 border-b border-slate-100 bg-white shrink-0">
                     <div>
-                        <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                        <h2 className="text-base sm:text-lg font-bold text-black">
                             Add New Room
                         </h2>
-                        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                        <p className="text-xs sm:text-sm text-black mt-0.5">
                             Add a new room to your hotel.
                         </p>
                     </div>
@@ -288,7 +288,7 @@ export default function AddRoom({
                         type="button"
                         onClick={handleClose}
                         disabled={addingRoom}
-                        className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition disabled:opacity-50 cursor-pointer"
+                        className="w-9 h-9 rounded-lg flex items-center justify-center text-black hover:text-black hover:bg-slate-100 transition disabled:opacity-50 cursor-pointer"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -336,7 +336,7 @@ export default function AddRoom({
                             <div className="sm:col-span-2">
                                 <label
                                     htmlFor="roomNumber"
-                                    className="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5"
+                                    className="block text-xs sm:text-sm font-bold text-black mb-1.5"
                                 >
                                     Room Number *
                                 </label>
@@ -349,7 +349,7 @@ export default function AddRoom({
                                     onChange={handleChange}
                                     placeholder="Example: 101"
                                     disabled={addingRoom}
-                                    className={`w-full px-3.5 py-2.5 sm:py-3 border rounded-xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none transition ${
+                                    className={`w-full px-3.5 py-2.5 sm:py-3 border rounded-xl text-xs sm:text-sm text-black placeholder:text-black outline-none transition ${
                                         fieldErrors.roomNumber
                                             ? "border-red-500 bg-red-50/20 ring-2 ring-red-500/20"
                                             : "border-slate-200 focus:border-[var(--teal,#08838d)] focus:ring-2 focus:ring-[var(--teal,#08838d)]/20"
@@ -367,7 +367,7 @@ export default function AddRoom({
                             <div>
                                 <label
                                     htmlFor="roomType"
-                                    className="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5"
+                                    className="block text-xs sm:text-sm font-bold text-black mb-1.5"
                                 >
                                     Room Type *
                                 </label>
@@ -378,7 +378,7 @@ export default function AddRoom({
                                     value={roomForm.roomType}
                                     onChange={handleChange}
                                     disabled={addingRoom}
-                                    className={`w-full px-3.5 py-2.5 sm:py-3 border rounded-xl text-xs sm:text-sm text-slate-900 bg-white outline-none transition cursor-pointer ${
+                                    className={`w-full px-3.5 py-2.5 sm:py-3 border rounded-xl text-xs sm:text-sm text-black bg-white outline-none transition cursor-pointer ${
                                         fieldErrors.roomType
                                             ? "border-red-500 bg-red-50/20 ring-2 ring-red-500/20"
                                             : "border-slate-200 focus:border-[var(--teal,#08838d)] focus:ring-2 focus:ring-[var(--teal,#08838d)]/20"
@@ -400,7 +400,7 @@ export default function AddRoom({
                             <div>
                                 <label
                                     htmlFor="bedType"
-                                    className="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5"
+                                    className="block text-xs sm:text-sm font-bold text-black mb-1.5"
                                 >
                                     Bed Type *
                                 </label>
@@ -411,7 +411,7 @@ export default function AddRoom({
                                     value={roomForm.bedType}
                                     onChange={handleChange}
                                     disabled={addingRoom}
-                                    className={`w-full px-3.5 py-2.5 sm:py-3 border rounded-xl text-xs sm:text-sm text-slate-900 bg-white outline-none transition cursor-pointer ${
+                                    className={`w-full px-3.5 py-2.5 sm:py-3 border rounded-xl text-xs sm:text-sm text-black bg-white outline-none transition cursor-pointer ${
                                         fieldErrors.bedType
                                             ? "border-red-500 bg-red-50/20 ring-2 ring-red-500/20"
                                             : "border-slate-200 focus:border-[var(--teal,#08838d)] focus:ring-2 focus:ring-[var(--teal,#08838d)]/20"
@@ -434,12 +434,12 @@ export default function AddRoom({
                             <div className="sm:col-span-2">
                                 <label
                                     htmlFor="pricePerNight"
-                                    className="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5"
+                                    className="block text-xs sm:text-sm font-bold text-black mb-1.5"
                                 >
                                     Price Per Night *
                                 </label>
                                 <div className="relative">
-                                    <IndianRupee className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <IndianRupee className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-black" />
                                     <input
                                         ref={pricePerNightRef}
                                         id="pricePerNight"
@@ -450,7 +450,7 @@ export default function AddRoom({
                                         onChange={handleChange}
                                         placeholder="Enter price per night"
                                         disabled={addingRoom}
-                                        className={`w-full pl-10 pr-3.5 py-2.5 sm:py-3 border rounded-xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none transition ${
+                                        className={`w-full pl-10 pr-3.5 py-2.5 sm:py-3 border rounded-xl text-xs sm:text-sm text-black placeholder:text-black outline-none transition ${
                                             fieldErrors.pricePerNight
                                                 ? "border-red-500 bg-red-50/20 ring-2 ring-red-500/20"
                                                 : "border-slate-200 focus:border-[var(--teal,#08838d)] focus:ring-2 focus:ring-[var(--teal,#08838d)]/20"
@@ -481,7 +481,7 @@ export default function AddRoom({
                         type="button"
                         onClick={handleClose}
                         disabled={addingRoom}
-                        className="w-full sm:w-auto px-5 py-2.5 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-700 bg-white hover:bg-slate-50 transition cursor-pointer shadow-sm"
+                        className="w-full sm:w-auto px-5 py-2.5 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-black bg-white hover:bg-slate-50 transition cursor-pointer shadow-sm"
                     >
                         Cancel
                     </button>
@@ -509,7 +509,7 @@ export default function AddRoom({
                         ) : (
                             <>
                                 <Plus className="w-4 h-4" />
-                                Add Room
+                                Add Room 
                             </>
                         )}
                     </button>

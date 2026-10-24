@@ -5,10 +5,11 @@ import { useToast } from "../Context/ToastContext";
 import {
   LayoutDashboard, LogOut, Menu, X, ShieldCheck as UserShield, BedDouble, FileText,
   UtensilsCrossed, Wrench, Receipt, Users, SlidersHorizontal, Building2, CreditCard, Bell,
-  BarChart3,
+  BarChart3, DoorOpen, LogIn, WifiOff, Wifi,
 } from "lucide-react";
 
 import logo from "../../public/logo.png"
+import hotelWallpaper from "../../public/image/luxury_hotel_wallpaper.jpg";
 
 import { getSettings } from "../service/settingsService.js";
 import SubscriptionAlertBanner from "./SubscriptionAlertBanner";
@@ -32,12 +33,34 @@ const getLogoUrl = (logoPath) => {
 const ic = "w-5 h-5";
 
 export default function Layout() {
-  const { logoutUser, adminUser, hotelUser } = useAuth();
+  const { logoutUser, adminUser, hotelUser, isOnline } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [companyLogo, setCompanyLogo] = useState(null);
+  const [reconnectedNotice, setReconnectedNotice] = useState(false);
   const toast = useToast();
+
+  // Track if user was actually offline so we only show "reconnected" after a real disconnect
+  const wasOfflineRef = React.useRef(false);
+
+  React.useEffect(() => {
+    let timer;
+    if (!isOnline) {
+      wasOfflineRef.current = true;
+      setReconnectedNotice(false);
+    } else if (wasOfflineRef.current) {
+      // Reconnected only after having been offline
+      setReconnectedNotice(true);
+      wasOfflineRef.current = false;
+      timer = setTimeout(() => {
+        setReconnectedNotice(false);
+      }, 3500);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isOnline]);
 
   const isAdminRoute = location.pathname.startsWith("/saas-admin");
   const userData = isAdminRoute ? adminUser : hotelUser;
@@ -173,29 +196,34 @@ export default function Layout() {
   );
 
   return (
-    <div className="h-screen flex overflow-hidden font-['Inter'] bg-[radial-gradient(ellipse_at_top,#2a5288_0%,#16345e_45%,#0f2447_100%)]">
-      {/* DESKTOP SIDEBAR */}
-      <aside className="hidden md:flex md:w-60 lg:w-64 flex-col bg-white/[0.06] backdrop-blur-xl border-r border-white/10 shrink-0">
-        <div className="h-16 flex items-center gap-2.5 px-5 lg:px-6 border-b border-white/10">
+    <div 
+      className="h-screen flex overflow-hidden font-['Inter'] relative bg-cover bg-center bg-no-repeat bg-fixed"
+      style={{
+        backgroundImage: `linear-gradient(rgba(10, 25, 47, 0.15), rgba(10, 25, 47, 0.25)), url(${hotelWallpaper})`
+      }}
+    >
+      {/* DESKTOP SIDEBAR — Frosted Glassmorphism like Gmail */}
+      <aside className="hidden md:flex md:w-60 lg:w-64 flex-col bg-[#0e2a4a]/40 backdrop-blur-2xl border-r border-white/15 shrink-0 shadow-[0_4px_30px_rgba(0,0,0,0.2)]">
+        <div className="h-16 flex items-center gap-2.5 px-5 lg:px-6 border-b border-white/15 bg-white/[0.04]">
           <img src={companyLogo || logo} alt="StayLio" className="w-9 h-9 lg:w-10 lg:h-10 object-contain shrink-0 rounded" />
-          <span className="text-lg lg:text-xl font-bold tracking-tight text-white truncate">{brand}</span>
+          <span className="text-lg lg:text-xl font-bold tracking-tight text-white truncate drop-shadow-sm">{brand}</span>
         </div>
         <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto staylio-scrollbar">          {navigation.map((item) => renderNavItem(item, false))}
         </nav>
-        <div className="p-3 border-t border-white/10">{logoutBtn()}</div>
+        <div className="p-3 border-t border-white/15 bg-white/[0.02]">{logoutBtn()}</div>
       </aside>
 
       {/* MOBILE OVERLAY */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-40 bg-[#0b1d3d]/60 backdrop-blur-sm md:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* MOBILE SIDEBAR */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-[78vw] max-w-64 bg-[#132f57] border-r border-white/10 flex flex-col transition-transform duration-300 md:hidden ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed top-0 bottom-0 left-0 z-50 w-[78vw] max-w-64 bg-[#0e2a4a]/85 backdrop-blur-2xl border-r border-white/15 flex flex-col transition-transform duration-300 md:hidden ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
       >
-        <div className="h-16 flex items-center justify-between px-4 sm:px-5 border-b border-white/10">
+        <div className="h-16 flex items-center justify-between px-4 sm:px-5 border-b border-white/15">
           <div className="flex items-center gap-2 min-w-0">
             <img src={companyLogo || logo} alt="SatylioLogo" className="w-9 h-9 object-contain shrink-0 rounded" />
             <span className="text-lg font-bold tracking-tight text-white truncate">{brand}</span>
@@ -209,12 +237,12 @@ export default function Layout() {
         </div>
         <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto staylio-scrollbar">          {navigation.map((item) => renderNavItem(item, true))}
         </nav>
-        <div className="p-3 border-t border-white/10">{logoutBtn()}</div>
+        <div className="p-3 border-t border-white/15">{logoutBtn()}</div>
       </aside>
 
-      {/* MAIN */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 bg-white/[0.06] backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-4 sm:px-6 shrink-0">
+      {/* MAIN CONTAINER */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+        <header className="h-16 bg-[#0e2a4a]/40 backdrop-blur-2xl border-b border-white/15 flex items-center justify-between px-4 sm:px-6 shrink-0 shadow-[0_2px_15px_rgba(0,0,0,0.1)]">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
@@ -222,9 +250,9 @@ export default function Layout() {
             >
               <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <h2 className="text-base lg:text-lg font-bold text-white truncate">{getHeaderTitle()}</h2>
+            <h2 className="text-base lg:text-lg font-bold text-white truncate drop-shadow-sm">{getHeaderTitle()}</h2>
             {userData?.branchName && (
-              <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 border border-white/15 rounded-xl text-xs font-medium text-blue-50">
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 bg-white/15 backdrop-blur-md border border-white/20 rounded-xl text-xs font-medium text-white shadow-sm">
                 <Building2 className="w-3.5 h-3.5 text-blue-200" />
                 {userData.branchName}
                 {userData?.isMainBranch ? " (Main Branch)" : ""}
@@ -233,9 +261,24 @@ export default function Layout() {
           </div>
         </header>
 
+        {/* NETWORK STATUS INDICATORS */}
+        {!isOnline && (
+          <div className="bg-amber-500/90 backdrop-blur-md text-amber-950 px-4 py-2 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 border-b border-amber-600/30 shadow-sm animate-pulse">
+            <WifiOff className="w-4 h-4 text-amber-950 shrink-0" />
+            <span>Internet connection lost. You are currently in offline mode — your session is preserved.</span>
+          </div>
+        )}
+
+        {isOnline && reconnectedNotice && (
+          <div className="bg-emerald-500/90 backdrop-blur-md text-white px-4 py-2 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 border-b border-emerald-600/30 shadow-sm transition-all duration-300">
+            <Wifi className="w-4 h-4 text-white shrink-0" />
+            <span>Internet reconnected!</span>
+          </div>
+        )}
+
         <SubscriptionAlertBanner />
 
-        <main className="flex-1 p-3 sm:p-4 lg:p-6 flex flex-col overflow-y-auto staylio-scrollbar">          <Suspense
+        <main className="flex-1 p-3 sm:p-4 lg:p-6 pb-20 md:pb-6 flex flex-col overflow-y-auto staylio-scrollbar">          <Suspense
           fallback={
             <div className="flex-1 flex items-center justify-center">
               <div className="flex items-center gap-2 text-sm text-blue-100">
@@ -249,12 +292,12 @@ export default function Layout() {
         </Suspense>
         </main>
 
-        <footer className="mt-auto py-2 text-center text-[11px] sm:text-xs text-blue-100/60 px-4">
+        <footer className="mt-auto py-2 text-center text-[11px] sm:text-xs text-white/80 px-4 drop-shadow-sm hidden md:block">
           <p>
             © {new Date().getFullYear()} Developed by{" "}
             <a
               href="https://jayamwebsolutions.com/"
-              className="font-semibold text-blue-200 hover:text-white hover:underline transition-colors"
+              className="font-semibold text-white hover:underline transition-colors"
               title="Jayam Web Solutions"
               target="_blank"
               rel="noreferrer"
@@ -264,6 +307,124 @@ export default function Layout() {
             . All rights reserved.
           </p>
         </footer>
+
+        {/* ========================================================
+            MOBILE FIXED BOTTOM NAVIGATION BAR (md:hidden)
+            Order: 1. Checkout | 2. Check-In | 3. Rooms Availability | 4. Settings
+        ======================================================== */}
+        {!isSaasPortalUser && (
+          <nav
+            aria-label="Mobile Navigation"
+            className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-[#0c223c]/95 backdrop-blur-xl border-t border-white/10 shadow-[0_-10px_30px_rgba(3,14,29,0.45)] px-2 pt-1.5 pb-2 shrink-0 w-full"
+            style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+          >
+            <div className="grid grid-cols-4 items-center gap-1.5 max-w-md mx-auto">
+              {/* 1. CHECKOUT */}
+              {(() => {
+                const isTabActive = location.pathname === "/rooms-booking" && location.search.includes("tab=currentStays");
+                return (
+                  <button
+                    type="button"
+                    onClick={() => navigate("/rooms-booking?tab=currentStays", { state: { tab: "currentStays" } })}
+                    className={`group relative flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl transition-all duration-200 active:scale-95 ${
+                      isTabActive
+                        ? "text-white bg-gradient-to-b from-blue-500/25 to-blue-600/15 border border-blue-400/30 shadow-[0_2px_12px_rgba(59,130,246,0.3)]"
+                        : "text-blue-200/70 hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    <div className="relative flex items-center justify-center">
+                      <LogOut className={`w-4 h-4 transition-transform duration-200 group-active:scale-90 ${isTabActive ? "text-cyan-300 stroke-[2.3]" : "stroke-[1.8]"}`} />
+                      {isTabActive && (
+                        <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cyan-400 ring-2 ring-[#0c223c] shadow-sm animate-pulse" />
+                      )}
+                    </div>
+                    <span className={`mt-1 text-[10px] font-semibold tracking-tight transition-colors duration-200 ${isTabActive ? "text-white font-bold" : "text-blue-200/80"}`}>
+                      Checkout
+                    </span>
+                  </button>
+                );
+              })()}
+
+              {/* 2. CHECK-IN */}
+              {(() => {
+                const isTabActive = location.pathname === "/rooms-booking" && location.search.includes("tab=booking");
+                return (
+                  <button
+                    type="button"
+                    onClick={() => navigate("/rooms-booking?tab=booking", { state: { tab: "booking" } })}
+                    className={`group relative flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl transition-all duration-200 active:scale-95 ${
+                      isTabActive
+                        ? "text-white bg-gradient-to-b from-blue-500/25 to-blue-600/15 border border-blue-400/30 shadow-[0_2px_12px_rgba(59,130,246,0.3)]"
+                        : "text-blue-200/70 hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    <div className="relative flex items-center justify-center">
+                      <LogIn className={`w-4 h-4 transition-transform duration-200 group-active:scale-90 ${isTabActive ? "text-cyan-300 stroke-[2.3]" : "stroke-[1.8]"}`} />
+                      {isTabActive && (
+                        <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cyan-400 ring-2 ring-[#0c223c] shadow-sm animate-pulse" />
+                      )}
+                    </div>
+                    <span className={`mt-1 text-[10px] font-semibold tracking-tight transition-colors duration-200 ${isTabActive ? "text-white font-bold" : "text-blue-200/80"}`}>
+                      Check-In
+                    </span>
+                  </button>
+                );
+              })()}
+
+              {/* 3. ROOMS AVAILABILITY */}
+              {(() => {
+                const isTabActive = location.pathname === "/rooms-booking" && (!location.search || location.search.includes("tab=availability"));
+                return (
+                  <button
+                    type="button"
+                    onClick={() => navigate("/rooms-booking?tab=availability", { state: { tab: "availability" } })}
+                    className={`group relative flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl transition-all duration-200 active:scale-95 ${
+                      isTabActive
+                        ? "text-white bg-gradient-to-b from-blue-500/25 to-blue-600/15 border border-blue-400/30 shadow-[0_2px_12px_rgba(59,130,246,0.3)]"
+                        : "text-blue-200/70 hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    <div className="relative flex items-center justify-center">
+                      <DoorOpen className={`w-4 h-4 transition-transform duration-200 group-active:scale-90 ${isTabActive ? "text-cyan-300 stroke-[2.3]" : "stroke-[1.8]"}`} />
+                      {isTabActive && (
+                        <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cyan-400 ring-2 ring-[#0c223c] shadow-sm animate-pulse" />
+                      )}
+                    </div>
+                    <span className={`mt-1 text-[10px] font-semibold tracking-tight transition-colors duration-200 ${isTabActive ? "text-white font-bold" : "text-blue-200/80"}`}>
+                      Rooms
+                    </span>
+                  </button>
+                );
+              })()}
+
+              {/* 4. SETTINGS */}
+              {(() => {
+                const isTabActive = location.pathname.startsWith("/settings");
+                return (
+                  <button
+                    type="button"
+                    onClick={() => navigate("/settings")}
+                    className={`group relative flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl transition-all duration-200 active:scale-95 ${
+                      isTabActive
+                        ? "text-white bg-gradient-to-b from-blue-500/25 to-blue-600/15 border border-blue-400/30 shadow-[0_2px_12px_rgba(59,130,246,0.3)]"
+                        : "text-blue-200/70 hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    <div className="relative flex items-center justify-center">
+                      <SlidersHorizontal className={`w-4 h-4 transition-transform duration-200 group-active:scale-90 ${isTabActive ? "text-cyan-300 stroke-[2.3]" : "stroke-[1.8]"}`} />
+                      {isTabActive && (
+                        <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cyan-400 ring-2 ring-[#0c223c] shadow-sm animate-pulse" />
+                      )}
+                    </div>
+                    <span className={`mt-1 text-[10px] font-semibold tracking-tight transition-colors duration-200 ${isTabActive ? "text-white font-bold" : "text-blue-200/80"}`}>
+                      Settings
+                    </span>
+                  </button>
+                );
+              })()}
+            </div>
+          </nav>
+        )}
       </div>
     </div>
   );

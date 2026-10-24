@@ -28,6 +28,7 @@ import {
     CheckCircle2,
     Lock,
     Sparkles,
+    X,
 } from "lucide-react";
 
 import { useToast } from "../../Context/ToastContext";
@@ -210,7 +211,7 @@ const GRID_STAFF =
     "md:grid-cols-[2.5rem_minmax(0,1.5fr)_7rem_minmax(0,2fr)_5.5rem]";
 
 const headCell =
-    "text-xs font-semibold text-slate-500";
+    "text-xs font-semibold text-black";
 
 /* =========================================================
    USER ROW (memoized: only re-renders when its own data changes)
@@ -270,7 +271,7 @@ const UserRow = memo(function UserRow({
                     <p className="font-bold text-[#0a1a3f] text-sm truncate">
                         {user.name}
                     </p>
-                    <p className="text-xs text-slate-500 truncate">
+                    <p className="text-xs text-black truncate">
                         {user.email}
                     </p>
                 </div>
@@ -282,7 +283,7 @@ const UserRow = memo(function UserRow({
                     className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-bold capitalize border ${
                         isPrivileged
                             ? "bg-[#eff6ff] text-blue-700 border-blue-200"
-                            : "bg-slate-50 text-slate-700 border-slate-200"
+                            : "bg-slate-50 text-black border-slate-200"
                     }`}
                 >
                     {user.role}
@@ -301,7 +302,7 @@ const UserRow = memo(function UserRow({
                         {permissionChips.map(([key]) => (
                             <span
                                 key={key}
-                                className="px-2 py-1 text-[10px] bg-slate-50 text-slate-700 rounded-md border border-slate-200 font-semibold"
+                                className="px-2 py-1 text-[10px] bg-slate-50 text-black rounded-md border border-slate-200 font-semibold"
                             >
                                 {key
                                     .replace(/([A-Z])/g, " $1")
@@ -1351,7 +1352,7 @@ export default function User() {
                 {/* =================================================
                     HEADER
                     (white text is for the navy gradient from Layout;
-                     on a light Layout use text-[#0a1a3f] / text-slate-500)
+                     on a light Layout use text-[#0a1a3f] / text-black)
                 ================================================= */}
 
                 <Reveal>
@@ -1361,7 +1362,7 @@ export default function User() {
                       
 
                         <div className="min-w-0">
-<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">     
+<h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight text-white leading-tight">     
                                Users Management
                             </h1>
 
@@ -1403,7 +1404,7 @@ export default function User() {
                                             </div>
 
                                             <div className="min-w-0">
-                                                <p className="text-xs font-semibold text-slate-400">
+                                                <p className="text-xs font-semibold text-black">
                                                     Current plan
                                                 </p>
 
@@ -1419,10 +1420,10 @@ export default function User() {
                                                 </div>
 
                                                 {subscription?.endDate && (
-                                                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
+                                                    <p className="text-xs text-black mt-1 flex items-center gap-1.5">
                                                         <CalendarDays className="w-3.5 h-3.5" />
                                                         Valid until{" "}
-                                                        <strong className="text-slate-700">
+                                                        <strong className="text-black">
                                                             {formatDate(
                                                                 subscription.endDate
                                                             )}
@@ -1436,13 +1437,13 @@ export default function User() {
 
                                         <div className="grid grid-cols-3 gap-2 sm:gap-2.5 w-full lg:w-auto">
                                             <div className="min-w-0 lg:min-w-[120px] rounded-xl border border-[#dbe6f8] bg-[#eff6ff]/60 px-3 py-2.5">
-                                                <p className="text-[11px] font-semibold text-slate-400 truncate">
+                                                <p className="text-[11px] font-semibold text-black truncate">
                                                     Receptionists
                                                 </p>
 
                                                 <p className="text-sm font-bold text-[#0a1a3f] mt-1">
                                                     {receptionistCount}
-                                                    <span className="text-slate-400 font-medium">
+                                                    <span className="text-black font-medium">
                                                         {" "}
                                                         / {limits.receptionists || "∞"}
                                                     </span>
@@ -1450,7 +1451,7 @@ export default function User() {
                                             </div>
 
                                             <div className="min-w-0 lg:min-w-[120px] rounded-xl border border-[#dbe6f8] bg-[#eff6ff]/60 px-3 py-2.5">
-                                                <p className="text-[11px] font-semibold text-slate-400 truncate">
+                                                <p className="text-[11px] font-semibold text-black truncate">
                                                     Branches
                                                 </p>
 
@@ -1460,7 +1461,7 @@ export default function User() {
                                             </div>
 
                                             <div className="min-w-0 lg:min-w-[120px] rounded-xl border border-[#dbe6f8] bg-[#eff6ff]/60 px-3 py-2.5">
-                                                <p className="text-[11px] font-semibold text-slate-400 truncate">
+                                                <p className="text-[11px] font-semibold text-black truncate">
                                                     Rooms
                                                 </p>
 
@@ -1478,7 +1479,7 @@ export default function User() {
                                             className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border ${
                                                 features.foodService
                                                     ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                                    : "bg-slate-50 text-slate-400 border-slate-200"
+                                                    : "bg-slate-50 text-black border-slate-200"
                                             }`}
                                         >
                                             Food Service{" "}
@@ -1491,7 +1492,7 @@ export default function User() {
                                             className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border ${
                                                 features.roomService
                                                     ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                                    : "bg-slate-50 text-slate-400 border-slate-200"
+                                                    : "bg-slate-50 text-black border-slate-200"
                                             }`}
                                         >
                                             Room Service{" "}
@@ -1538,7 +1539,7 @@ export default function User() {
                                             Subscription unavailable
                                         </p>
 
-                                        <p className="text-xs text-slate-500 mt-1">
+                                        <p className="text-xs text-black mt-1">
                                             {subscriptionError ||
                                                 "No subscription information is available."}
                                         </p>
@@ -1557,7 +1558,7 @@ export default function User() {
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
                         <div className="flex flex-col sm:flex-row gap-2.5 flex-1 min-w-0">
                             <div className="relative flex-1 sm:max-w-sm">
-                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/70 pointer-events-none" />
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-500 pointer-events-none" />
 
                                 <input
                                     type="text"
@@ -1565,8 +1566,19 @@ export default function User() {
                                     aria-label="Search users"
                                     value={searchUser}
                                     onChange={(e) => setSearchUser(e.target.value)}
-                                    className="w-full h-11 pl-10 pr-4 text-sm text-white placeholder:text-white/60 rounded-xl border border-white/25 bg-white/10 backdrop-blur-md shadow-lg shadow-[#0a1a3f]/15 outline-none transition-all duration-300 focus:border-sky-300 focus:bg-white/15 focus:ring-2 focus:ring-sky-300/40"
+                                    className="staylio-search-input"
                                 />
+
+                                {searchUser && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchUser("")}
+                                        aria-label="Clear search"
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-black hover:bg-slate-100 transition cursor-pointer"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                )}
                             </div>
 
                             {isHotelOwner && selectedIds.length > 0 && (
@@ -1589,7 +1601,7 @@ export default function User() {
                                     value={roleFilter}
                                     aria-label="Filter by role"
                                     onChange={(e) => setRoleFilter(e.target.value)}
-                                    className="w-full sm:w-44 h-11 pl-10 pr-8 text-sm font-medium text-white rounded-xl border border-white/25 bg-white/10 backdrop-blur-md cursor-pointer outline-none transition-all duration-300 focus:border-sky-300 focus:ring-2 focus:ring-sky-300/40 [&>option]:text-slate-900"
+                                    className="w-full sm:w-44 h-11 pl-10 pr-8 text-sm font-medium text-white rounded-xl border border-white/25 bg-white/10 backdrop-blur-md cursor-pointer outline-none transition-all duration-300 focus:border-sky-300 focus:ring-2 focus:ring-sky-300/40 [&>option]:text-black"
                                 >
                                     <option value="All">All Roles</option>
                                     <option value="receptionist">Receptionist</option>
@@ -1735,7 +1747,7 @@ export default function User() {
                                 <h2 className="text-sm font-bold text-[#0a1a3f]">
                                     Team members
                                 </h2>
-                                <p className="text-xs text-slate-400 mt-0.5">
+                                <p className="text-xs text-black mt-0.5">
                                     {filteredUsers.length}{" "}
                                     {filteredUsers.length === 1 ? "user" : "users"}
                                 </p>
@@ -1771,7 +1783,7 @@ export default function User() {
 
                             {/* mobile: select all */}
                             {isHotelOwner && filteredUsers.length > 0 && (
-                                <label className="md:hidden flex items-center gap-2.5 px-4 py-2.5 bg-[#eff6ff]/70 border-b border-[#dbe6f8] text-xs font-semibold text-slate-600">
+                                <label className="md:hidden flex items-center gap-2.5 px-4 py-2.5 bg-[#eff6ff]/70 border-b border-[#dbe6f8] text-xs font-semibold text-black">
                                     <input
                                         type="checkbox"
                                         checked={allVisibleSelected}
@@ -1833,7 +1845,7 @@ export default function User() {
                                     <p className="mt-4 text-sm font-bold text-[#0a1a3f]">
                                         No users found
                                     </p>
-                                    <p className="mt-1 text-xs text-slate-400">
+                                    <p className="mt-1 text-xs text-black">
                                         Try another search or role filter.
                                     </p>
                                 </div>

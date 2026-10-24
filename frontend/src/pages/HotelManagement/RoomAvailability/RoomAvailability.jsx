@@ -267,44 +267,9 @@ export default function RoomAvailability({ onNewBooking }) {
             {/* HEADER */}
             <div className="ra-in flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
                 <div>
-<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">                         Room Availability
+                    <h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight text-white leading-tight">
+                        Room Availability
                     </h1>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3">
-                    <button
-                        type="button"
-                        onClick={handleAddRoomClick}
-                        title={
-                            isRoomLimitReached
-                                ? `Plan room allocation limit reached (${totalRooms}/${roomLimit} rooms). Click to learn how to upgrade.`
-                                : "Add Room"
-                        }
-                        className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold cursor-pointer transition-all ${
-                            isRoomLimitReached
-                                ? "border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 hover:border-amber-400"
-                                : "border border-[#dbe6f5] bg-white text-[#0e2a4a] hover:bg-[#eaf3ff] hover:border-[#a8cbff]"
-                        }`}
-                    >
-                        {isRoomLimitReached ? <Lock className="w-4 h-4 text-amber-600" /> : <DoorOpen className="w-4 h-4" />}
-                        Add Room
-                        {isRoomLimitReached && (
-                            <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-900 uppercase tracking-tight">
-                                Quota Full
-                            </span>
-                        )}
-                    </button>
-
-                    {onNewBooking && (
-                        <button
-                            type="button"
-                            onClick={onNewBooking}
-                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] hover:brightness-110 text-white text-sm font-bold cursor-pointer transition shadow-md shadow-blue-500/25"
-                        >
-                            <Plus className="w-4 h-4" />
-                            New Booking
-                        </button>
-                    )}
                 </div>
             </div>
 
@@ -313,56 +278,97 @@ export default function RoomAvailability({ onNewBooking }) {
                 <div className="ra-pop bg-red-50 border border-red-200 rounded-2xl px-4 py-3 text-sm text-red-600">{error}</div>
             )}
 
-            {/* SUMMARY */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <SummaryCard
-                    index={1}
-                    title="Total Rooms"
-                    icon={Layers}
-                    cls="bg-[#eaf3ff] text-[#2568e0]"
-                    loading={loading}
-                    value={
-                        <div className="flex items-baseline gap-2">
-                            <p className="text-2xl text-[#0e2a4a] font-extrabold tracking-tight">{totalRooms}</p>
-                            {roomLimit > 0 && <span className="text-xs font-bold text-[#6b7f99]">/ {roomLimit} Max</span>}
-                        </div>
-                    }
-                    extra={
-                        roomLimit > 0 && !loading ? (
-                            <div className="mt-2.5">
-                                <div className="w-full bg-[#e8f0fb] rounded-full h-1.5 overflow-hidden">
-                                    <div
-                                        className={`ra-bar h-full rounded-full ${isRoomLimitReached ? "bg-amber-500" : "bg-gradient-to-r from-[#5b9bf5] to-[#2568e0]"}`}
-                                        style={{ width: `${usagePct}%` }}
-                                    />
-                                </div>
-                                <p className="text-[11px] font-semibold text-[#6b7f99] mt-1.5 flex justify-between gap-2">
-                                    <span className={isRoomLimitReached ? "text-amber-700 font-bold shrink-0" : "text-[#6b7f99] font-semibold shrink-0"}>
-                                        {isRoomLimitReached ? "100% (Quota Reached)" : `${roomsRemaining} room${roomsRemaining === 1 ? "" : "s"} left`}
-                                    </span>
+            {/* SUMMARY (All 3 Cards in the Same Row - Centered Numbers, Medium Sized) */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-3.5">
+                {/* CARD 1: Total Rooms */}
+                <div style={delay(1)} className={`ra-in ${card} flex flex-col justify-between p-2.5 sm:p-4 hover:-translate-y-0.5 transition-transform duration-300 text-center`}>
+                    <div>
+                        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#6b7f99] leading-tight">
+                            Total
+                        </p>
+                    </div>
+
+                    <div className="my-1 sm:my-2 flex justify-center">
+                        {loading ? (
+                            <div className="h-6 w-10 bg-slate-100 rounded animate-pulse" />
+                        ) : (
+                            <div className="flex items-baseline justify-center gap-1">
+                                <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-[#0e2a4a]">
+                                    {totalRooms}
                                 </p>
+                                {roomLimit > 0 && (
+                                    <span className="text-[10px] sm:text-xs font-bold text-[#6b7f99] whitespace-nowrap">
+                                        / {roomLimit}
+                                    </span>
+                                )}
                             </div>
-                        ) : null
-                    }
-                />
+                        )}
+                    </div>
 
-                <SummaryCard
-                    index={2}
-                    title="Available"
-                    icon={CheckCircle2}
-                    cls="bg-emerald-50 text-emerald-600"
-                    loading={loading}
-                    value={<p className="text-2xl text-emerald-600 font-extrabold tracking-tight">{availableRooms}</p>}
-                />
+                    {roomLimit > 0 && !loading ? (
+                        <div>
+                            <div className="h-1 w-full overflow-hidden rounded-full bg-[#e8f0fb] sm:h-1.5">
+                                <div
+                                    className={`ra-bar h-full rounded-full ${isRoomLimitReached ? "bg-amber-500" : "bg-gradient-to-r from-[#5b9bf5] to-[#2568e0]"}`}
+                                    style={{ width: `${usagePct}%` }}
+                                />
+                            </div>
+                            <p className="mt-1 text-[9px] sm:text-[11px] font-semibold text-[#6b7f99] whitespace-nowrap leading-none">
+                                {isRoomLimitReached ? "Full" : `${roomsRemaining} left`}
+                            </p>
+                        </div>
+                    ) : (
+                        <p className="text-[9px] sm:text-[11px] font-medium text-[#6b7f99] whitespace-nowrap leading-none">
+                            All Rooms
+                        </p>
+                    )}
+                </div>
 
-                <SummaryCard
-                    index={3}
-                    title="Occupied"
-                    icon={Users}
-                    cls="bg-amber-50 text-amber-600"
-                    loading={loading}
-                    value={<p className="text-2xl text-amber-600 font-extrabold tracking-tight">{occupiedRooms}</p>}
-                />
+                {/* CARD 2: Available Rooms */}
+                <div style={delay(2)} className={`ra-in ${card} flex flex-col justify-between p-2.5 sm:p-4 hover:-translate-y-0.5 transition-transform duration-300 text-center`}>
+                    <div>
+                        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-emerald-700 leading-tight">
+                            Available
+                        </p>
+                    </div>
+
+                    <div className="my-1 sm:my-2 flex justify-center">
+                        {loading ? (
+                            <div className="h-6 w-10 bg-emerald-50 rounded animate-pulse" />
+                        ) : (
+                            <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-emerald-600">
+                                {availableRooms}
+                            </p>
+                        )}
+                    </div>
+
+                    <p className="text-[9px] sm:text-[11px] font-semibold text-emerald-700 whitespace-nowrap leading-none">
+                        Ready
+                    </p>
+                </div>
+
+                {/* CARD 3: Occupied Rooms */}
+                <div style={delay(3)} className={`ra-in ${card} flex flex-col justify-between p-2.5 sm:p-4 hover:-translate-y-0.5 transition-transform duration-300 text-center`}>
+                    <div>
+                        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-amber-700 leading-tight">
+                            Occupied
+                        </p>
+                    </div>
+
+                    <div className="my-1 sm:my-2 flex justify-center">
+                        {loading ? (
+                            <div className="h-6 w-10 bg-amber-50 rounded animate-pulse" />
+                        ) : (
+                            <p className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-amber-600">
+                                {occupiedRooms}
+                            </p>
+                        )}
+                    </div>
+
+                    <p className="text-[9px] sm:text-[11px] font-semibold text-amber-700 whitespace-nowrap leading-none">
+                        Booked
+                    </p>
+                </div>
             </div>
 
             {/* ROOM LIMIT REACHED BANNER */}
@@ -409,12 +415,48 @@ export default function RoomAvailability({ onNewBooking }) {
 
             {/* ROOMS */}
             <div>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                     <div>
-                        <h2 className="text-sm font-bold text-white">Rooms</h2>
-                        <p className="text-xs text-white mt-1">
+                        <h2 className="text-sm sm:text-base font-bold text-white">Rooms</h2>
+                        <p className="text-xs text-white/80 mt-0.5">
                             {loading ? "Loading rooms..." : `${filteredRooms.length} rooms shown`}
                         </p>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 sm:gap-3">
+                        <button
+                            type="button"
+                            onClick={handleAddRoomClick}
+                            title={
+                                isRoomLimitReached
+                                    ? `Plan room allocation limit reached (${totalRooms}/${roomLimit} rooms). Click to learn how to upgrade.`
+                                    : "Add Room"
+                            }
+                            className={`inline-flex items-center justify-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold cursor-pointer transition-all shadow-sm ${
+                                isRoomLimitReached
+                                    ? "border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 hover:border-amber-400"
+                                    : "border border-white/30 bg-white/95 backdrop-blur-md text-[#0e2a4a] hover:bg-white hover:border-[#a8cbff]"
+                            }`}
+                        >
+                            {isRoomLimitReached ? <Lock className="w-4 h-4 text-amber-600" /> : <DoorOpen className="w-4 h-4" />}
+                            Add Room
+                            {isRoomLimitReached && (
+                                <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-900 uppercase tracking-tight">
+                                    Quota Full
+                                </span>
+                            )}
+                        </button>
+
+                        {onNewBooking && (
+                            <button
+                                type="button"
+                                onClick={onNewBooking}
+                                className="inline-flex items-center justify-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-gradient-to-r from-[#5b9bf5] to-[#2568e0] hover:brightness-110 text-white text-xs sm:text-sm font-bold cursor-pointer transition shadow-md shadow-blue-500/25"
+                            >
+                                <Plus className="w-4 h-4" />
+                                New Booking
+                            </button>
+                        )}
                     </div>
                 </div>
 

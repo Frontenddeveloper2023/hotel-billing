@@ -18,8 +18,8 @@ function AmountRow({
             <span
                 className={
                     bold
-                        ? "text-sm font-bold text-slate-800"
-                        : "text-sm text-slate-500"
+                        ? "text-sm font-bold text-black"
+                        : "text-sm text-black"
                 }
             >
                 {label}
@@ -28,8 +28,8 @@ function AmountRow({
             <span
                 className={
                     bold
-                        ? "text-sm font-bold text-slate-900"
-                        : "text-sm font-semibold text-slate-700"
+                        ? "text-sm font-bold text-black"
+                        : "text-sm font-semibold text-black"
                 }
             >
                 ₹{Number(amount || 0).toLocaleString("en-IN")}
@@ -144,11 +144,11 @@ export default function BillSummary({
 
                             <div>
 
-                                <p className="text-xs font-bold text-slate-700">
+                                <p className="text-xs font-bold text-black">
                                     GST
                                 </p>
 
-                                <p className="text-[10px] text-slate-400 mt-0.5">
+                                <p className="text-[10px] text-black mt-0.5">
                                     Applied to subtotal
                                 </p>
 
@@ -170,7 +170,7 @@ export default function BillSummary({
                                     className="w-full px-3 py-2 pr-7 rounded-lg border border-slate-200 bg-white text-sm font-bold text-right outline-none focus:border-[var(--teal,#08838d)]"
                                 />
 
-                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none">
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-black pointer-events-none">
                                     %
                                 </span>
 
@@ -181,11 +181,11 @@ export default function BillSummary({
 
                         <div className="flex items-center justify-between pt-3">
 
-                            <span className="text-xs text-slate-500">
+                            <span className="text-xs text-black">
                                 GST Amount
                             </span>
 
-                            <span className="text-sm font-bold text-slate-800">
+                            <span className="text-sm font-bold text-black">
                                 ₹{money(gstAmount)}
                             </span>
 
@@ -202,11 +202,11 @@ export default function BillSummary({
 
                             <div>
 
-                                <p className="text-[10px] uppercase tracking-wide font-bold text-slate-400">
+                                <p className="text-[10px] uppercase tracking-wide font-bold text-black">
                                     Grand Total
                                 </p>
 
-                                <p className="text-2xl font-bold text-slate-900 mt-1">
+                                <p className="text-2xl font-bold text-black mt-1">
                                     ₹{money(grandTotal)}
                                 </p>
 

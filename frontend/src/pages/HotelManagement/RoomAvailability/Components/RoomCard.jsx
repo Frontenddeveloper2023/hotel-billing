@@ -50,7 +50,7 @@ export default function RoomCard({ room, onEdit, onDelete, onStatusChange, index
         {/* STATUS SELECT DROPDOWN (Allows manually toggling Occupied to Available) */}
         <div className="relative shrink-0">
           {updatingStatus ? (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-black border border-slate-200">
               <Loader2 className="w-3 h-3 animate-spin text-blue-600" />
               Updating...
             </span>

@@ -2894,6 +2894,186 @@ const sendHotelBlockedEmail = async ({
 };
 
 // ============================================================
+// APPLICATION PAYMENT SUCCESS & STATUS TRACKING EMAIL
+// Sent when hotel owner successfully pays subscription and enters admin review
+// ============================================================
+const sendApplicationPaymentSuccessEmail = async ({
+  to,
+  ownerName,
+  hotelName,
+  applicationId,
+  amount,
+  planName,
+  billingCycle,
+  transactionId,
+}) => {
+  try {
+    if (!to) {
+      log.warn("[EMAIL] sendApplicationPaymentSuccessEmail skipped: recipient email is missing.");
+      return;
+    }
+
+    const frontendUrl = getFrontendUrl();
+    const trackingUrl = `${frontendUrl}/saas-user/application-status?id=${encodeURIComponent(applicationId)}`;
+    const formattedAmount = Number(amount || 0).toLocaleString("en-IN", {
+      maximumFractionDigits: 0,
+    });
+    const cycleLabel =
+      billingCycle === "yearly"
+        ? "Yearly Subscription"
+        : billingCycle === "monthly"
+        ? "Monthly Subscription"
+        : billingCycle === "quarterly"
+        ? "Quarterly Subscription"
+        : billingCycle === "halfYearly"
+        ? "Half-Yearly Subscription"
+        : "Subscription Plan";
+
+    const formattedDate = new Date().toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    await transporter.sendMail({
+      from: `"${process.env.SMTP_FROM_NAME || "StayLio Support"}" <${process.env.SMTP_USER}>`,
+      to,
+      subject: `Hotel Registration Received & Payment Confirmed [App ID: ${applicationId}] - StayLio`,
+      html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Received - StayLio</title>
+</head>
+<body style="margin:0;padding:0;background:#F1F5F9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0F172A;-webkit-font-smoothing:antialiased;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F1F5F9;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:580px;background:#FFFFFF;border-radius:20px;overflow:hidden;box-shadow:0 12px 36px rgba(15,23,42,0.08);border:1px solid #E2E8F0;">
+          
+          <!-- BRAND HEADER -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#0F2746 0%,#184A7E 100%);padding:36px 32px 28px;text-align:center;">
+              <div style="font-size:26px;font-weight:800;color:#FFFFFF;letter-spacing:-0.5px;">
+                StayLio
+              </div>
+              <div style="margin-top:4px;font-size:12px;font-weight:600;color:#93C5FD;letter-spacing:0.5px;text-transform:uppercase;">
+                StayLio Hotel Pilling Platform
+              </div>
+              
+              <div style="margin-top:22px;display:inline-block;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.25);border-radius:9999px;padding:6px 16px;color:#FFFFFF;font-size:12px;font-weight:700;">
+                ✓ Payment Received & Verified
+              </div>
+            </td>
+          </tr>
+
+          <!-- MAIN BODY -->
+          <tr>
+            <td style="padding:32px 32px 24px;">
+              <h1 style="margin:0 0 12px;font-size:20px;font-weight:800;color:#0F172A;line-height:28px;">
+                Dear ${ownerName || "Hotel Partner"},
+              </h1>
+              <p style="margin:0 0 20px;font-size:14px;line-height:22px;color:#475569;">
+                Thank you for choosing <strong>StayLio</strong>. Your subscription payment for <strong>${hotelName}</strong> has been successfully processed, and your hotel application has been submitted to our administration team for formal review and activation.
+              </p>
+
+              <!-- APPLICATION ID CARD (HIGHLIGHT) -->
+              <div style="background:linear-gradient(135deg,#EFF6FF 0%,#DBEAFE 100%);border:1px solid #BFDBFE;border-radius:16px;padding:20px 24px;text-align:center;margin:0 0 24px;">
+                <div style="font-size:11px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">
+                  Your Official Application ID
+                </div>
+                <div style="font-size:24px;font-weight:800;color:#0F172A;letter-spacing:0.5px;font-family:monospace;background:#FFFFFF;padding:10px 16px;border-radius:10px;border:1px dashed #93C5FD;display:inline-block;margin:6px 0;">
+                  ${applicationId}
+                </div>
+                <div style="font-size:12px;font-weight:500;color:#3B82F6;margin-top:8px;">
+                  Please save this ID to check your real-time review and approval status anytime.
+                </div>
+              </div>
+
+              <!-- TRACKING CTA BUTTON -->
+              <div style="text-align:center;margin:0 0 28px;">
+                <a href="${trackingUrl}" style="display:inline-block;background:#2563EB;color:#FFFFFF;font-size:14px;font-weight:700;text-decoration:none;padding:14px 28px;border-radius:12px;box-shadow:0 4px 14px rgba(37,99,235,0.35);">
+                  Check Application Status Online →
+                </a>
+                <div style="margin-top:10px;font-size:11px;color:#64748B;">
+                  Direct link: <a href="${trackingUrl}" style="color:#2563EB;word-break:break-all;">${trackingUrl}</a>
+                </div>
+              </div>
+
+              <!-- ORDER & PAYMENT BREAKDOWN -->
+              <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:14px;padding:18px 20px;margin-bottom:24px;">
+                <div style="font-size:12px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;border-bottom:1px solid #E2E8F0;padding-bottom:8px;">
+                  Payment & Subscription Summary
+                </div>
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:13px;line-height:22px;">
+                  <tr>
+                    <td style="color:#64748B;padding:4px 0;">Hotel Name:</td>
+                    <td style="font-weight:600;color:#0F172A;padding:4px 0;text-align:right;">${hotelName}</td>
+                  </tr>
+                  <tr>
+                    <td style="color:#64748B;padding:4px 0;">Subscription Plan:</td>
+                    <td style="font-weight:600;color:#0F172A;padding:4px 0;text-align:right;">${planName || "Selected Plan"} (${cycleLabel})</td>
+                  </tr>
+                  <tr>
+                    <td style="color:#64748B;padding:4px 0;">Amount Paid:</td>
+                    <td style="font-weight:800;color:#0F172A;padding:4px 0;text-align:right;">₹${formattedAmount}</td>
+                  </tr>
+                  <tr>
+                    <td style="color:#64748B;padding:4px 0;">Transaction ID:</td>
+                    <td style="font-weight:600;color:#2563EB;padding:4px 0;text-align:right;font-family:monospace;">${transactionId || "Verified"}</td>
+                  </tr>
+                  <tr>
+                    <td style="color:#64748B;padding:4px 0;">Payment Date:</td>
+                    <td style="font-weight:500;color:#475569;padding:4px 0;text-align:right;">${formattedDate}</td>
+                  </tr>
+                  <tr>
+                    <td style="color:#64748B;padding:4px 0;">Review Status:</td>
+                    <td style="font-weight:700;color:#D97706;padding:4px 0;text-align:right;">Pending Admin Approval</td>
+                  </tr>
+                </table>
+              </div>
+
+              <!-- NEXT STEPS -->
+              <div style="border-left:3px solid #2563EB;padding-left:14px;margin-bottom:16px;">
+                <p style="margin:0;font-size:13px;line-height:20px;color:#334155;">
+                  <strong>What happens next?</strong><br/>
+                  Our operations team reviews newly submitted hotel records to ensure account security. You will receive an immediate email confirmation with your hotel portal login credentials as soon as approval is complete.
+                </p>
+              </div>
+
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="padding:22px 32px;background:#F8FAFC;border-top:1px solid #E2E8F0;font-size:11px;color:#64748B;text-align:center;line-height:18px;">
+              Need urgent assistance? Reply directly to this email or reach out to our dedicated support desk.<br/>
+              © ${new Date().getFullYear()} StayLio. All rights reserved.
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`,
+    });
+
+    log.info(
+      `[EMAIL] Application payment confirmation email successfully sent to ${to} (Application ID: ${applicationId}, Hotel: ${hotelName})`
+    );
+  } catch (err) {
+    log.error(`[EMAIL] Failed to send application payment confirmation email: ${err.message}`);
+  }
+};
+
+// ============================================================
 // EXPORTS
 // ============================================================
 export {
@@ -2905,6 +3085,7 @@ export {
   sendAdminEmail,
   sendAdminFreeTrialNotificationEmail,
   sendHotelBlockedEmail,
+  sendApplicationPaymentSuccessEmail,
   getBaseUrl,
   getFrontendUrl,
   getBackendApiUrl,

@@ -2,11 +2,12 @@ import React, { memo, useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import {
   BookmarkCheck, IndianRupee, Receipt, UtensilsCrossed, DoorClosed, Search, Filter,
-  Loader2, TrendingUp, Sparkles,
+  Loader2, TrendingUp, Sparkles, X,
 } from "lucide-react";
 import { getDashboardSummary } from "../../service/dashboardApi";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../Context/AuthContext";
+import StaylioLoader from "../../Components/StaylioLoader";
 
 // ======================================================
 // STYLE + SHARED UI
@@ -25,8 +26,8 @@ const styles = `
 `;
 
 const delay = (i, step = 65) => ({ animationDelay: `${Math.min(i, 12) * step}ms` });
-const card = "rounded-3xl bg-white shadow-[0_18px_45px_rgba(6,20,52,0.16)]";
-const inputCls = "text-xs sm:text-sm bg-[#f6f9fe] border border-[#dbe6f5] rounded-xl text-[#0e2a4a] placeholder:text-[#9aabc0] focus:bg-white focus:border-[#3b82f0] focus:ring-2 focus:ring-[#3b82f0]/20 focus:outline-none transition";
+const card = "rounded-3xl bg-white/90 backdrop-blur-xl border border-white/60 shadow-[0_18px_45px_rgba(6,20,52,0.14)]";
+const inputCls = "text-xs sm:text-sm bg-white/80 border border-[#dbe6f5] rounded-xl text-[#0e2a4a] placeholder:text-[#9aabc0] focus:bg-white focus:border-[#3b82f0] focus:ring-2 focus:ring-[#3b82f0]/20 focus:outline-none transition";
 
 const StatCard = memo(({ title, value, icon, cls, index }) => (
   <div style={delay(index)} className={`hd-in ${card} p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300`}>
@@ -168,13 +169,10 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <div className="relative">
-          <div className="h-14 w-14 rounded-full border-4 border-white/20" />
-          <Loader2 className="w-14 h-14 absolute inset-0 animate-spin text-white" strokeWidth={2.5} />
-        </div>
-        <p className="text-sm text-blue-100 font-medium">Loading dashboard…</p>
-      </div>
+      <StaylioLoader
+        message="Loading Dashboard"
+        subtitle="Fetching your latest revenue, rooms, and occupancy data..."
+      />
     );
   }
 
@@ -224,15 +222,25 @@ export default function Dashboard() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8fa2ba]" />
+              <div className="relative w-full sm:w-72">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-500 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Search customer, invoice, room..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className={`w-full sm:w-64 pl-9 pr-4 py-2.5 ${inputCls}`}
+                  className="staylio-search-input"
                 />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm("")}
+                    aria-label="Clear search"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-black hover:bg-slate-100 transition cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
 
               <div className="relative">
@@ -254,7 +262,7 @@ export default function Dashboard() {
           <div className="overflow-x-auto hd-scroll">
             <table className="w-full text-left border-collapse min-w-[640px]">
               <thead>
-                <tr className="bg-[#f4f8fd] border-y border-[#e2ebf7]">
+                <tr className="bg-[#f4f8fd]/70 backdrop-blur-sm border-y border-[#e2ebf7]">
                   {["Invoice No", "Customer", "Room", "Date", "Grand Total", "Status"].map((h) => (
                     <th key={h} className="px-4 sm:px-6 py-3 text-[10px] sm:text-[11px] font-bold text-[#5b7089] tracking-wider uppercase whitespace-nowrap">
                       {h}

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import AddServiceModal from "./Components/AddServiceModal";
 import { getActiveBookings } from "../../../service/bookingApi";
+import StaylioLoader from "../../../Components/StaylioLoader";
 
 export default function CurrentStays({ onCheckout }) {
   const toast = useToast();
@@ -282,7 +283,13 @@ export default function CurrentStays({ onCheckout }) {
 
   const openCheckout = (group) => {
     setCheckoutCustomer(group);
-    setSelectedRooms([]);
+    // If only one room, automatically select it; if multiple rooms, let user choose
+    const availableRooms = Array.isArray(group?.rooms) ? group.rooms : [];
+    if (availableRooms.length === 1) {
+      setSelectedRooms([availableRooms[0]]);
+    } else {
+      setSelectedRooms([]);
+    }
     setCheckoutTime("11:00");
     setCheckoutAmPm("AM");
     setShowTimePicker(false);
@@ -490,21 +497,31 @@ export default function CurrentStays({ onCheckout }) {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
        
-<h1 className="text-[12px] sm:text-[15px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">         
+<h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight text-white leading-tight">         
      Current Stays
           </h1>
         
 
         </div>
 
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9aabc0]" />
+        <div className="relative w-full sm:w-72 md:w-80">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-500 pointer-events-none" />
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search name, room, phone..."
-            className="w-full pl-10 pr-4 py-2.5 bg-[#f6f9fe] border border-[#dbe6f5] rounded-xl text-sm text-[#0e2a4a] placeholder:text-[#9aabc0] focus:outline-none focus:bg-white focus:border-[#3b82f0] focus:ring-2 focus:ring-[#3b82f0]/20 transition"
+            className="staylio-search-input"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              aria-label="Clear search"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-black hover:bg-slate-100 transition cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -529,22 +546,10 @@ export default function CurrentStays({ onCheckout }) {
   ========================================== */}
 
   {loading ? (
-    <div className="bg-white border border-[#dbe6f5] rounded-2xl shadow-[0_2px_8px_rgba(6,20,52,0.08)] p-12 text-center">
-
-      <div className="relative mx-auto w-10 h-10">
-        <div className="h-10 w-10 rounded-full border-[3px] border-[#dbe6f5]" />
-        <div className="absolute inset-0 h-10 w-10 rounded-full border-[3px] border-transparent border-t-[#2568e0] animate-spin" />
-      </div>
-
-      <p className="mt-4 text-sm font-semibold text-[#6b7f99]">
-        Loading current stays...
-      </p>
-
-      <p className="mt-1 text-xs text-[#9aabc0]">
-        Please wait while we fetch active guests.
-      </p>
-
-    </div>
+    <StaylioLoader
+      message="Loading Current Stays"
+      subtitle="Fetching active guests and room allocations..."
+    />
   ) : !filteredGroups.length ? (
 
     /* ==========================================
@@ -1211,17 +1216,7 @@ export default function CurrentStays({ onCheckout }) {
                                     "Guest"}
                             </p>
 
-                            <p
-                                className="
-                                    text-[11px]
-                                    sm:text-xs
-                                    text-[#6b7f99]
-                                    mt-0.5
-                                "
-                            >
-                                Review the room and checkout details
-                                before generating the bill.
-                            </p>
+                        
                         </div>
                     </div>
 
@@ -1264,31 +1259,7 @@ export default function CurrentStays({ onCheckout }) {
                     space-y-5
                 "
             >
-                {/* =================================================
-                    STEP INDICATOR
-                ================================================== */}
-                <div
-                    className="
-                        flex items-center gap-3
-                        rounded-xl
-                        bg-[#eaf3ff]
-                        border border-[#dbe6f5]
-                        px-3.5 py-3
-                    "
-                >
-                   
-
-                    <div className="min-w-0">
-                        <p className="text-xs sm:text-sm font-bold text-[#0e2a4a]">
-                            Checkout Details
-                        </p>
-
-                        <p className="text-[11px] sm:text-xs text-[#6b7f99] mt-0.5">
-                            Select the room(s) and confirm the checkout time.
-                        </p>
-                    </div>
-                </div>
-
+                
                 {/* =================================================
                     ROOM SELECTION
                 ================================================== */}
@@ -1321,8 +1292,8 @@ export default function CurrentStays({ onCheckout }) {
                             </p>
                         </div>
 
-                        {/* SELECT ALL */}
-                        {checkoutCustomer.rooms?.length > 0 && (
+                        {/* SELECT ALL (Only relevant for multiple rooms) */}
+                        {checkoutCustomer.rooms?.length > 1 && (
                             <button
                                 type="button"
                                 onClick={() =>
@@ -1351,129 +1322,167 @@ export default function CurrentStays({ onCheckout }) {
                     </div>
 
                     {/* ROOM CARDS */}
-                    <div
-                        className="
-                            grid
-                            grid-cols-1
-                            min-[400px]:grid-cols-2
-                            gap-2.5
-                        "
-                    >
-                        {checkoutCustomer.rooms.map((room) => {
-                            const selected = isSelected(room);
+                    {checkoutCustomer.rooms?.length === 1 ? (
+                        /* SINGLE ROOM: Pre-selected automatically, clearly displayed */
+                        <div
+                            className="
+                                w-full
+                                min-h-[64px]
+                                flex
+                                items-center
+                                justify-between
+                                gap-3
+                                px-4
+                                py-3.5
+                                rounded-xl
+                                bg-[#eaf3ff]
+                                border border-[#2568e0]
+                                ring-2 ring-[#dbe6f5]
+                            "
+                        >
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-10 h-10 rounded-lg bg-[#2568e0] text-white flex items-center justify-center shrink-0">
+                                    <span className="text-sm font-bold">
+                                        {checkoutCustomer.rooms[0].roomNumber}
+                                    </span>
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-sm font-bold text-[#0e2a4a]">
+                                        Room {checkoutCustomer.rooms[0].roomNumber}
+                                    </p>
+                                    <p className="text-[11px] text-[#6b7f99] mt-0.5 truncate">
+                                        {checkoutCustomer.rooms[0].roomType || "Standard Room"}
+                                        {checkoutCustomer.rooms[0].bedType ? ` • ${checkoutCustomer.rooms[0].bedType}` : ""}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#dbeafc] text-[#1d56c4] text-xs font-bold">
+                                <CheckCircle2 className="w-4 h-4 text-[#2568e0]" />
+                                <span>Selected</span>
+                            </div>
+                        </div>
+                    ) : (
+                        /* MULTIPLE ROOMS: User can choose which rooms to check out */
+                        <div
+                            className="
+                                grid
+                                grid-cols-1
+                                min-[400px]:grid-cols-2
+                                gap-2.5
+                            "
+                        >
+                            {checkoutCustomer.rooms.map((room) => {
+                                const selected = isSelected(room);
 
-                            return (
-                                <button
-                                    key={roomKey(room)}
-                                    type="button"
-                                    onClick={() => toggleRoom(room)}
-                                    className={`
-                                        w-full cursor-pointer
-                                        min-h-[68px]
-                                        flex
-                                        items-center
-                                        justify-between
-                                        gap-3
-                                        px-3.5
-                                        py-3
-                                        rounded-xl
-                                        border
-                                        text-left
-                                        transition-all
-                                        active:scale-[0.98]
-                                        ${
-                                            selected
-                                                ? `
-                                                    bg-[#eaf3ff]
-                                                    border-[#2568e0]
-                                                    ring-2
-                                                    ring-[#dbe6f5]
-                                                `
-                                                : `
-                                                    bg-white
-                                                    border-[#c7d8f0]
-                                                    hover:border-[#5b9bf5]
-                                                    hover:bg-[#f4f8fd]
-                                                `
-                                        }
-                                    `}
-                                >
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        {/* ROOM ICON */}
-                                        <div
-                                            className={`
-                                                w-9 h-9
-                                                rounded-lg
-                                                flex items-center justify-center
-                                                shrink-0
-                                                ${
-                                                    selected
-                                                        ? "bg-[#2568e0] text-white"
-                                                        : "bg-[#eaf3ff] text-[#6b7f99]"
-                                                }
-                                            `}
-                                        >
-                                            <span className="text-xs font-bold">
-                                                {room.roomNumber}
-                                            </span>
-                                        </div>
-
-                                        <div className="min-w-0">
-                                            <p
+                                return (
+                                    <button
+                                        key={roomKey(room)}
+                                        type="button"
+                                        onClick={() => toggleRoom(room)}
+                                        className={`
+                                            w-full cursor-pointer
+                                            min-h-[68px]
+                                            flex
+                                            items-center
+                                            justify-between
+                                            gap-3
+                                            px-3.5
+                                            py-3
+                                            rounded-xl
+                                            border
+                                            text-left
+                                            transition-all
+                                            active:scale-[0.98]
+                                            ${
+                                                selected
+                                                    ? `
+                                                        bg-[#eaf3ff]
+                                                        border-[#2568e0]
+                                                        ring-2
+                                                        ring-[#dbe6f5]
+                                                    `
+                                                    : `
+                                                        bg-white
+                                                        border-[#c7d8f0]
+                                                        hover:border-[#5b9bf5]
+                                                        hover:bg-[#f4f8fd]
+                                                    `
+                                            }
+                                        `}
+                                    >
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            {/* ROOM ICON */}
+                                            <div
                                                 className={`
-                                                    text-sm
-                                                    font-bold
-                                                    truncate
+                                                    w-9 h-9
+                                                    rounded-lg
+                                                    flex items-center justify-center
+                                                    shrink-0
                                                     ${
                                                         selected
-                                                            ? "text-[#0e2a4a]"
-                                                            : "text-[#0e2a4a]"
+                                                            ? "bg-[#2568e0] text-white"
+                                                            : "bg-[#eaf3ff] text-[#6b7f99]"
                                                     }
                                                 `}
                                             >
-                                                Room {room.roomNumber}
-                                            </p>
+                                                <span className="text-xs font-bold">
+                                                    {room.roomNumber}
+                                                </span>
+                                            </div>
 
-                                            {room.roomType && (
+                                            <div className="min-w-0">
                                                 <p
                                                     className="
-                                                        text-[11px]
-                                                        text-[#6b7f99]
-                                                        mt-0.5
+                                                        text-sm
+                                                        font-bold
                                                         truncate
+                                                        text-[#0e2a4a]
                                                     "
                                                 >
-                                                    {room.roomType}
-                                                    {room.bedType
-                                                        ? ` • ${room.bedType}`
-                                                        : ""}
+                                                    Room {room.roomNumber}
                                                 </p>
+
+                                                {room.roomType && (
+                                                    <p
+                                                        className="
+                                                            text-[11px]
+                                                            text-[#6b7f99]
+                                                            mt-0.5
+                                                            truncate
+                                                        "
+                                                    >
+                                                        {room.roomType}
+                                                        {room.bedType
+                                                            ? ` • ${room.bedType}`
+                                                            : ""}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* CHECKBOX */}
+                                        <div className="shrink-0">
+                                            {selected ? (
+                                                <CheckSquare
+                                                    className="
+                                                        w-5 h-5
+                                                        text-[#2568e0]
+                                                    "
+                                                />
+                                            ) : (
+                                                <Square
+                                                    className="
+                                                        w-5 h-5
+                                                        text-[#9aabc0]
+                                                    "
+                                                />
                                             )}
                                         </div>
-                                    </div>
-
-                                    {/* CHECKBOX */}
-                                    <div className="shrink-0">
-                                        {selected ? (
-                                            <CheckSquare
-                                                className="
-                                                    w-5 h-5
-                                                    text-[#2568e0]
-                                                "
-                                            />
-                                        ) : (
-                                            <Square
-                                                className="
-                                                    w-5 h-5
-                                                    text-[#9aabc0]
-                                                "
-                                            />
-                                        )}
-                                    </div>
-                                </button>
-                            );
-                        })}
-                    </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
 
                     {/* SELECTED COUNT */}
                     <div

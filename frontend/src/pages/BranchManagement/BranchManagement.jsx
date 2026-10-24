@@ -186,7 +186,7 @@ const CSS = `
 // ============================================================
 
 const inputClass = (hasError, extra = "") =>
-  `bm-input w-full text-sm rounded-xl border outline-none text-slate-900 placeholder:text-slate-400 disabled:cursor-not-allowed ${
+  `bm-input w-full text-sm rounded-xl border outline-none text-black placeholder:text-black disabled:cursor-not-allowed ${
     hasError
       ? "border-rose-400 bg-rose-50/40"
       : "border-slate-200 bg-slate-50/70"
@@ -203,14 +203,14 @@ const Field = memo(function Field({
   return (
     <div className={`min-w-0 ${className}`}>
       {label && (
-        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+        <label className="block text-xs font-semibold text-black mb-1.5">
           {label}
           {required && <span className="text-rose-500 ml-1">*</span>}
         </label>
       )}
       {children}
       {hint && (
-        <p className="text-[11px] text-slate-400 mt-1">{hint}</p>
+        <p className="text-[11px] text-black mt-1">{hint}</p>
       )}
       {error && (
         <p className="bm-pop text-xs text-rose-600 mt-1 font-medium">
@@ -230,7 +230,7 @@ const StatCard = memo(function StatCard({
 }) {
   return (
     <div className="bm-lift bg-white border border-blue-100/80 rounded-2xl p-4 sm:p-5 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)] flex flex-col justify-between min-h-[110px]">
-      <span className="text-xs font-semibold text-slate-500">
+      <span className="text-xs font-semibold text-black">
         {label}
       </span>
       <div className="mt-2">
@@ -300,7 +300,7 @@ const BranchCard = memo(function BranchCard({
                 className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
                   isActive
                     ? "bg-emerald-50 text-emerald-700 border border-emerald-200/70"
-                    : "bg-slate-100 text-slate-600 border border-slate-200"
+                    : "bg-slate-100 text-black border border-slate-200"
                 }`}
               >
                 <span
@@ -314,7 +314,7 @@ const BranchCard = memo(function BranchCard({
           </div>
         </div>
 
-        <div className="mt-5 space-y-2.5 text-sm text-slate-600 border-t border-slate-100 pt-4">
+        <div className="mt-5 space-y-2.5 text-sm text-black border-t border-slate-100 pt-4">
           <div className="flex items-center gap-2.5 min-w-0">
             <Phone className="w-4 h-4 text-blue-400 shrink-0" />
             <span className="truncate">
@@ -332,7 +332,7 @@ const BranchCard = memo(function BranchCard({
 
           <div className="flex items-start gap-2.5">
             <MapPin className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-            <span className="text-xs text-slate-500 line-clamp-2">
+            <span className="text-xs text-black line-clamp-2">
               {address}
             </span>
           </div>
@@ -340,7 +340,7 @@ const BranchCard = memo(function BranchCard({
       </div>
 
       <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
-        <span className="text-xs text-slate-400">
+        <span className="text-xs text-black">
           Created{" "}
           {branch.createdAt
             ? new Date(branch.createdAt).toLocaleDateString()
@@ -351,7 +351,7 @@ const BranchCard = memo(function BranchCard({
           <button
             type="button"
             onClick={() => onEdit(branch)}
-            className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 active:scale-90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-600/20"
+            className="p-2 text-black hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 active:scale-90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-600/20"
             title="Edit Branch"
             aria-label={`Edit ${branch.branchName}`}
           >
@@ -362,7 +362,7 @@ const BranchCard = memo(function BranchCard({
             <button
               type="button"
               onClick={() => onDelete(branch)}
-              className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all duration-200 active:scale-90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/20"
+              className="p-2 text-black hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all duration-200 active:scale-90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/20"
               title="Delete Sub-Branch"
               aria-label={`Delete ${branch.branchName}`}
             >
@@ -415,23 +415,23 @@ const SearchableSelect = memo(function SearchableSelect({
           if (!isOpen) setSearch(""); // Reset search on open
         }}
       >
-        <span className={value ? "text-slate-900" : "text-slate-400"}>
+        <span className={value ? "text-black" : "text-black"}>
           {value || placeholder}
         </span>
-        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        <ChevronDown className={`w-4 h-4 text-black transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </div>
       
       {isOpen && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-blue-100 rounded-xl shadow-[0_8px_30px_-15px_rgba(15,42,99,.25)] overflow-hidden bm-pop">
           <div className="p-2 border-b border-slate-100 flex items-center gap-2">
-            <Search className="w-4 h-4 text-slate-400" />
+            <Search className="w-4 h-4 text-black" />
             <input 
               type="text" 
               autoFocus
               placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full text-sm outline-none bg-transparent text-slate-700"
+              className="w-full text-sm outline-none bg-transparent text-black"
             />
           </div>
           <ul className="max-h-48 overflow-y-auto bm-scroll p-1">
@@ -446,14 +446,14 @@ const SearchableSelect = memo(function SearchableSelect({
                   className={`px-3 py-2 text-sm rounded-lg cursor-pointer transition-colors ${
                     value === opt 
                       ? "bg-blue-50 text-blue-700 font-semibold" 
-                      : "text-slate-700 hover:bg-slate-50"
+                      : "text-black hover:bg-slate-50"
                   }`}
                 >
                   {opt}
                 </li>
               ))
             ) : (
-              <li className="px-3 py-4 text-sm text-center text-slate-400 font-medium">
+              <li className="px-3 py-4 text-sm text-center text-black font-medium">
                 No results found
               </li>
             )}
@@ -508,7 +508,7 @@ const BranchFormModal = memo(function BranchFormModal({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="p-2 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-all active:scale-90"
+            className="p-2 text-black hover:text-black rounded-lg hover:bg-slate-100 transition-all active:scale-90"
           >
             <X className="w-5 h-5" />
           </button>
@@ -557,7 +557,7 @@ const BranchFormModal = memo(function BranchFormModal({
                 className={inputClass(
                   formErrors.branchCode,
                   `px-3.5 py-2.5 font-mono ${
-                    codeLocked ? "!bg-slate-100 !text-slate-400" : ""
+                    codeLocked ? "!bg-slate-100 !text-black" : ""
                   }`
                 )}
               />
@@ -658,7 +658,7 @@ const BranchFormModal = memo(function BranchFormModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all active:scale-95"
+              className="px-4 py-2.5 text-sm font-semibold text-black hover:text-black hover:bg-slate-100 rounded-xl transition-all active:scale-95"
             >
               Cancel
             </button>
@@ -702,7 +702,7 @@ const DeleteModal = memo(function DeleteModal({
           Delete Sub-Branch
         </h3>
 
-        <p className="text-sm text-slate-600 mt-2">
+        <p className="text-sm text-black mt-2">
           Are you sure you want to delete{" "}
           <strong>"{branch.branchName}"</strong>? This action cannot be
           undone.
@@ -712,7 +712,7 @@ const DeleteModal = memo(function DeleteModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all active:scale-95"
+            className="px-4 py-2.5 text-sm font-semibold text-black hover:text-black hover:bg-slate-100 rounded-xl transition-all active:scale-95"
           >
             Cancel
           </button>
@@ -1213,7 +1213,8 @@ export default function BranchManagement() {
           <div className="min-w-0">
             
 
-<h1 className="text-[12px] sm:text-[20px] lg:text-[25px] leading-tight font-extrabold tracking-[-0.035em] text-white">              Branch Management
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-extrabold tracking-tight text-white leading-tight">
+              Branch Management
             </h1>
           
           </div>
@@ -1226,14 +1227,14 @@ export default function BranchManagement() {
             type="button"
             onClick={handleOpenAddModal}
             disabled={isLimitReached}
-            className={`bm-btn flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm ${
+            className={`bm-btn flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 sm:px-4.5 sm:py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 active:scale-95 shadow-md ${
               isLimitReached
-                ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                : "bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 text-white shadow-lg shadow-blue-700/30"
+                ? "bg-slate-200 text-slate-500 cursor-not-allowed shadow-none"
+                : "bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white shadow-blue-600/25 hover:shadow-blue-600/40"
             }`}
           >
-            <Plus className="w-4 h-4" />
-            Add Sub-Branch
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span>Add Sub-Branch</span>
           </button>
         </div>
       </header>
@@ -1340,7 +1341,7 @@ export default function BranchManagement() {
             valueClass={
               remainingCount === 0 ? "text-rose-600" : "text-blue-600"
             }
-            noteClass="text-slate-400"
+            noteClass="text-black"
           />
         </div>
       </section>
@@ -1350,14 +1351,24 @@ export default function BranchManagement() {
       ============================================================ */}
       <section className="bm-rise bm-d3 bg-white border border-blue-100/80 rounded-2xl p-3 sm:p-4 shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
         <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-blue-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-4 h-4 text-blue-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             placeholder="Search by branch name, code, city..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={inputClass(false, "pl-10 pr-4 py-2.5")}
+            className="staylio-search-input"
           />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => setSearchTerm("")}
+              aria-label="Clear search"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-black hover:bg-slate-100 transition cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-1 bg-blue-50 p-1 rounded-xl w-full sm:w-auto">
@@ -1369,7 +1380,7 @@ export default function BranchManagement() {
               className={`flex-1 sm:flex-initial px-4 py-2 text-xs font-semibold rounded-lg capitalize transition-all duration-300 active:scale-95 ${
                 statusFilter === status
                   ? "bg-white text-blue-700 shadow-sm"
-                  : "text-slate-600 hover:text-blue-700"
+                  : "text-black hover:text-blue-700"
               }`}
             >
               {status}
@@ -1384,7 +1395,7 @@ export default function BranchManagement() {
       {loading ? (
         <div className="bm-pop bg-white border border-blue-100/80 rounded-2xl p-12 sm:p-16 flex flex-col items-center justify-center text-center shadow-[0_8px_30px_-18px_rgba(15,42,99,.3)]">
           <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-          <p className="text-sm font-medium text-slate-500 mt-3">
+          <p className="text-sm font-medium text-black mt-3">
             Loading your branches and quota...
           </p>
         </div>
@@ -1396,7 +1407,7 @@ export default function BranchManagement() {
           <h3 className="text-lg font-bold text-[#0f2a63] mt-4">
             No Branches Found
           </h3>
-          <p className="text-sm text-slate-500 mt-1 max-w-sm">
+          <p className="text-sm text-black mt-1 max-w-sm">
             {searchTerm
               ? "No branches match your search criteria. Try modifying your filter."
               : "You haven't created any sub-branches yet."}
@@ -1405,9 +1416,10 @@ export default function BranchManagement() {
             <button
               type="button"
               onClick={handleOpenAddModal}
-              className="bm-btn mt-5 inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 text-white text-sm font-semibold rounded-xl shadow-lg shadow-blue-700/30"
+              className="bm-btn mt-5 inline-flex items-center gap-2 px-4 py-2 sm:px-4.5 sm:py-2.5 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-md shadow-blue-600/25 transition-all duration-200 active:scale-95"
             >
-              <Plus className="w-4 h-4" /> Add Sub-Branch
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span>Add Sub-Branch</span>
             </button>
           )}
         </div>

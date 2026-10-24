@@ -18,18 +18,18 @@ function SectionHeader({
                 <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center">
 
                     {React.cloneElement(icon, {
-                        className: "w-4 h-4 text-slate-600",
+                        className: "w-4 h-4 text-black",
                     })}
 
                 </div>
 
                 <div>
 
-                    <h2 className="text-sm font-bold text-slate-900">
+                    <h2 className="text-sm font-bold text-black">
                         {title}
                     </h2>
 
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-black mt-0.5">
                         {subtitle}
                     </p>
 
@@ -74,7 +74,7 @@ export default function InitialPayment({
                                 Initial Payment
                             </p>
 
-                            <p className="text-[10px] text-slate-500 mt-1">
+                            <p className="text-[10px] text-black mt-1">
                                 Already paid by customer
                             </p>
 

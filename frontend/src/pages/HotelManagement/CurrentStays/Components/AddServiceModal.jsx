@@ -164,118 +164,101 @@ export default function AddServiceModal({
 
   /* ── RENDER ────────────────────────────────────────────────── */
   return (
-    <div className="fixed inset-0 z-50 bg-[#061434]/55 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-[#061434]/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
       <style>{TAB_STYLES}</style>
 
-      <div className="bg-white w-full max-w-5xl rounded-3xl shadow-[0_18px_45px_rgba(6,20,52,0.22)] overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-[#f8fafc] w-full max-w-5xl rounded-2xl sm:rounded-3xl shadow-[0_25px_60px_-15px_rgba(6,20,52,0.35)] border border-slate-200/90 overflow-hidden flex flex-col h-[92vh] max-h-[92vh] transition-all">
 
         {/* HEADER ──────────────────────────────────────────────── */}
-        <div className="px-6 py-4 border-b border-[#e7eff8] flex items-center justify-between bg-gradient-to-r from-[#f4f8fd] to-white shrink-0">
+        <div className="px-5 sm:px-7 py-3.5 sm:py-4 border-b border-slate-200/80 bg-white/95 backdrop-blur-md flex items-center justify-between shrink-0 shadow-xs">
 
-          <div className="flex flex-wrap items-center gap-3 text-xs min-w-0">
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 text-xs min-w-0">
 
-            <div className="font-bold text-[#0e2a4a] text-sm flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#5b9bf5] to-[#2568e0] flex items-center justify-center shrink-0 shadow-md shadow-blue-500/25">
-                <User className="w-4 h-4 text-white" />
+            <div className="font-extrabold text-[#0f2a63] text-sm sm:text-base flex items-center gap-2.5">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-[#1877F2] to-[#3b82f6] flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/30 text-white">
+                <User className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
               </div>
-              <span className="truncate">{customerName}</span>
+              <span className="truncate max-w-[160px] sm:max-w-[260px]">{customerName}</span>
             </div>
 
-            <div className="flex items-center gap-1 text-[#6b7f99] bg-white px-2.5 py-1 rounded-lg border border-[#dbe6f5] shrink-0">
-              <BedDouble className="w-3.5 h-3.5 text-[#2568e0]" />
-              <span>Room:</span>
-              <strong className="text-[#2568e0]">{selectedRoomNumber || "-"}</strong>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50/80 border border-blue-200/70 text-blue-900 font-bold shrink-0 text-xs">
+              <BedDouble className="w-3.5 h-3.5 text-[#1877F2]" />
+              <span className="text-slate-500 font-medium">Room:</span>
+              <span className="text-[#1877F2]">{selectedRoomNumber || "-"}</span>
             </div>
 
-            <div className="flex items-center gap-1 text-[#6b7f99] bg-white px-2.5 py-1 rounded-lg border border-[#dbe6f5] shrink-0">
-              <Phone className="w-3.5 h-3.5 text-[#2568e0]" />
-              {phoneNumber}
-            </div>
+            {phoneNumber && phoneNumber !== "-" && (
+              <div className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 font-medium shrink-0 text-xs">
+                <Phone className="w-3.5 h-3.5 text-slate-400" />
+                <span>{phoneNumber}</span>
+              </div>
+            )}
 
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 ml-3 shrink-0 rounded-xl border border-[#dbe6f5] bg-white text-[#6b7f99] hover:bg-[#eaf3ff] hover:text-[#2568e0] hover:border-[#5b9bf5] active:scale-95 transition-all duration-200 flex items-center justify-center"
+            className="w-8 h-8 sm:w-9 sm:h-9 ml-3 shrink-0 rounded-xl border border-slate-200 bg-slate-50 text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-2xs"
+            title="Close"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* ROOM CHIP ───────────────────────────────────────────── */}
-        <div className="px-6 pt-3 shrink-0">
-          <div className="flex items-center justify-center">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-xl bg-[#eaf3ff] border border-[#dbe6f5]">
-              <BedDouble className="w-4 h-4 text-[#2568e0]" />
-              <span className="text-xs font-semibold text-[#6b7f99]">Adding services for</span>
-              <span className="text-xs font-extrabold text-[#2568e0]">
-                Room {selectedRoomNumber || "-"}
-              </span>
-            </div>
-          </div>
-        </div>
-
         {/* SUBSCRIPTION CHECKING ───────────────────────────────── */}
         {subscriptionLoading ? (
 
-          <div className="flex-1 flex items-center justify-center min-h-[350px]">
-            <div className="text-center">
-              <div className="relative w-14 h-14 mx-auto mb-4">
-                <div className="w-14 h-14 rounded-full border-4 border-[#dbe6f5]" />
-                <div className="absolute inset-0 w-14 h-14 rounded-full border-4 border-transparent border-t-[#2568e0] animate-spin" />
+          <div className="flex-1 flex items-center justify-center min-h-[350px] bg-white">
+            <div className="text-center p-6">
+              <div className="relative w-12 h-12 mx-auto mb-3.5">
+                <div className="w-12 h-12 rounded-full border-3 border-blue-100" />
+                <div className="absolute inset-0 w-12 h-12 rounded-full border-3 border-transparent border-t-[#1877F2] animate-spin" />
               </div>
-              <h3 className="text-sm font-bold text-[#0e2a4a]">Checking Service Access</h3>
-              <p className="text-xs text-[#9aabc0] mt-1">Verifying your subscription and plan features...</p>
+              <h3 className="text-sm font-bold text-[#0f2a63]">Verifying Service Access</h3>
+              <p className="text-xs text-slate-400 mt-1">Checking active room and food service subscriptions...</p>
             </div>
           </div>
 
         ) : !foodAllowed && !roomServiceAllowed ? (
 
-          <div className="flex-1 flex items-center justify-center min-h-[350px] px-6">
-            <div className="text-center max-w-md">
-              <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto mb-4">
-                <ShieldAlert className="w-8 h-8 text-amber-600" />
+          <div className="flex-1 flex items-center justify-center min-h-[350px] px-6 bg-white">
+            <div className="text-center max-w-md p-6 rounded-2xl bg-amber-50/60 border border-amber-200/80">
+              <div className="w-14 h-14 rounded-2xl bg-amber-100/90 border border-amber-200 flex items-center justify-center mx-auto mb-3.5 text-amber-600">
+                <ShieldAlert className="w-7 h-7" />
               </div>
-              <h3 className="text-base font-bold text-[#0e2a4a]">Service Features Not Available</h3>
-              <p className="text-xs text-[#6b7f99] mt-2 leading-5">
-                {accessMessage || "Food Service and Room Service are not included in your current subscription plan."}
+              <h3 className="text-base font-extrabold text-[#0f2a63]">Service Features Unavailable</h3>
+              <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+                {accessMessage || "Food Service and Room Service are not active in your current subscription plan."}
               </p>
             </div>
           </div>
 
         ) : (
           <>
-            {/* ── TAB BAR — sliding underline indicator ──────── */}
-            <div className="flex justify-center border-b border-[#dbe6f5] bg-white pt-3 pb-0 shrink-0">
-              <div className="inline-flex">
+            {/* ── MODERN SEGMENTED PILL TAB BAR ──────────────── */}
+            <div className="px-5 sm:px-7 py-2.5 bg-white border-b border-slate-200/80 flex items-center justify-between gap-4 shrink-0">
+              <div className="inline-flex p-1 bg-slate-100/90 rounded-xl border border-slate-200/70 shadow-inner">
 
                 {foodAllowed && (
                   <button
                     type="button"
                     onClick={() => switchTab("food")}
                     className={`
-                      relative px-7 py-2.5 text-xs font-bold
-                      flex items-center gap-2 transition-colors duration-200
-                      ${activeTab === "food" ? "text-[#2568e0]" : "text-[#6b7f99] hover:text-[#0e2a4a]"}
+                      relative px-4 sm:px-6 py-2 rounded-lg text-xs font-bold
+                      flex items-center gap-2 transition-all duration-200 cursor-pointer
+                      ${activeTab === "food"
+                        ? "bg-white text-[#1877F2] shadow-sm shadow-slate-200/80"
+                        : "text-slate-500 hover:text-slate-800 hover:bg-white/50"
+                      }
                     `}
                   >
                     <UtensilsCrossed
-                      className={`w-3.5 h-3.5 transition-all duration-200 ${
-                        activeTab === "food" ? "scale-110 text-[#2568e0]" : ""
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                        activeTab === "food" ? "scale-110 text-[#1877F2]" : "text-slate-400"
                       }`}
                     />
-                    Food Order
-
-                    {/* sliding underline */}
-                    <span
-                      className={`
-                        absolute bottom-0 left-2 right-2 h-0.5 rounded-full
-                        bg-gradient-to-r from-[#5b9bf5] to-[#2568e0]
-                        transition-all duration-300 origin-center
-                        ${activeTab === "food" ? "opacity-100 scale-x-100" : "opacity-0 scale-x-0"}
-                      `}
-                    />
+                    <span>Food Order</span>
                   </button>
                 )}
 
@@ -284,38 +267,33 @@ export default function AddServiceModal({
                     type="button"
                     onClick={() => switchTab("service")}
                     className={`
-                      relative px-7 py-2.5 text-xs font-bold
-                      flex items-center gap-2 transition-colors duration-200
-                      ${activeTab === "service" ? "text-[#2568e0]" : "text-[#6b7f99] hover:text-[#0e2a4a]"}
+                      relative px-4 sm:px-6 py-2 rounded-lg text-xs font-bold
+                      flex items-center gap-2 transition-all duration-200 cursor-pointer
+                      ${activeTab === "service"
+                        ? "bg-white text-[#1877F2] shadow-sm shadow-slate-200/80"
+                        : "text-slate-500 hover:text-slate-800 hover:bg-white/50"
+                      }
                     `}
                   >
                     <Wrench
-                      className={`w-3.5 h-3.5 transition-all duration-200 ${
-                        activeTab === "service" ? "scale-110 text-[#2568e0]" : ""
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                        activeTab === "service" ? "scale-110 text-[#1877F2]" : "text-slate-400"
                       }`}
                     />
-                    Room Service
-
-                    {/* sliding underline */}
-                    <span
-                      className={`
-                        absolute bottom-0 left-2 right-2 h-0.5 rounded-full
-                        bg-gradient-to-r from-[#5b9bf5] to-[#2568e0]
-                        transition-all duration-300 origin-center
-                        ${activeTab === "service" ? "opacity-100 scale-x-100" : "opacity-0 scale-x-0"}
-                      `}
-                    />
+                    <span>Room Service</span>
                   </button>
                 )}
 
               </div>
+
+            
             </div>
 
-            {/* ── TAB CONTENT — directional fade + slide ──────── */}
-            <div className="overflow-y-auto flex-1 bg-white">
+            {/* ── TAB CONTENT — Directional Fade + Natural Scroll ──── */}
+            <div className="overflow-y-auto flex-1 p-4 sm:p-6 bg-[#f8fafc] staylio-scrollbar">
 
               {activeTab === "food" && foodAllowed && (
-                <div key="food" className={`p-6 ${tabAnimCls}`}>
+                <div key="food" className={tabAnimCls}>
                   <FoodOrderTab
                     customerId={customerId}
                     bookingId={safeBookingId}
@@ -326,7 +304,7 @@ export default function AddServiceModal({
               )}
 
               {activeTab === "service" && roomServiceAllowed && (
-                <div key="service" className={`p-6 ${tabAnimCls}`}>
+                <div key="service" className={tabAnimCls}>
                   <ServiceTab
                     customerId={customerId}
                     bookingId={safeBookingId}

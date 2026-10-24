@@ -10,6 +10,7 @@ import {
   Clock3,
   CreditCard,
   Hotel,
+  IndianRupee,
   Info,
   Landmark,
   Loader2,
@@ -779,27 +780,28 @@ if (paymentSuccess) {
       {/* ======================================================
           CENTERED MAIN CONTENT
       ====================================================== */}
-      <main className="mx-auto w-full max-w-[1160px] px-4 pb-16 pt-5 sm:px-6 sm:pt-8 lg:px-8">
+      {/* ======================================================
+          CENTERED MAIN CONTENT
+      ====================================================== */}
+      <main className="mx-auto w-full max-w-[1160px] px-3.5 pb-10 pt-4 sm:px-6 sm:pb-14 sm:pt-6 lg:px-8">
 
         {/* PAGE HEADER */}
-        <div className="mx-auto mb-7 max-w-[850px] text-center">
-         
-
-          <h1 className="mt-4 text-[24px] font-bold tracking-[-0.035em] text-white sm:text-[28px]">
-Review Subscription & Checkout          </h1>
-
-        
-
-         
+        <div className="mx-auto mb-5 max-w-[850px] text-center sm:mb-7">
+          <h1 className="text-xl font-extrabold tracking-tight text-white sm:text-2xl lg:text-3xl">
+            Review Subscription & Checkout
+          </h1>
+          <p className="mt-1.5 text-xs text-blue-100/90 sm:text-sm">
+            Confirm your plan and hotel details before finalizing activation
+          </p>
         </div>
 
         {/* ERROR */}
         {error && (
-          <div className="mx-auto mb-6 flex max-w-[1080px] items-start gap-3 rounded-xl border border-[#F3C6C1] bg-[#FEF0EF] px-4 py-3.5">
-            <Info size={17} className="mt-0.5 shrink-0 text-[#B42318]" />
-            <div>
-              <p className="text-[14px] font-bold text-[#7A1B12]">Checkout Error</p>
-              <p className="mt-0.5 text-[13px] font-medium leading-5 text-[#93261B]">{error}</p>
+          <div className="mx-auto mb-5 flex max-w-[1080px] items-start gap-3 rounded-xl border border-[#F3C6C1] bg-[#FEF0EF] px-3.5 py-3 sm:px-4 sm:py-3.5">
+            <Info size={16} className="mt-0.5 shrink-0 text-[#B42318]" />
+            <div className="min-w-0">
+              <p className="text-[13px] font-bold text-[#7A1B12]">Checkout Error</p>
+              <p className="mt-0.5 text-[12px] font-medium leading-5 text-[#93261B]">{error}</p>
             </div>
           </div>
         )}
@@ -807,496 +809,272 @@ Review Subscription & Checkout          </h1>
         {/* ====================================================
             TOP ROW — PLAN LEFT + HOTEL RIGHT
         ==================================================== */}
-        <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-2 lg:gap-6">
+        <div className="grid grid-cols-1 items-stretch gap-4 sm:gap-5 lg:grid-cols-2 lg:gap-6">
 
           {/* ==================================================
               LEFT — SELECTED SUBSCRIPTION PLAN
           ================================================== */}
-    <section className="relative w-full overflow-hidden rounded-[22px] border border-[#6AA5FF] bg-[linear-gradient(145deg,#5597F5_0%,#347BE9_58%,#2868DA_100%)] shadow-[0_20px_45px_rgba(22,71,149,0.23)]">
-
-  {/* ============================================================
-      SUBTLE TOP-RIGHT BACKGROUND
-  ============================================================ */}
-  <div className="pointer-events-none absolute right-0 top-0 h-[140px] w-[180px] bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.24)_0%,transparent_72%)]" />
-
-
-  {/* ============================================================
-      CONTENT
-  ============================================================ */}
-  <div className="relative w-full p-4 sm:p-6 lg:p-7">
-
-
-    {/* ==========================================================
-        HEADER
-    ========================================================== */}
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-
-      {/* TITLE */}
-      <div className="min-w-0">
-
-        <p className="text-[12px] font-semibold uppercase tracking-[0.07em] text-[#E2EEFF]">
-          Subscription
-        </p>
-
-        <h2 className="mt-1 text-[20px] font-bold leading-6 tracking-[-0.01em] text-white sm:text-[22px]">
-          Selected Plan
-        </h2>
-
-      </div>
-
-
-      {/* PLAN BADGE */}
-      <span className="w-fit shrink-0 rounded-full bg-white/20 px-3.5 py-2 text-[12px] font-bold text-white ring-1 ring-white/30 sm:self-center">
-Most Popular      </span>
-
-    </div>
-
-
-    {/* ==========================================================
-        PLAN INFORMATION
-    ========================================================== */}
-    <div className="mt-6 min-w-0">
-
-      <p className="break-words text-[22px] font-bold leading-7 tracking-[-0.01em] text-white sm:text-[22px]">
-        {selectedPlan.planName}
-      </p>
-
-      {selectedPlan.description && (
-        <p className="mt-2 max-w-[520px] break-words text-[14px] font-medium leading-6 text-[#F0F6FF]">
-          {selectedPlan.description}
-        </p>
-      )}
-
-    </div>
-
-
-    {/* ==========================================================
-        PRICE
-    ========================================================== */}
-    <div className="mt-6 flex flex-wrap items-end gap-x-2 gap-y-1">
-
-      <span className="break-words text-[33px] font-bold leading-none tracking-[-0.04em] text-white sm:text-[36px]">
-        {formatCurrency(price)}
-      </span>
-
-      <span className="pb-0.5 text-[14px] font-medium text-[#F0F6FF]">
-        /
-        {" "}
-        {billingCycle === "yearly"
-          ? "year"
-          : billingCycle === "monthly"
-            ? "month"
-            : "cycle"}
-      </span>
-
-    </div>
-
-
-    {/* DIVIDER */}
-    <div className="my-5 border-t border-white/30" />
-
-
-    {/* ==========================================================
-        INCLUDED TITLE
-    ========================================================== */}
-    <p className="break-words text-[14px] font-medium leading-5 text-[#F0F6FF]">
-      {selectedPlan.planName} package included{" "}
-      <span className="font-bold text-white">
-        +
-      </span>
-    </p>
-
-
-    {/* ==========================================================
-        FEATURES
-    ========================================================== */}
-    <div className="mt-2 w-full">
-
-
-      {/* ========================================================
-          ROOMS
-      ======================================================== */}
-      <div className="flex min-h-[36px] w-full items-center gap-2.5 border-b border-white/20 py-2">
-
-        <CheckCircle2
-          size={16}
-          strokeWidth={1.8}
-          className="shrink-0 text-white"
-        />
-
-        <span className="min-w-0 break-words text-[14px] font-medium leading-5 text-white">
-          {Number(selectedPlan?.limits?.rooms || 0) === 0
-            ? "Unlimited rooms"
-            : `Up to ${selectedPlan?.limits?.rooms} rooms`}
-        </span>
-
-      </div>
-
-
-      {/* ========================================================
-          BRANCHES
-      ======================================================== */}
-      <div className="flex min-h-[36px] w-full items-center gap-2.5 border-b border-white/20 py-2">
-
-        <CheckCircle2
-          size={16}
-          strokeWidth={1.8}
-          className="shrink-0 text-white"
-        />
-
-        <span className="min-w-0 break-words text-[14px] font-medium leading-5 text-white">
-          {Number(selectedPlan?.limits?.branches || 0) === 0
-            ? "Unlimited branches"
-            : `Up to ${selectedPlan?.limits?.branches} branches`}
-        </span>
-
-      </div>
-
-
-      {/* ========================================================
-          RECEPTIONISTS
-      ======================================================== */}
-      <div className="flex min-h-[36px] w-full items-center gap-2.5 border-b border-white/20 py-2">
-
-        <CheckCircle2
-          size={16}
-          strokeWidth={1.8}
-          className="shrink-0 text-white"
-        />
-
-        <span className="min-w-0 break-words text-[14px] font-medium leading-5 text-white">
-          {Number(selectedPlan?.limits?.receptionists || 0) === 0
-            ? "Unlimited receptionists"
-            : `Up to ${selectedPlan?.limits?.receptionists} receptionists`}
-        </span>
-
-      </div>
-
-
-    {/* ========================================================
-    FOOD SERVICE
-======================================================== */}
-<div className="flex min-h-[36px] w-full items-center gap-2.5 border-b border-white/20 py-2">
-
-  {selectedPlan?.features?.foodService ? (
-    <CheckCircle2
-      size={16}
-      strokeWidth={1.8}
-      className="shrink-0 text-white"
-    />
-  ) : (
-    <XCircle
-      size={16}
-      strokeWidth={1.8}
-      className="shrink-0 text-[#B7D4FF]"
-    />
-  )}
-
-  <span
-    className={`min-w-0 break-words text-[14px] font-medium leading-5 ${
-      selectedPlan?.features?.foodService
-        ? "text-white"
-        : "text-[#D5E6FF] line-through decoration-white/60"
-    }`}
-  >
-    Food Service
-  </span>
-
-</div>
-
-
-{/* ========================================================
-    ROOM SERVICE
-======================================================== */}
-<div className="flex min-h-[36px] w-full items-center gap-2.5 border-b border-white/20 py-2">
-
-  {selectedPlan?.features?.roomService ? (
-    <CheckCircle2
-      size={16}
-      strokeWidth={1.8}
-      className="shrink-0 text-white"
-    />
-  ) : (
-    <XCircle
-      size={16}
-      strokeWidth={1.8}
-      className="shrink-0 text-[#B7D4FF]"
-    />
-  )}
-
-  <span
-    className={`min-w-0 break-words text-[14px] font-medium leading-5 ${
-      selectedPlan?.features?.roomService
-        ? "text-white"
-        : "text-[#D5E6FF] line-through decoration-white/60"
-    }`}
-  >
-    Room Service
-  </span>
-
-</div>
-
-
-      {/* ========================================================
-          TRIAL
-      ======================================================== */}
-      {Number(selectedPlan?.trialDays || 0) > 0 && (
-        <div className="flex min-h-[36px] w-full items-center gap-2.5 border-b border-white/20 py-2">
-
-          <CheckCircle2
-            size={16}
-            strokeWidth={1.8}
-            className="shrink-0 text-white"
-          />
-
-          <span className="min-w-0 break-words text-[14px] font-medium leading-5 text-white">
-            {selectedPlan.trialDays} days free trial
-          </span>
-
-        </div>
-      )}
-
-    </div>
-
-
-    {/* ==========================================================
-        BILLING
-    ========================================================== */}
-    <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-
-      <span className="text-[14px] font-semibold text-[#F0F6FF]">
-        Billing
-      </span>
-
-      <span className="w-fit shrink-0 rounded-full border border-white/30 bg-white/20 px-3 py-1.5 text-[13px] font-bold text-white">
-        {getBillingLabel(billingCycle)}
-      </span>
-
-    </div>
-
-  </div>
-
-</section>
+          <section className="relative flex w-full flex-col justify-between overflow-hidden rounded-2xl border border-[#6AA5FF]/70 bg-[linear-gradient(145deg,#3B82F6_0%,#2563EB_50%,#1D4ED8_100%)] shadow-[0_12px_32px_rgba(29,78,216,0.22)]">
+
+            {/* SUBTLE TOP-RIGHT GLOW ACCENT */}
+            <div className="pointer-events-none absolute -right-6 -top-6 h-36 w-36 rounded-full bg-white/10 blur-xl" />
+
+            {/* CONTENT */}
+            <div className="relative flex w-full flex-1 flex-col justify-between p-4 sm:p-5 lg:p-6">
+
+              <div>
+                {/* HEADER */}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white ring-1 ring-white/20">
+                      <Sparkles size={11} className="text-amber-300" />
+                      Subscription Plan
+                    </span>
+                  </div>
+
+                  <span className="shrink-0 rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-bold text-white ring-1 ring-white/30">
+                    Most Popular
+                  </span>
+                </div>
+
+                {/* PLAN NAME & DESC */}
+                <div className="mt-3.5 min-w-0">
+                  <h2 className="break-words text-xl font-extrabold leading-tight tracking-tight text-white sm:text-2xl">
+                    {selectedPlan.planName}
+                  </h2>
+                  {selectedPlan.description && (
+                    <p className="mt-1 line-clamp-2 text-xs font-medium leading-relaxed text-blue-50/90 sm:text-[13px]">
+                      {selectedPlan.description}
+                    </p>
+                  )}
+                </div>
+
+                {/* PRICE */}
+                <div className="mt-3.5 flex flex-wrap items-baseline gap-x-2">
+                  <span className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+                    {formatCurrency(price)}
+                  </span>
+                  <span className="text-xs font-semibold text-blue-100 sm:text-sm">
+                    / {billingCycle === "yearly" ? "year" : billingCycle === "monthly" ? "month" : "cycle"}
+                  </span>
+                </div>
+
+                {/* DIVIDER */}
+                <div className="my-3.5 border-t border-white/20" />
+
+                {/* INCLUDED TITLE */}
+                <p className="text-xs font-semibold text-blue-100">
+                  Plan inclusions & limits:
+                </p>
+
+                {/* FEATURES LIST */}
+                <div className="mt-2 divide-y divide-white/15">
+                  {/* ROOMS */}
+                  <div className="flex items-center gap-2.5 py-2">
+                    <CheckCircle2 size={15} strokeWidth={2.2} className="shrink-0 text-white" />
+                    <span className="text-xs font-medium text-white sm:text-[13px]">
+                      {Number(selectedPlan?.limits?.rooms || 0) === 0
+                        ? "Unlimited rooms"
+                        : `Up to ${selectedPlan?.limits?.rooms} rooms`}
+                    </span>
+                  </div>
+
+                  {/* BRANCHES */}
+                  <div className="flex items-center gap-2.5 py-2">
+                    <CheckCircle2 size={15} strokeWidth={2.2} className="shrink-0 text-white" />
+                    <span className="text-xs font-medium text-white sm:text-[13px]">
+                      {Number(selectedPlan?.limits?.branches || 0) === 0
+                        ? "Unlimited branches"
+                        : `Up to ${selectedPlan?.limits?.branches} branches`}
+                    </span>
+                  </div>
+
+                  {/* RECEPTIONISTS */}
+                  <div className="flex items-center gap-2.5 py-2">
+                    <CheckCircle2 size={15} strokeWidth={2.2} className="shrink-0 text-white" />
+                    <span className="text-xs font-medium text-white sm:text-[13px]">
+                      {Number(selectedPlan?.limits?.receptionists || 0) === 0
+                        ? "Unlimited receptionists"
+                        : `Up to ${selectedPlan?.limits?.receptionists} receptionists`}
+                    </span>
+                  </div>
+
+                  {/* FOOD SERVICE */}
+                  <div className="flex items-center gap-2.5 py-2">
+                    {selectedPlan?.features?.foodService ? (
+                      <CheckCircle2 size={15} strokeWidth={2.2} className="shrink-0 text-white" />
+                    ) : (
+                      <XCircle size={15} strokeWidth={2} className="shrink-0 text-blue-200" />
+                    )}
+                    <span
+                      className={`text-xs font-medium sm:text-[13px] ${
+                        selectedPlan?.features?.foodService
+                          ? "text-white"
+                          : "text-blue-200/80 line-through"
+                      }`}
+                    >
+                      Food Service & Kitchen Billing
+                    </span>
+                  </div>
+
+                  {/* ROOM SERVICE */}
+                  <div className="flex items-center gap-2.5 py-2">
+                    {selectedPlan?.features?.roomService ? (
+                      <CheckCircle2 size={15} strokeWidth={2.2} className="shrink-0 text-white" />
+                    ) : (
+                      <XCircle size={15} strokeWidth={2} className="shrink-0 text-blue-200" />
+                    )}
+                    <span
+                      className={`text-xs font-medium sm:text-[13px] ${
+                        selectedPlan?.features?.roomService
+                          ? "text-white"
+                          : "text-blue-200/80 line-through"
+                      }`}
+                    >
+                      Room Service Ordering
+                    </span>
+                  </div>
+
+                  {/* TRIAL */}
+                  {Number(selectedPlan?.trialDays || 0) > 0 && (
+                    <div className="flex items-center gap-2.5 py-2">
+                      <CheckCircle2 size={15} strokeWidth={2.2} className="shrink-0 text-emerald-300" />
+                      <span className="text-xs font-semibold text-emerald-100 sm:text-[13px]">
+                        {selectedPlan.trialDays} days free trial enabled
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* BILLING FOOTER */}
+              <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/20 pt-3">
+                <span className="text-xs font-semibold text-blue-100">
+                  Billing Frequency
+                </span>
+                <span className="rounded-md border border-white/30 bg-white/20 px-2.5 py-1 text-xs font-bold text-white">
+                  {getBillingLabel(billingCycle)}
+                </span>
+              </div>
+
+            </div>
+          </section>
 
 
           {/* ==================================================
               RIGHT — HOTEL REGISTRATION
           ================================================== */}
-          
-          <section className="w-full overflow-hidden rounded-[22px] border border-[#E2EAF5] bg-white shadow-[0_16px_40px_rgba(14,42,81,0.09)]">
-
-  {/* ============================================================
-      HEADER
-  ============================================================ */}
-  <div className="flex flex-col gap-3 border-b border-[#E2EAF5] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 sm:py-5">
-
-    {/* HEADER TITLE */}
-    <div className="flex min-w-0 items-center gap-3">
-
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EAF3FF] text-[#3479E8]">
-        <Hotel size={18} />
-      </div>
-
-      <div className="min-w-0">
-        <p className="text-[12px] font-semibold uppercase tracking-[0.07em] text-[#5B6472]">
-          Registration
-        </p>
-
-        <h2 className="mt-0.5 break-words text-[19px] font-bold leading-6 text-[#17345D]">
-          Hotel Information
-        </h2>
-      </div>
-
-    </div>
-
-
-    {/* EDIT BUTTON */}
-    <button
-      type="button"
-      onClick={() => navigate(-1)}
-      className="
-        inline-flex
-        min-h-[40px]
-        w-full
-        shrink-0
-        cursor-pointer
-        items-center
-        justify-center
-        gap-1.5
-        rounded-lg
-        px-3
-        py-2
-        text-[13px]
-        font-semibold
-        text-[#3479E8]
-        transition
-        hover:bg-[#EAF3FF]
-        active:scale-[0.98]
-        sm:min-h-[38px]
-        sm:w-auto
-        sm:px-3
-      "
-    >
-      <ArrowLeft
-        size={15}
-        className="shrink-0"
-      />
-
-      <span>
-        Edit
-      </span>
-    </button>
-
-  </div>
-
-
-  {/* ============================================================
-      CONTENT
-  ============================================================ */}
-  <div className="w-full p-4 sm:p-6 lg:p-7">
-
-
-    {/* ==========================================================
-        HOTEL IDENTITY
-    ========================================================== */}
-    <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-
-      {/* HOTEL ICON */}
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#17345D] text-white sm:h-12 sm:w-12">
-        <Hotel size={19} />
-      </div>
-
-
-      {/* HOTEL DETAILS */}
-      <div className="min-w-0 flex-1">
-
-        <p className="break-words text-[19px] font-bold leading-6 tracking-[-0.01em] text-[#17345D] sm:text-[19px]">
-          {hotelName}
-        </p>
-
-        <div className="mt-1.5 flex min-w-0 items-start gap-2">
-
-          <MapPin
-            size={15}
-            className="mt-0.5 shrink-0 text-[#3479E8]"
-          />
-
-          <p className="min-w-0 break-words text-[14px] font-medium leading-5 text-[#5B6472]">
-            {addressText || "Registered hotel address"}
-          </p>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    {/* ==========================================================
-        OWNER + TAX
-    ========================================================== */}
-    <div className="mt-5 grid w-full grid-cols-1 overflow-hidden rounded-xl border border-[#E2EAF5] sm:grid-cols-2">
-
-      {/* AUTHORIZED OWNER */}
-      <div className="min-w-0 p-4 sm:p-4">
-
-        <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#5B6472]">
-          Authorized Owner
-        </p>
-
-        <p className="mt-1.5 break-words text-[14px] font-bold leading-5 text-[#17345D]">
-          {ownerName}
-        </p>
-
-      </div>
-
-
-
-    </div>
-
-
-    {/* ==========================================================
-        CONTACT
-    ========================================================== */}
-    <div className="mt-4 grid w-full grid-cols-1 overflow-hidden rounded-xl border border-[#E2EAF5] sm:grid-cols-2">
-
-      {/* EMAIL */}
-      <div className="flex min-w-0 items-start gap-3 p-4">
-
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EAF3FF] text-[#3479E8]">
-          <Mail size={16} />
-        </div>
-
-        <div className="min-w-0 flex-1">
-
-          <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#5B6472]">
-            Email
-          </p>
-
-          <p className="mt-1 break-all text-[13px] font-semibold leading-5 text-[#222222]">
-            {ownerEmail || "Not available"}
-          </p>
-
-        </div>
-
-      </div>
-
-
-      {/* PHONE */}
-      <div className="flex min-w-0 items-start gap-3 border-t border-[#EEF1F5] p-4 sm:border-l sm:border-t-0">
-
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EAF3FF] text-[#3479E8]">
-          <Phone size={16} />
-        </div>
-
-        <div className="min-w-0 flex-1">
-
-          <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#5B6472]">
-            Phone
-          </p>
-
-          <p className="mt-1 break-words text-[13px] font-semibold leading-5 text-[#222222]">
-            {ownerPhone || "Not available"}
-          </p>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    {/* ==========================================================
-        VERIFICATION
-    ========================================================== */}
-    <div className="mt-4 flex w-full items-start gap-3 rounded-xl border border-[#BFE4D2] bg-[#F1FAF6] p-4 sm:p-4">
-
-      {/* CHECK ICON */}
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E7F6EF] text-[#0F7A5E]">
-        <Check size={15} />
-      </div>
-
-
-      {/* MESSAGE */}
-      <div className="min-w-0 flex-1">
-
-        <p className="break-words text-[13px] font-bold leading-5 text-[#0F7A5E]">
-          Registration details ready
-        </p>
-
-        <p className="mt-1 break-words text-[12px] font-medium leading-5 text-[#136245]">
-          Hotel information will be submitted for admin review after payment.
-        </p>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</section>
-
-
+          <section className="flex w-full flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+
+            {/* HEADER */}
+            <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/70 px-4 py-3 sm:px-5 sm:py-3.5">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                  <Hotel size={16} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    Registration Info
+                  </p>
+                  <h2 className="truncate text-sm font-bold text-slate-900 sm:text-[15px]">
+                    Hotel & Owner Details
+                  </h2>
+                </div>
+              </div>
+
+              {/* EDIT BUTTON */}
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:text-blue-600 active:scale-[0.98]"
+              >
+                <ArrowLeft size={13} className="shrink-0" />
+                <span>Edit</span>
+              </button>
+            </div>
+
+            {/* CONTENT */}
+            <div className="flex flex-1 flex-col justify-between p-4 sm:p-5 lg:p-6">
+              <div>
+                {/* HOTEL IDENTITY */}
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm">
+                    <Building2 size={18} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="break-words text-base font-bold text-slate-900 sm:text-lg">
+                      {hotelName}
+                    </h3>
+                    <div className="mt-1 flex items-start gap-1.5 text-xs text-slate-500">
+                      <MapPin size={13} className="mt-0.5 shrink-0 text-blue-500" />
+                      <span className="line-clamp-2 leading-relaxed">
+                        {addressText || "Registered hotel address"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* KEY VALUE DETAILS */}
+                <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  {/* AUTHORIZED OWNER */}
+                  <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Authorized Owner
+                    </p>
+                    <p className="mt-1 truncate text-xs font-bold text-slate-800 sm:text-[13px]">
+                      {ownerName || "Hotel Owner"}
+                    </p>
+                  </div>
+
+                  {/* PHONE */}
+                  <div className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                      <Phone size={13} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        Phone
+                      </p>
+                      <p className="mt-0.5 truncate text-xs font-bold text-slate-800">
+                        {ownerPhone || "Not provided"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* EMAIL */}
+                <div className="mt-2.5 flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                    <Mail size={13} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Verified Contact Email
+                    </p>
+                    <p className="mt-0.5 break-all text-xs font-bold text-slate-800">
+                      {ownerEmail || "Not available"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* VERIFICATION NOTICE */}
+              <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50/70 p-3">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                  <Check size={13} strokeWidth={2.5} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-emerald-900">
+                    Registration information ready
+                  </p>
+                  <p className="mt-0.5 text-[11px] font-medium leading-relaxed text-emerald-700">
+                    Your hotel profile will be forwarded to admin review immediately after checkout.
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          </section>
 
         </div>
 
@@ -1304,268 +1082,169 @@ Most Popular      </span>
         {/* ====================================================
             BOTTOM — PROFESSIONAL CHECKOUT INFORMATION
         ==================================================== */}
-   <section className="mt-6 overflow-hidden rounded-[22px] border border-[#E2EAF5] bg-white shadow-[0_16px_40px_rgba(14,42,81,0.08)]">
+        <section className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:mt-6">
 
-  {/* ============================================================
-      CHECKOUT HEADER
-  ============================================================ */}
-  <div className="flex flex-col gap-3 border-b border-[#E2EAF5] bg-[linear-gradient(105deg,#17345D,#347BE9)] px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6">
-
-    <div className="min-w-0">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#C4DAFF]">
-        Checkout
-      </p>
-
-      <h2 className="mt-1 text-[20px] font-bold text-white sm:text-[20px]">
-        Order Summary
-      </h2>
-    </div>
-
-    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white">
-      <ReceiptText size={18} />
-    </div>
-
-  </div>
-
-
-  {/* ============================================================
-      CHECKOUT CONTENT
-  ============================================================ */}
-  <div className="p-4 sm:p-6 lg:p-7">
-
-    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_330px] lg:gap-6">
-
-
-      {/* ==========================================================
-          BILLING DETAILS
-      ========================================================== */}
-    <div className="min-w-0 w-full">
-
-  {/* ============================================================
-      BILLING DETAILS
-  ============================================================ */}
-  <p className="mb-3 text-[14px] font-bold uppercase tracking-[0.06em] text-[#5B6472] sm:text-[14px]">
-    Billing Details
-  </p>
-
-
-  {/* ============================================================
-      BILLING CARD
-  ============================================================ */}
-  <div className="w-full overflow-hidden rounded-xl border border-[#E2EAF5] bg-white">
-
-
-    {/* ==========================================================
-        PLAN PRICE
-    ========================================================== */}
-    <div className="min-w-0 w-full">
-      <SummaryPriceRow
-        label={selectedPlan.planName}
-        description={`${getBillingLabel(billingCycle)} subscription`}
-        value={price}
-      />
-    </div>
-
-
-    {/* ==========================================================
-        SETUP FEE
-    ========================================================== */}
-    <div className="border-t border-[#EEF1F5] px-4 py-4 sm:px-5 sm:py-5">
-
-      <div className="flex w-full flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
-
-        {/* LEFT */}
-        <div className="min-w-0 flex-1">
-
-          <p className="break-words text-[16px] font-semibold leading-5 text-[#101828]">
-            Platform Setup Fee
-          </p>
-
-          <p className="mt-1 text-[14px] font-medium leading-5 text-[#5B6472]">
-            Initial platform provisioning
-          </p>
-
-        </div>
-
-
-        {/* RIGHT */}
-        {setupFee > 0 ? (
-          <span className="shrink-0 self-start text-[16px] font-bold text-[#17345D] sm:self-center">
-            {formatCurrency(setupFee)}
-          </span>
-        ) : (
-          <span className="w-fit shrink-0 rounded-full bg-[#E7F6EF] px-3 py-1.5 text-[13px] font-bold text-[#0F7A5E]">
-            Free
-          </span>
-        )}
-
-      </div>
-
-    </div>
-
-
-    
-
-  </div>
-
-
-  {/* ============================================================
-      PAYMENT NOTICE
-  ============================================================ */}
-  <div className="mt-4 flex w-full items-start gap-3 rounded-xl border border-[#BFD8FF] bg-[#EAF3FF] p-4 sm:mt-5 sm:p-5">
-
-    {/* ICON */}
-    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#3479E8] sm:h-10 sm:w-10">
-      <Info size={18} />
-    </div>
-
-
-    {/* CONTENT */}
-    <div className="min-w-0 flex-1">
-
-      <p className="break-words text-[15px] font-bold leading-5 text-[#17345D]">
-        Before you continue
-      </p>
-
-      <p className="mt-1.5 break-words text-[14px] font-medium leading-6 text-[#2A4A73]">
-        Payment marks your registration as paid. Your hotel is then submitted to the admin for review and activation.
-      </p>
-
-    </div>
-
-  </div>
-
-</div>
-
-
-      {/* ==========================================================
-          TOTAL + ACTIONS
-      ========================================================== */}
-      <div className="min-w-0 rounded-xl border border-[#E2EAF5] bg-[#F8FAFF] p-4 sm:p-5">
-
-
-        {/* TOTAL LABEL */}
-        <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[#5B6472]">
-          Total Due Today
-        </p>
-
-
-        {/* TOTAL */}
-        <div className="mt-2 flex items-end justify-between gap-3">
-
-          <p className="min-w-0 break-words text-[30px] font-bold tracking-[-0.03em] text-[#17345D] sm:text-[30px]">
-            {formatCurrency(total)}
-          </p>
-
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#17345D] text-white">
-            <CreditCard size={18} />
-          </div>
-
-        </div>
-
-
-        <div className="my-5 border-t border-[#E2EAF5]" />
-
-
-        {/* ========================================================
-            PAY NOW / ALREADY PAID
-        ======================================================== */}
-        {alreadyPaid ? (
-          /* ── Already-Paid Premium Banner ── */
-          <div className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 sm:p-5">
-            <div className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
-                <CheckCircle2 size={20} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[14px] font-bold text-amber-800">
-                  Payment Already Received
-                </p>
-                <p className="mt-0.5 text-[12px] leading-5 text-amber-700">
-                  Your hotel registration is confirmed and subscription payment
-                  has been successfully received. Our admin team is currently
-                  reviewing your application.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-white px-3 py-2.5">
-              <Clock3 size={14} className="shrink-0 text-amber-500" />
-              <p className="text-[12px] font-semibold text-amber-700">
-                Awaiting admin approval — you will be notified via email once your hotel account is activated.
+          {/* CHECKOUT HEADER */}
+          <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 px-4 py-3 sm:px-6 sm:py-3.5">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-blue-200">
+                Payment Summary
               </p>
+              <h2 className="text-sm font-bold text-white sm:text-base">
+                Order Breakdown & Due Total
+              </h2>
             </div>
-            <button
-              type="button"
-              onClick={handleViewApplicationStatus}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#347BE9] bg-white px-4 py-2.5 text-[13px] font-bold text-[#347BE9] transition hover:bg-[#EAF3FF] active:scale-[0.99]"
-            >
-              <Info size={15} className="shrink-0" />
-              View Application Status
-            </button>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white ring-1 ring-white/15">
+              <ReceiptText size={16} />
+            </div>
           </div>
-        ) : (
-          <button
-            type="button"
-            onClick={handlePayNow}
-            disabled={isPaying}
-            className="
-              flex
-              min-h-[50px]
-              w-full
-              cursor-pointer
-              items-center
-              justify-center
-              gap-2
-              rounded-xl
-              bg-[#347BE9]
-              px-4
-              py-3.5
-              text-[15px]
-              font-bold
-              text-white
-              shadow-[0_2px_5px_rgba(52,123,233,0.25)]
-              transition
-              hover:bg-[#2467D5]
-              active:scale-[0.99]
-              disabled:cursor-not-allowed
-              disabled:opacity-60
-              sm:px-5
-            "
-          >
-            <CreditCard
-              size={18}
-              className="shrink-0"
-            />
 
-            <span className="truncate">
-              Pay Now
-            </span>
+          {/* CHECKOUT CONTENT */}
+          <div className="p-4 sm:p-5 lg:p-6">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6">
 
-            <span className="shrink-0">
-              {formatCurrency(total)}
-            </span>
+              {/* LEFT — BILLING DETAILS */}
+              <div className="min-w-0 w-full">
+                <p className="mb-2.5 text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Billing Details
+                </p>
 
-            <ArrowRight
-              size={17}
-              className="ml-auto shrink-0"
-            />
-          </button>
-        )}
+                {/* BILLING CARD */}
+                <div className="w-full overflow-hidden rounded-xl border border-slate-200 bg-white">
+                  {/* PLAN PRICE */}
+                  <div className="min-w-0 w-full">
+                    <SummaryPriceRow
+                      label={selectedPlan.planName}
+                      description={`${getBillingLabel(billingCycle)} subscription`}
+                      value={price}
+                    />
+                  </div>
 
+                  {/* SETUP FEE */}
+                  <div className="border-t border-slate-100 px-4 py-3 sm:px-5">
+                    <div className="flex w-full items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-900 sm:text-[13px]">
+                          Platform Setup Fee
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-slate-500">
+                          Initial cloud database and platform provisioning
+                        </p>
+                      </div>
+                      {setupFee > 0 ? (
+                        <span className="shrink-0 text-xs font-bold text-slate-900 sm:text-[13px]">
+                          {formatCurrency(setupFee)}
+                        </span>
+                      ) : (
+                        <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-200">
+                          Free
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-      
+                {/* PAYMENT NOTICE */}
+                <div className="mt-3.5 flex items-start gap-2.5 rounded-xl border border-blue-200 bg-blue-50/60 p-3 sm:p-3.5">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-blue-600 shadow-sm">
+                    <Info size={14} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-slate-900">
+                      Payment Protection & Approval
+                    </p>
+                    <p className="mt-0.5 text-[11px] font-medium leading-relaxed text-slate-600">
+                      Completing payment validates your subscription. Your hotel profile is queued for rapid verification by our operations team.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-     
+              {/* RIGHT — TOTAL + ACTIONS */}
+              <div className="flex flex-col justify-between rounded-xl border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      Total Due Today
+                    </p>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-sm">
+                      <CreditCard size={15} />
+                    </div>
+                  </div>
 
-      </div>
+                  <div className="mt-2">
+                    <p className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+                      {formatCurrency(total)}
+                    </p>
+                    <p className="mt-0.5 text-[11px] font-medium text-slate-500">
+                      Includes all applicable platform taxes
+                    </p>
+                  </div>
+                </div>
 
-    </div>
+                <div className="mt-5 border-t border-slate-200 pt-4">
+                  {/* PAY NOW / ALREADY PAID */}
+                  {alreadyPaid ? (
+                    <div className="flex flex-col gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3.5">
+                      <div className="flex items-start gap-2.5">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                          <CheckCircle2 size={16} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-amber-800">
+                            Payment Already Received
+                          </p>
+                          <p className="mt-0.5 text-[11px] leading-relaxed text-amber-700">
+                            Your hotel registration and payment are confirmed. Our admin team is reviewing your application.
+                          </p>
+                        </div>
+                      </div>
 
-  </div>
+                      <button
+                        type="button"
+                        onClick={handleViewApplicationStatus}
+                        className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-blue-600 bg-white px-3 py-2 text-xs font-bold text-blue-600 transition hover:bg-blue-50 active:scale-[0.99]"
+                      >
+                        <Info size={13} className="shrink-0" />
+                        View Application Status
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      <button
+                        type="button"
+                        onClick={handlePayNow}
+                        disabled={isPaying}
+                        className="flex min-h-[46px] w-full cursor-pointer items-center justify-between rounded-xl bg-blue-600 px-4 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
+                      >
+                        <div className="flex items-center gap-2">
+                          <CreditCard size={16} className="shrink-0" />
+                          <span>Pay Now</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span>{formatCurrency(total)}</span>
+                          <ArrowRight size={14} className="shrink-0" />
+                        </div>
+                      </button>
 
-</section>
+                      <div className="flex items-center justify-center gap-3 pt-1 text-[11px] text-slate-500">
+                        <span className="inline-flex items-center gap-1">
+                          <LockKeyhole size={12} className="text-emerald-600" />
+                          256-bit SSL Secure
+                        </span>
+                        <span>•</span>
+                        <span>Instant Receipt</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-        
+              </div>
+
+            </div>
+          </div>
+
+        </section>
 
       </main>
 
@@ -1739,8 +1418,8 @@ Most Popular      </span>
                         </>
                       ) : (
                         <>
-                          <LockKeyhole size={16} />
-                          Pay Securely with Cashfree
+                          <CreditCard size={16} />
+                          Pay 
                           <span className="ml-1">{formatCurrency(total)}</span>
                         </>
                       )}

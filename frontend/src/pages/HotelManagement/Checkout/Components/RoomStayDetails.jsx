@@ -17,7 +17,7 @@ function DetailItem({
 
             <div className="flex items-start gap-2.5">
 
-                <div className="mt-0.5 text-slate-400">
+                <div className="mt-0.5 text-black">
 
                     {React.cloneElement(icon, {
                         className: "w-3.5 h-3.5",
@@ -27,11 +27,11 @@ function DetailItem({
 
                 <div>
 
-                    <p className="text-[10px] uppercase tracking-wide font-bold text-slate-400">
+                    <p className="text-[10px] uppercase tracking-wide font-bold text-black">
                         {label}
                     </p>
 
-                    <p className="text-sm font-semibold text-slate-800 mt-1">
+                    <p className="text-sm font-semibold text-black mt-1">
                         {value ?? "Not provided"}
                     </p>
 
@@ -57,18 +57,18 @@ function SectionHeader({
                 <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center">
 
                     {React.cloneElement(icon, {
-                        className: "w-4 h-4 text-slate-600",
+                        className: "w-4 h-4 text-black",
                     })}
 
                 </div>
 
                 <div>
 
-                    <h2 className="text-sm font-bold text-slate-900">
+                    <h2 className="text-sm font-bold text-black">
                         {title}
                     </h2>
 
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-black mt-0.5">
                         {subtitle}
                     </p>
 
@@ -118,11 +118,11 @@ export default function RoomStayDetails({
 
                         <div>
 
-                            <p className="text-[10px] uppercase tracking-wide font-bold text-slate-400">
+                            <p className="text-[10px] uppercase tracking-wide font-bold text-black">
                                 Room Number
                             </p>
 
-                            <p className="text-xl font-bold text-slate-900 mt-0.5">
+                            <p className="text-xl font-bold text-black mt-0.5">
                                 {roomNumber || "-"}
                             </p>
 
@@ -175,21 +175,21 @@ export default function RoomStayDetails({
 
                     <div>
 
-                        <p className="text-[10px] uppercase tracking-wide font-bold text-slate-400">
+                        <p className="text-[10px] uppercase tracking-wide font-bold text-black">
                             Room Rate
                         </p>
 
-                        <p className="text-xs text-slate-400 mt-0.5">
+                        <p className="text-xs text-black mt-0.5">
                             Per night
                         </p>
 
                     </div>
 
-                    <p className="text-base font-bold text-slate-900">
+                    <p className="text-base font-bold text-black">
 
                         ₹{money(pricePerNight)}
 
-                        <span className="text-xs text-slate-400 font-medium ml-1">
+                        <span className="text-xs text-black font-medium ml-1">
                             / night
                         </span>
 
@@ -204,9 +204,9 @@ export default function RoomStayDetails({
 
                     <div className="flex items-center gap-2 mb-3">
 
-                        <CalendarDays className="w-4 h-4 text-slate-500" />
+                        <CalendarDays className="w-4 h-4 text-black" />
 
-                        <h3 className="text-sm font-bold text-slate-800">
+                        <h3 className="text-sm font-bold text-black">
                             Check-in Information
                         </h3>
 
@@ -217,15 +217,15 @@ export default function RoomStayDetails({
 
                         <div className="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3">
 
-                            <p className="text-[10px] uppercase tracking-wide font-bold text-slate-400">
+                            <p className="text-[10px] uppercase tracking-wide font-bold text-black">
                                 Check-in
                             </p>
 
                             <div className="flex items-center gap-2 mt-2">
 
-                                <CalendarDays className="w-3.5 h-3.5 text-slate-400" />
+                                <CalendarDays className="w-3.5 h-3.5 text-black" />
 
-                                <p className="text-sm font-semibold text-slate-800">
+                                <p className="text-sm font-semibold text-black">
                                     {checkInDate || "Not provided"}
                                 </p>
 
@@ -233,9 +233,9 @@ export default function RoomStayDetails({
 
                             <div className="flex items-center gap-2 mt-1.5">
 
-                                <Clock3 className="w-3.5 h-3.5 text-slate-400" />
+                                <Clock3 className="w-3.5 h-3.5 text-black" />
 
-                                <p className="text-xs text-slate-500">
+                                <p className="text-xs text-black">
                                     {checkInTime || "Not provided"}
                                 </p>
 
@@ -252,17 +252,17 @@ export default function RoomStayDetails({
 
                             <div className="flex items-baseline gap-1 mt-1.5">
 
-                                <p className="text-lg font-bold text-slate-900">
+                                <p className="text-lg font-bold text-black">
                                     {nights}
                                 </p>
 
-                                <span className="text-xs font-medium text-slate-500">
+                                <span className="text-xs font-medium text-black">
                                     Nights
                                 </span>
 
                             </div>
 
-                            <p className="text-xs text-slate-500 mt-1">
+                            <p className="text-xs text-black mt-1">
                                 ₹{money(pricePerNight)} / night
                             </p>
 

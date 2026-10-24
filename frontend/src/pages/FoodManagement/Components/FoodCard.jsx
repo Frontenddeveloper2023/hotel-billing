@@ -38,7 +38,7 @@ function FoodCard({ food, onEdit, onDelete }) {
                                 <Utensils className="h-5 w-5 sm:h-6 sm:w-6" />
                             )}
                         </div>
-                        <span className="mt-2 text-[11px] font-semibold text-slate-400">
+                        <span className="mt-2 text-[11px] font-semibold text-black">
                             {imgFailed ? "Image unavailable" : "No image"}
                         </span>
                     </div>
@@ -57,7 +57,7 @@ function FoodCard({ food, onEdit, onDelete }) {
                         </h3>
                         <p
                             title={description}
-                            className="mt-1.5 line-clamp-2 min-h-[30px] text-[11px] leading-relaxed text-slate-500 sm:min-h-[32px] sm:text-xs"
+                            className="mt-1.5 line-clamp-2 min-h-[30px] text-[11px] leading-relaxed text-black sm:min-h-[32px] sm:text-xs"
                         >
                             {description}
                         </p>
@@ -70,7 +70,7 @@ function FoodCard({ food, onEdit, onDelete }) {
 
                 {/* ACTIONS */}
                 <div className="mt-4 flex items-center justify-between gap-3 border-t border-[var(--line)] pt-3 sm:pt-3.5">
-                    <span className="hidden truncate text-[10px] font-medium text-slate-400 min-[400px]:block sm:text-[11px]">
+                    <span className="hidden truncate text-[10px] font-medium text-black min-[400px]:block sm:text-[11px]">
                         Menu item
                     </span>
 
@@ -80,7 +80,7 @@ function FoodCard({ food, onEdit, onDelete }) {
                             onClick={() => onEdit(food)}
                             aria-label={`Edit ${foodName}`}
                             title="Edit food"
-                            className="fm-btn flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--tint)] text-slate-600 hover:border-blue-300 hover:bg-blue-600 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 sm:h-10 sm:w-10"
+                            className="fm-btn flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--tint)] text-black hover:border-blue-300 hover:bg-blue-600 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 sm:h-10 sm:w-10"
                         >
                             <Pencil className="h-4 w-4 sm:h-[17px] sm:w-[17px]" />
                         </button>
@@ -90,7 +90,7 @@ function FoodCard({ food, onEdit, onDelete }) {
                             onClick={() => onDelete(food)}
                             aria-label={`Delete ${foodName}`}
                             title="Delete food"
-                            className="fm-btn flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--tint)] text-slate-600 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-200 sm:h-10 sm:w-10"
+                            className="fm-btn flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--tint)] text-black hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-200 sm:h-10 sm:w-10"
                         >
                             <Trash2 className="h-4 w-4 sm:h-[17px] sm:w-[17px]" />
                         </button>
