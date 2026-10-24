@@ -1,3 +1,4 @@
+import fs from 'fs';
 import puppeteer from 'puppeteer';
 import ejs from 'ejs';
 import path from 'path';
@@ -50,16 +51,46 @@ export const generateInvoicePdfBuffer = async (invoice) => {
         // 2. Render HTML using EJS
         const htmlContent = await ejs.renderFile(templatePath, { invoice });
 
-        // 3. Launch Puppeteer
-        const browser = await puppeteer.launch({
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
-        });
+        // 3. Launch Puppeteer with robust production/Linux flags
+        const launchOptions = {
+            headless: "new",
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--no-first-run',
+                '--no-zygote',
+                '--single-process',
+                '--disable-gpu',
+            ],
+        };
+
+        // Determine executable path
+        if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+            launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+        } else if (process.platform === 'linux') {
+            const commonPaths = [
+                '/usr/bin/google-chrome',
+                '/usr/bin/google-chrome-stable',
+                '/usr/bin/chromium',
+                '/usr/bin/chromium-browser',
+                '/snap/bin/chromium'
+            ];
+            for (const p of commonPaths) {
+                if (fs.existsSync(p)) {
+                    launchOptions.executablePath = p;
+                    break;
+                }
+            }
+        }
+
+        const browser = await puppeteer.launch(launchOptions);
         
         const page = await browser.newPage();
         
         // 4. Set HTML content
-        await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+        await page.setContent(htmlContent, { waitUntil: 'networkidle0', timeout: 30000 });
 
         // 5. Generate PDF buffer
         const pdfBuffer = await page.pdf({
@@ -79,6 +110,6 @@ export const generateInvoicePdfBuffer = async (invoice) => {
         return Buffer.from(pdfBuffer);
     } catch (error) {
         console.error('Error generating PDF:', error);
-        throw new Error('Could not generate PDF');
+        throw error;
     }
 };

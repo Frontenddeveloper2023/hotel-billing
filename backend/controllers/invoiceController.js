@@ -2586,15 +2586,23 @@ export const sendInvoiceEmail = async (req, res) => {
         invoiceData.dynamicHotelName = dynamicHotelName;
 
 
-        let generatedPdfBuffer;
-        try {
-            generatedPdfBuffer = await generateInvoicePdfBuffer(invoiceData);
-        } catch (err) {
-            console.error("Failed to generate PDF backend:", err);
-            return res.status(500).json({
-                success: false,
-                message: "Failed to generate professional PDF.",
-            });
+        let generatedPdfBuffer = null;
+
+        // 1. If frontend already rendered and sent the PDF blob, prioritize it for instant delivery
+        if (req.file && req.file.buffer && req.file.buffer.length > 0) {
+            console.log("[Invoice Email] Using frontend-uploaded PDF buffer.");
+            generatedPdfBuffer = req.file.buffer;
+        } else {
+            // 2. Otherwise generate server-side via Puppeteer
+            try {
+                generatedPdfBuffer = await generateInvoicePdfBuffer(invoiceData);
+            } catch (err) {
+                console.error("Puppeteer PDF generation failed on server:", err);
+                return res.status(500).json({
+                    success: false,
+                    message: `Failed to generate professional PDF: ${err.message || "Chrome/Puppeteer launch error on server"}. Please ensure Chrome or Chromium is installed on the host.`,
+                });
+            }
         }
 
         const safeEmail = String(email).trim();

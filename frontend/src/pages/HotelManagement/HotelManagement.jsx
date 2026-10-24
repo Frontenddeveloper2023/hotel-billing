@@ -308,8 +308,8 @@ export default function HotelManagement() {
                 SUCCESS POPUP — shown after payment, outside Checkout tree
             ============================================================ */}
 
-            {/* Hidden invoice used for PDF rendering */}
-            {successData && !successData.pdfBlob && (
+            {/* Hidden invoice used for PDF rendering — always keep rendered while successData is present so receiptRef is never unmounted */}
+            {successData && (
                 <div className="pointer-events-none fixed -left-[10000px] top-0 z-[-1]">
                     <InvoiceTemplate
                         activeInvoice={null}
